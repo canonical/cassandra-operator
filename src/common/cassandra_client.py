@@ -1,0 +1,82 @@
+#!/usr/bin/env python3
+"""TODO."""
+
+import logging
+from typing import List, Optional
+
+from cassandra.auth import PlainTextAuthProvider
+from cassandra.cluster import Cluster, Session
+
+from common.models import Node
+
+logger = logging.getLogger(__name__)
+
+
+class CassandraClient:
+    """TODO."""
+
+    def __init__(
+        self, hosts: List[str], user: Optional[str] = None, password: Optional[str] = None
+    ):
+        self.hosts = hosts
+        self.user = user
+        self.password = password
+        self.auth_provider = None
+
+        if self.user is not None and self.password is not None:
+            self.auth_provider = PlainTextAuthProvider(username=self.user, password=self.password)
+
+        return
+
+    class _SessionContext:
+        def __init__(self, client: "CassandraClient", keyspace: Optional[str] = None):
+            self.client = client
+            self.keyspace = keyspace
+            self.cluster = None
+            self.session = None
+
+        def __enter__(self) -> Session:
+            self.cluster = Cluster(
+                contact_points=self.client.hosts, auth_provider=self.client.auth_provider
+            )
+            self.session = self.cluster.connect()
+            if self.keyspace:
+                self.session.set_keyspace(self.keyspace)
+            return self.session
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            if self.cluster:
+                self.cluster.shutdown()
+
+    def create_keyspace(self, keyspace: str) -> None:
+        """TODO."""
+        with self._SessionContext(self, keyspace=None) as session:
+            query = (
+                """
+                CREATE KEYSPACE IF NOT EXISTS %s
+                WITH replication = {
+                    'class': 'SimpleStrategy',
+                    'replication_factor': 1
+                }
+            """
+                % keyspace
+            )
+            session.execute(query)
+
+    def create_table(self, keyspace: str, table_name: str) -> None:
+        """TODO."""
+        with self._SessionContext(self, keyspace=keyspace) as session:
+            query = (
+                """
+                CREATE TABLE IF NOT EXISTS %s (
+                    id UUID PRIMARY KEY,
+                    name text
+                )
+            """
+                % table_name
+            )
+            session.execute(query)
+
+    def node_list(self) -> dict[str, Node] | None:
+        """TODO."""
+        pass
