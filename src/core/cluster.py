@@ -28,7 +28,6 @@ class ApplicationState(Object):
 
     def __init__(self, charm: CharmBase, substrate: SUBSTRATES):
         super().__init__(parent=charm, key="charm_state")
-        self.charm = charm
         self.substrate: SUBSTRATES = substrate
         self.peer_app_interface = DataPeerData(
             self.model,
@@ -75,25 +74,24 @@ class ApplicationState(Object):
     @property
     def nodes(self) -> Set[UnitContext]:
         """Get all nodes/units in the current peer relation, including this unit itself.
-
+    
         Note: This is not to be confused with the list of cluster members.
-
+    
         Returns:
-            Set of CassadnraUnitContexts with their unit data.
+            Set of CassandraUnitContexts with their unit data.
         """
         if not self.peer_relation:
             return set()
-
-        servers = set()
-        for unit, data_interface in self.peer_units_data_interfaces.items():
-            servers.add(
+    
+        return {
+            self.unit_context,
+            *(
                 UnitContext(
                     relation=self.peer_relation,
                     data_interface=data_interface,
                     component=unit,
                     substrate=self.substrate,
                 )
-            )
-        servers.add(self.unit_context)
-
-        return servers
+                for unit, data_interface in self.peer_units_data_interfaces.items()
+            ),
+        }

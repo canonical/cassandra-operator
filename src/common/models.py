@@ -13,5 +13,5 @@ class Node:
 
     id: str
     name: str
-    peer_urls: list[str]
-    client_urls: list[str]
+    peer_url: str
+    client_url: str

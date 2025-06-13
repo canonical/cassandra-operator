@@ -24,7 +24,7 @@ class CassandraEvents(Object):
     """Handle all base and cassandra related events."""
 
     def __init__(self, charm: CassandraCharmBase):
-        super().__init__(charm, key="etcd_events")
+        super().__init__(charm, key="cassandra_events")
         self.charm = charm
 
         self.framework.observe(self.charm.on.start, self._on_start)

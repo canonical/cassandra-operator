@@ -23,11 +23,10 @@ logger = logging.getLogger(__name__)
 class CassandraWorkload(WorkloadBase):
     """Implementation of WorkloadBase for running on VMs."""
 
-    def __init__(self):
-        for attempt in Retrying(stop=stop_after_attempt(5), wait=wait_fixed(5)):
-            with attempt:
-                self.cassandra = snap.SnapCache()[SNAP_NAME]
-
+    @property
+    def cassandra(self) -> snap.Snap:
+        return snap.SnapCache()[SNAP_NAME]
+    
     @override
     def start(self) -> None:
         try:
@@ -91,7 +90,7 @@ class CassandraWorkload(WorkloadBase):
         rmtree(directory)
 
     @override
-    def exists(self, path: str) -> bool:
+    def path_exists(self, path: str) -> bool:
         path_object = Path(path)
 
         if path_object.exists():
@@ -103,16 +102,21 @@ class CassandraWorkload(WorkloadBase):
         return False
 
     @override
-    def exec(self, command: List[str]) -> None:
+    def exec(self, command: List[str]) -> tuple[str, str]:
         try:
-            output = subprocess.run(
+            result = subprocess.run(
                 command,
                 check=True,
                 text=True,
                 capture_output=True,
                 timeout=10,
-            ).stdout.strip()
-            logger.debug(output)
+            )
+            logger.debug(result.stdout.strip())
+            logger.debug(result.stderr.strip())
+            return result.stdout.strip(), result.stderr.strip()
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
-            logger.error(e)
+            if hasattr(e, 'stdout') or hasattr(e, 'stderr'):
+                stdout = getattr(e, 'stdout', '').strip()
+                stderr = getattr(e, 'stderr', '').strip()
+                return stdout, stderr
             raise

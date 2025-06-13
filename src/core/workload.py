@@ -92,7 +92,7 @@ class WorkloadBase(ABC):
         pass
 
     @abstractmethod
-    def exists(self, path: str) -> bool:
+    def path_exists(self, path: str) -> bool:
         """Check if a file or directory exists.
 
         Args:
@@ -104,6 +104,6 @@ class WorkloadBase(ABC):
         pass
 
     @abstractmethod
-    def exec(self, command: List[str]) -> None:
+    def exec(self, command: List[str]) -> tuple[str, str]:
         """Run a command on the workload substrate."""
         pass

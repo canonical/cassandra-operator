@@ -67,16 +67,6 @@ class WorkloadBase(ABC):
         """Stop the workload service."""
         pass
 
-    @staticmethod
-    def generate_password() -> str:
-        """Create randomized string for use as app passwords.
-
-        Returns:
-            str: String of 32 randomized letter+digit characters
-
-        """
-        return "strong-password"
-
     @abstractmethod
     def restart(self) -> None:
         """Restart the workload service."""
@@ -101,7 +91,7 @@ class WorkloadBase(ABC):
         pass
 
     @abstractmethod
-    def exists(self, path: str) -> bool:
+    def path_exists(self, path: str) -> bool:
         """Check if a file or directory exists.
 
         Args:
@@ -113,6 +103,6 @@ class WorkloadBase(ABC):
         pass
 
     @abstractmethod
-    def exec(self, command: List[str]) -> None:
+    def exec(self, command: List[str]) -> tuple[str, str]:
         """Run a command on the workload substrate."""
         pass

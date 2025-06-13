@@ -35,13 +35,7 @@ class ConfigManager:
         self.config_file = workload.paths.config_file
         self.config_env_file = workload.paths.config_env_file
 
-        logger.debug("---------- CONFIG MANAGER FIELDS ----------")
-        logger.debug(f"state: {self.state}")
-        logger.debug(f"workload: {self.workload}")
-        logger.debug(f"config: {self.config}")
-        logger.debug(f"config_file: {self.config_file}")
-
-    def set_config_properties(self) -> bool:
+    def set_config_properties(self) -> None:
         """Write the config properties to the config files."""
         logger.debug("Writing configuration")
 
@@ -49,15 +43,13 @@ class ConfigManager:
             self.config
         except ValidationError as e:
             logger.debug(f"Config haven't passed validation: {e}")
-            return False
+            raise e
 
         self._render_cassandra_env_config(
             max_heap_size_mb=1024 if self.config.profile == "testing" else None,
             enable_mgmt_server=True,
         )
         self._set_cassandra_config()
-
-        return True
 
     def _set_cassandra_config(self) -> None:
         with open(f"{WORKING_DIR}/config/cassandra.yaml") as config:

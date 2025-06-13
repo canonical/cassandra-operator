@@ -26,11 +26,6 @@ class ClusterManager:
         self.workload = workload
         self.cluster_endpoints = [server.peer_url for server in self.state.nodes]
 
-        logger.debug("---------- CLUSTER MANAGER FIELDS ----------")
-        logger.debug(f"state: {self.state}")
-        logger.debug(f"workload: {self.workload}")
-        logger.debug(f"cluster_endpoints: {self.cluster_endpoints}")
-
     def start_node(self) -> None:
         """Start a cluster node and update its status."""
         self.workload.start()
@@ -49,8 +44,8 @@ class ClusterManager:
         """TODO."""
         logger.debug(f"Getting node for unit {self.state.unit_context.node_name}")
 
-        client = CassandraClient(
-            self.cluster_endpoints,
+        client = ManagementClient(
+            self.state.unit_context.ip,
         )
 
         node_list = client.node_list()
