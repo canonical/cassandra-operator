@@ -6,11 +6,9 @@
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Literal, Optional
+from typing import Literal
 
-from charms.data_platform_libs.v0.data_models import BaseConfigModel
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, StatusBase
-from pydantic import field_validator
 
 SNAP_VAR_CURRENT_PATH = "/var/snap/charmed-cassandra/current"
 SNAP_CURRENT_PATH = "/snap/charmed-cassandra/current"
@@ -70,19 +68,3 @@ class Status(Enum):
     SERVICE_STARTING = StatusLevel(MaintenanceStatus("Waiting for cassandra to start..."), "DEBUG")
     SERVICE_NOT_INSTALLED = StatusLevel(BlockedStatus("unable to install cassandra snap"), "ERROR")
     SERVICE_NOT_RUNNING = StatusLevel(BlockedStatus("cassandra service not running"), "ERROR")
-
-
-class CharmConfig(BaseConfigModel):
-    """Manager for the structured configuration."""
-
-    profile: str
-    cluster_name: Optional[str] = None
-
-    @field_validator("profile")
-    @classmethod
-    def profile_values(cls, value: str) -> str | None:
-        """Check profile config option is one of `testing` or `production`."""
-        if value not in ["testing", "production"]:
-            raise ValueError("Value not one of 'testing' or 'production'")
-
-        return value

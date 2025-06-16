@@ -23,14 +23,10 @@ logger = logging.getLogger(__name__)
 class CassandraWorkload(WorkloadBase):
     """Implementation of WorkloadBase for running on VMs."""
 
-    @property
-    def cassandra(self) -> snap.Snap:
-        return snap.SnapCache()[SNAP_NAME]
-
     @override
     def start(self) -> None:
         try:
-            self.cassandra.start(services=[SNAP_SERVICE])
+            self._cassandra.start(services=[SNAP_SERVICE])
         except snap.SnapError as e:
             logger.exception(f"Failed to start cassandra snap: {e}")
 
@@ -44,8 +40,8 @@ class CassandraWorkload(WorkloadBase):
         try:
             logger.debug("Installing & configuring Cassandra snap")
             snap.install_local("charmed-cassandra_5.0.4_amd64.snap", devmode=True)
-            self.cassandra.connect("process-control")
-            self.cassandra.connect("system-observe")
+            self._cassandra.connect("process-control")
+            self._cassandra.connect("system-observe")
 
             return True
         except snap.SnapError as e:
@@ -55,7 +51,7 @@ class CassandraWorkload(WorkloadBase):
     @override
     def alive(self) -> bool:
         try:
-            return bool(self.cassandra.services[SNAP_SERVICE]["active"])
+            return bool(self._cassandra.services[SNAP_SERVICE]["active"])
         except KeyError:
             return False
 
@@ -74,11 +70,11 @@ class CassandraWorkload(WorkloadBase):
 
     @override
     def stop(self) -> None:
-        self.cassandra.stop(services=[SNAP_SERVICE])
+        self._cassandra.stop(services=[SNAP_SERVICE])
 
     @override
     def restart(self) -> None:
-        self.cassandra.restart(services=[SNAP_SERVICE])
+        self._cassandra.restart(services=[SNAP_SERVICE])
 
     @override
     def remove_file(self, file) -> None:
@@ -120,3 +116,7 @@ class CassandraWorkload(WorkloadBase):
                 stderr = getattr(e, "stderr", "").strip()
                 return stdout, stderr
             raise
+
+    @property
+    def _cassandra(self) -> snap.Snap:
+        return snap.SnapCache()[SNAP_NAME]

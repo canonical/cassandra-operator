@@ -6,6 +6,7 @@
 
 import json
 import logging
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Union
 
 import requests
@@ -21,12 +22,21 @@ from tenacity import (
 from common.exceptions import (
     HealthCheckFailedError,
 )
-from common.models import Node
 
 logger = logging.getLogger(__name__)
 
 _CASSANDRA_READY_TIMEOUT = 5
 _CASSANDRA_LIVE_TIMEOUT = 5
+
+
+@dataclass
+class Node:
+    """Class representing the nodes of an Cassandra cluster."""
+
+    id: str
+    name: str
+    peer_url: str
+    client_url: str
 
 
 class ManagementClientHttpError(Exception):

@@ -6,14 +6,14 @@
 
 import logging
 import re
-from pathlib import Path
 
 import yaml
 from pydantic import ValidationError
 
-from common.literals import CAS_CONF_FILE, CAS_ENV_CONF_FILE, MGMT_API_DIR, CharmConfig
+from common.config import CharmConfig
+from common.literals import CAS_CONF_FILE, CAS_ENV_CONF_FILE, MGMT_API_DIR
 from common.workload import WorkloadBase
-from core.cluster import ApplicationState
+from core.state import ApplicationState
 
 logger = logging.getLogger(__name__)
 

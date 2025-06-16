@@ -9,10 +9,9 @@ import socket
 from typing import List
 
 from common.literals import CassandraClusterState, Status
-from common.management_client import ManagementClient
-from common.models import Node
+from common.management_client import ManagementClient, Node
 from common.workload import WorkloadBase
-from core.cluster import ApplicationState
+from core.state import ApplicationState
 
 logger = logging.getLogger(__name__)
 

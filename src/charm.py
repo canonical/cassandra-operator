@@ -15,7 +15,7 @@ from workload import CassandraWorkload
 logger = logging.getLogger(__name__)
 
 
-class CassandraOperatorCharm(CassandraCharmBase):
+class CassandraCharm(CassandraCharmBase):
     """Charm the application."""
 
     def __init__(self, *args):
@@ -25,4 +25,4 @@ class CassandraOperatorCharm(CassandraCharmBase):
 
 
 if __name__ == "__main__":  # pragma: nocover
-    main(CassandraOperatorCharm)
+    main(CassandraCharm)
