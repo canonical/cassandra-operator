@@ -5,6 +5,7 @@
 """TODO."""
 
 import logging
+from typing import Any
 
 from charms.data_platform_libs.v0.data_interfaces import (
     Data,
@@ -34,30 +35,22 @@ class RelationState:
         self.substrate = substrate
         self.relation_data = self.data_interface.as_dict(self.relation.id) if self.relation else {}
 
-    def update(self, items: dict[str, str]) -> None:
-        """Write to relation data."""
+    def _field_setter_wrapper(self, field: str, value: str) -> None:
         if not self.relation:
             logger.warning(
-                f"Fields {list(items.keys())} were attempted to\
+                f"Field `{field}` were attempted to\
                 be written on the relation before it exists."
             )
             return
-
-        delete_fields = [key for key in items if not items[key]]
-        update_content = {k: items[k] for k in items if k not in delete_fields}
-
-        self.relation_data.update(update_content)
-
-        logger.debug(f"models relation_data updated with: {update_content}")
-
-        for field in delete_fields:
-            # use del instead of pop here because of error with dataplatform-libs
+        
+        if value == "":
             try:
                 del self.relation_data[field]
             except KeyError:
                 pass
-
-
+            else:
+                self.relation_data.update({field: value})
+        
 class UnitContext(RelationState):
     """State/Relation data collection for a unit."""
 
@@ -121,6 +114,20 @@ class UnitContext(RelationState):
         """Check if the unit has started."""
         return self.relation_data.get("state", "") == "started"
 
+    # TODO: should we rename it to unit_state?
+    @property
+    def state(self) -> str:
+        if not self.relation:
+            return ""
+        return self.relation_data.get("state", "")
+        
+    @state.setter
+    def state(self, value: str) -> None:
+        self._field_setter_wrapper("state", value)
+
+    @ip.setter
+    def ip(self, value: str) -> None:
+        self._field_setter_wrapper("ip", value)
 
 class ClusterContext(RelationState):
     """State/Relation data collection for the cassandra application."""
@@ -153,3 +160,11 @@ class ClusterContext(RelationState):
         the cluster on startup after deployment.
         """
         return self.relation_data.get("cluster_nodes", "")
+
+    @cluster_state.setter
+    def cluster_state(self, value: str) -> None:
+        self._field_setter_wrapper("cluster_state", value)
+        
+    @cluster_nodes.setter
+    def cluster_nodes(self, value: str) -> None:
+        self._field_setter_wrapper("cluster_nodes", value)

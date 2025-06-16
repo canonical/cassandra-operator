@@ -30,15 +30,12 @@ class ClusterManager:
         """Start a cluster node and update its status."""
         self.workload.start()
 
-        self.state.unit_context.update({"state": "started"})
+        self.state.unit_context
+        self.state.unit_context.state = "started"
         if not self.state.cluster_context.cluster_state:
             # mark the cluster as initialized
-            self.state.cluster_context.update(
-                {
-                    "cluster_state": CassandraClusterState.EXISTING.value,
-                    "cluster_nodes": self.state.unit_context.node_endpoint,
-                }
-            )
+            self.state.cluster_context.cluster_state = CassandraClusterState.EXISTING.value
+            self.state.cluster_context.cluster_nodes = self.state.unit_context.node_endpoint
 
     def node(self) -> Node:
         """TODO."""

@@ -66,7 +66,7 @@ class CassandraEvents(Object):
         ip_address = self.charm.cluster_manager.get_host_mapping().get("ip")
         if ip_address is not None and ip_address != self.charm.state.unit_context.ip:
             logger.info(f"New ip address: {ip_address}")
-            self.charm.state.unit_context.update({"ip": ip_address})
+            self.charm.state.unit_context.ip = ip_address
 
             # update cluster configuration
             self.charm.cluster_manager.broadcast_peer_url(self.charm.state.unit_context.peer_url)

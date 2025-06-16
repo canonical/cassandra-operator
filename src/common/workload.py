@@ -5,24 +5,11 @@
 """TODO."""
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from typing import List
-
-from common.literals import CAS_CONF_FILE, CAS_ENV_CONF_FILE
-
-
-@dataclass
-class CassandraPaths:
-    """Paths for cassandra."""
-
-    config_file: str = CAS_CONF_FILE
-    config_env_file: str = CAS_ENV_CONF_FILE
 
 
 class WorkloadBase(ABC):
     """Base interface for common workload operations."""
-
-    paths: CassandraPaths = CassandraPaths()
 
     @abstractmethod
     def start(self) -> None:
