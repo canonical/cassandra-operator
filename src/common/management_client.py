@@ -4,33 +4,30 @@
 
 """TODO."""
 
-import logging
-from typing import Dict, List, Optional, Union, Any
 import json
+import logging
+from typing import Any, Dict, List, Optional, Union
 
 import requests
-import tenacity
 import urllib3
-import requests
-
-from common.exceptions import (
-    HealthCheckFailedError,
-)
-
-from common.models import Node
-
 from tenacity import (
+    RetryCallState,
     Retrying,
     retry_if_exception_type,
     stop_after_attempt,
     wait_fixed,
-    RetryCallState,
 )
+
+from common.exceptions import (
+    HealthCheckFailedError,
+)
+from common.models import Node
 
 logger = logging.getLogger(__name__)
 
 _CASSANDRA_READY_TIMEOUT = 5
 _CASSANDRA_LIVE_TIMEOUT = 5
+
 
 class ManagementClientHttpError(Exception):
     """Exception thrown when an OpenSearch REST call fails."""
@@ -40,7 +37,7 @@ class ManagementClientHttpError(Exception):
             self.response_text = "response is empty"
         else:
             self.response_text = response_text
-            
+
         try:
             self.response_body = json.loads(self.response_text)
         except (json.JSONDecodeError, TypeError):
@@ -51,7 +48,7 @@ class ManagementClientHttpError(Exception):
         else:
             message = f"HTTP error {self.response_code=}\n{self.response_text=}"
         super().__init__(message)
-    
+
 
 class ManagementClient:
     """TODO."""
@@ -62,7 +59,7 @@ class ManagementClient:
     ):
         self.base_url = f"http://{host}:8080/api/v0"
 
-    def request( 
+    def request(
         self,
         method: str,
         endpoint: str,
@@ -86,6 +83,7 @@ class ManagementClient:
             ValueError if method or endpoint are missing
             OpenSearchHttpError if hosts are unreachable
         """
+
         def call(url: str) -> requests.Response:
             """Performs an HTTP request."""
             for attempt in Retrying(
@@ -114,9 +112,9 @@ class ManagementClient:
                     response = s.request(**request_kwargs)
                     response.raise_for_status()
                     return response
-                
+
             raise RuntimeError("HTTP request failed after all retries.")
-        
+
         if None in [endpoint, method]:
             raise ValueError("endpoint or method missing")
 
@@ -144,13 +142,12 @@ class ManagementClient:
             )
         except Exception as e:
             raise ManagementClientHttpError(response_text=str(e))
-        
-            
+
     def get_keyspace_list(self) -> List[str]:
         """TODO."""
         url = f"{self.base_url}"
         try:
-            response = self.request(method="GET",endpoint="/ops/keyspace", retries=5)
+            response = self.request(method="GET", endpoint="/ops/keyspace", retries=5)
 
             if isinstance(response, dict) and "keyspaces" in response:
                 return response["keyspaces"]
@@ -168,14 +165,14 @@ class ManagementClient:
             bool: True if the cluster or node is healthy.
         """
         logger.debug("Running cassandra health check.")
-        live_result = self._cassandra_ready()        
+        live_result = self._cassandra_ready()
         if live_result is False:
-           raise HealthCheckFailedError("Cassandra is not live")
+            raise HealthCheckFailedError("Cassandra is not live")
 
         ready_result = self._cassandra_ready()
 
         if ready_result is False:
-           raise HealthCheckFailedError("Cassandra is not ready")
+            raise HealthCheckFailedError("Cassandra is not ready")
 
         logger.debug("Health check passed.")
         return True
@@ -183,21 +180,25 @@ class ManagementClient:
     def _cassandra_ready(self) -> bool:
         endpoint = "/probes/readiness"
         try:
-            response = self.request(method="GET", endpoint=endpoint, resp_status_code=True, retries=3, timeout=_CASSANDRA_READY_TIMEOUT)
-            
+            response = self.request(
+                method="GET",
+                endpoint=endpoint,
+                resp_status_code=True,
+                retries=3,
+                timeout=_CASSANDRA_READY_TIMEOUT,
+            )
+
             if not isinstance(response, int):
                 logger.warning(f"Unexpected response format: {response}")
                 return False
-            
+
             if response == 200:
                 return True
             elif 500 <= response < 600:
                 logger.warning(f"Cassandra not ready, status: {response}")
                 return False
             else:
-                logger.warning(
-                    f"Unexpected status code from readiness probe: {response}"
-                )
+                logger.warning(f"Unexpected status code from readiness probe: {response}")
                 return False
         except ManagementClientHttpError as e:
             logger.error(f"Error checking Cassandra readiness at {endpoint}: {e}")
@@ -206,21 +207,25 @@ class ManagementClient:
     def _cassandra_live(self) -> bool:
         endpoint = "/probes/liveness"
         try:
-            response = self.request(method="GET", endpoint="/probes/liveness", resp_status_code=True, retries=3, timeout=_CASSANDRA_LIVE_TIMEOUT)
-            
+            response = self.request(
+                method="GET",
+                endpoint="/probes/liveness",
+                resp_status_code=True,
+                retries=3,
+                timeout=_CASSANDRA_LIVE_TIMEOUT,
+            )
+
             if not isinstance(response, int):
                 logger.warning(f"Unexpected response format: {response}")
                 return False
-            
+
             if response == 200:
                 return True
             elif 500 <= response < 600:
                 logger.warning(f"Cassandra not ready, status: {response}")
                 return False
             else:
-                logger.warning(
-                    f"Unexpected status code from readiness probe: {response}"
-                )
+                logger.warning(f"Unexpected status code from readiness probe: {response}")
                 return False
         except ManagementClientHttpError as e:
             logger.error(f"Error checking Cassandra readiness at {endpoint}: {e}")
@@ -230,8 +235,13 @@ class ManagementClient:
         """TODO."""
         pass
 
+
 def _error_http_retry_log(
-    logger, retry_max: int, method: str, url: str, payload: Optional[Union[str, Dict[str, Any], List[Dict[str, Any]]]]
+    logger,
+    retry_max: int,
+    method: str,
+    url: str,
+    payload: Optional[Union[str, Dict[str, Any], List[Dict[str, Any]]]],
 ):
     """Return a custom log function to run before a new Tenacity retry."""
 
@@ -244,4 +254,4 @@ def _error_http_retry_log(
             f"\tError: {retry_state.outcome.exception()}"
         )
 
-    return log_error    
+    return log_error

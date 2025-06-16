@@ -5,7 +5,6 @@
 """TODO."""
 
 import logging
-from typing import Any
 
 from charms.data_platform_libs.v0.data_interfaces import (
     Data,
@@ -14,7 +13,7 @@ from charms.data_platform_libs.v0.data_interfaces import (
 )
 from ops.model import Application, Relation, Unit
 
-from common.literals import CLIENT_MGMT_PORT, CLIENT_PORT, PEER_PORT, SUBSTRATES
+from common.literals import CLIENT_MGMT_PORT, CLIENT_PORT, PEER_PORT
 
 logger = logging.getLogger(__name__)
 
@@ -27,12 +26,10 @@ class RelationState:
         relation: Relation | None,
         data_interface: Data,
         component: Unit | Application | None,
-        substrate: SUBSTRATES,
     ):
         self.relation = relation
         self.data_interface = data_interface
         self.component = component
-        self.substrate = substrate
         self.relation_data = self.data_interface.as_dict(self.relation.id) if self.relation else {}
 
     def _field_setter_wrapper(self, field: str, value: str) -> None:
@@ -42,7 +39,7 @@ class RelationState:
                 be written on the relation before it exists."
             )
             return
-        
+
         if value == "":
             try:
                 del self.relation_data[field]
@@ -50,7 +47,8 @@ class RelationState:
                 pass
             else:
                 self.relation_data.update({field: value})
-        
+
+
 class UnitContext(RelationState):
     """State/Relation data collection for a unit."""
 
@@ -59,9 +57,8 @@ class UnitContext(RelationState):
         relation: Relation | None,
         data_interface: DataPeerUnitData,
         component: Unit,
-        substrate: SUBSTRATES,
     ):
-        super().__init__(relation, data_interface, component, substrate)
+        super().__init__(relation, data_interface, component)
         self.unit = component
 
     @property
@@ -120,7 +117,7 @@ class UnitContext(RelationState):
         if not self.relation:
             return ""
         return self.relation_data.get("state", "")
-        
+
     @state.setter
     def state(self, value: str) -> None:
         self._field_setter_wrapper("state", value)
@@ -128,6 +125,7 @@ class UnitContext(RelationState):
     @ip.setter
     def ip(self, value: str) -> None:
         self._field_setter_wrapper("ip", value)
+
 
 class ClusterContext(RelationState):
     """State/Relation data collection for the cassandra application."""
@@ -137,9 +135,8 @@ class ClusterContext(RelationState):
         relation: Relation | None,
         data_interface: DataPeerData,
         component: Application,
-        substrate: SUBSTRATES,
     ):
-        super().__init__(relation, data_interface, component, substrate)
+        super().__init__(relation, data_interface, component)
         self.app = component
 
     @property
@@ -164,7 +161,7 @@ class ClusterContext(RelationState):
     @cluster_state.setter
     def cluster_state(self, value: str) -> None:
         self._field_setter_wrapper("cluster_state", value)
-        
+
     @cluster_nodes.setter
     def cluster_nodes(self, value: str) -> None:
         self._field_setter_wrapper("cluster_nodes", value)

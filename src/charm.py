@@ -8,7 +8,6 @@ import logging
 
 from ops import main
 
-from common.literals import CharmConfig, Status
 from core.charm import CassandraCharmBase
 from events.cassandra import CassandraEvents
 from workload import CassandraWorkload

@@ -44,12 +44,14 @@ class CassandraClient:
             )
             session.execute(query)
 
+
 class _SessionContext:
     def __init__(self, client: CassandraClient, keyspace: Optional[str] = None):
         self.client = client
         self.keyspace = keyspace
         self.cluster = None
         self.session = None
+
     def __enter__(self) -> Session:
         self.cluster = Cluster(
             contact_points=self.client.hosts, auth_provider=self.client.auth_provider
@@ -58,7 +60,7 @@ class _SessionContext:
         if self.keyspace:
             self.session.set_keyspace(self.keyspace)
         return self.session
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.cluster:
             self.cluster.shutdown()
-            

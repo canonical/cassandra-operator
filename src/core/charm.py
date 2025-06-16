@@ -7,9 +7,9 @@
 import logging
 
 from charms.data_platform_libs.v0.data_models import TypedCharmBase
-from ops import StatusBase, CollectStatusEvent
+from ops import CollectStatusEvent, StatusBase
 
-from common.literals import SUBSTRATE, CharmConfig, DebugLevel, Status
+from common.literals import CharmConfig, DebugLevel, Status
 from common.workload import WorkloadBase
 from core.cluster import ApplicationState
 from managers.cluster import ClusterManager
@@ -26,7 +26,7 @@ class CassandraCharmBase(TypedCharmBase[CharmConfig]):
     def __init__(self, workload: WorkloadBase, *args):
         super().__init__(*args)
         self.workload = workload
-        self.state = ApplicationState(self, substrate=SUBSTRATE)
+        self.state = ApplicationState(self)
 
         self.pending_inactive_statuses: list[Status] = []
 
@@ -38,7 +38,6 @@ class CassandraCharmBase(TypedCharmBase[CharmConfig]):
         self.framework.observe(self.on.collect_unit_status, self._on_collect_status)
         self.framework.observe(self.on.collect_app_status, self._on_collect_status)
 
-        
     def set_status(self, key: Status) -> None:
         """Set charm status."""
         status: StatusBase = key.value.status
@@ -47,7 +46,6 @@ class CassandraCharmBase(TypedCharmBase[CharmConfig]):
         getattr(logger, log_level.lower())(status.message)
         self.pending_inactive_statuses.append(key)
 
-        
     def _on_collect_status(self, event: CollectStatusEvent) -> None:
         if self.app.planned_units() == 0:
             event.add_status(Status.REMOVED.value.status)
@@ -60,4 +58,3 @@ class CassandraCharmBase(TypedCharmBase[CharmConfig]):
         # add all other statuses collected during the current hook
         for status in self.pending_inactive_statuses + [Status.ACTIVE]:
             event.add_status(status.value.status)
-        

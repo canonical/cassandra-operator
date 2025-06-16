@@ -8,7 +8,6 @@ import logging
 import socket
 from typing import List
 
-from common.cassandra_client import CassandraClient
 from common.literals import CassandraClusterState, Status
 from common.management_client import ManagementClient
 from common.models import Node

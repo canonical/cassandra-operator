@@ -11,7 +11,7 @@ from shutil import rmtree
 from typing import List
 
 from charms.operator_libs_linux.v2 import snap
-from tenacity import Retrying, retry, stop_after_attempt, wait_fixed
+from tenacity import retry, stop_after_attempt, wait_fixed
 from typing_extensions import override
 
 from common.literals import SNAP_NAME, SNAP_SERVICE
@@ -26,7 +26,7 @@ class CassandraWorkload(WorkloadBase):
     @property
     def cassandra(self) -> snap.Snap:
         return snap.SnapCache()[SNAP_NAME]
-    
+
     @override
     def start(self) -> None:
         try:
@@ -115,8 +115,8 @@ class CassandraWorkload(WorkloadBase):
             logger.debug(result.stderr.strip())
             return result.stdout.strip(), result.stderr.strip()
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
-            if hasattr(e, 'stdout') or hasattr(e, 'stderr'):
-                stdout = getattr(e, 'stdout', '').strip()
-                stderr = getattr(e, 'stderr', '').strip()
+            if hasattr(e, "stdout") or hasattr(e, "stderr"):
+                stdout = getattr(e, "stdout", "").strip()
+                stderr = getattr(e, "stderr", "").strip()
                 return stdout, stderr
             raise
