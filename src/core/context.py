@@ -45,8 +45,8 @@ class RelationState:
                 del self.relation_data[field]
             except KeyError:
                 pass
-            else:
-                self.relation_data.update({field: value})
+        else:
+            self.relation_data.update({field: value})
 
 
 class UnitContext(RelationState):

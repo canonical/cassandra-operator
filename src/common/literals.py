@@ -60,7 +60,9 @@ class Status(Enum):
     ACTIVE = StatusLevel(ActiveStatus(), "DEBUG")
     REMOVED = StatusLevel(BlockedStatus("unit removed from cluster"), "INFO")
     CLUSTER_NOT_JOINED = StatusLevel(MaintenanceStatus("Waiting to join cluster"), "DEBUG")
-    CLUSTER_INITIALIZING = StatusLevel(MaintenanceStatus("Initializing etcd cluster..."), "DEBUG")
+    CLUSTER_INITIALIZING = StatusLevel(
+        MaintenanceStatus("Initializing cassandra cluster..."), "DEBUG"
+    )
     CLUSTER_NOT_INITIALIZED = StatusLevel(
         BlockedStatus("Waiting for cluster initialization"), "ERROR"
     )
