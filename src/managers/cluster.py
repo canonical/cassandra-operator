@@ -6,7 +6,6 @@
 
 import logging
 import socket
-from typing import List
 
 from common.literals import CassandraClusterState, Status
 from common.management_client import ManagementClient, Node
@@ -64,7 +63,7 @@ class ClusterManager:
 
         return {"hostname": hostname, "ip": ip}
 
-    def compute_component_status(self) -> List[Status]:
+    def compute_component_status(self) -> list[Status]:
         """Compute the Cluster manager's statuses."""
         status_list = []
 

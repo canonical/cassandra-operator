@@ -7,7 +7,7 @@
 import json
 import logging
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import requests
 import urllib3
@@ -42,7 +42,7 @@ class Node:
 class ManagementClientHttpError(Exception):
     """Exception thrown when an OpenSearch REST call fails."""
 
-    def __init__(self, response_text: Optional[str] = None, response_code: Optional[int] = None):
+    def __init__(self, response_text: str | None = None, response_code: int | None = None):
         if response_text is None:
             self.response_text = "response is empty"
         else:
@@ -73,11 +73,11 @@ class ManagementClient:
         self,
         method: str,
         endpoint: str,
-        payload: Optional[Union[str, Dict[str, Any], List[Dict[str, Any]]]] = None,
+        payload: str | dict[str, Any] | list[dict[str, Any]] | None = None,
         resp_status_code: bool = False,
         retries: int = 0,
         timeout: int = 5,
-    ) -> Union[Dict[str, Any], List[Any], int]:
+    ) -> dict[str, Any] | list[Any] | int:
         """Make an HTTP request.
 
         Args:
@@ -153,7 +153,7 @@ class ManagementClient:
         except Exception as e:
             raise ManagementClientHttpError(response_text=str(e))
 
-    def get_keyspace_list(self) -> List[str]:
+    def get_keyspace_list(self) -> list[str]:
         """TODO."""
         url = f"{self.base_url}"
         try:
@@ -251,7 +251,7 @@ def _error_http_retry_log(
     retry_max: int,
     method: str,
     url: str,
-    payload: Optional[Union[str, Dict[str, Any], List[Dict[str, Any]]]],
+    payload: str | dict[str, Any] | list[dict[str, Any]] | None,
 ):
     """Return a custom log function to run before a new Tenacity retry."""
 

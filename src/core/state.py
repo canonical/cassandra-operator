@@ -5,7 +5,6 @@
 """TODO."""
 
 import logging
-from typing import Dict, Set
 
 from charms.data_platform_libs.v0.data_interfaces import (
     Data,
@@ -200,7 +199,7 @@ class ApplicationState(Object):
         )
 
     @property
-    def peer_units_data_interfaces(self) -> Dict[Unit, DataPeerOtherUnitData]:
+    def peer_units_data_interfaces(self) -> dict[Unit, DataPeerOtherUnitData]:
         """Get unit data interface of all peer units from the cluster peer relation."""
         if not self.peer_relation or not self.peer_relation.units:
             return {}
@@ -220,7 +219,7 @@ class ApplicationState(Object):
         )
 
     @property
-    def nodes(self) -> Set[UnitContext]:
+    def nodes(self) -> set[UnitContext]:
         """Get all nodes/units in the current peer relation, including this unit itself.
 
         Note: This is not to be confused with the list of cluster members.

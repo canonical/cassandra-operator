@@ -5,7 +5,6 @@
 """TODO."""
 
 from abc import ABC, abstractmethod
-from typing import List
 
 
 class WorkloadBase(ABC):
@@ -90,6 +89,6 @@ class WorkloadBase(ABC):
         pass
 
     @abstractmethod
-    def exec(self, command: List[str]) -> tuple[str, str]:
+    def exec(self, command: list[str]) -> tuple[str, str]:
         """Run a command on the workload substrate."""
         pass

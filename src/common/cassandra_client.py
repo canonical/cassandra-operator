@@ -6,7 +6,7 @@
 
 import logging
 from contextlib import contextmanager
-from typing import Generator, List, Optional
+from typing import Generator
 
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.cluster import Cluster, Session
@@ -17,9 +17,7 @@ logger = logging.getLogger(__name__)
 class CassandraClient:
     """TODO."""
 
-    def __init__(
-        self, hosts: List[str], user: Optional[str] = None, password: Optional[str] = None
-    ):
+    def __init__(self, hosts: list[str], user: str | None = None, password: str | None = None):
         self.auth_provider = (
             PlainTextAuthProvider(username=user, password=password)
             if user is not None and password is not None

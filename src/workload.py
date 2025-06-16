@@ -8,7 +8,6 @@ import logging
 import subprocess
 from pathlib import Path
 from shutil import rmtree
-from typing import List
 
 from charms.operator_libs_linux.v2 import snap
 from tenacity import retry, stop_after_attempt, wait_fixed
@@ -98,7 +97,7 @@ class CassandraWorkload(WorkloadBase):
         return False
 
     @override
-    def exec(self, command: List[str]) -> tuple[str, str]:
+    def exec(self, command: list[str]) -> tuple[str, str]:
         try:
             result = subprocess.run(
                 command,
