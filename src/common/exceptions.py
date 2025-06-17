@@ -2,8 +2,15 @@
 # Copyright 2025 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""TODO."""
+"""Exceptions."""
 
 
-class HealthCheckFailedError(Exception):
-    """Custom Exception if a health check failed."""
+class ExecError(Exception):
+    """Error during executing command in workload."""
+
+    def __init__(self, stdout: str, stderr: str) -> None:
+        self.stdout = stdout
+        self.stderr = stderr
+
+    stdout: str
+    stderr: str
