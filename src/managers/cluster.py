@@ -7,6 +7,7 @@
 import logging
 import socket
 
+from common.literals import CLIENT_MGMT_URL
 from common.management_client import ManagementClient
 from common.workload import WorkloadBase
 from core.state import ApplicationState
@@ -20,10 +21,15 @@ class ClusterManager:
     def __init__(self, state: ApplicationState, workload: WorkloadBase):
         self.state = state
         self.workload = workload
+        self.management_client = ManagementClient(CLIENT_MGMT_URL)
 
     def start_node(self) -> None:
-        """Start a cluster node and update its status."""
+        """Start a cluster node."""
         self.workload.start()
+
+    def restart_node(self) -> None:
+        """Restart a cluster node."""
+        self.workload.restart()
 
     def update_network_address(self) -> bool:
         """TODO."""
@@ -43,11 +49,7 @@ class ClusterManager:
         Returns:
             bool: True if the cluster or node is healthy.
         """
-        return ManagementClient().is_healthy()
-
-    def restart_node(self) -> None:
-        """TODO."""
-        pass
+        return self.management_client.is_healthy()
 
     def _network_address(self) -> tuple[str, str]:
         """TODO."""

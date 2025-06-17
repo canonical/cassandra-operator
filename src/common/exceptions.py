@@ -5,10 +5,6 @@
 """Exceptions."""
 
 
-class HealthCheckFailedError(Exception):
-    """Health check failed error."""
-
-
 class ExecError(Exception):
     """Error during executing command in workload."""
 

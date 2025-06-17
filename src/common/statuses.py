@@ -6,7 +6,7 @@
 
 from enum import Enum
 
-from ops import ActiveStatus, MaintenanceStatus
+from ops import ActiveStatus, BlockedStatus, MaintenanceStatus
 
 
 class Status(Enum):
@@ -15,3 +15,4 @@ class Status(Enum):
     ACTIVE = ActiveStatus()
     INSTALLING = MaintenanceStatus("installing Cassandra")
     STARTING = MaintenanceStatus("waiting for Cassandra to start")
+    INVALID_CONFIG = BlockedStatus("invalid config")

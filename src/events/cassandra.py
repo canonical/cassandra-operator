@@ -14,6 +14,7 @@ from ops import (
     StartEvent,
     UpdateStatusEvent,
 )
+from pydantic import ValidationError
 
 from common.literals import ClusterState, UnitWorkloadState
 from common.statuses import Status
@@ -41,7 +42,12 @@ class CassandraEvents(Object):
 
     def _on_start(self, event: StartEvent) -> None:
         self.charm.cluster_manager.update_network_address()
-        self.charm.config_manager.set_config_properties()
+        try:
+            self.charm.config_manager.reconcile(self.charm.config)
+        except ValidationError as e:
+            logger.debug(f"Config haven't passed validation: {e}")
+            event.defer()
+            return
 
         if (
             not self.charm.unit.is_leader()
@@ -57,16 +63,30 @@ class CassandraEvents(Object):
             self.charm.state.cluster.state = ClusterState.ACTIVE.value
 
     def _on_config_changed(self, event: ConfigChangedEvent) -> None:
-        pass
+        try:
+            self.charm.config_manager.reconcile(self.charm.config)
+        except ValidationError as e:
+            logger.debug(f"Config haven't passed validation: {e}")
+            return
+        if not self.charm.state.unit.workload_state == UnitWorkloadState.ACTIVE.value:
+            return
+        self.charm.cluster_manager.restart_node()
 
     def _on_update_status(self, event: UpdateStatusEvent) -> None:
         self.charm.cluster_manager.update_network_address()
 
     def _on_collect_unit_status(self, event: CollectStatusEvent) -> None:
+        try:
+            self.charm.config
+        except ValidationError:
+            event.add_status(Status.INVALID_CONFIG.value)
+
         if self.charm.state.unit.workload_state == "":
             event.add_status(Status.INSTALLING.value)
+
         if self.charm.state.unit.workload_state == UnitWorkloadState.STARTING.value:
             event.add_status(Status.STARTING.value)
+
         if (
             self.charm.state.unit.workload_state == UnitWorkloadState.ACTIVE.value
             and not self.charm.cluster_manager.is_healthy
