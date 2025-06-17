@@ -15,7 +15,6 @@ from charms.data_platform_libs.v0.data_interfaces import (
 from ops import Application, CharmBase, Object, Relation, Unit
 
 from common.literals import (
-    CLIENT_MGMT_PORT,
     CLIENT_PORT,
     PEER_PORT,
     PEER_RELATION,
@@ -87,10 +86,18 @@ class UnitContext(RelationState):
         """The hostname for the unit."""
         return self.relation_data.get("hostname", "")
 
+    @hostname.setter
+    def hostname(self, value: str) -> None:
+        self._field_setter_wrapper("hostname", value)
+
     @property
     def ip(self) -> str:
         """The IP address for the unit."""
         return self.relation_data.get("ip", "")
+
+    @ip.setter
+    def ip(self, value: str) -> None:
+        self._field_setter_wrapper("ip", value)
 
     @property
     def peer_url(self) -> str:
@@ -103,34 +110,20 @@ class UnitContext(RelationState):
         return f"{self.ip}:{CLIENT_PORT}"
 
     @property
-    def client_mgmt_url(self) -> str:
-        """The client mgmt connection endpoint for the cassandra server."""
-        return f"{self.ip}:{CLIENT_MGMT_PORT}"
-
-    @property
-    def node_endpoint(self) -> str:
-        """Concatenate node_name and peer_url."""
-        return f"{self.node_name}={self.peer_url}"
-
-    @property
     def is_started(self) -> bool:
         """Check if the unit has started."""
         return self.relation_data.get("state", "") == "started"
 
-    # TODO: should we rename it to unit_state?
     @property
-    def state(self) -> str:
+    def workload_state(self) -> str:
+        """TODO."""
         if not self.relation:
             return ""
-        return self.relation_data.get("state", "")
+        return self.relation_data.get("workload_state", "")
 
-    @state.setter
-    def state(self, value: str) -> None:
-        self._field_setter_wrapper("state", value)
-
-    @ip.setter
-    def ip(self, value: str) -> None:
-        self._field_setter_wrapper("ip", value)
+    @workload_state.setter
+    def workload_state(self, value: str) -> None:
+        self._field_setter_wrapper("workload_state", value)
 
 
 class ClusterContext(RelationState):
@@ -146,31 +139,14 @@ class ClusterContext(RelationState):
         self.app = component
 
     @property
-    def cluster_state(self) -> str:
+    def state(self) -> str:
         """The cluster state ('new' or 'existing') of the cassandra cluster."""
         return self.relation_data.get("cluster_state", "")
 
-    @property
-    def auth_enabled(self) -> bool:
-        """Flag to check if authentication is already enabled in the Cluster."""
-        return self.relation_data.get("authentication", "") == "enabled"
-
-    @property
-    def cluster_nodes(self) -> str:
-        """Get the list of current nodes added to the cassandra cluster.
-
-        This data is added to the peer cluster relation app databag when the first unit initializes
-        the cluster on startup after deployment.
-        """
-        return self.relation_data.get("cluster_nodes", "")
-
-    @cluster_state.setter
-    def cluster_state(self, value: str) -> None:
+    @state.setter
+    def state(self, value: str) -> None:
+        """TODO."""
         self._field_setter_wrapper("cluster_state", value)
-
-    @cluster_nodes.setter
-    def cluster_nodes(self, value: str) -> None:
-        self._field_setter_wrapper("cluster_nodes", value)
 
 
 class ApplicationState(Object):
@@ -190,16 +166,7 @@ class ApplicationState(Object):
         return self.model.get_relation(PEER_RELATION)
 
     @property
-    def unit_context(self) -> UnitContext:
-        """Get the server state of this unit."""
-        return UnitContext(
-            relation=self.peer_relation,
-            data_interface=self.peer_unit_interface,
-            component=self.model.unit,
-        )
-
-    @property
-    def peer_units_data_interfaces(self) -> dict[Unit, DataPeerOtherUnitData]:
+    def peer_relation_units(self) -> dict[Unit, DataPeerOtherUnitData]:
         """Get unit data interface of all peer units from the cluster peer relation."""
         if not self.peer_relation or not self.peer_relation.units:
             return {}
@@ -210,7 +177,7 @@ class ApplicationState(Object):
         }
 
     @property
-    def cluster_context(self) -> ClusterContext:
+    def cluster(self) -> ClusterContext:
         """Get the cluster context of the entire cassandra application."""
         return ClusterContext(
             relation=self.peer_relation,
@@ -219,7 +186,16 @@ class ApplicationState(Object):
         )
 
     @property
-    def nodes(self) -> set[UnitContext]:
+    def unit(self) -> UnitContext:
+        """Get the server state of this unit."""
+        return UnitContext(
+            relation=self.peer_relation,
+            data_interface=self.peer_unit_interface,
+            component=self.model.unit,
+        )
+
+    @property
+    def units(self) -> set[UnitContext]:
         """Get all nodes/units in the current peer relation, including this unit itself.
 
         Note: This is not to be confused with the list of cluster members.
@@ -231,13 +207,13 @@ class ApplicationState(Object):
             return set()
 
         return {
-            self.unit_context,
+            self.unit,
             *(
                 UnitContext(
                     relation=self.peer_relation,
                     data_interface=data_interface,
                     component=unit,
                 )
-                for unit, data_interface in self.peer_units_data_interfaces.items()
+                for unit, data_interface in self.peer_relation_units.items()
             ),
         }

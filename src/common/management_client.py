@@ -22,6 +22,7 @@ from tenacity import (
 from common.exceptions import (
     HealthCheckFailedError,
 )
+from common.literals import CLIENT_MGMT_URL
 
 logger = logging.getLogger(__name__)
 
@@ -65,9 +66,9 @@ class ManagementClient:
 
     def __init__(
         self,
-        host: str,
+        host: str | None = None,
     ):
-        self.base_url = f"http://{host}:8080/api/v0"
+        self.base_url = host or CLIENT_MGMT_URL
 
     def request(
         self,
@@ -108,10 +109,6 @@ class ManagementClient:
                     request_kwargs = {
                         "method": method.upper(),
                         "url": url,
-                        "headers": {
-                            "Accept": "application/json",
-                            "Content-Type": "application/json",
-                        },
                         "timeout": (timeout, timeout),
                     }
                     if payload:
@@ -175,16 +172,12 @@ class ManagementClient:
             bool: True if the cluster or node is healthy.
         """
         logger.debug("Running cassandra health check.")
-        live_result = self._cassandra_ready()
-        if live_result is False:
-            raise HealthCheckFailedError("Cassandra is not live")
+        if not self._cassandra_live():
+            return False
 
-        ready_result = self._cassandra_ready()
+        if not self._cassandra_ready():
+            return False
 
-        if ready_result is False:
-            raise HealthCheckFailedError("Cassandra is not ready")
-
-        logger.debug("Health check passed.")
         return True
 
     def _cassandra_ready(self) -> bool:

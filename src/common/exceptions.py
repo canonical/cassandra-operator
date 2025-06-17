@@ -6,4 +6,15 @@
 
 
 class HealthCheckFailedError(Exception):
-    """Custom Exception if a health check failed."""
+    """Health check failed error."""
+
+
+class ExecError(Exception):
+    """Error during executing command in workload."""
+
+    def __init__(self, stdout: str, stderr: str) -> None:
+        self.stdout = stdout
+        self.stderr = stderr
+
+    stdout: str
+    stderr: str

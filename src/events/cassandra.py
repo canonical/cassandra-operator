@@ -7,14 +7,16 @@
 import logging
 
 from ops import (
+    CollectStatusEvent,
     ConfigChangedEvent,
     InstallEvent,
     Object,
     StartEvent,
+    UpdateStatusEvent,
 )
 
-from common.exceptions import HealthCheckFailedError
-from common.literals import Status
+from common.literals import ClusterState, UnitWorkloadState
+from common.statuses import Status
 from core.charm import CassandraCharmBase
 
 logger = logging.getLogger(__name__)
@@ -29,48 +31,44 @@ class CassandraEvents(Object):
 
         self.framework.observe(self.charm.on.start, self._on_start)
         self.framework.observe(self.charm.on.install, self._on_install)
+        self.framework.observe(self.charm.on.config_changed, self._on_config_changed)
+        self.framework.observe(self.charm.on.update_status, self._on_update_status)
+        self.framework.observe(self.charm.on.collect_unit_status, self._on_collect_unit_status)
 
     def _on_install(self, _: InstallEvent) -> None:
-        if not self.charm.workload.install():
-            self.charm.set_status(Status.SERVICE_NOT_INSTALLED)
-        return
+        self.charm.workload.install()
+        self.charm.state.unit.workload_state = UnitWorkloadState.STARTING.value
 
     def _on_start(self, event: StartEvent) -> None:
-        # TODO: maby add functionality like in etcd (MEMBER UNITS).
-        # Member units are added to cluster, but does not operate
-        # within this cluster until they are bootstraped and helthy
+        self.charm.cluster_manager.update_network_address()
         self.charm.config_manager.set_config_properties()
 
-        if not self.charm.state.cluster_context.cluster_state and self.charm.unit.is_leader():
-            # this unit is creating cluster
-            self.charm.cluster_manager.start_node()
-            try:
-                self.charm.cluster_manager.broadcast_peer_url(
-                    self.charm.state.unit_context.peer_url
-                )
-            except ValueError:
-                logger.error("Failed to update member configuration")
-                event.defer()
-                return
-        else:
-            # this unit is added to cluster
-            self.charm.set_status(Status.CLUSTER_NOT_JOINED)
+        if (
+            not self.charm.unit.is_leader()
+            and self.charm.state.cluster.state != ClusterState.ACTIVE.value
+        ):
+            logger.debug("Deferring on_start for unit due to cluster isn't initialized yet")
             event.defer()
             return
 
-        if not self.charm.workload.alive():
-            self.charm.set_status(Status.SERVICE_NOT_RUNNING)
-        return
+        self.charm.cluster_manager.start_node()
+        self.charm.state.unit.workload_state = UnitWorkloadState.ACTIVE.value
+        if self.charm.unit.is_leader():
+            self.charm.state.cluster.state = ClusterState.ACTIVE.value
 
     def _on_config_changed(self, event: ConfigChangedEvent) -> None:
-        ip_address = self.charm.cluster_manager.get_host_mapping().get("ip")
-        if ip_address is not None and ip_address != self.charm.state.unit_context.ip:
-            logger.info(f"New ip address: {ip_address}")
-            self.charm.state.unit_context.ip = ip_address
+        pass
 
-            # update cluster configuration
-            self.charm.cluster_manager.broadcast_peer_url(self.charm.state.unit_context.peer_url)
-            self.charm.config_manager.set_config_properties()
+    def _on_update_status(self, event: UpdateStatusEvent) -> None:
+        self.charm.cluster_manager.update_network_address()
 
-            if not self.charm.cluster_manager.restart_node():
-                raise HealthCheckFailedError("Failed to check health of the node")
+    def _on_collect_unit_status(self, event: CollectStatusEvent) -> None:
+        if self.charm.state.unit.workload_state == "":
+            event.add_status(Status.INSTALLING.value)
+        if self.charm.state.unit.workload_state == UnitWorkloadState.STARTING.value:
+            event.add_status(Status.STARTING.value)
+        if (
+            self.charm.state.unit.workload_state == UnitWorkloadState.ACTIVE.value
+            and not self.charm.cluster_manager.is_healthy
+        ):
+            event.add_status(Status.STARTING.value)

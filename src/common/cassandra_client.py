@@ -27,21 +27,6 @@ class CassandraClient:
 
         return
 
-    def create_keyspace(self, keyspace: str) -> None:
-        """TODO."""
-        with self._session() as session:
-            query = (
-                """
-                CREATE KEYSPACE IF NOT EXISTS %s
-                WITH replication = {
-                    'class': 'SimpleStrategy',
-                    'replication_factor': 1
-                }
-                """
-                % keyspace
-            )
-            session.execute(query)
-
     @contextmanager
     def _session(self, keyspace: str | None = None) -> Generator[Session]:
         cluster = Cluster(contact_points=self.hosts, auth_provider=self.auth_provider)

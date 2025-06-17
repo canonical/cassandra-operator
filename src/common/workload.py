@@ -16,7 +16,7 @@ class WorkloadBase(ABC):
         pass
 
     @abstractmethod
-    def install(self) -> bool:
+    def install(self) -> None:
         """Install the cassandra snap."""
         pass
 
