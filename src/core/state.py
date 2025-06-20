@@ -5,6 +5,7 @@
 """TODO."""
 
 import logging
+from enum import Enum
 
 from charms.data_platform_libs.v0.data_interfaces import (
     Data,
@@ -21,6 +22,19 @@ from common.literals import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+class ClusterState(Enum):
+    """TODO."""
+
+    ACTIVE = "active"
+
+
+class UnitWorkloadState(Enum):
+    """TODO."""
+
+    STARTING = "starting"
+    ACTIVE = "active"
 
 
 class RelationState:

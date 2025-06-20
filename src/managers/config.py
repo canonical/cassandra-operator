@@ -9,8 +9,7 @@ import re
 
 import yaml
 
-from common.literals import CAS_CONF_FILE, CAS_ENV_CONF_FILE, MGMT_API_DIR
-from core.workload import WorkloadBase
+from core.workload import CAS_CONF_FILE, CAS_ENV_CONF_FILE, MGMT_API_DIR, WorkloadBase
 
 logger = logging.getLogger(__name__)
 

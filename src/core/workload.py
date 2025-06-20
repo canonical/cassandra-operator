@@ -6,6 +6,18 @@
 
 from abc import ABC, abstractmethod
 
+SNAP_VAR_CURRENT_PATH = "/var/snap/charmed-cassandra/current"
+SNAP_CURRENT_PATH = "/snap/charmed-cassandra/current"
+
+SNAP_CONF_PATH = f"{SNAP_VAR_CURRENT_PATH}/etc"
+
+CAS_CONF_PATH = f"{SNAP_CONF_PATH}/cassandra"
+
+CAS_CONF_FILE = f"{CAS_CONF_PATH}/cassandra.yaml"
+CAS_ENV_CONF_FILE = f"{CAS_CONF_PATH}/cassandra-env.sh"
+
+MGMT_API_DIR = f"{SNAP_CURRENT_PATH}/opt/mgmt-api"
+
 
 class WorkloadBase(ABC):
     """Base interface for common workload operations."""
