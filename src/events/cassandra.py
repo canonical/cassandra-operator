@@ -43,7 +43,9 @@ class CassandraEvents(Object):
     def _on_start(self, event: StartEvent) -> None:
         self.charm.cluster_manager.update_network_address()
         try:
-            self.charm.config_manager.reconcile(self.charm.config)
+            self.charm.config_manager.render_cassandra_env_config(
+                1024 if self.charm.config.profile == "testing" else None
+            )
         except ValidationError as e:
             logger.debug(f"Config haven't passed validation: {e}")
             event.defer()
@@ -64,7 +66,9 @@ class CassandraEvents(Object):
 
     def _on_config_changed(self, event: ConfigChangedEvent) -> None:
         try:
-            self.charm.config_manager.reconcile(self.charm.config)
+            self.charm.config_manager.render_cassandra_env_config(
+                1024 if self.charm.config.profile == "testing" else None
+            )
         except ValidationError as e:
             logger.debug(f"Config haven't passed validation: {e}")
             return

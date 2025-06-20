@@ -9,7 +9,6 @@ import re
 
 import yaml
 
-from common.config import CharmConfig
 from common.literals import CAS_CONF_FILE, CAS_ENV_CONF_FILE, MGMT_API_DIR
 from common.workload import WorkloadBase
 
@@ -25,14 +24,8 @@ class ConfigManager:
     ):
         self.workload = workload
 
-    def reconcile(self, config: CharmConfig):
+    def render_cassandra_config(self, cluster_name: str) -> None:
         """TODO."""
-        self._render_cassandra_env_config(
-            max_heap_size_mb=1024 if config.profile == "testing" else None,
-        )
-        self._render_cassandra_config(config.cluster_name)
-
-    def _render_cassandra_config(self, cluster_name: str) -> None:
         config_properties = yaml.safe_load(self.workload.read_file(CAS_CONF_FILE))
 
         if not isinstance(config_properties, dict):
@@ -45,7 +38,8 @@ class ConfigManager:
             CAS_CONF_FILE,
         )
 
-    def _render_cassandra_env_config(self, max_heap_size_mb: int | None) -> None:
+    def render_cassandra_env_config(self, max_heap_size_mb: int | None) -> None:
+        """TODO."""
         content = self.workload.read_file(CAS_ENV_CONF_FILE)
 
         content, _ = re.subn(
