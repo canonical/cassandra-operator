@@ -9,18 +9,31 @@ import subprocess
 from pathlib import Path
 from shutil import rmtree
 
+from charmlibs import pathops
 from charms.operator_libs_linux.v2 import snap
 from typing_extensions import override
 
 from common.exceptions import ExecError
 from common.literals import SNAP_NAME, SNAP_SERVICE
-from core.workload import WorkloadBase
+from core.workload import CassandraPaths, ManagementApiPaths, WorkloadBase
+
+SNAP_VAR_CURRENT_PATH = "/var/snap/charmed-cassandra/current"
+SNAP_CURRENT_PATH = "/snap/charmed-cassandra/current"
 
 logger = logging.getLogger(__name__)
 
 
 class CassandraWorkload(WorkloadBase):
     """Implementation of WorkloadBase for running on VMs."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.cassandra_paths = CassandraPaths(
+            config_path=pathops.LocalPath(f"{SNAP_VAR_CURRENT_PATH}/etc/cassandra")
+        )
+        self.management_api_paths = ManagementApiPaths(
+            agent_path=f"{SNAP_CURRENT_PATH}/opt/mgmt-api/libs/datastax-mgmtapi-agent.jar"
+        )
 
     @override
     def start(self) -> None:

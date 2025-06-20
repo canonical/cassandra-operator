@@ -6,21 +6,43 @@
 
 from abc import ABC, abstractmethod
 
-SNAP_VAR_CURRENT_PATH = "/var/snap/charmed-cassandra/current"
-SNAP_CURRENT_PATH = "/snap/charmed-cassandra/current"
+from charmlibs import pathops
 
-SNAP_CONF_PATH = f"{SNAP_VAR_CURRENT_PATH}/etc"
 
-CAS_CONF_PATH = f"{SNAP_CONF_PATH}/cassandra"
+class CassandraPaths:
+    """TODO."""
 
-CAS_CONF_FILE = f"{CAS_CONF_PATH}/cassandra.yaml"
-CAS_ENV_CONF_FILE = f"{CAS_CONF_PATH}/cassandra-env.sh"
+    def __init__(self, config_path: pathops.PathProtocol) -> None:
+        self._config_path = config_path
 
-MGMT_API_DIR = f"{SNAP_CURRENT_PATH}/opt/mgmt-api"
+    @property
+    def env_config(self) -> pathops.PathProtocol:
+        """TODO."""
+        return self._config_path / "cassandra-env.sh"
+
+    @property
+    def config(self) -> pathops.PathProtocol:
+        """TODO."""
+        return self._config_path / "cassandra.yaml"
+
+
+class ManagementApiPaths:
+    """TODO."""
+
+    def __init__(self, agent_path: str) -> None:
+        self._agent_path = agent_path
+
+    @property
+    def agent(self) -> str:
+        """TODO."""
+        return self._agent_path
 
 
 class WorkloadBase(ABC):
     """Base interface for common workload operations."""
+
+    cassandra_paths: CassandraPaths
+    management_api_paths: ManagementApiPaths
 
     @abstractmethod
     def start(self) -> None:

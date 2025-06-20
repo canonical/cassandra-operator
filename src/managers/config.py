@@ -9,7 +9,7 @@ import re
 
 import yaml
 
-from core.workload import CAS_CONF_FILE, CAS_ENV_CONF_FILE, MGMT_API_DIR, WorkloadBase
+from core.workload import WorkloadBase
 
 logger = logging.getLogger(__name__)
 
@@ -25,21 +25,20 @@ class ConfigManager:
 
     def render_cassandra_config(self, cluster_name: str) -> None:
         """TODO."""
-        config_properties = yaml.safe_load(self.workload.read_file(CAS_CONF_FILE))
+        config_properties = yaml.safe_load(self.workload.cassandra_paths.config.read_text())
 
         if not isinstance(config_properties, dict):
             raise ValueError("Current cassandra config file is not valid")
 
         config_properties.update({"cluster_name": cluster_name})
 
-        self.workload.write_file(
-            yaml.dump(config_properties, allow_unicode=True, default_flow_style=False),
-            CAS_CONF_FILE,
+        self.workload.cassandra_paths.config.write_text(
+            yaml.dump(config_properties, allow_unicode=True, default_flow_style=False)
         )
 
     def render_cassandra_env_config(self, max_heap_size_mb: int | None) -> None:
         """TODO."""
-        content = self.workload.read_file(CAS_ENV_CONF_FILE)
+        content = self.workload.cassandra_paths.env_config.read_text()
 
         content, _ = re.subn(
             pattern=r'^\s*#?MAX_HEAP_SIZE="[^"]*"$',
@@ -62,9 +61,9 @@ class ConfigManager:
         )
 
         mgmtapi_agent_line = (
-            f'JVM_OPTS="$JVM_OPTS -javaagent:{MGMT_API_DIR}/libs/datastax-mgmtapi-agent.jar"'
+            f'JVM_OPTS="$JVM_OPTS -javaagent:{self.workload.management_api_paths.agent}"'
         )
         if mgmtapi_agent_line not in content:
             content += f"\n{mgmtapi_agent_line}\n"
 
-        self.workload.write_file(content, CAS_ENV_CONF_FILE)
+        self.workload.cassandra_paths.env_config.write_text(content)
