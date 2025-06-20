@@ -4,13 +4,37 @@
 type: charm
 platforms:
   ubuntu@24.04:amd64:
+
+name: cassandra
+display-name: Cassandra VM
+summary: |
+  Machine charm for Cassandra
+description: |
+  Machine charm for Cassandra database
+
 charm-libs:
   - lib: operator_libs_linux.snap
     version: "2"
   - lib: data_platform_libs.data_models
-    version: "0"
+    version: "1"
   - lib: data_platform_libs.data_interfaces
     version: "0"
+
+config:
+  options:
+    profile:
+      # TODO: description
+      type: string
+      default: production
+    cluster_name:
+      # TODO: description
+      type: string
+      default: Test Cluster
+
+peers:
+  cassandra-peers:
+    interface: cassandra_peers
+
 parts:
   # "poetry-deps" part name is a magic constant
   # https://github.com/canonical/craft-parts/pull/901

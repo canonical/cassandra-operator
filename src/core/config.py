@@ -4,7 +4,7 @@
 
 """Charm config definition."""
 
-from charms.data_platform_libs.v0.data_models import BaseConfigModel
+from charms.data_platform_libs.v1.data_models import BaseConfigModel
 from pydantic import field_validator
 
 
