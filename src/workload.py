@@ -6,7 +6,6 @@
 
 import logging
 import subprocess
-from pathlib import Path
 from shutil import rmtree
 
 from charmlibs import pathops
@@ -28,8 +27,9 @@ class CassandraWorkload(WorkloadBase):
 
     def __init__(self) -> None:
         super().__init__()
+        self.root = pathops.LocalPath("/")
         self.cassandra_paths = CassandraPaths(
-            config_path=pathops.LocalPath(f"{SNAP_VAR_CURRENT_PATH}/etc/cassandra")
+            config_path=self.root / f"{SNAP_VAR_CURRENT_PATH}/etc/cassandra"
         )
         self.management_api_paths = ManagementApiPaths(
             agent_path=f"{SNAP_CURRENT_PATH}/opt/mgmt-api/libs/datastax-mgmtapi-agent.jar"
@@ -59,13 +59,13 @@ class CassandraWorkload(WorkloadBase):
 
     @override
     def write_file(self, content: str, file: str) -> None:
-        path = Path(file)
+        path = self.root / file
         path.parent.mkdir(exist_ok=True, parents=True)
         path.write_text(content)
 
     @override
     def read_file(self, file: str) -> str:
-        path = Path(file)
+        path = self.root / file
         if not path.exists():
             raise FileNotFoundError(f"File '{file}' does not exist.")
         return path.read_text()
@@ -80,17 +80,17 @@ class CassandraWorkload(WorkloadBase):
 
     @override
     def remove_file(self, file) -> None:
-        path = Path(file)
+        path = self.root / file
         path.unlink(missing_ok=True)
 
     @override
     def remove_directory(self, directory: str) -> None:
+        # TODO: https://github.com/canonical/charmtech-charmlibs/issues/23
         rmtree(directory)
 
     @override
     def path_exists(self, path: str) -> bool:
-        path_object = Path(path)
-
+        path_object = self.root / path
         if path_object.exists():
             if path_object.is_dir():
                 # consider it false if the directory is empty
