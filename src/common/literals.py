@@ -13,6 +13,3 @@ SUBSTRATES = Literal["vm", "k8s"]
 PEER_PORT = 7000
 CLIENT_PORT = 9042
 CLIENT_MGMT_URL = "http://127.0.0.1:8080/api/v0"
-
-SNAP_NAME = "charmed-cassandra"
-SNAP_SERVICE = "mgmt-server"

@@ -13,11 +13,14 @@ from charms.operator_libs_linux.v2 import snap
 from typing_extensions import override
 
 from common.exceptions import ExecError
-from common.literals import SNAP_NAME, SNAP_SERVICE
 from core.workload import CassandraPaths, ManagementApiPaths, WorkloadBase
 
 SNAP_VAR_CURRENT_PATH = "/var/snap/charmed-cassandra/current"
 SNAP_CURRENT_PATH = "/snap/charmed-cassandra/current"
+
+SNAP_NAME = "charmed-cassandra"
+SNAP_REVISION = "7"
+SNAP_SERVICE = "mgmt-server"
 
 logger = logging.getLogger(__name__)
 
@@ -34,26 +37,30 @@ class CassandraWorkload(WorkloadBase):
         self.management_api_paths = ManagementApiPaths(
             agent_path=f"{SNAP_CURRENT_PATH}/opt/mgmt-api/libs/datastax-mgmtapi-agent.jar"
         )
+        self._cassandra_snap = snap.SnapCache()[SNAP_NAME]
 
     @override
     def start(self) -> None:
         try:
-            self._cassandra.start(services=[SNAP_SERVICE])
+            self._cassandra_snap.start(services=[SNAP_SERVICE])
         except snap.SnapError as e:
             logger.exception(f"Failed to start cassandra snap: {e}")
+            raise
 
     @override
     def install(self) -> None:
         """Install the cassandra snap."""
         logger.debug("Installing & configuring Cassandra snap")
-        snap.install_local("charmed-cassandra_5.0.4_amd64.snap", devmode=True)
-        self._cassandra.connect("process-control")
-        self._cassandra.connect("system-observe")
+        self._cassandra_snap.ensure(snap.SnapState.Present, revision=SNAP_REVISION)
+        self._cassandra_snap.connect("process-control")
+        self._cassandra_snap.connect("system-observe")
+        self._cassandra_snap.connect("mount-observe")
+        self._cassandra_snap.hold()
 
     @override
     def alive(self) -> bool:
         try:
-            return bool(self._cassandra.services[SNAP_SERVICE]["active"])
+            return bool(self._cassandra_snap.services[SNAP_SERVICE]["active"])
         except KeyError:
             return False
 
@@ -72,11 +79,11 @@ class CassandraWorkload(WorkloadBase):
 
     @override
     def stop(self) -> None:
-        self._cassandra.stop(services=[SNAP_SERVICE])
+        self._cassandra_snap.stop(services=[SNAP_SERVICE])
 
     @override
     def restart(self) -> None:
-        self._cassandra.restart(services=[SNAP_SERVICE])
+        self._cassandra_snap.restart(services=[SNAP_SERVICE])
 
     @override
     def remove_file(self, file) -> None:
@@ -133,7 +140,3 @@ class CassandraWorkload(WorkloadBase):
             logger.debug("STDOUT: %s", stdout)
             logger.debug("STDERR: %s", stderr)
             raise ExecError(stdout, stderr)
-
-    @property
-    def _cassandra(self) -> snap.Snap:
-        return snap.SnapCache()[SNAP_NAME]
