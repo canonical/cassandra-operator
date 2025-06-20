@@ -6,6 +6,7 @@
 
 import logging
 
+from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from ops import (
     CollectStatusEvent,
     ConfigChangedEvent,
@@ -16,9 +17,12 @@ from ops import (
 )
 from pydantic import ValidationError
 
-from core.charm import CassandraCharmBase
-from core.state import ClusterState, UnitWorkloadState
+from core.config import CharmConfig
+from core.state import ApplicationState, ClusterState, UnitWorkloadState
 from core.statuses import Status
+from core.workload import WorkloadBase
+from managers.cluster import ClusterManager
+from managers.config import ConfigManager
 
 logger = logging.getLogger(__name__)
 
@@ -26,9 +30,20 @@ logger = logging.getLogger(__name__)
 class CassandraEvents(Object):
     """Handle all base and cassandra related events."""
 
-    def __init__(self, charm: CassandraCharmBase):
+    def __init__(
+        self,
+        charm: TypedCharmBase[CharmConfig],
+        state: ApplicationState,
+        workload: WorkloadBase,
+        cluster_manager: ClusterManager,
+        config_manager: ConfigManager,
+    ):
         super().__init__(charm, key="cassandra_events")
         self.charm = charm
+        self.state = state
+        self.workload = workload
+        self.cluster_manager = cluster_manager
+        self.config_manager = config_manager
 
         self.framework.observe(self.charm.on.start, self._on_start)
         self.framework.observe(self.charm.on.install, self._on_install)
@@ -37,13 +52,13 @@ class CassandraEvents(Object):
         self.framework.observe(self.charm.on.collect_unit_status, self._on_collect_unit_status)
 
     def _on_install(self, _: InstallEvent) -> None:
-        self.charm.workload.install()
-        self.charm.state.unit.workload_state = UnitWorkloadState.STARTING.value
+        self.workload.install()
+        self.state.unit.workload_state = UnitWorkloadState.STARTING.value
 
     def _on_start(self, event: StartEvent) -> None:
-        self.charm.cluster_manager.update_network_address()
+        self.cluster_manager.update_network_address()
         try:
-            self.charm.config_manager.render_cassandra_env_config(
+            self.config_manager.render_cassandra_env_config(
                 1024 if self.charm.config.profile == "testing" else None
             )
         except ValidationError as e:
@@ -53,31 +68,31 @@ class CassandraEvents(Object):
 
         if (
             not self.charm.unit.is_leader()
-            and self.charm.state.cluster.state != ClusterState.ACTIVE.value
+            and self.state.cluster.state != ClusterState.ACTIVE.value
         ):
             logger.debug("Deferring on_start for unit due to cluster isn't initialized yet")
             event.defer()
             return
 
-        self.charm.cluster_manager.start_node()
-        self.charm.state.unit.workload_state = UnitWorkloadState.ACTIVE.value
+        self.cluster_manager.start_node()
+        self.state.unit.workload_state = UnitWorkloadState.ACTIVE.value
         if self.charm.unit.is_leader():
-            self.charm.state.cluster.state = ClusterState.ACTIVE.value
+            self.state.cluster.state = ClusterState.ACTIVE.value
 
     def _on_config_changed(self, event: ConfigChangedEvent) -> None:
         try:
-            self.charm.config_manager.render_cassandra_env_config(
+            self.config_manager.render_cassandra_env_config(
                 1024 if self.charm.config.profile == "testing" else None
             )
         except ValidationError as e:
             logger.debug(f"Config haven't passed validation: {e}")
             return
-        if not self.charm.state.unit.workload_state == UnitWorkloadState.ACTIVE.value:
+        if not self.state.unit.workload_state == UnitWorkloadState.ACTIVE.value:
             return
-        self.charm.cluster_manager.restart_node()
+        self.cluster_manager.restart_node()
 
     def _on_update_status(self, event: UpdateStatusEvent) -> None:
-        self.charm.cluster_manager.update_network_address()
+        self.cluster_manager.update_network_address()
 
     def _on_collect_unit_status(self, event: CollectStatusEvent) -> None:
         try:
@@ -85,14 +100,14 @@ class CassandraEvents(Object):
         except ValidationError:
             event.add_status(Status.INVALID_CONFIG.value)
 
-        if self.charm.state.unit.workload_state == "":
+        if self.state.unit.workload_state == "":
             event.add_status(Status.INSTALLING.value)
 
-        if self.charm.state.unit.workload_state == UnitWorkloadState.STARTING.value:
+        if self.state.unit.workload_state == UnitWorkloadState.STARTING.value:
             event.add_status(Status.STARTING.value)
 
         if (
-            self.charm.state.unit.workload_state == UnitWorkloadState.ACTIVE.value
-            and not self.charm.cluster_manager.is_healthy
+            self.state.unit.workload_state == UnitWorkloadState.ACTIVE.value
+            and not self.cluster_manager.is_healthy
         ):
             event.add_status(Status.STARTING.value)

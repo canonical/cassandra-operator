@@ -6,22 +6,49 @@
 
 import logging
 
-from ops import main
+from charms.data_platform_libs.v1.data_models import TypedCharmBase
+from ops import CollectStatusEvent, main
 
-from core.charm import CassandraCharmBase
+from core.config import CharmConfig
+from core.state import ApplicationState
+from core.statuses import Status
 from events.cassandra import CassandraEvents
+from managers.cluster import ClusterManager
+from managers.config import ConfigManager
 from workload import CassandraWorkload
 
 logger = logging.getLogger(__name__)
 
 
-class CassandraCharm(CassandraCharmBase):
+class CassandraCharm(TypedCharmBase[CharmConfig]):
     """Charm the application."""
 
-    def __init__(self, *args):
-        super().__init__(CassandraWorkload(), *args)
+    config_type = CharmConfig
 
-        self.cassandra_events = CassandraEvents(self)
+    def __init__(self, *args):
+        super().__init__(*args)
+
+        state = ApplicationState(self)
+        workload = CassandraWorkload()
+        cluster_manager = ClusterManager(state=state, workload=workload)
+        config_manager = ConfigManager(workload=workload)
+
+        self.framework.observe(self.on.collect_unit_status, self._on_collect_unit_status)
+        self.framework.observe(self.on.collect_app_status, self._on_collect_app_status)
+
+        self.cassandra_events = CassandraEvents(
+            self,
+            state=state,
+            workload=workload,
+            cluster_manager=cluster_manager,
+            config_manager=config_manager,
+        )
+
+    def _on_collect_unit_status(self, event: CollectStatusEvent) -> None:
+        event.add_status(Status.ACTIVE.value)
+
+    def _on_collect_app_status(self, event: CollectStatusEvent) -> None:
+        event.add_status(Status.ACTIVE.value)
 
 
 if __name__ == "__main__":  # pragma: nocover
