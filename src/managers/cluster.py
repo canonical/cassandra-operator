@@ -9,8 +9,8 @@ import socket
 
 from common.literals import CLIENT_MGMT_URL
 from common.management_client import ManagementClient
-from common.workload import WorkloadBase
 from core.state import ApplicationState
+from core.workload import WorkloadBase
 
 logger = logging.getLogger(__name__)
 

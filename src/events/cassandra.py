@@ -17,8 +17,8 @@ from ops import (
 from pydantic import ValidationError
 
 from common.literals import ClusterState, UnitWorkloadState
-from common.statuses import Status
 from core.charm import CassandraCharmBase
+from core.statuses import Status
 
 logger = logging.getLogger(__name__)
 

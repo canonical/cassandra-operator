@@ -14,7 +14,7 @@ from typing_extensions import override
 
 from common.exceptions import ExecError
 from common.literals import SNAP_NAME, SNAP_SERVICE
-from common.workload import WorkloadBase
+from core.workload import WorkloadBase
 
 logger = logging.getLogger(__name__)
 

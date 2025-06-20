@@ -9,10 +9,10 @@ import logging
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from ops import CollectStatusEvent
 
-from common.statuses import Status
-from common.workload import WorkloadBase
 from core.config import CharmConfig
 from core.state import ApplicationState
+from core.statuses import Status
+from core.workload import WorkloadBase
 from managers.cluster import ClusterManager
 from managers.config import ConfigManager
 
