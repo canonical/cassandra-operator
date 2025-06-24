@@ -7,7 +7,6 @@
 import logging
 import socket
 
-from common.literals import CLIENT_MGMT_URL
 from common.management_client import ManagementClient
 from core.state import ApplicationState
 from core.workload import WorkloadBase
@@ -21,7 +20,7 @@ class ClusterManager:
     def __init__(self, state: ApplicationState, workload: WorkloadBase):
         self.state = state
         self.workload = workload
-        self.management_client = ManagementClient(CLIENT_MGMT_URL)
+        self.management_client = ManagementClient()
 
     def start_node(self) -> None:
         """Start a cluster node."""

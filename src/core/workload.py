@@ -5,8 +5,11 @@
 """TODO."""
 
 from abc import ABC, abstractmethod
+from typing import Literal
 
 from charmlibs import pathops
+
+Substrate = Literal["vm", "k8s"]
 
 
 class CassandraPaths:
@@ -41,6 +44,7 @@ class ManagementApiPaths:
 class WorkloadBase(ABC):
     """Base interface for common workload operations."""
 
+    substrate: Substrate
     cassandra_paths: CassandraPaths
     management_api_paths: ManagementApiPaths
 

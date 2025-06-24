@@ -15,11 +15,9 @@ from charms.data_platform_libs.v0.data_interfaces import (
 )
 from ops import Application, CharmBase, Object, Relation, Unit
 
-from common.literals import (
-    CLIENT_PORT,
-    PEER_PORT,
-    PEER_RELATION,
-)
+PEER_RELATION = "cassandra-peers"
+PEER_PORT = 7000
+CLIENT_PORT = 9042
 
 logger = logging.getLogger(__name__)
 

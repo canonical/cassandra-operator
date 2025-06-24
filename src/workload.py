@@ -30,6 +30,7 @@ class CassandraWorkload(WorkloadBase):
 
     def __init__(self) -> None:
         super().__init__()
+        self.substrate = "vm"
         self.root = pathops.LocalPath("/")
         self.cassandra_paths = CassandraPaths(
             config_path=self.root / f"{SNAP_VAR_CURRENT_PATH}/etc/cassandra"
