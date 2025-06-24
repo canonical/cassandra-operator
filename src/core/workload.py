@@ -15,8 +15,9 @@ Substrate = Literal["vm", "k8s"]
 class CassandraPaths:
     """TODO."""
 
-    def __init__(self, config_path: pathops.PathProtocol) -> None:
+    def __init__(self, config_path: pathops.PathProtocol, data_path: pathops.PathProtocol) -> None:
         self._config_path = config_path
+        self._data_path = data_path
 
     @property
     def env_config(self) -> pathops.PathProtocol:
@@ -27,6 +28,26 @@ class CassandraPaths:
     def config(self) -> pathops.PathProtocol:
         """TODO."""
         return self._config_path / "cassandra.yaml"
+
+    @property
+    def commitlog_directory(self) -> pathops.PathProtocol:
+        """TODO."""
+        return self._data_path / "commitlog"
+
+    @property
+    def data_file_directory(self) -> pathops.PathProtocol:
+        """TODO."""
+        return self._data_path / "data"
+
+    @property
+    def hints_directory(self) -> pathops.PathProtocol:
+        """TODO."""
+        return self._data_path / "hints"
+
+    @property
+    def saved_caches_directory(self) -> pathops.PathProtocol:
+        """TODO."""
+        return self._data_path / "saved_caches"
 
 
 class ManagementApiPaths:

@@ -15,8 +15,10 @@ from typing_extensions import override
 from common.exceptions import ExecError
 from core.workload import CassandraPaths, ManagementApiPaths, WorkloadBase
 
-SNAP_VAR_CURRENT_PATH = "/var/snap/charmed-cassandra/current"
 SNAP_CURRENT_PATH = "/snap/charmed-cassandra/current"
+SNAP_VAR_PATH = "/var/snap/charmed-cassandra"
+SNAP_VAR_COMMON_PATH = f"{SNAP_VAR_PATH}/common"
+SNAP_VAR_CURRENT_PATH = f"{SNAP_VAR_PATH}/current"
 
 SNAP_NAME = "charmed-cassandra"
 SNAP_REVISION = "7"
@@ -33,7 +35,8 @@ class CassandraWorkload(WorkloadBase):
         self.substrate = "vm"
         self.root = pathops.LocalPath("/")
         self.cassandra_paths = CassandraPaths(
-            config_path=self.root / f"{SNAP_VAR_CURRENT_PATH}/etc/cassandra"
+            config_path=self.root / f"{SNAP_VAR_CURRENT_PATH}/etc/cassandra",
+            data_path=self.root / f"{SNAP_VAR_COMMON_PATH}/var/lib/cassandra",
         )
         self.management_api_paths = ManagementApiPaths(
             agent_path=f"{SNAP_CURRENT_PATH}/opt/mgmt-api/libs/datastax-mgmtapi-agent.jar"
