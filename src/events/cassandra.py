@@ -56,7 +56,7 @@ class CassandraEvents(Object):
         self.state.unit.workload_state = UnitWorkloadState.STARTING.value
 
     def _on_start(self, event: StartEvent) -> None:
-        self.cluster_manager.update_network_address()
+        self._update_network_address()
         try:
             self.config_manager.render_cassandra_env_config(
                 1024 if self.charm.config.profile == "testing" else None
@@ -92,7 +92,7 @@ class CassandraEvents(Object):
         self.cluster_manager.restart_node()
 
     def _on_update_status(self, event: UpdateStatusEvent) -> None:
-        self.cluster_manager.update_network_address()
+        self._update_network_address()
 
     def _on_collect_unit_status(self, event: CollectStatusEvent) -> None:
         try:
@@ -111,3 +111,14 @@ class CassandraEvents(Object):
             and not self.cluster_manager.is_healthy
         ):
             event.add_status(Status.STARTING.value)
+
+    def _update_network_address(self) -> bool:
+        """TODO."""
+        old_ip = self.state.unit.ip
+        old_hostname = self.state.unit.hostname
+        self.state.unit.ip, self.state.unit.hostname = self.cluster_manager.network_address()
+        return (
+            old_ip is not None
+            and old_hostname is not None
+            and (old_ip != self.state.unit.ip or old_hostname != self.state.unit.hostname)
+        )

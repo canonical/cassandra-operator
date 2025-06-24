@@ -17,8 +17,7 @@ logger = logging.getLogger(__name__)
 class ClusterManager:
     """Manage cluster members, quorum and authorization."""
 
-    def __init__(self, state: ApplicationState, workload: WorkloadBase):
-        self.state = state
+    def __init__(self, workload: WorkloadBase):
         self.workload = workload
         self.management_client = ManagementClient()
 
@@ -30,17 +29,6 @@ class ClusterManager:
         """Restart a cluster node."""
         self.workload.restart()
 
-    def update_network_address(self) -> bool:
-        """TODO."""
-        old_ip = self.state.unit.ip
-        old_hostname = self.state.unit.hostname
-        self.state.unit.ip, self.state.unit.hostname = self._network_address()
-        return (
-            old_ip is not None
-            and old_hostname is not None
-            and (old_ip != self.state.unit.ip or old_hostname != self.state.unit.hostname)
-        )
-
     @property
     def is_healthy(self) -> bool:
         """Perform cassandra helth and readiness checks and return True if healthy.
@@ -50,7 +38,7 @@ class ClusterManager:
         """
         return self.management_client.is_healthy()
 
-    def _network_address(self) -> tuple[str, str]:
+    def network_address(self) -> tuple[str, str]:
         """TODO."""
         hostname = socket.gethostname()
         return socket.gethostbyname(hostname), hostname
