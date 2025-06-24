@@ -8,7 +8,6 @@ import logging
 import socket
 
 from common.management_client import ManagementClient
-from core.state import ApplicationState
 from core.workload import WorkloadBase
 
 logger = logging.getLogger(__name__)
