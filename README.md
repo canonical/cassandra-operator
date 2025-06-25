@@ -1,15 +1,10 @@
-# cassandra-operator
+# Charmed Apache Cassandra Operator
 
-Charmhub package name: operator-template
-More information: https://charmhub.io/cassandra-operator
-
-Describe your charm in one or two sentences.
+Apache Cassandra is a free and open-source database management system designed to handle large volumes of data across multiple commodity servers. This charm deploys and operate Apache Cassandra on a VM machine environment.
+Apache Cassandra is a free and open-source software project by the Apache Software Foundation.
+More info can be found at the [Apache Cassandra project page](https://cassandra.apache.org/_/index.html).
 
 ## Other resources
-
-<!-- If your charm is documented somewhere else other than Charmhub, provide a link separately. -->
-
-- [Read more](https://example.com)
 
 - [Contributing](CONTRIBUTING.md) <!-- or link to other contribution documentation -->
 
