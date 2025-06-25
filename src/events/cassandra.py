@@ -58,8 +58,8 @@ class CassandraEvents(Object):
     def _on_start(self, event: StartEvent) -> None:
         self._update_network_address()
         try:
-            self.workload.set_memory_limit(
-                1024 if self.charm.config.profile == "testing" else None
+            self.config_manager.render_env(
+                cassandra_limit_memory_mb=1024 if self.charm.config.profile == "testing" else None
             )
         except ValidationError as e:
             logger.debug(f"Config haven't passed validation: {e}")
@@ -81,8 +81,8 @@ class CassandraEvents(Object):
 
     def _on_config_changed(self, event: ConfigChangedEvent) -> None:
         try:
-            self.workload.set_memory_limit(
-                1024 if self.charm.config.profile == "testing" else None
+            self.config_manager.render_env(
+                cassandra_limit_memory_mb=1024 if self.charm.config.profile == "testing" else None
             )
         except ValidationError as e:
             logger.debug(f"Config haven't passed validation: {e}")

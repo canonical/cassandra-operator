@@ -5,6 +5,7 @@
 """Manager for handling configuration building + writing."""
 
 import logging
+from typing import Iterable
 
 import yaml
 
@@ -84,3 +85,33 @@ class ConfigManager:
         self.workload.cassandra_paths.config.write_text(
             yaml.dump(config, allow_unicode=True, default_flow_style=False)
         )
+
+    def render_env(self, cassandra_limit_memory_mb: int | None) -> None:
+        """TODO."""
+        if cassandra_limit_memory_mb is not None and cassandra_limit_memory_mb < 1024:
+            raise ValueError("cassandra_limit_memory_mb should be at least 1024")
+
+        env = self._map_env(self.workload.cassandra_paths.env.read_text().split("\n"))
+
+        if cassandra_limit_memory_mb:
+            env["MAX_HEAP_SIZE"] = f"{cassandra_limit_memory_mb}M"
+            env["HEAP_NEWSIZE"] = f"{cassandra_limit_memory_mb // 2}M"
+        else:
+            env["MAX_HEAP_SIZE"] = ""
+            env["HEAP_NEWSIZE"] = ""
+
+        self.workload.cassandra_paths.env.write_text(
+            "\n".join([f"{key}={value}" for key, value in env.items()])
+        )
+
+    @staticmethod
+    def _map_env(env: Iterable[str]) -> dict[str, str]:
+        """Parse env var into a dict."""
+        map_env = {}
+        for var in env:
+            key = var.split("=", maxsplit=1)[0]
+            value = "".join(var.split("=", maxsplit=1)[1:])
+            if key:
+                # only check for keys, as we can have an empty value for a variable
+                map_env[key] = value
+        return map_env

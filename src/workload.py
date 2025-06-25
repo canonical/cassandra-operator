@@ -35,8 +35,9 @@ class CassandraWorkload(WorkloadBase):
         self.substrate = "vm"
         self.root = pathops.LocalPath("/")
         self.cassandra_paths = CassandraPaths(
-            config_path=self.root / f"{SNAP_VAR_CURRENT_PATH}/etc/cassandra",
-            data_path=self.root / f"{SNAP_VAR_COMMON_PATH}/var/lib/cassandra",
+            env=self.root / "/etc/environment",
+            config_dir=self.root / f"{SNAP_VAR_CURRENT_PATH}/etc/cassandra",
+            data_dir=self.root / f"{SNAP_VAR_COMMON_PATH}/var/lib/cassandra",
         )
         self._cassandra_snap = snap.SnapCache()[SNAP_NAME]
 
@@ -64,16 +65,6 @@ class CassandraWorkload(WorkloadBase):
             return bool(self._cassandra_snap.services[SNAP_SERVICE]["active"])
         except KeyError:
             return False
-
-    @override
-    def set_memory_limit(self, limit_mb: int | None) -> None:
-        if limit_mb:
-            self._cassandra_snap.set(
-                {"max-heap-size-mb": limit_mb, "heap-new-size-mb": limit_mb // 2}
-            )
-        else:
-            self._cassandra_snap.unset("max-heap-size-mb")
-            self._cassandra_snap.unset("heap-new-size-mb")
 
     @override
     def write_file(self, content: str, file: str) -> None:

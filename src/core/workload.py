@@ -15,39 +15,45 @@ Substrate = Literal["vm", "k8s"]
 class CassandraPaths:
     """TODO."""
 
-    def __init__(self, config_path: pathops.PathProtocol, data_path: pathops.PathProtocol) -> None:
-        self._config_path = config_path
-        self._data_path = data_path
+    def __init__(
+        self,
+        env: pathops.PathProtocol,
+        config_dir: pathops.PathProtocol,
+        data_dir: pathops.PathProtocol,
+    ) -> None:
+        self._env = env
+        self._config_dir = config_dir
+        self._data_dir = data_dir
 
     @property
-    def env_config(self) -> pathops.PathProtocol:
+    def env(self) -> pathops.PathProtocol:
         """TODO."""
-        return self._config_path / "cassandra-env.sh"
+        return self._env
 
     @property
     def config(self) -> pathops.PathProtocol:
         """TODO."""
-        return self._config_path / "cassandra.yaml"
+        return self._config_dir / "cassandra.yaml"
 
     @property
     def commitlog_directory(self) -> pathops.PathProtocol:
         """TODO."""
-        return self._data_path / "commitlog"
+        return self._data_dir / "commitlog"
 
     @property
     def data_file_directory(self) -> pathops.PathProtocol:
         """TODO."""
-        return self._data_path / "data"
+        return self._data_dir / "data"
 
     @property
     def hints_directory(self) -> pathops.PathProtocol:
         """TODO."""
-        return self._data_path / "hints"
+        return self._data_dir / "hints"
 
     @property
     def saved_caches_directory(self) -> pathops.PathProtocol:
         """TODO."""
-        return self._data_path / "saved_caches"
+        return self._data_dir / "saved_caches"
 
 
 class WorkloadBase(ABC):
@@ -73,11 +79,6 @@ class WorkloadBase(ABC):
         Returns:
             bool: True if the workload is running, False otherwise.
         """
-        pass
-
-    @abstractmethod
-    def set_memory_limit(self, limit_mb: int | None) -> None:
-        """TODO."""
         pass
 
     @abstractmethod
