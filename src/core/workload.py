@@ -50,24 +50,11 @@ class CassandraPaths:
         return self._data_path / "saved_caches"
 
 
-class ManagementApiPaths:
-    """TODO."""
-
-    def __init__(self, agent_path: str) -> None:
-        self._agent_path = agent_path
-
-    @property
-    def agent(self) -> str:
-        """TODO."""
-        return self._agent_path
-
-
 class WorkloadBase(ABC):
     """Base interface for common workload operations."""
 
     substrate: Substrate
     cassandra_paths: CassandraPaths
-    management_api_paths: ManagementApiPaths
 
     @abstractmethod
     def start(self) -> None:
@@ -86,6 +73,11 @@ class WorkloadBase(ABC):
         Returns:
             bool: True if the workload is running, False otherwise.
         """
+        pass
+
+    @abstractmethod
+    def set_memory_limit(self, limit_mb: int | None) -> None:
+        """TODO."""
         pass
 
     @abstractmethod

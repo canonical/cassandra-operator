@@ -13,7 +13,7 @@ from charms.operator_libs_linux.v2 import snap
 from typing_extensions import override
 
 from common.exceptions import ExecError
-from core.workload import CassandraPaths, ManagementApiPaths, WorkloadBase
+from core.workload import CassandraPaths, WorkloadBase
 
 SNAP_CURRENT_PATH = "/snap/charmed-cassandra/current"
 SNAP_VAR_PATH = "/var/snap/charmed-cassandra"
@@ -37,9 +37,6 @@ class CassandraWorkload(WorkloadBase):
         self.cassandra_paths = CassandraPaths(
             config_path=self.root / f"{SNAP_VAR_CURRENT_PATH}/etc/cassandra",
             data_path=self.root / f"{SNAP_VAR_COMMON_PATH}/var/lib/cassandra",
-        )
-        self.management_api_paths = ManagementApiPaths(
-            agent_path=f"{SNAP_CURRENT_PATH}/opt/mgmt-api/libs/datastax-mgmtapi-agent.jar"
         )
         self._cassandra_snap = snap.SnapCache()[SNAP_NAME]
 
@@ -67,6 +64,16 @@ class CassandraWorkload(WorkloadBase):
             return bool(self._cassandra_snap.services[SNAP_SERVICE]["active"])
         except KeyError:
             return False
+
+    @override
+    def set_memory_limit(self, limit_mb: int | None) -> None:
+        if limit_mb:
+            self._cassandra_snap.set(
+                {"max-heap-size-mb": limit_mb, "heap-new-size-mb": limit_mb // 2}
+            )
+        else:
+            self._cassandra_snap.unset("max-heap-size-mb")
+            self._cassandra_snap.unset("heap-new-size-mb")
 
     @override
     def write_file(self, content: str, file: str) -> None:
