@@ -15,7 +15,6 @@ from typing_extensions import override
 from common.exceptions import ExecError
 from core.workload import CassandraPaths, WorkloadBase
 
-SNAP_CURRENT_PATH = "/snap/charmed-cassandra/current"
 SNAP_VAR_PATH = "/var/snap/charmed-cassandra"
 SNAP_VAR_COMMON_PATH = f"{SNAP_VAR_PATH}/common"
 SNAP_VAR_CURRENT_PATH = f"{SNAP_VAR_PATH}/current"

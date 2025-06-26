@@ -88,20 +88,13 @@ class ConfigManager:
 
     def render_env(self, cassandra_limit_memory_mb: int | None) -> None:
         """TODO."""
-        if cassandra_limit_memory_mb is not None and cassandra_limit_memory_mb < 1024:
-            raise ValueError("cassandra_limit_memory_mb should be at least 1024")
-
-        env = self._map_env(self.workload.cassandra_paths.env.read_text().split("\n"))
-
-        if cassandra_limit_memory_mb:
-            env["MAX_HEAP_SIZE"] = f"{cassandra_limit_memory_mb}M"
-            env["HEAP_NEWSIZE"] = f"{cassandra_limit_memory_mb // 2}M"
-        else:
-            env["MAX_HEAP_SIZE"] = ""
-            env["HEAP_NEWSIZE"] = ""
-
         self.workload.cassandra_paths.env.write_text(
-            "\n".join([f"{key}={value}" for key, value in env.items()])
+            self._render_env(
+                [
+                    self._map_env(self.workload.cassandra_paths.env.read_text().split("\n")),
+                    self._env_heap_config(cassandra_limit_memory_mb=cassandra_limit_memory_mb),
+                ]
+            )
         )
 
     @staticmethod
@@ -115,3 +108,21 @@ class ConfigManager:
                 # only check for keys, as we can have an empty value for a variable
                 map_env[key] = value
         return map_env
+
+    @staticmethod
+    def _render_env(envs: Iterable[dict[str, str]]) -> str:
+        res = {}
+        for env in envs:
+            res.update(env)
+        return "\n".join([f"{key}={value}" for key, value in res.items()])
+
+    @staticmethod
+    def _env_heap_config(cassandra_limit_memory_mb: int | None) -> dict[str, str]:
+        if cassandra_limit_memory_mb is not None and cassandra_limit_memory_mb < 1024:
+            raise ValueError("cassandra_limit_memory_mb should be at least 1024")
+        return {
+            "MAX_HEAP_SIZE": f"{cassandra_limit_memory_mb}M" if cassandra_limit_memory_mb else "",
+            "HEAP_NEWSIZE": f"{cassandra_limit_memory_mb // 2}M"
+            if cassandra_limit_memory_mb
+            else "",
+        }
