@@ -50,6 +50,7 @@ class CassandraEvents(Object):
         self.framework.observe(self.charm.on.config_changed, self._on_config_changed)
         self.framework.observe(self.charm.on.update_status, self._on_update_status)
         self.framework.observe(self.charm.on.collect_unit_status, self._on_collect_unit_status)
+        self.framework.observe(self.charm.on.collect_app_status, self._on_collect_app_status)
 
     def _on_install(self, _: InstallEvent) -> None:
         self.workload.install()
@@ -124,6 +125,12 @@ class CassandraEvents(Object):
             not self.workload.alive() or not self.cluster_manager.is_healthy
         ):
             event.add_status(Status.STARTING.value)
+
+    def _on_collect_app_status(self, event: CollectStatusEvent) -> None:
+        try:
+            self.charm.config
+        except ValidationError:
+            event.add_status(Status.INVALID_CONFIG.value)
 
     def _update_network_address(self) -> bool:
         """TODO."""
