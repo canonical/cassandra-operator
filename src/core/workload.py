@@ -15,45 +15,34 @@ Substrate = Literal["vm", "k8s"]
 class CassandraPaths:
     """TODO."""
 
-    def __init__(
-        self,
-        env: pathops.PathProtocol,
-        config_dir: pathops.PathProtocol,
-        data_dir: pathops.PathProtocol,
-    ) -> None:
-        self._env = env
-        self._config_dir = config_dir
-        self._data_dir = data_dir
-
-    @property
-    def env(self) -> pathops.PathProtocol:
-        """TODO."""
-        return self._env
+    env: pathops.PathProtocol
+    config_dir: pathops.PathProtocol
+    data_dir: pathops.PathProtocol
 
     @property
     def config(self) -> pathops.PathProtocol:
         """TODO."""
-        return self._config_dir / "cassandra.yaml"
+        return self.config_dir / "cassandra.yaml"
 
     @property
     def commitlog_directory(self) -> pathops.PathProtocol:
         """TODO."""
-        return self._data_dir / "commitlog"
+        return self.data_dir / "commitlog"
 
     @property
     def data_file_directory(self) -> pathops.PathProtocol:
         """TODO."""
-        return self._data_dir / "data"
+        return self.data_dir / "data"
 
     @property
     def hints_directory(self) -> pathops.PathProtocol:
         """TODO."""
-        return self._data_dir / "hints"
+        return self.data_dir / "hints"
 
     @property
     def saved_caches_directory(self) -> pathops.PathProtocol:
         """TODO."""
-        return self._data_dir / "saved_caches"
+        return self.data_dir / "saved_caches"
 
 
 class WorkloadBase(ABC):

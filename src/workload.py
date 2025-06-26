@@ -34,11 +34,12 @@ class CassandraWorkload(WorkloadBase):
         super().__init__()
         self.substrate = "vm"
         self.root = pathops.LocalPath("/")
-        self.cassandra_paths = CassandraPaths(
-            env=self.root / "/etc/environment",
-            config_dir=self.root / f"{SNAP_VAR_CURRENT_PATH}/etc/cassandra",
-            data_dir=self.root / f"{SNAP_VAR_COMMON_PATH}/var/lib/cassandra",
-        )
+
+        self.cassandra_paths = CassandraPaths()
+        self.cassandra_paths.env = self.root / "/etc/environment"
+        self.cassandra_paths.config_dir = self.root / f"{SNAP_VAR_CURRENT_PATH}/etc/cassandra"
+        self.cassandra_paths.data_dir = self.root / f"{SNAP_VAR_COMMON_PATH}/var/lib/cassandra"
+
         self._cassandra_snap = snap.SnapCache()[SNAP_NAME]
 
     @override
