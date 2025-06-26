@@ -34,7 +34,6 @@ optional = true
 
 [tool.poetry.group.unit.dependencies]
 coverage = {extras = ["toml"], version = "^7.8.0"}
-pytest-asyncio = "*"
 pytest = "^8.4.1"
 pytest-mock = "^3.14.1"
 ops = {version = "^2.22.0", extras = ["testing"]}
@@ -43,9 +42,8 @@ ops = {version = "^2.22.0", extras = ["testing"]}
 optional = true
 
 [tool.poetry.group.integration.dependencies]
-pytest-asyncio = "*"
+pytest = "^8.3.5"
 jubilant = "^1.2.0"
-pytest-operator = "^0.42.0"
 # renovate caret doesn't work: https://github.com/renovatebot/renovate/issues/26940
 juju = "<=3.6.1.1"
 tenacity = "*"
@@ -62,7 +60,6 @@ show_missing = true
 [tool.pytest.ini_options]
 minversion = "6.0"
 log_cli_level = "INFO"
-asyncio_mode = "auto"
 
 # Linting tools configuration
 [tool.ruff]
