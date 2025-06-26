@@ -74,7 +74,7 @@ class CassandraEvents(Object):
             event.defer()
             return
 
-        self.cluster_manager.start_node()
+        self.workload.restart()
         self.state.unit.workload_state = UnitWorkloadState.ACTIVE.value
         if self.charm.unit.is_leader():
             self.state.cluster.state = ClusterState.ACTIVE.value
@@ -89,7 +89,7 @@ class CassandraEvents(Object):
             return
         if not self.state.unit.workload_state == UnitWorkloadState.ACTIVE.value:
             return
-        self.cluster_manager.restart_node()
+        self.workload.restart()
 
     def _on_update_status(self, event: UpdateStatusEvent) -> None:
         self._update_network_address()

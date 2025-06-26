@@ -8,7 +8,6 @@ import logging
 import socket
 
 from common.management_client import ManagementClient
-from core.workload import WorkloadBase
 
 logger = logging.getLogger(__name__)
 
@@ -16,17 +15,8 @@ logger = logging.getLogger(__name__)
 class ClusterManager:
     """Manage cluster members, quorum and authorization."""
 
-    def __init__(self, workload: WorkloadBase):
-        self.workload = workload
+    def __init__(self):
         self.management_client = ManagementClient()
-
-    def start_node(self) -> None:
-        """Start a cluster node."""
-        self.workload.start()
-
-    def restart_node(self) -> None:
-        """Restart a cluster node."""
-        self.workload.restart()
 
     @property
     def is_healthy(self) -> bool:
