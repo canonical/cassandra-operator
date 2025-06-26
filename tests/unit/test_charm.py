@@ -70,26 +70,9 @@ def test_start_only_after_leader_active():
         patch("workload.CassandraWorkload.restart") as restart,
     ):
         state_out = ctx.run(ctx.on.start(), state_in)
-        print(state_out)
         assert state_out.unit_status == ops.MaintenanceStatus("waiting for Cassandra to start")
         assert state_out.get_relation(1).local_unit_data.get("workload_state") == 'active'
         restart.assert_called()
-
-# TODO: Ensure that if mgmt-server fails to start cassandra (it will be in endless restart loop), status will be blocked
-@pytest.mark.skip()
-def test_start_sets_blocked_status_on_failure():
-    """Charm enters BlockedStatus if Cassandra cannot be started."""
-    ctx = testing.Context(CassandraCharm)
-    relation = testing.PeerRelation(id=1, endpoint=PEER_RELATION)
-    state_in = testing.State(leader=True, relations={relation})
-
-    with (
-        patch("managers.config.ConfigManager.render_env"),
-        patch("workload.CassandraWorkload.start"),
-        patch("subprocess.run"),
-    ):
-        state_out = ctx.run(ctx.on.start(), state_in)
-        assert state_out.unit_status == ops.BlockedStatus("cassandra failed to start")
 
 def test_config_changed_invalid_config():
     """Ensure charm enters BlockedStatus if config is invalid during config_changed event."""
