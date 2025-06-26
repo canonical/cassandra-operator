@@ -7,6 +7,7 @@ from typing import Generator
 
 import jubilant
 import pytest
+import yaml
 
 
 @pytest.fixture(scope="module")
@@ -39,3 +40,9 @@ def cassandra_charm() -> Path:
         raise FileNotFoundError("Could not find packed cassandra charm.")
 
     return path
+
+
+@pytest.fixture(scope="module")
+def app_name() -> str:
+    metadata = yaml.safe_load(Path("./charmcraft.yaml").read_text())
+    return metadata["name"]
