@@ -122,20 +122,15 @@ class UnitContext(RelationState):
         return f"{self.ip}:{CLIENT_PORT}"
 
     @property
-    def is_started(self) -> bool:
-        """Check if the unit has started."""
-        return self.relation_data.get("state", "") == "started"
-
-    @property
-    def workload_state(self) -> str:
+    def workload_state(self) -> UnitWorkloadState | None:
         """TODO."""
-        if not self.relation:
-            return ""
-        return self.relation_data.get("workload_state", "")
+        if not self.relation or not (value := self.relation_data.get("workload_state", "")):
+            return None
+        return UnitWorkloadState[value.upper()]
 
     @workload_state.setter
-    def workload_state(self, value: str) -> None:
-        self._field_setter_wrapper("workload_state", value)
+    def workload_state(self, value: UnitWorkloadState) -> None:
+        self._field_setter_wrapper("workload_state", value.value)
 
 
 class ClusterContext(RelationState):
@@ -151,14 +146,27 @@ class ClusterContext(RelationState):
         self.app = component
 
     @property
-    def state(self) -> str:
+    def seeds(self) -> list[str]:
+        """TODO."""
+        if not self.relation or not (value := self.relation_data.get("seeds", "")):
+            return []
+        return value.split(",")
+
+    @seeds.setter
+    def seeds(self, value: list[str]) -> None:
+        self._field_setter_wrapper("seeds", ",".join(value))
+
+    @property
+    def state(self) -> ClusterState | None:
         """The cluster state ('new' or 'existing') of the cassandra cluster."""
-        return self.relation_data.get("cluster_state", "")
+        if not self.relation or not (value := self.relation_data.get("cluster_state", "")):
+            return None
+        return ClusterState[value.upper()]
 
     @state.setter
-    def state(self, value: str) -> None:
+    def state(self, value: ClusterState) -> None:
         """TODO."""
-        self._field_setter_wrapper("cluster_state", value)
+        self._field_setter_wrapper("cluster_state", value.value)
 
 
 class ApplicationState(Object):
