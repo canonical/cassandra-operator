@@ -21,7 +21,7 @@ SNAP_VAR_CURRENT_PATH = f"{SNAP_VAR_PATH}/current"
 
 SNAP_NAME = "charmed-cassandra"
 SNAP_REVISION = "8"
-SNAP_SERVICE = "mgmt-server"
+SNAP_SERVICE = "daemon"
 
 logger = logging.getLogger(__name__)
 
