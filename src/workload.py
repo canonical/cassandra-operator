@@ -67,19 +67,6 @@ class CassandraWorkload(WorkloadBase):
             return False
 
     @override
-    def write_file(self, content: str, file: str) -> None:
-        path = self.root / file
-        path.parent.mkdir(exist_ok=True, parents=True)
-        path.write_text(content)
-
-    @override
-    def read_file(self, file: str) -> str:
-        path = self.root / file
-        if not path.exists():
-            raise FileNotFoundError(f"File '{file}' does not exist.")
-        return path.read_text()
-
-    @override
     def stop(self) -> None:
         self._cassandra_snap.stop(services=[SNAP_SERVICE])
 
