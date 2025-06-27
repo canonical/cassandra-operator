@@ -7,11 +7,10 @@
 import logging
 
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
-from ops import CollectStatusEvent, main
+from ops import main
 
 from core.config import CharmConfig
 from core.state import ApplicationState
-from core.statuses import Status
 from events.cassandra import CassandraEvents
 from managers.cluster import ClusterManager
 from managers.config import ConfigManager
@@ -33,9 +32,6 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         cluster_manager = ClusterManager(workload=workload)
         config_manager = ConfigManager(workload=workload)
 
-        self.framework.observe(self.on.collect_unit_status, self._on_collect_unit_status)
-        self.framework.observe(self.on.collect_app_status, self._on_collect_app_status)
-
         self.cassandra_events = CassandraEvents(
             self,
             state=state,
@@ -43,12 +39,6 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             cluster_manager=cluster_manager,
             config_manager=config_manager,
         )
-
-    def _on_collect_unit_status(self, event: CollectStatusEvent) -> None:
-        event.add_status(Status.ACTIVE.value)
-
-    def _on_collect_app_status(self, event: CollectStatusEvent) -> None:
-        event.add_status(Status.ACTIVE.value)
 
 
 if __name__ == "__main__":  # pragma: nocover

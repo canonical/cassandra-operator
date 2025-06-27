@@ -126,11 +126,15 @@ class CassandraEvents(Object):
         ):
             event.add_status(Status.STARTING.value)
 
+        event.add_status(Status.ACTIVE.value)
+
     def _on_collect_app_status(self, event: CollectStatusEvent) -> None:
         try:
             self.charm.config
         except ValidationError:
             event.add_status(Status.INVALID_CONFIG.value)
+
+        event.add_status(Status.ACTIVE.value)
 
     def _update_network_address(self) -> bool:
         """TODO."""
