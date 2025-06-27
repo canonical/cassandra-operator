@@ -30,7 +30,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
 
         state = ApplicationState(self)
         workload = CassandraWorkload()
-        cluster_manager = ClusterManager()
+        cluster_manager = ClusterManager(workload=workload)
         config_manager = ConfigManager(workload=workload)
 
         self.framework.observe(self.on.collect_unit_status, self._on_collect_unit_status)

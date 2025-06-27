@@ -7,25 +7,29 @@
 import logging
 import socket
 
-from common.management_client import ManagementClient
+from common.exceptions import ExecError
+from core.workload import WorkloadBase
 
 logger = logging.getLogger(__name__)
+
+_NODETOOL = "charmed-cassandra.nodetool"
 
 
 class ClusterManager:
     """Manage cluster members, quorum and authorization."""
 
-    def __init__(self):
-        self.management_client = ManagementClient()
+    def __init__(self, workload: WorkloadBase):
+        self._workload = workload
+        pass
 
     @property
     def is_healthy(self) -> bool:
-        """Perform cassandra helth and readiness checks and return True if healthy.
-
-        Returns:
-            bool: True if the cluster or node is healthy.
-        """
-        return self.management_client.is_healthy()
+        """TODO."""
+        try:
+            stdout, _ = self._workload.exec([_NODETOOL, "info"])
+            return "Native Transport active: true" in stdout
+        except ExecError:
+            return False
 
     def network_address(self) -> tuple[str, str]:
         """TODO."""

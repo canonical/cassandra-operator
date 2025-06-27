@@ -21,7 +21,7 @@ SNAP_VAR_CURRENT_PATH = f"{SNAP_VAR_PATH}/current"
 
 SNAP_NAME = "charmed-cassandra"
 SNAP_REVISION = "8"
-SNAP_SERVICE = "mgmt-server"
+SNAP_SERVICE = "daemon"
 
 logger = logging.getLogger(__name__)
 
@@ -65,19 +65,6 @@ class CassandraWorkload(WorkloadBase):
             return bool(self._cassandra_snap.services[SNAP_SERVICE]["active"])
         except KeyError:
             return False
-
-    @override
-    def write_file(self, content: str, file: str) -> None:
-        path = self.root / file
-        path.parent.mkdir(exist_ok=True, parents=True)
-        path.write_text(content)
-
-    @override
-    def read_file(self, file: str) -> str:
-        path = self.root / file
-        if not path.exists():
-            raise FileNotFoundError(f"File '{file}' does not exist.")
-        return path.read_text()
 
     @override
     def stop(self) -> None:
