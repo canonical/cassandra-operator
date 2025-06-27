@@ -8,7 +8,7 @@ import logging
 from typing import Literal
 
 import requests
-from requests import ConnectionError, HTTPError
+from requests import ConnectionError, HTTPError, ReadTimeout
 
 _TIMEOUT = 5
 DEFAULT_MGMT_URL = "http://127.0.0.1:8080/api/v0"
@@ -41,7 +41,7 @@ class ManagementClient:
         try:
             self._request("GET", "/probes/liveness")
             self._request("GET", "/probes/readiness")
-        except (HTTPError, ConnectionError):
+        except (HTTPError, ConnectionError, ReadTimeout):
             return False
 
         return True
