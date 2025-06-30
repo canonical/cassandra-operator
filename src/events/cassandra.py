@@ -106,9 +106,8 @@ class CassandraEvents(Object):
         if self.state.unit.workload_state == UnitWorkloadState.STARTING.value:
             event.add_status(Status.STARTING.value)
 
-        if (
-            self.state.unit.workload_state == UnitWorkloadState.ACTIVE.value
-            and not self.cluster_manager.is_healthy
+        if self.state.unit.workload_state == UnitWorkloadState.ACTIVE.value and (
+            not self.workload.alive() or not self.cluster_manager.is_healthy
         ):
             event.add_status(Status.STARTING.value)
 

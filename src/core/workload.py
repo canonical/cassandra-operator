@@ -71,25 +71,6 @@ class WorkloadBase(ABC):
         pass
 
     @abstractmethod
-    def write_file(self, content: str, file: str) -> None:
-        """Write content to a file.
-
-        Args:
-            content (str): Content to write to the file.
-            file (str): Path to the file.
-        """
-        pass
-
-    @abstractmethod
-    def read_file(self, file: str) -> str:
-        """Read content from file.
-
-        Args:
-            file (str): Path to the file.
-        """
-        pass
-
-    @abstractmethod
     def stop(self) -> None:
         """Stop the workload service."""
         pass
