@@ -16,7 +16,7 @@ on:
   pull_request:
     paths-ignore:
       - 'docs/**'
-      - '**.md'      
+      - '**.md'
   schedule:
     - cron: '53 0 * * *'  # Daily at 00:53 UTC
 
@@ -60,9 +60,9 @@ jobs:
       pull-requests: write
 
   build:
+    cache: false
     strategy:
       fail-fast: true
-      cache: false
       matrix:
         path:
           - .
