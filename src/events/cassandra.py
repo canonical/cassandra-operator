@@ -113,12 +113,12 @@ class CassandraEvents(Object):
         except ValidationError:
             event.add_status(Status.INVALID_CONFIG.value)
 
-        if self.state.unit.workload_state is None:
+        if not self.state.unit.workload_state:
             event.add_status(Status.INSTALLING.value)
 
-        if not self.charm.unit.is_leader() and self.state.cluster.state != ClusterState.ACTIVE:
-            event.add_status(Status.WAITING_FOR_CLUSTER.value)
-        elif self.state.unit.workload_state == UnitWorkloadState.STARTING:
+        if self.state.unit.workload_state == UnitWorkloadState.STARTING:
+            if not self.charm.unit.is_leader() and self.state.cluster.state != ClusterState.ACTIVE:
+                event.add_status(Status.WAITING_FOR_CLUSTER.value)
             event.add_status(Status.STARTING.value)
 
         if self.state.unit.workload_state == UnitWorkloadState.ACTIVE and (
