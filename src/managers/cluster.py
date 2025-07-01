@@ -34,3 +34,7 @@ class ClusterManager:
         """Get hostname and IP of this unit."""
         hostname = socket.gethostname()
         return socket.gethostbyname(hostname), hostname
+
+    def flush_tables(self, keyspace: str, tables: list[str]) -> None:
+        """TODO."""
+        self._workload.exec(["charmed-cassandra.nodetool", "flush", keyspace, *tables])

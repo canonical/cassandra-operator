@@ -46,7 +46,7 @@ SECRETS_UNIT = [
     "peer-private-key-secret",
 ]
 
-SECRETS_APP = ["internal-ca-secret", "internal-ca-key-secret"]
+SECRETS_APP = ["internal-ca-secret", "internal-ca-key-secret", "cassandra-password"]
 
 
 logger = logging.getLogger(__name__)
@@ -83,6 +83,8 @@ class UnitWorkloadState(StrEnum):
     """Cassandra is installing."""
     WAITING_FOR_START = "waiting_for_start"
     """Subordinate unit is waiting for leader to initialize cluster before it starts workload."""
+    CHANGING_PASSWORD = "changing_password"
+    """Leader unit executes password change sequence before cluster is announced as ready."""
     STARTING = "starting"
     """Cassandra is starting."""
     ACTIVE = "active"
@@ -473,6 +475,15 @@ class ClusterContext(RelationState):
     @internal_ca_key.setter
     def internal_ca_key(self, value: PrivateKey) -> None:
         self._field_setter_wrapper("internal-ca-key-secret", str(value))
+
+    def cassandra_password_secret(self) -> str:
+        """TODO."""
+        return self.relation_data.get("cassandra-password", "")
+
+    @cassandra_password_secret.setter
+    def cassandra_password_secret(self, value: str) -> None:
+        """TODO."""
+        self._field_setter_wrapper("cassandra-password", value)
 
 
 class ApplicationState(Object):

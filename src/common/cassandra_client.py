@@ -8,6 +8,7 @@ import logging
 from contextlib import contextmanager
 from typing import Generator
 
+from bcrypt import gensalt, hashpw
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.cluster import EXEC_PROFILE_DEFAULT, Cluster, ExecutionProfile, Session
 from cassandra.policies import DCAwareRoundRobinPolicy, TokenAwarePolicy
@@ -30,6 +31,22 @@ class CassandraClient:
         self.hosts = hosts
 
         return
+
+    def change_superuser_password(self, user: str, password: str) -> None:
+        """TODO."""
+        with self._session() as session:
+            session.execute(
+                "UPDATE system_auth.roles SET salted_hash = %s WHERE role = %s",
+                [
+                    hashpw(password.encode(), gensalt(prefix=b"2a")).decode(),
+                    user,
+                ],
+            )
+
+    def change_user_password(self, user: str, password: str) -> None:
+        """TODO."""
+        with self._session() as session:
+            session.execute("ALTER USER %s WITH PASSWORD %s", [user, password])
 
     @contextmanager
     def _session(self, keyspace: str | None = None) -> Generator[Session, None, None]:
