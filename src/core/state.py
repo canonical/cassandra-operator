@@ -5,7 +5,7 @@
 """TODO."""
 
 import logging
-from enum import Enum
+from enum import StrEnum
 
 from charms.data_platform_libs.v0.data_interfaces import (
     Data,
@@ -22,15 +22,17 @@ CLIENT_PORT = 9042
 logger = logging.getLogger(__name__)
 
 
-class ClusterState(Enum):
+class ClusterState(StrEnum):
     """TODO."""
 
+    UNKNOWN = ""
     ACTIVE = "active"
 
 
-class UnitWorkloadState(Enum):
+class UnitWorkloadState(StrEnum):
     """TODO."""
 
+    UNKNOWN = ""
     STARTING = "starting"
     ACTIVE = "active"
 
@@ -122,11 +124,9 @@ class UnitContext(RelationState):
         return f"{self.ip}:{CLIENT_PORT}"
 
     @property
-    def workload_state(self) -> UnitWorkloadState | None:
+    def workload_state(self) -> UnitWorkloadState:
         """TODO."""
-        if not self.relation or not (value := self.relation_data.get("workload_state", "")):
-            return None
-        return UnitWorkloadState[value.upper()]
+        return self.relation_data.get("workload_state", UnitWorkloadState.UNKNOWN)
 
     @workload_state.setter
     def workload_state(self, value: UnitWorkloadState) -> None:
@@ -148,20 +148,17 @@ class ClusterContext(RelationState):
     @property
     def seeds(self) -> list[str]:
         """TODO."""
-        if not self.relation or not (value := self.relation_data.get("seeds", "")):
-            return []
-        return value.split(",")
+        seeds = self.relation_data.get("seeds", "")
+        return seeds.split(",") if seeds else []
 
     @seeds.setter
     def seeds(self, value: list[str]) -> None:
         self._field_setter_wrapper("seeds", ",".join(value))
 
     @property
-    def state(self) -> ClusterState | None:
+    def state(self) -> ClusterState:
         """The cluster state ('new' or 'existing') of the cassandra cluster."""
-        if not self.relation or not (value := self.relation_data.get("cluster_state", "")):
-            return None
-        return ClusterState[value.upper()]
+        return self.relation_data.get("cluster_state", ClusterState.UNKNOWN)
 
     @state.setter
     def state(self, value: ClusterState) -> None:
