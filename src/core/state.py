@@ -38,6 +38,8 @@ class UnitWorkloadState(StrEnum):
     """Cassandra is installing."""
     WAITING_FOR_START = "waiting_for_start"
     """Subordinate unit is waiting for leader to initialize cluster before it starts workload."""
+    CHANGING_PASSWORD = "changing_password"
+    """Leader unit executes password change sequence before cluster is announced as ready."""
     STARTING = "starting"
     """Cassandra is starting."""
     ACTIVE = "active"
@@ -176,6 +178,16 @@ class ClusterContext(RelationState):
         """Whether Cassandra cluster state is `ACTIVE`."""
         return self.state == ClusterState.ACTIVE
 
+    @property
+    def cassandra_password_secret(self) -> str:
+        """TODO."""
+        return self.relation_data.get("cassandra-password", "")
+
+    @cassandra_password_secret.setter
+    def cassandra_password_secret(self, value: str) -> None:
+        """TODO."""
+        self._field_setter_wrapper("cassandra-password", value)
+
 
 class ApplicationState(Object):
     """Mappings for the charm relations that forms global application state."""
@@ -185,6 +197,7 @@ class ApplicationState(Object):
         self.peer_app_interface = DataPeerData(
             self.model,
             relation_name=PEER_RELATION,
+            additional_secret_fields=["cassandra-password"],
         )
         self.peer_unit_interface = DataPeerUnitData(self.model, relation_name=PEER_RELATION)
 
