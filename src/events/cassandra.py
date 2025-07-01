@@ -59,7 +59,7 @@ class CassandraEvents(Object):
     def _on_start(self, event: StartEvent) -> None:
         self._update_network_address()
 
-        if not self.charm.unit.is_leader() and self.state.cluster.state != ClusterState.ACTIVE:
+        if not self.charm.unit.is_leader() and not self.state.cluster.active:
             logger.debug("Deferring on_start for unit due to cluster isn't initialized yet")
             event.defer()
             return
@@ -113,13 +113,14 @@ class CassandraEvents(Object):
         except ValidationError:
             event.add_status(Status.INVALID_CONFIG.value)
 
-        if not self.state.unit.workload_state:
+        if self.state.unit.workload_state == UnitWorkloadState.INSTALLING:
             event.add_status(Status.INSTALLING.value)
 
         if self.state.unit.workload_state == UnitWorkloadState.STARTING:
-            if not self.charm.unit.is_leader() and self.state.cluster.state != ClusterState.ACTIVE:
+            if not self.charm.unit.is_leader() and not self.state.cluster.active:
                 event.add_status(Status.WAITING_FOR_CLUSTER.value)
-            event.add_status(Status.STARTING.value)
+            else:
+                event.add_status(Status.STARTING.value)
 
         if self.state.unit.workload_state == UnitWorkloadState.ACTIVE and (
             not self.workload.alive() or not self.cluster_manager.is_healthy

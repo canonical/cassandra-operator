@@ -32,7 +32,7 @@ class ClusterState(StrEnum):
 class UnitWorkloadState(StrEnum):
     """TODO."""
 
-    UNKNOWN = ""
+    INSTALLING = ""
     STARTING = "starting"
     ACTIVE = "active"
 
@@ -126,7 +126,7 @@ class UnitContext(RelationState):
     @property
     def workload_state(self) -> UnitWorkloadState:
         """TODO."""
-        return self.relation_data.get("workload_state", UnitWorkloadState.UNKNOWN)
+        return self.relation_data.get("workload_state", UnitWorkloadState.INSTALLING)
 
     @workload_state.setter
     def workload_state(self, value: UnitWorkloadState) -> None:
@@ -164,6 +164,11 @@ class ClusterContext(RelationState):
     def state(self, value: ClusterState) -> None:
         """TODO."""
         self._field_setter_wrapper("cluster_state", value.value)
+
+    @property
+    def active(self) -> bool:
+        """TODO."""
+        return self.state == ClusterState.ACTIVE
 
 
 class ApplicationState(Object):
