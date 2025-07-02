@@ -24,7 +24,7 @@ class ConfigManager:
         self.workload = workload
 
     def render_cassandra_config(
-        self, cluster_name: str, listen_address: str, seeds: list[str]
+        self, cluster_name: str, listen_address: str, seeds: list[str], enable_tls: bool
     ) -> None:
         """TODO."""
         config = {
@@ -52,6 +52,7 @@ class ConfigManager:
             "inter_dc_tcp_nodelay": False,
             "internode_compression": "dc",
             "listen_address": listen_address,
+            "broadcast_address": listen_address,
             "memtable": {
                 "configurations": {
                     "default": {"inherits": "skiplist"},
@@ -69,6 +70,7 @@ class ConfigManager:
             },
             "role_manager": "CassandraRoleManager",
             "rpc_address": listen_address,
+            "broadcast_rpc_address": listen_address,
             "saved_caches_directory": (
                 self.workload.cassandra_paths.saved_caches_directory.as_posix()
             ),
@@ -81,6 +83,32 @@ class ConfigManager:
             "storage_compatibility_mode": "CASSANDRA_4",
             "storage_port": 7000,
         }
+
+        if enable_tls:
+            config["server_encryption_options"] = {
+                "internode_encryption": "all",
+                "keystore": self.workload.cassandra_paths.peer_keystore.as_posix(),
+                "keystore_password": "myStorePass",
+                "truststore": self.workload.cassandra_paths.peer_truststore.as_posix(),
+                "truststore_password": "myStorePass",
+                "require_client_auth": True,
+                "algorithm": "SunX509",
+                "store_type": "JKS",
+                "protocol": "TLS",
+            }
+
+            config["client_encryption_options"] = {
+                "enabled": True,
+                "optional": False,
+                "keystore": self.workload.cassandra_paths.client_keystore.as_posix(),
+                "keystore_password": "myStorePass",
+                "truststore": self.workload.cassandra_paths.client_truststore.as_posix(),
+                "truststore_password": "myStorePass",
+                "require_client_auth": True,
+                "algorithm": "SunX509",
+                "store_type": "JKS",
+                "protocol": "TLS",
+            }
 
         self.workload.cassandra_paths.config.write_text(
             yaml.dump(config, allow_unicode=True, default_flow_style=False)

@@ -28,7 +28,7 @@ class CassandraClient:
         return
 
     @contextmanager
-    def _session(self, keyspace: str | None = None) -> Generator[Session]:
+    def _session(self, keyspace: str | None = None) -> Generator[Session, None, None]:
         cluster = Cluster(contact_points=self.hosts, auth_provider=self.auth_provider)
         session = cluster.connect()
         if keyspace:

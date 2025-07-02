@@ -15,6 +15,8 @@ from core.statuses import Status
 from events.cassandra import CassandraEvents
 from managers.cluster import ClusterManager
 from managers.config import ConfigManager
+from managers.tls import TLSManager
+from common.cassandra_client import CassandraClient
 from workload import CassandraWorkload
 
 logger = logging.getLogger(__name__)
@@ -32,6 +34,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         workload = CassandraWorkload()
         cluster_manager = ClusterManager(workload=workload)
         config_manager = ConfigManager(workload=workload)
+        tls_manager = TLSManager(workload=workload)  
 
         self.framework.observe(self.on.collect_unit_status, self._on_collect_unit_status)
         self.framework.observe(self.on.collect_app_status, self._on_collect_app_status)
@@ -42,6 +45,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             workload=workload,
             cluster_manager=cluster_manager,
             config_manager=config_manager,
+            tls_manager=tls_manager,
         )
 
     def _on_collect_unit_status(self, event: CollectStatusEvent) -> None:
