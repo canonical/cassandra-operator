@@ -22,6 +22,9 @@ def test_start_maintenance_status_when_starting():
         patch("managers.config.ConfigManager.render_env"),
         patch("workload.CassandraWorkload.restart"),
         patch("workload.CassandraWorkload.alive"),
+        patch(
+            "managers.cluster.ClusterManager.is_healthy", new_callable=PropertyMock(return_value=False)
+        ),
     ):
         state_out = ctx.run(ctx.on.start(), state_in)
         assert state_out.unit_status == ops.MaintenanceStatus("waiting for Cassandra to start")
@@ -40,10 +43,9 @@ def test_start_sets_active_status_when_healthy():
         patch("workload.CassandraWorkload.restart"),
         patch("workload.CassandraWorkload.alive"),
         patch(
-            "managers.cluster.ClusterManager.is_healthy", new_callable=PropertyMock
-        ) as is_healthy,
+            "managers.cluster.ClusterManager.is_healthy", new_callable=PropertyMock(return_value=True)
+        ),
     ):
-        is_healthy.return_value = True
         state_out = ctx.run(ctx.on.start(), state_in)
         assert state_out.unit_status == ops.ActiveStatus()
         assert state_out.get_relation(1).local_unit_data.get("workload_state") == "active"
@@ -60,6 +62,9 @@ def test_start_only_after_leader_active():
         patch("managers.config.ConfigManager.render_env"),
         patch("workload.CassandraWorkload.restart") as restart,
         patch("workload.CassandraWorkload.alive"),
+        patch(
+            "managers.cluster.ClusterManager.is_healthy", new_callable=PropertyMock(return_value=False)
+        ),
     ):
         state_out = ctx.run(ctx.on.start(), state_in)
         assert state_out.unit_status == ops.MaintenanceStatus("installing Cassandra")
