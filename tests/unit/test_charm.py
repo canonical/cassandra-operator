@@ -22,10 +22,7 @@ def test_start_maintenance_status_when_starting():
         patch("managers.config.ConfigManager.render_env"),
         patch("workload.CassandraWorkload.restart"),
         patch("workload.CassandraWorkload.alive"),
-        patch(
-            "managers.cluster.ClusterManager.is_healthy",
-            new_callable=PropertyMock(return_value=False),
-        ),
+        patch("subprocess.run"),
     ):
         state_out = ctx.run(ctx.on.start(), state_in)
         assert state_out.unit_status == ops.MaintenanceStatus("waiting for Cassandra to start")
@@ -64,10 +61,7 @@ def test_start_only_after_leader_active():
         patch("managers.config.ConfigManager.render_env"),
         patch("workload.CassandraWorkload.restart") as restart,
         patch("workload.CassandraWorkload.alive"),
-        patch(
-            "managers.cluster.ClusterManager.is_healthy",
-            new_callable=PropertyMock(return_value=False),
-        ),
+        patch("subprocess.run"),
     ):
         state_out = ctx.run(ctx.on.start(), state_in)
         assert state_out.unit_status == ops.MaintenanceStatus("installing Cassandra")
