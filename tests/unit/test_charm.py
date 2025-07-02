@@ -25,7 +25,7 @@ def test_start_maintenance_status_when_starting():
         patch(
             "managers.cluster.ClusterManager.is_healthy",
             new_callable=PropertyMock(return_value=False),
-        ),        
+        ),
     ):
         state_out = ctx.run(ctx.on.start(), state_in)
         assert state_out.unit_status == ops.MaintenanceStatus("waiting for Cassandra to start")
