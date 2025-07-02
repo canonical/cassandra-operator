@@ -1,11 +1,10 @@
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import pytest
-import yaml
 
 from managers.config import ConfigManager
+
 
 class MockCassandraPaths:
     """Mock object for cassandra paths."""
@@ -52,29 +51,28 @@ def config_manager(temp_workload):
     """Create ConfigManager instance."""
     return ConfigManager(temp_workload)
 
+
 def test_render_env_with_memory_limit(config_manager):
     """Test env rendering with memory limit."""
-    memory_limit = 2048
-
     config_manager.render_env(cassandra_limit_memory_mb=2048)
 
     env_content = config_manager.workload.cassandra_paths.env.read_text()
-    
+
     assert "EXISTING_VAR=existing_value" in env_content
     assert "ANOTHER_VAR=another_value" in env_content
-    
+
     assert "MAX_HEAP_SIZE=2048M" in env_content
     assert "HEAP_NEWSIZE=1024M" in env_content
 
-    # Change limits 
+    # Change limits
 
     config_manager.render_env(cassandra_limit_memory_mb=4096)
 
     env_content = config_manager.workload.cassandra_paths.env.read_text()
-    
+
     assert "EXISTING_VAR=existing_value" in env_content
     assert "ANOTHER_VAR=another_value" in env_content
-    
+
     assert "MAX_HEAP_SIZE=4096M" in env_content
     assert "HEAP_NEWSIZE=2048M" in env_content
 
@@ -88,17 +86,17 @@ def test_render_env_preserves_existing_vars(config_manager):
     original_content = config_manager.workload.cassandra_paths.env.read_text()
     extra_content = original_content + "EXTRA_VAR=extra_value\nPATH=/custom/path\n"
     config_manager.workload.cassandra_paths.env.write_text(extra_content)
-    
+
     config_manager.render_env(cassandra_limit_memory_mb=2048)
-    
+
     final_content = config_manager.workload.cassandra_paths.env.read_text()
-    
+
     # All original variables should be preserved
     assert "EXISTING_VAR=existing_value" in final_content
     assert "ANOTHER_VAR=another_value" in final_content
     assert "EXTRA_VAR=extra_value" in final_content
     assert "PATH=/custom/path" in final_content
-    
+
     # New heap variables should be added
     assert "MAX_HEAP_SIZE=2048M" in final_content
     assert "HEAP_NEWSIZE=1024M" in final_content
