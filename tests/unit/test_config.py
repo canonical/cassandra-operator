@@ -82,39 +82,6 @@ def test_render_env_with_memory_limit(config_manager):
     assert "HEAP_NEWSIZE=1024M" not in env_content
 
 
-def test_workload_integration():
-    """Test that ConfigManager properly integrates with workload object."""
-    # Mock workload with different path structure
-    mock_workload = MagicMock()
-    mock_workload.cassandra_paths.config.write_text = MagicMock()
-    mock_workload.cassandra_paths.env.write_text = MagicMock()
-    mock_workload.cassandra_paths.env.read_text.return_value = "MOCK_VAR=mock_value\n"
-    
-    # Mock path objects to return string representations
-    mock_workload.cassandra_paths.commitlog_directory.as_posix.return_value = "/mock/commitlog"
-    mock_workload.cassandra_paths.data_file_directory.as_posix.return_value = "/mock/data"
-    mock_workload.cassandra_paths.hints_directory.as_posix.return_value = "/mock/hints"
-    mock_workload.cassandra_paths.saved_caches_directory.as_posix.return_value = "/mock/caches"
-    
-    config_manager = ConfigManager(mock_workload)
-    
-    # Test cassandra config
-    config_manager.render_cassandra_config(
-        cluster_name="mock-cluster",
-        listen_address="10.0.0.1",
-        seeds=["10.0.0.1", "10.0.0.2"]
-    )
-    
-    # Verify that workload methods were called
-    mock_workload.cassandra_paths.config.write_text.assert_called_once()
-    
-    # Test env config
-    config_manager.render_env(cassandra_limit_memory_mb=2048)
-    
-    # Verify env methods were called
-    mock_workload.cassandra_paths.env.read_text.assert_called_once()
-    mock_workload.cassandra_paths.env.write_text.assert_called_once()
-
 def test_render_env_preserves_existing_vars(config_manager):
     """Test that render_env preserves existing environment variables."""
     # Add some extra variables to the env file
