@@ -23,7 +23,8 @@ def test_start_maintenance_status_when_starting():
         patch("workload.CassandraWorkload.restart"),
         patch("workload.CassandraWorkload.alive"),
         patch(
-            "managers.cluster.ClusterManager.is_healthy", new_callable=PropertyMock(return_value=False)
+            "managers.cluster.ClusterManager.is_healthy", 
+            new_callable=PropertyMock(return_value=False)
         ),
     ):
         state_out = ctx.run(ctx.on.start(), state_in)
@@ -43,7 +44,8 @@ def test_start_sets_active_status_when_healthy():
         patch("workload.CassandraWorkload.restart"),
         patch("workload.CassandraWorkload.alive"),
         patch(
-            "managers.cluster.ClusterManager.is_healthy", new_callable=PropertyMock(return_value=True)
+            "managers.cluster.ClusterManager.is_healthy", 
+            new_callable=PropertyMock(return_value=True)
         ),
     ):
         state_out = ctx.run(ctx.on.start(), state_in)
@@ -63,7 +65,8 @@ def test_start_only_after_leader_active():
         patch("workload.CassandraWorkload.restart") as restart,
         patch("workload.CassandraWorkload.alive"),
         patch(
-            "managers.cluster.ClusterManager.is_healthy", new_callable=PropertyMock(return_value=False)
+            "managers.cluster.ClusterManager.is_healthy", 
+            new_callable=PropertyMock(return_value=False)
         ),
     ):
         state_out = ctx.run(ctx.on.start(), state_in)
