@@ -22,7 +22,10 @@ def test_start_maintenance_status_when_starting():
         patch("managers.config.ConfigManager.render_env"),
         patch("workload.CassandraWorkload.restart"),
         patch("workload.CassandraWorkload.alive"),
-        patch("subprocess.run"),
+        patch(
+            "managers.cluster.ClusterManager.is_healthy",
+            new_callable=PropertyMock(return_value=False),
+        ),        
     ):
         state_out = ctx.run(ctx.on.start(), state_in)
         assert state_out.unit_status == ops.MaintenanceStatus("waiting for Cassandra to start")
@@ -61,7 +64,10 @@ def test_start_only_after_leader_active():
         patch("managers.config.ConfigManager.render_env"),
         patch("workload.CassandraWorkload.restart") as restart,
         patch("workload.CassandraWorkload.alive"),
-        patch("subprocess.run"),
+        patch(
+            "managers.cluster.ClusterManager.is_healthy",
+            new_callable=PropertyMock(return_value=False),
+        ),
     ):
         state_out = ctx.run(ctx.on.start(), state_in)
         assert state_out.unit_status == ops.MaintenanceStatus("installing Cassandra")
@@ -76,7 +82,10 @@ def test_start_only_after_leader_active():
         patch("managers.config.ConfigManager.render_env"),
         patch("workload.CassandraWorkload.restart") as restart,
         patch("workload.CassandraWorkload.alive"),
-        patch("subprocess.run"),
+        patch(
+            "managers.cluster.ClusterManager.is_healthy",
+            new_callable=PropertyMock(return_value=False),
+        ),
     ):
         state_out = ctx.run(ctx.on.start(), state_in)
         assert state_out.unit_status == ops.MaintenanceStatus("waiting for Cassandra to start")
@@ -93,6 +102,10 @@ def test_config_changed_invalid_config():
         patch("managers.config.ConfigManager.render_env"),
         patch("workload.CassandraWorkload.restart"),
         patch("workload.CassandraWorkload.alive"),
+        patch(
+            "managers.cluster.ClusterManager.is_healthy",
+            new_callable=PropertyMock(return_value=False),
+        ),
     ):
         state_out = ctx.run(ctx.on.config_changed(), state_in)
         assert state_out.unit_status == ops.BlockedStatus("invalid config")
@@ -109,6 +122,10 @@ def test_config_changed_no_restart():
         patch("managers.config.ConfigManager.render_env"),
         patch("workload.CassandraWorkload.restart") as restart,
         patch("workload.CassandraWorkload.alive"),
+        patch(
+            "managers.cluster.ClusterManager.is_healthy",
+            new_callable=PropertyMock(return_value=False),
+        ),
     ):
         state_out = ctx.run(ctx.on.config_changed(), state_in)
         assert state_out.unit_status == ops.MaintenanceStatus("waiting for Cassandra to start")
@@ -125,14 +142,14 @@ def test_collect_unit_status_active_but_not_healthy():
     )
     state_in = testing.State(leader=True, relations={relation})
     with (
-        patch(
-            "managers.cluster.ClusterManager.is_healthy", new_callable=PropertyMock
-        ) as is_healthy,
         patch("managers.config.ConfigManager.render_env"),
         patch("workload.CassandraWorkload.restart"),
         patch("workload.CassandraWorkload.alive"),
+        patch(
+            "managers.cluster.ClusterManager.is_healthy",
+            new_callable=PropertyMock(return_value=False),
+        ),
     ):
-        is_healthy.return_value = False
         state_out = ctx.run(ctx.on.collect_unit_status(), state_in)
         assert state_out.unit_status == ops.MaintenanceStatus("waiting for Cassandra to start")
 
@@ -148,6 +165,10 @@ def test_start_not_leader_and_cluster_state_not_active():
         patch("managers.config.ConfigManager.render_env"),
         patch("workload.CassandraWorkload.restart") as restart,
         patch("workload.CassandraWorkload.alive"),
+        patch(
+            "managers.cluster.ClusterManager.is_healthy",
+            new_callable=PropertyMock(return_value=False),
+        ),
     ):
         state_out = ctx.run(ctx.on.start(), state_in)
         assert state_out.unit_status == ops.MaintenanceStatus("installing Cassandra")
