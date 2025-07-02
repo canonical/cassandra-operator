@@ -21,6 +21,7 @@ def test_start_maintenance_status_when_starting():
     with (
         patch("managers.config.ConfigManager.render_env"),
         patch("workload.CassandraWorkload.restart"),
+        patch("workload.CassandraWorkload.alive"),
     ):
         state_out = ctx.run(ctx.on.start(), state_in)
         assert state_out.unit_status == ops.MaintenanceStatus("waiting for Cassandra to start")
@@ -37,6 +38,7 @@ def test_start_sets_active_status_when_healthy():
     with (
         patch("managers.config.ConfigManager.render_env"),
         patch("workload.CassandraWorkload.restart"),
+        patch("workload.CassandraWorkload.alive"),
         patch(
             "managers.cluster.ClusterManager.is_healthy", new_callable=PropertyMock
         ) as is_healthy,
@@ -57,6 +59,7 @@ def test_start_only_after_leader_active():
     with (
         patch("managers.config.ConfigManager.render_env"),
         patch("workload.CassandraWorkload.restart") as restart,
+        patch("workload.CassandraWorkload.alive"),
     ):
         state_out = ctx.run(ctx.on.start(), state_in)
         assert state_out.unit_status == ops.MaintenanceStatus("installing Cassandra")
@@ -70,6 +73,7 @@ def test_start_only_after_leader_active():
     with (
         patch("managers.config.ConfigManager.render_env"),
         patch("workload.CassandraWorkload.restart") as restart,
+        patch("workload.CassandraWorkload.alive"),
     ):
         state_out = ctx.run(ctx.on.start(), state_in)
         assert state_out.unit_status == ops.MaintenanceStatus("waiting for Cassandra to start")
@@ -85,6 +89,7 @@ def test_config_changed_invalid_config():
     with (
         patch("managers.config.ConfigManager.render_env"),
         patch("workload.CassandraWorkload.restart"),
+        patch("workload.CassandraWorkload.alive"),
     ):
         state_out = ctx.run(ctx.on.config_changed(), state_in)
         assert state_out.unit_status == ops.BlockedStatus("invalid config")
@@ -100,6 +105,7 @@ def test_config_changed_no_restart():
     with (
         patch("managers.config.ConfigManager.render_env"),
         patch("workload.CassandraWorkload.restart") as restart,
+        patch("workload.CassandraWorkload.alive"),
     ):
         state_out = ctx.run(ctx.on.config_changed(), state_in)
         assert state_out.unit_status == ops.MaintenanceStatus("waiting for Cassandra to start")
@@ -121,6 +127,7 @@ def test_collect_unit_status_active_but_not_healthy():
         ) as is_healthy,
         patch("managers.config.ConfigManager.render_env"),
         patch("workload.CassandraWorkload.restart"),
+        patch("workload.CassandraWorkload.alive"),
     ):
         is_healthy.return_value = False
         state_out = ctx.run(ctx.on.collect_unit_status(), state_in)
@@ -137,6 +144,7 @@ def test_start_not_leader_and_cluster_state_not_active():
     with (
         patch("managers.config.ConfigManager.render_env"),
         patch("workload.CassandraWorkload.restart") as restart,
+        patch("workload.CassandraWorkload.alive"),
     ):
         state_out = ctx.run(ctx.on.start(), state_in)
         assert state_out.unit_status == ops.MaintenanceStatus("installing Cassandra")

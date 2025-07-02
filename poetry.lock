@@ -980,6 +980,7 @@ files = [
 [package.dependencies]
 importlib-metadata = "*"
 opentelemetry-api = ">=1.0,<2.0"
+ops-scenario = {version = "7.22.0", optional = true, markers = "extra == \"testing\""}
 PyYAML = "==6.*"
 websocket-client = "==1.*"
 
@@ -987,6 +988,22 @@ websocket-client = "==1.*"
 docs = ["canonical-sphinx-extensions", "furo", "linkify-it-py", "myst-parser", "pyspelling", "sphinx (>=8.0.0,<8.1.0)", "sphinx-autobuild", "sphinx-copybutton", "sphinx-design", "sphinx-notfound-page", "sphinx-tabs", "sphinxcontrib-jquery", "sphinxext-opengraph"]
 testing = ["ops-scenario (==7.22.0)"]
 tracing = ["ops-tracing (==2.22.0)"]
+
+[[package]]
+name = "ops-scenario"
+version = "7.22.0"
+description = "Python library providing a state-transition testing API for Operator Framework charms."
+optional = false
+python-versions = ">=3.8"
+groups = ["unit"]
+files = [
+    {file = "ops_scenario-7.22.0-py3-none-any.whl", hash = "sha256:a42d3acf831fc46f213286268e31d14c2ffc5ea72452c49955de76895f62437c"},
+    {file = "ops_scenario-7.22.0.tar.gz", hash = "sha256:15921e6849773b81df90ad4d78f573e0af5f5b9ddbfc82603c991c29648d8070"},
+]
+
+[package.dependencies]
+ops = "2.22.0"
+PyYAML = ">=6.0.1"
 
 [[package]]
 name = "packaging"
@@ -1347,6 +1364,24 @@ tomli = {version = ">=1", markers = "python_version < \"3.11\""}
 
 [package.extras]
 dev = ["argcomplete", "attrs (>=19.2)", "hypothesis (>=3.56)", "mock", "requests", "setuptools", "xmlschema"]
+
+[[package]]
+name = "pytest-mock"
+version = "3.14.1"
+description = "Thin-wrapper around the mock package for easier use with pytest"
+optional = false
+python-versions = ">=3.8"
+groups = ["unit"]
+files = [
+    {file = "pytest_mock-3.14.1-py3-none-any.whl", hash = "sha256:178aefcd11307d874b4cd3100344e7e2d888d9791a6a1d9bfe90fbc1b74fd1d0"},
+    {file = "pytest_mock-3.14.1.tar.gz", hash = "sha256:159e9edac4c451ce77a5cdb9fc5d1100708d2dd4ba3c3df572f14097351af80e"},
+]
+
+[package.dependencies]
+pytest = ">=6.2.5"
+
+[package.extras]
+dev = ["pre-commit", "pytest-asyncio", "tox"]
 
 [[package]]
 name = "python-dateutil"
@@ -1889,4 +1924,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "1535376ffe7cdede3f0c4b7046959e4efd772812279ed8a1372c0fd075d48ced"
+content-hash = "3cfe94147fdf7547f612e4aeb156b4ca33effdc140b061c2dec9ceda1d2e3d2b"
