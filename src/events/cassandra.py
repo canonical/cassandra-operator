@@ -54,12 +54,12 @@ class CassandraEvents(Object):
 
     def _on_install(self, _: InstallEvent) -> None:
         self.workload.install()
-        self.state.unit.workload_state = UnitWorkloadState.STARTING
 
     def _on_start(self, event: StartEvent) -> None:
+        self.state.unit.workload_state = UnitWorkloadState.WAITING_FOR_START
         self._update_network_address()
 
-        if not self.charm.unit.is_leader() and not self.state.cluster.active:
+        if not self.charm.unit.is_leader() and not self.state.cluster.is_active:
             logger.debug("Deferring on_start for unit due to cluster isn't initialized yet")
             event.defer()
             return
@@ -82,10 +82,7 @@ class CassandraEvents(Object):
             return
 
         self.workload.start()
-        self.state.unit.workload_state = UnitWorkloadState.ACTIVE
-
-        if self.charm.unit.is_leader():
-            self.state.cluster.state = ClusterState.ACTIVE
+        self.state.unit.workload_state = UnitWorkloadState.STARTING
 
     def _on_config_changed(self, _: ConfigChangedEvent) -> None:
         try:
@@ -103,9 +100,24 @@ class CassandraEvents(Object):
         if not self.state.unit.workload_state == UnitWorkloadState.ACTIVE:
             return
         self.workload.restart()
+        self.state.unit.workload_state = UnitWorkloadState.STARTING
 
     def _on_update_status(self, _: UpdateStatusEvent) -> None:
-        self._update_network_address()
+        if (
+            self._update_network_address()
+            and self.state.unit.workload_state == UnitWorkloadState.ACTIVE
+        ):
+            self.workload.restart()
+            self.state.unit.workload_state = UnitWorkloadState.STARTING
+            return
+
+        if (
+            self.state.unit.workload_state == UnitWorkloadState.STARTING
+            and self.cluster_manager.is_healthy
+        ):
+            self.state.unit.workload_state = UnitWorkloadState.ACTIVE
+            if self.charm.unit.is_leader():
+                self.state.cluster.state = ClusterState.ACTIVE
 
     def _on_collect_unit_status(self, event: CollectStatusEvent) -> None:
         try:
@@ -116,15 +128,17 @@ class CassandraEvents(Object):
         if self.state.unit.workload_state == UnitWorkloadState.INSTALLING:
             event.add_status(Status.INSTALLING.value)
 
-        if self.state.unit.workload_state == UnitWorkloadState.STARTING:
-            if not self.charm.unit.is_leader() and not self.state.cluster.active:
-                event.add_status(Status.WAITING_FOR_CLUSTER.value)
-            else:
-                event.add_status(Status.STARTING.value)
-
-        if self.state.unit.workload_state == UnitWorkloadState.ACTIVE and (
-            not self.workload.alive() or not self.cluster_manager.is_healthy
+        if (
+            self.state.unit.workload_state == UnitWorkloadState.WAITING_FOR_START
+            and not self.charm.unit.is_leader()
+            and not self.state.cluster.is_active
         ):
+            event.add_status(Status.WAITING_FOR_CLUSTER.value)
+
+        if self.state.unit.workload_state in [
+            UnitWorkloadState.WAITING_FOR_START,
+            UnitWorkloadState.STARTING,
+        ] and (self.charm.unit.is_leader() or self.state.cluster.is_active):
             event.add_status(Status.STARTING.value)
 
         event.add_status(Status.ACTIVE.value)

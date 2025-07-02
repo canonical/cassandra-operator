@@ -26,7 +26,7 @@ class ClusterManager:
     def is_healthy(self) -> bool:
         """TODO."""
         try:
-            stdout, _ = self._workload.exec([_NODETOOL, "info"])
+            stdout, _ = self._workload.exec([_NODETOOL, "info"], suppress_error_log=True)
             return "Native Transport active: true" in stdout
         except ExecError:
             return False

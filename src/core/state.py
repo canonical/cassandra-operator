@@ -33,6 +33,7 @@ class UnitWorkloadState(StrEnum):
     """TODO."""
 
     INSTALLING = ""
+    WAITING_FOR_START = "waiting_for_start"
     STARTING = "starting"
     ACTIVE = "active"
 
@@ -166,7 +167,7 @@ class ClusterContext(RelationState):
         self._field_setter_wrapper("cluster_state", value.value)
 
     @property
-    def active(self) -> bool:
+    def is_active(self) -> bool:
         """TODO."""
         return self.state == ClusterState.ACTIVE
 
