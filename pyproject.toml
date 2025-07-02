@@ -15,10 +15,12 @@ cassandra-driver = "^3.29.2"
 tenacity = "^9.1.2"
 charmlibs-pathops = "^1.0.1"
 
-[tool.poetry.group.charm-libs.dependencies]
-
 [tool.poetry.group.format]
 optional = true
+
+[tool.poetry.group.charm-libs.dependencies]
+# data_platform_libs/v0/data_interfaces.py
+ops = ">=2.0.0"
 
 [tool.poetry.group.format.dependencies]
 ruff = "^0.11.8"
@@ -28,6 +30,7 @@ optional = true
 
 [tool.poetry.group.lint.dependencies]
 codespell = "^2.4.1"
+pyright = "^1.1.402"
 
 [tool.poetry.group.unit]
 optional = true
@@ -95,4 +98,5 @@ skip = "build,lib,venv,icon.svg,.tox,.git,.mypy_cache,.ruff_cache,.coverage"
 
 [tool.pyright]
 include = ["src"]
-extraPaths = ["lib"]
+extraPaths = ["src","lib"]
+pythonVersion = "3.12"
