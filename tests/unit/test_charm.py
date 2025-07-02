@@ -76,6 +76,7 @@ def test_start_only_after_leader_active():
         patch("managers.config.ConfigManager.render_env"),
         patch("workload.CassandraWorkload.restart") as restart,
         patch("workload.CassandraWorkload.alive"),
+        patch("subprocess.run"),
     ):
         state_out = ctx.run(ctx.on.start(), state_in)
         assert state_out.unit_status == ops.MaintenanceStatus("waiting for Cassandra to start")
