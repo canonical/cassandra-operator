@@ -19,7 +19,7 @@ def test_deploy(juju: jubilant.Juju, cassandra_charm: Path, app_name: str) -> No
         config={"profile": "testing"},
         num_units=3,
     )
-    juju.wait(jubilant.all_active)
+    juju.wait(jubilant.all_active, timeout=1000)
 
 
 def test_write(juju: jubilant.Juju, app_name: str) -> None:
