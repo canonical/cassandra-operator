@@ -23,7 +23,6 @@ from core.statuses import Status
 from core.workload import WorkloadBase
 from managers.cluster import ClusterManager
 from managers.config import ConfigManager
-from core import state
 from managers.tls import TLSManager
 from common.cassandra_client import CassandraClient
 
@@ -90,7 +89,7 @@ class CassandraEvents(Object):
                 listen_address=self.state.unit.ip,
                 seeds=self.state.cluster.seeds,
                 enable_tls=True,
-            )            
+            )
         except ValidationError as e:
             logger.debug(f"Config haven't passed validation: {e}")
             event.defer()
@@ -141,6 +140,9 @@ class CassandraEvents(Object):
         ):
             event.add_status(Status.STARTING.value)
 
+        if not self.state.unit.peer_tls.ready and not self.state.cluster.internal_ca:
+            event.add_status(Status.NO_INTERNAL_TLS.value)
+
     def _update_network_address(self) -> bool:
         """TODO."""
         old_ip = self.state.unit.ip
@@ -157,7 +159,7 @@ class CassandraEvents(Object):
             return
 
         ca, pk = self.tls_manager.generate_internal_ca(common_name=self.state.unit.unit.app.name)
-        
+
         self.state.cluster.internal_ca = ca
         self.state.cluster.internal_ca_key = pk
 
