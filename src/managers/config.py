@@ -5,6 +5,7 @@
 """Config manager."""
 
 import logging
+import random
 from typing import Iterable
 
 import yaml
@@ -51,6 +52,7 @@ class ConfigManager:
             "hints_directory": self.workload.cassandra_paths.hints_directory.as_posix(),
             "inter_dc_tcp_nodelay": False,
             "internode_compression": "dc",
+            "initial_token": self._generate_initial_token(listen_address+cluster_name),
             "listen_address": listen_address,
             "broadcast_address": listen_address,
             "memtable": {
@@ -154,3 +156,12 @@ class ConfigManager:
             if cassandra_limit_memory_mb
             else "",
         }
+    
+    def _generate_initial_token(self, salt: str) -> int:
+        """Generate deterministic initial token based on salt."""
+        
+        random.seed(int(salt))
+
+        min_token = -2**63
+        max_token = 2**63 - 1
+        return random.randint(min_token, max_token)
