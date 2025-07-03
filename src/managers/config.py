@@ -163,6 +163,5 @@ class ConfigManager:
         if ring_delay_ms is not None and ring_delay_ms <= 0:
             raise ValueError("ring_delay_ms should be at least 1000ms")
         return {
-            "JVM_OPTS": f"$JVM_OPTS -Dcassandra.ring_delay_ms={ring_delay_ms}ms"
+            "JVM_OPTS": f'"$JVM_OPTS -Dcassandra.ring_delay_ms={ring_delay_ms}ms"'
         }
-
