@@ -21,7 +21,7 @@ from charms.tls_certificates_interface.v4.tls_certificates import (
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
-from ops.pebble import ExecError
+from common.exceptions import ExecError
 
 from core.workload import WorkloadBase
 from core.state import ApplicationState, TLSScope
@@ -201,7 +201,7 @@ class TLSManager:
                 self.workload.exec(f"chmod 770 {self.get_truststore_path(scope)}".split())
                   
               except (subprocess.CalledProcessError, ExecError) as e:
-                 if e.stdout and "already exists" in str(e):
+                 if e.stdout and "already exists" in e.stdout:
                     continue
                  logger.error(e.stdout)
                  raise e
