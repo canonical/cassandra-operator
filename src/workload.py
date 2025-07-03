@@ -51,7 +51,6 @@ class CassandraWorkload(WorkloadBase):
 
     @override
     def install(self) -> None:
-        """Install the cassandra snap."""
         logger.debug("Installing & configuring Cassandra snap")
         self._cassandra_snap.ensure(snap.SnapState.Present, revision=SNAP_REVISION)
         self._cassandra_snap.connect("process-control")
@@ -60,7 +59,7 @@ class CassandraWorkload(WorkloadBase):
         self._cassandra_snap.hold()
 
     @override
-    def alive(self) -> bool:
+    def is_alive(self) -> bool:
         try:
             return bool(self._cassandra_snap.services[SNAP_SERVICE]["active"])
         except KeyError:

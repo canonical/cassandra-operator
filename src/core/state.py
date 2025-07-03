@@ -173,7 +173,7 @@ class ClusterContext(RelationState):
 
     @property
     def is_active(self) -> bool:
-        """Is Cassandra cluster state `ACTIVE`."""
+        """Whether Cassandra cluster state is `ACTIVE`."""
         return self.state == ClusterState.ACTIVE
 
 
