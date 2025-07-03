@@ -17,6 +17,7 @@ from ops import (
 )
 from pydantic import ValidationError
 
+from common.cassandra_client import CassandraClient
 from core.config import CharmConfig
 from core.state import ApplicationState, ClusterState, UnitWorkloadState
 from core.statuses import Status
@@ -56,35 +57,91 @@ class CassandraEvents(Object):
         self.workload.install()
 
     def _on_start(self, event: StartEvent) -> None:
-        self.state.unit.workload_state = UnitWorkloadState.WAITING_FOR_START
         self._update_network_address()
 
-        if not self.charm.unit.is_leader() and not self.state.cluster.is_active:
+        try:
+            self.config_manager.render_env(
+                cassandra_limit_memory_mb=1024 if self.charm.config.profile == "testing" else None
+            )
+        except ValidationError as e:
+            logger.debug(f"Config haven't passed validation: {e}")
+            event.defer()
+            return
+
+        if not self.charm.unit.is_leader():
+            self._start_subordinate(event)
+            return
+
+        self.state.cluster.seeds = [self.state.unit.peer_url]
+
+        if self.state.unit.workload_state == UnitWorkloadState.CHANGING_PASSWORD:
+            self._finalize_password_change(event)
+            return
+
+        if not self.state.unit.workload_state:
+            if self.state.cluster.cassandra_password_secret:
+                self._start_leader()
+            else:
+                self._start_password_change(event)
+
+    def _start_subordinate(self, event: StartEvent) -> None:
+        if not self.state.cluster.is_active:
+            self.state.unit.workload_state = UnitWorkloadState.WAITING_FOR_START
             logger.debug("Deferring on_start for unit due to cluster isn't initialized yet")
             event.defer()
             return
-
-        if self.charm.unit.is_leader():
-            self.state.cluster.seeds = [self.state.unit.peer_url]
-
-        try:
-            self.config_manager.render_env(
-                cassandra_limit_memory_mb=1024 if self.charm.config.profile == "testing" else None
-            )
-            self.config_manager.render_cassandra_config(
-                cluster_name=self.charm.config.cluster_name,
-                listen_address=self.state.unit.ip,
-                seeds=self.state.cluster.seeds,
-            )
-        except ValidationError as e:
-            logger.debug(f"Config haven't passed validation: {e}")
-            event.defer()
-            return
-
+        self.config_manager.render_cassandra_config(
+            cluster_name=self.charm.config.cluster_name,
+            listen_address=self.state.unit.ip,
+            seeds=self.state.cluster.seeds,
+            authentication=True,
+        )
         self.workload.start()
         self.state.unit.workload_state = UnitWorkloadState.STARTING
 
+    def _start_leader(self) -> None:
+        self.config_manager.render_cassandra_config(
+            cluster_name=self.charm.config.cluster_name,
+            listen_address=self.state.unit.ip,
+            seeds=self.state.cluster.seeds,
+            authentication=True,
+        )
+        self.workload.start()
+        self.state.unit.workload_state = UnitWorkloadState.STARTING
+
+    def _start_password_change(self, event: StartEvent) -> None:
+        self.config_manager.render_cassandra_config(
+            cluster_name=self.charm.config.cluster_name,
+            listen_address="127.0.0.1",
+            seeds=["127.0.0.1:7000"],
+            authentication=False,
+        )
+        self.workload.start()
+        self.state.unit.workload_state = UnitWorkloadState.CHANGING_PASSWORD
+        event.defer()
+
+    def _finalize_password_change(self, event: StartEvent) -> None:
+        if not self.cluster_manager.is_healthy:
+            event.defer()
+            return
+        password = self.workload.generate_password()
+        self._cassandra.change_superuser_password("cassandra", password)
+        self.state.cluster.cassandra_password_secret = password
+        self.config_manager.render_cassandra_config(
+            cluster_name=self.charm.config.cluster_name,
+            listen_address=self.state.unit.ip,
+            seeds=self.state.cluster.seeds,
+            authentication=True,
+        )
+        self.workload.restart()
+        self.state.unit.workload_state = UnitWorkloadState.STARTING
+
     def _on_config_changed(self, _: ConfigChangedEvent) -> None:
+        if self.state.unit.workload_state not in [
+            UnitWorkloadState.STARTING,
+            UnitWorkloadState.ACTIVE,
+        ]:
+            return
         try:
             self.config_manager.render_env(
                 cassandra_limit_memory_mb=1024 if self.charm.config.profile == "testing" else None
@@ -93,14 +150,14 @@ class CassandraEvents(Object):
                 cluster_name=self.charm.config.cluster_name,
                 listen_address=self.state.unit.ip,
                 seeds=self.state.cluster.seeds,
+                authentication=True,
             )
         except ValidationError as e:
             logger.debug(f"Config haven't passed validation: {e}")
             return
-        if not self.state.unit.workload_state == UnitWorkloadState.ACTIVE:
-            return
         self.workload.restart()
-        self.state.unit.workload_state = UnitWorkloadState.STARTING
+        if self.state.unit.workload_state == UnitWorkloadState.ACTIVE:
+            self.state.unit.workload_state = UnitWorkloadState.STARTING
 
     def _on_update_status(self, _: UpdateStatusEvent) -> None:
         if (
@@ -141,6 +198,9 @@ class CassandraEvents(Object):
         ] and (self.charm.unit.is_leader() or self.state.cluster.is_active):
             event.add_status(Status.STARTING.value)
 
+        if self.state.unit.workload_state == UnitWorkloadState.CHANGING_PASSWORD:
+            event.add_status(Status.CHANGING_PASSWORD.value)
+
         event.add_status(Status.ACTIVE.value)
 
     def _on_collect_app_status(self, event: CollectStatusEvent) -> None:
@@ -164,4 +224,12 @@ class CassandraEvents(Object):
             old_ip is not None
             and old_hostname is not None
             and (old_ip != self.state.unit.ip or old_hostname != self.state.unit.hostname)
+        )
+
+    @property
+    def _cassandra(self) -> CassandraClient:
+        return CassandraClient(
+            [self.state.unit.ip if self.state.cluster.cassandra_password_secret else "127.0.0.1"],
+            "cassandra",
+            self.state.cluster.cassandra_password_secret or None,
         )

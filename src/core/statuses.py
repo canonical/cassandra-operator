@@ -16,4 +16,5 @@ class Status(Enum):
     INSTALLING = MaintenanceStatus("installing Cassandra")
     STARTING = MaintenanceStatus("waiting for Cassandra to start")
     WAITING_FOR_CLUSTER = WaitingStatus("waiting for cluster to start")
+    CHANGING_PASSWORD = MaintenanceStatus("initializing authentication")
     INVALID_CONFIG = BlockedStatus("invalid config")
