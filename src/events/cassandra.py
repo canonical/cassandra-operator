@@ -54,15 +54,16 @@ class CassandraEvents(Object):
         self.framework.observe(self.charm.on.config_changed, self._on_config_changed)
         self.framework.observe(self.charm.on.update_status, self._on_update_status)
         self.framework.observe(self.charm.on.collect_unit_status, self._on_collect_unit_status)
+        self.framework.observe(self.charm.on.collect_app_status, self._on_collect_app_status)
 
     def _on_install(self, _: InstallEvent) -> None:
         self.workload.install()
-        self.state.unit.workload_state = UnitWorkloadState.STARTING.value
 
         # TODO: move to snap?
         self.workload.cassandra_paths.tls_directory.mkdir(exist_ok=True)
 
     def _on_start(self, event: StartEvent) -> None:
+        self.state.unit.workload_state = UnitWorkloadState.WAITING_FOR_START
         self._update_network_address()
 
         if not self.state.unit.peer_tls.ready and not self.state.cluster.internal_ca:
@@ -75,15 +76,18 @@ class CassandraEvents(Object):
 
         self._setup_internal_credentials()
 
+        if not self.charm.unit.is_leader() and not self.state.cluster.is_active:
+            logger.debug("Deferring on_start for unit due to cluster isn't initialized yet")
+            event.defer()
+            return
 
         if self.charm.unit.is_leader():
-            self.state.cluster.seeds = [self.state.unit.peer_url]        
+            self.state.cluster.seeds = [self.state.unit.peer_url]
 
         try:
             self.config_manager.render_env(
                 cassandra_limit_memory_mb=1024 if self.charm.config.profile == "testing" else None
             )
-
             self.config_manager.render_cassandra_config(
                 cluster_name=self.charm.config.cluster_name,
                 listen_address=self.state.unit.ip,
@@ -95,33 +99,44 @@ class CassandraEvents(Object):
             event.defer()
             return
 
-        if (
-            not self.charm.unit.is_leader()
-            and self.state.cluster.state != ClusterState.ACTIVE.value
-        ):
-            logger.debug("Deferring on_start for unit due to cluster isn't initialized yet")
-            event.defer()
-            return
+        self.workload.start()
+        self.state.unit.workload_state = UnitWorkloadState.STARTING
 
-        self.workload.restart()
-        self.state.unit.workload_state = UnitWorkloadState.ACTIVE.value
-        if self.charm.unit.is_leader():
-            self.state.cluster.state = ClusterState.ACTIVE.value
-
-    def _on_config_changed(self, event: ConfigChangedEvent) -> None:
+    def _on_config_changed(self, _: ConfigChangedEvent) -> None:
         try:
             self.config_manager.render_env(
                 cassandra_limit_memory_mb=1024 if self.charm.config.profile == "testing" else None
             )
+            self.config_manager.render_cassandra_config(
+                cluster_name=self.charm.config.cluster_name,
+                listen_address=self.state.unit.ip,
+                seeds=self.state.cluster.seeds,
+                enable_tls=True,
+            )
         except ValidationError as e:
             logger.debug(f"Config haven't passed validation: {e}")
             return
-        if not self.state.unit.workload_state == UnitWorkloadState.ACTIVE.value:
+        if not self.state.unit.workload_state == UnitWorkloadState.ACTIVE:
             return
         self.workload.restart()
+        self.state.unit.workload_state = UnitWorkloadState.STARTING
 
-    def _on_update_status(self, event: UpdateStatusEvent) -> None:
-        self._update_network_address()
+    def _on_update_status(self, _: UpdateStatusEvent) -> None:
+        if (
+            self._update_network_address()
+            and self.state.unit.workload_state == UnitWorkloadState.ACTIVE
+        ):
+            self.workload.restart()
+            self.state.unit.workload_state = UnitWorkloadState.STARTING
+            return
+
+        if (
+            self.state.unit.workload_state == UnitWorkloadState.STARTING
+            and self.cluster_manager.is_healthy
+        ):
+            self.state.unit.workload_state = UnitWorkloadState.ACTIVE
+            if self.charm.unit.is_leader():
+                self.state.cluster.state = ClusterState.ACTIVE
 
     def _on_collect_unit_status(self, event: CollectStatusEvent) -> None:
         try:
@@ -129,16 +144,31 @@ class CassandraEvents(Object):
         except ValidationError:
             event.add_status(Status.INVALID_CONFIG.value)
 
-        if self.state.unit.workload_state == "":
+        if self.state.unit.workload_state == UnitWorkloadState.INSTALLING:
             event.add_status(Status.INSTALLING.value)
 
-        if self.state.unit.workload_state == UnitWorkloadState.STARTING.value:
+        if (
+            self.state.unit.workload_state == UnitWorkloadState.WAITING_FOR_START
+            and not self.charm.unit.is_leader()
+            and not self.state.cluster.is_active
+        ):
+            event.add_status(Status.WAITING_FOR_CLUSTER.value)
+
+        if self.state.unit.workload_state in [
+            UnitWorkloadState.WAITING_FOR_START,
+            UnitWorkloadState.STARTING,
+        ] and (self.charm.unit.is_leader() or self.state.cluster.is_active):
             event.add_status(Status.STARTING.value)
 
-        if self.state.unit.workload_state == UnitWorkloadState.ACTIVE.value and (
-            not self.workload.alive() or not self.cluster_manager.is_healthy
-        ):
-            event.add_status(Status.STARTING.value)
+        event.add_status(Status.ACTIVE.value)
+
+    def _on_collect_app_status(self, event: CollectStatusEvent) -> None:
+        try:
+            self.charm.config
+        except ValidationError:
+            event.add_status(Status.INVALID_CONFIG.value)
+
+        event.add_status(Status.ACTIVE.value)
 
         if not self.state.unit.peer_tls.ready and not self.state.cluster.internal_ca:
             event.add_status(Status.NO_INTERNAL_TLS.value)

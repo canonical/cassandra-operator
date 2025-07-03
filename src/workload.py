@@ -97,7 +97,7 @@ class CassandraWorkload(WorkloadBase):
 
     @override
     def exec(
-        self, command: list[str], cwd: str | None = None) -> tuple[str, str]:
+        self, command: list[str], cwd: str | None = None, suppress_error_log: bool = False) -> tuple[str, str]:
         try:
             result = subprocess.run(
                 command,
@@ -116,18 +116,20 @@ class CassandraWorkload(WorkloadBase):
         except subprocess.CalledProcessError as e:
             stdout = e.stdout.strip()
             stderr = e.stderr.strip()
-            logger.error(
-                "Got non-zero return code %s while executing command: %s",
-                e.returncode,
-                " ".join(command),
-            )
+            if not suppress_error_log:
+                logger.error(
+                    "Got non-zero return code %s while executing command: %s",
+                    e.returncode,
+                    " ".join(command),
+                )
             logger.debug("STDOUT: %s", e.stdout.strip())
             logger.debug("STDERR: %s", e.stderr.strip())
             raise ExecError(e.stdout.strip(), e.stderr.strip())
         except subprocess.TimeoutExpired as e:
             stdout = e.stdout.decode().strip() if e.stdout else ""
             stderr = e.stderr.decode().strip() if e.stderr else ""
-            logger.error("Got timeout error while executing command: %s", " ".join(command))
+            if not suppress_error_log:
+                logger.error("Got timeout error while executing command: %s", " ".join(command))
             logger.debug("STDOUT: %s", stdout)
             logger.debug("STDERR: %s", stderr)
             raise ExecError(stdout, stderr)

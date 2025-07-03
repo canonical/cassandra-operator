@@ -15,5 +15,6 @@ class Status(Enum):
     ACTIVE = ActiveStatus()
     INSTALLING = MaintenanceStatus("installing Cassandra")
     STARTING = MaintenanceStatus("waiting for Cassandra to start")
+    WAITING_FOR_CLUSTER = WaitingStatus("waiting for cluster to start")
     INVALID_CONFIG = BlockedStatus("invalid config")
     NO_INTERNAL_TLS = WaitingStatus("waiting for internal TLS setup")

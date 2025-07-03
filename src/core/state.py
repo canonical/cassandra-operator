@@ -7,7 +7,7 @@
 from dataclasses import dataclass
 import logging
 import json
-from enum import Enum
+from enum import StrEnum
 from typing import List, Optional
 
 from charms.data_platform_libs.v0.data_interfaces import (
@@ -30,23 +30,25 @@ CLIENT_PORT = 9042
 
 logger = logging.getLogger(__name__)
 
-
-class TLSScope(str, Enum):
+class TLSScope(StrEnum):
     """Enum for TLS scopes."""
 
     PEER = "peer"  # for internal communications
     CLIENT = "client"  # for external/client communications
 
 
-class ClusterState(Enum):
+class ClusterState(StrEnum):
     """TODO."""
 
+    UNKNOWN = ""
     ACTIVE = "active"
 
 
-class UnitWorkloadState(Enum):
+class UnitWorkloadState(StrEnum):
     """TODO."""
 
+    INSTALLING = ""
+    WAITING_FOR_START = "waiting_for_start"
     STARTING = "starting"
     ACTIVE = "active"
 
@@ -275,20 +277,13 @@ class UnitContext(RelationState):
         return f"{self.ip}:{CLIENT_PORT}"
 
     @property
-    def is_started(self) -> bool:
-        """Check if the unit has started."""
-        return self.relation_data.get("state", "") == "started"
-
-    @property
-    def workload_state(self) -> str:
+    def workload_state(self) -> UnitWorkloadState:
         """TODO."""
-        if not self.relation:
-            return ""
-        return self.relation_data.get("workload_state", "")
+        return self.relation_data.get("workload_state", UnitWorkloadState.INSTALLING)
 
     @workload_state.setter
-    def workload_state(self, value: str) -> None:
-        self._field_setter_wrapper("workload_state", value)
+    def workload_state(self, value: UnitWorkloadState) -> None:
+        self._field_setter_wrapper("workload_state", value.value)
 
     # --- TLS ---
     @property
@@ -347,14 +342,29 @@ class ClusterContext(RelationState):
         self._field_setter_wrapper("seeds", ",".join(value))    
         
     @property
-    def state(self) -> str:
+    def seeds(self) -> list[str]:
+        """TODO."""
+        seeds = self.relation_data.get("seeds", "")
+        return seeds.split(",") if seeds else []
+
+    @seeds.setter
+    def seeds(self, value: list[str]) -> None:
+        self._field_setter_wrapper("seeds", ",".join(value))
+
+    @property
+    def state(self) -> ClusterState:
         """The cluster state ('new' or 'existing') of the cassandra cluster."""
-        return self.relation_data.get("cluster_state", "")
+        return self.relation_data.get("cluster_state", ClusterState.UNKNOWN)
 
     @state.setter
-    def state(self, value: str) -> None:
+    def state(self, value: ClusterState) -> None:
         """TODO."""
-        self._field_setter_wrapper("cluster_state", value)
+        self._field_setter_wrapper("cluster_state", value.value)
+
+    @property
+    def is_active(self) -> bool:
+        """TODO."""
+        return self.state == ClusterState.ACTIVE
 
     # --- TLS ---
     @property

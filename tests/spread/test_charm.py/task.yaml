@@ -1,7 +1,6 @@
 summary: test_charm.py
-environment:
-  TEST_MODULE: test_charm.py
 execute: |
-  tox run -e integration-charm -- "tests/integration/$TEST_MODULE" --alluredir="$SPREAD_TASK/allure-results"
+  tox run -e integration-charm -- --alluredir="$SPREAD_TASK/allure-results"
 artifacts:
   - allure-results
+
