@@ -2,7 +2,7 @@
 # Copyright 2025 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""TODO."""
+"""Workload definition."""
 
 from abc import ABC, abstractmethod
 from typing import Literal
