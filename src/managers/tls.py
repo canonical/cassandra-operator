@@ -24,7 +24,7 @@ from cryptography.hazmat.primitives import hashes
 from ops.pebble import ExecError
 
 from core.workload import WorkloadBase
-from core.state import TLSScope
+from core.state import ApplicationState, TLSScope
 from common.cassandra_client import CassandraClient
 
 logger = logging.getLogger(__name__)
@@ -338,6 +338,15 @@ class TLSManager:
 
         return self.certificate_fingerprint(cert) != self.get_trusted_certificates.get(alias, b"")
 
+    def remove_stores(self, scope: TLSScope = TLSScope.CLIENT) -> None:
+        """Cleans up all keys/certs/stores on a unit."""
+        for pattern in ["*.pem", "*.key", "*.p12", "*.jks"]:
+            for path in (self.workload.cassandra_paths.tls_directory).glob(
+                f"{scope.value}-{pattern}"
+            ):
+                logger.debug(f"Removing {path}")
+                path.unlink()
+
     @staticmethod
     def certificate_fingerprint(cert: str):
         """Returns the certificate fingerprint using SHA-256 algorithm."""
@@ -387,3 +396,73 @@ class TLSManager:
             alias.strip(): self.keytool_hash_to_bytes(fingerprint)
             for alias, fingerprint in matches
         }
+
+
+def setup_internal_ca(tls_manager: TLSManager, state: ApplicationState) -> None:
+        if not state.unit.unit.is_leader():
+            return
+
+        ca, pk = tls_manager.generate_internal_ca(common_name=state.unit.unit.app.name)
+
+        state.cluster.internal_ca = ca
+        state.cluster.internal_ca_key = pk
+    
+def setup_internal_credentials(
+        tls_manager: TLSManager,
+        state: ApplicationState,
+        sans_ip: Optional[FrozenSet[str]],
+        sans_dns: Optional[FrozenSet[str]],
+        is_leader: bool,
+) -> None:
+        ca = state.cluster.internal_ca
+        ca_key = state.cluster.internal_ca_key
+        
+        if ca is None or ca_key is None:
+            logger.error("Internal CA is not set up yet.")
+            return
+
+        if state.unit.peer_tls.ready:
+            logger.debug("No need to set up internal credentials...")
+            _configure_internal_tls(tls_manager, state)
+            return
+
+        provider_crt, pk = tls_manager.generate_internal_credentials(
+            ca=ca,
+            ca_key=ca_key,
+            common_name=state.unit.unit.app.name,
+            sans_ip=sans_ip,
+            sans_dns=sans_dns,
+        )
+
+        if not pk:
+            logger.error("private key for internal tls is empty")
+            return
+
+        state.unit.peer_tls.certificate = provider_crt[0].certificate
+        state.unit.peer_tls.csr = provider_crt[0].certificate_signing_request
+        state.unit.peer_tls.private_key = pk
+        state.unit.peer_tls.ca = ca
+        state.unit.peer_tls.chain = provider_crt[0].chain
+
+        _configure_internal_tls(tls_manager, state)
+
+        if is_leader:
+            state.cluster.peer_cluster_ca = state.unit.peer_tls.bundle
+    
+
+def _configure_internal_tls(tls_manager: TLSManager, state: ApplicationState) -> None:
+    if not state.unit.peer_tls.ready:
+        return
+
+    resolved = state.unit.peer_tls.resolved()
+    
+    tls_manager.configure(
+        pk=resolved.private_key,
+        ca=resolved.ca,
+        chain=resolved.chain,
+        certificate=resolved.certificate,
+        bundle=resolved.bundle,
+        pk_password="",
+        keystore_password="myStorePass",
+        trust_password="myStorePass",
+    )            

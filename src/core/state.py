@@ -24,6 +24,8 @@ from charms.tls_certificates_interface.v4.tls_certificates import (
 )
 from ops import Application, CharmBase, Object, Relation, Unit
 
+CLIENT_TLS_RELATION = "client-certificates"
+PEER_TLS_RELATION = "peer-certificates"
 PEER_RELATION = "cassandra-peers"
 CASSANDRA_PEER_PORT = 7000
 CASSANDRA_CLIENT_PORT = 9042
@@ -36,6 +38,14 @@ class TLSScope(StrEnum):
     PEER = "peer"  # for internal communications
     CLIENT = "client"  # for external/client communications
 
+class TLSState(StrEnum):
+    """Current state of the Cassandra cluster."""
+
+    UNKNOWN = ""
+    ACTIVE = "active"
+    """Cassandra cluster is initialized by the leader unit and active."""
+
+    
 class ClusterState(StrEnum):
     """Current state of the Cassandra cluster."""
 
@@ -95,7 +105,7 @@ class ResolvedTLSState:
     chain: list[Certificate]
     bundle: list[Certificate]
             
-class TLSState(RelationState):
+class TLSContext(RelationState):
     """State collection metadata for TLS credentials."""
 
     def __init__(
@@ -121,7 +131,9 @@ class TLSState(RelationState):
         return PrivateKey.from_string(raw)
 
     @private_key.setter
-    def private_key(self, value: PrivateKey) -> None:
+    def private_key(self, value: PrivateKey | None) -> None:
+        if not value:
+            return self._field_setter_wrapper(f"{self.scope.value}-private-key", "")            
         self._field_setter_wrapper(f"{self.scope.value}-private-key", value.raw)
 
     @property
@@ -138,7 +150,9 @@ class TLSState(RelationState):
         return CertificateSigningRequest.from_string(raw)
 
     @csr.setter
-    def csr(self, value: CertificateSigningRequest) -> None:
+    def csr(self, value: CertificateSigningRequest | None) -> None:
+        if not value:
+            return self._field_setter_wrapper(f"{self.scope.value}-csr", "")
         self._field_setter_wrapper(f"{self.scope.value}-csr", value.raw)
 
     @property
@@ -150,7 +164,9 @@ class TLSState(RelationState):
         return Certificate.from_string(raw)
 
     @certificate.setter
-    def certificate(self, value: Certificate) -> None:
+    def certificate(self, value: Certificate | None) -> None:
+        if not value:
+          return self._field_setter_wrapper(f"{self.scope.value}-certificate", "")
         self._field_setter_wrapper(f"{self.scope.value}-certificate", value.raw)
 
     @property
@@ -169,7 +185,9 @@ class TLSState(RelationState):
         return Certificate.from_string(raw)
 
     @ca.setter
-    def ca(self, value: Certificate) -> None:
+    def ca(self, value: Certificate | None) -> None:
+        if not value:
+            return self._field_setter_wrapper(f"{self.scope.value}-ca-cert", "")
         self._field_setter_wrapper(f"{self.scope.value}-ca-cert", value.raw)
 
     @property
@@ -183,6 +201,8 @@ class TLSState(RelationState):
     @chain.setter
     def chain(self, value: List[Certificate]) -> None:
         """Sets the chain used to sign the unit cert."""
+        if len(value) == 0:
+            return self._field_setter_wrapper(f"{self.scope.value}-chain", "")            
         self._field_setter_wrapper(f"{self.scope.value}-chain", json.dumps([str(c) for c in value]))
 
     @property
@@ -289,14 +309,14 @@ class UnitContext(RelationState):
 
     # --- TLS ---
     @property
-    def peer_tls(self) -> TLSState:
+    def peer_tls(self) -> TLSContext:
         """TLS state for internal (peer) communications."""
-        return TLSState(self.relation, self.data_interface, self.unit, TLSScope.PEER)
+        return TLSContext(self.relation, self.data_interface, self.unit, TLSScope.PEER)
 
     @property
-    def client_tls(self) -> TLSState:
+    def client_tls(self) -> TLSContext:
         """TLS state for external (client) communications."""
-        return TLSState(self.relation, self.data_interface, self.unit, TLSScope.CLIENT)
+        return TLSContext(self.relation, self.data_interface, self.unit, TLSScope.CLIENT)
 
     @property
     def keystore_password(self) -> str:
@@ -317,7 +337,27 @@ class UnitContext(RelationState):
             None if password not yet generated
         """
         return self.relation_data.get("truststore-password", "")
-        
+
+    @keystore_password.setter
+    def keystore_password(self, value: str) -> None:
+        """The unit keystore password set during `certificates_joined`.
+
+        Returns:
+            String of password
+            None if password not yet generated
+        """
+        self._field_setter_wrapper("keystore-password", value)
+
+    @truststore_password.setter
+    def truststore_password(self, value: str) -> None:
+        """The unit truststore password set during `certificates_joined`.
+
+        Returns:
+            String of password
+            None if password not yet generated
+        """
+        self._field_setter_wrapper("truststore-password", value)
+    
 
 
 class ClusterContext(RelationState):
@@ -359,6 +399,16 @@ class ClusterContext(RelationState):
     def is_active(self) -> bool:
         """Whether Cassandra cluster state is `ACTIVE`."""
         return self.state == ClusterState.ACTIVE
+
+    @property
+    def tls_state(self) -> TLSState:
+        """Current state of the Cassandra cluster."""
+        return TLSState(self.relation_data.get("tls_state", TLSState.UNKNOWN))
+
+    @tls_state.setter
+    def tls_state(self, value: TLSState) -> None:
+        self._field_setter_wrapper("tls_state", value.value)
+
     
     # --- TLS ---
     @property

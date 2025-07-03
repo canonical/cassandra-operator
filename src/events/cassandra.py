@@ -15,6 +15,12 @@ from ops import (
     StartEvent,
     UpdateStatusEvent,
 )
+
+from managers.tls import (
+    setup_internal_ca,
+    setup_internal_credentials,
+)
+
 from pydantic import ValidationError
 
 from core.config import CharmConfig
@@ -71,10 +77,17 @@ class CassandraEvents(Object):
                 event.defer()
                 return
 
-            self._setup_internal_ca()
+            setup_internal_ca(self.tls_manager, self.state)
 
 
-        self._setup_internal_credentials()
+        host_mapping = self.cluster_manager.get_host_mapping()
+        setup_internal_credentials(
+            self.tls_manager,
+            self.state,
+            sans_ip=frozenset({host_mapping["ip"]}),
+            sans_dns=frozenset({self.charm.unit.name, host_mapping["hostname"]}),
+            is_leader=self.charm.unit.is_leader(),
+        )
 
         if not self.charm.unit.is_leader() and not self.state.cluster.is_active:
             logger.debug("Deferring on_start for unit due to cluster isn't initialized yet")
@@ -187,70 +200,6 @@ class CassandraEvents(Object):
             and old_hostname is not None
             and (old_ip != self.state.unit.ip or old_hostname != self.state.unit.hostname)
         )
-
-    def _setup_internal_ca(self) -> None:
-        if not self.state.unit.unit.is_leader():
-            return
-
-        ca, pk = self.tls_manager.generate_internal_ca(common_name=self.state.unit.unit.app.name)
-
-        self.state.cluster.internal_ca = ca
-        self.state.cluster.internal_ca_key = pk
-
-        
-    def _setup_internal_credentials(self, is_leader: bool = False) -> None:
-        ca = self.state.cluster.internal_ca
-        ca_key = self.state.cluster.internal_ca_key
-        
-        if ca is None or ca_key is None:
-            logger.error("Internal CA is not set up yet.")
-            return
-
-        if self.state.unit.peer_tls.ready:
-            logger.debug("No need to set up internal credentials...")
-            self._configure_internal_tls()
-            return
-
-        host_mapping = self.cluster_manager.get_host_mapping()
-        provider_crt, pk = self.tls_manager.generate_internal_credentials(
-            ca=ca,
-            ca_key=ca_key,
-            common_name=self.state.unit.unit.app.name,
-            sans_ip=frozenset({host_mapping["ip"]}),
-            sans_dns=frozenset({self.charm.unit.name, host_mapping["hostname"]}),
-        )
-
-        if not pk:
-            logger.error("private key for internal tls is empty")
-            return
-
-        self.state.unit.peer_tls.certificate = provider_crt[0].certificate
-        self.state.unit.peer_tls.csr = provider_crt[0].certificate_signing_request
-        self.state.unit.peer_tls.private_key = pk
-        self.state.unit.peer_tls.ca = ca
-        self.state.unit.peer_tls.chain = provider_crt[0].chain
-
-        self._configure_internal_tls()
-
-        if is_leader:
-            self.state.cluster.peer_cluster_ca = self.state.unit.peer_tls.bundle
-
-    def _configure_internal_tls(self) -> None:
-        if not self.state.unit.peer_tls.ready:
-            return
-
-        resolved = self.state.unit.peer_tls.resolved()
-        
-        self.tls_manager.configure(
-            pk=resolved.private_key,
-            ca=resolved.ca,
-            chain=resolved.chain,
-            certificate=resolved.certificate,
-            bundle=resolved.bundle,
-            pk_password="",
-            keystore_password="myStorePass",
-            trust_password="myStorePass",
-        )            
 
     @property
     def _cassandra(self) -> CassandraClient:
