@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class CassandraClient:
-    """TODO."""
+    """Cassandra CQL client."""
 
     def __init__(self, hosts: list[str], user: str | None = None, password: str | None = None):
         self.execution_profile = ExecutionProfile(

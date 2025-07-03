@@ -2,7 +2,7 @@
 # Copyright 2025 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""Manager for handling configuration building + writing."""
+"""Config manager."""
 
 import logging
 from typing import Iterable
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class ConfigManager:
-    """Handle the configuration of Cassandra."""
+    """Manager of config files."""
 
     def __init__(
         self,
@@ -26,7 +26,7 @@ class ConfigManager:
     def render_cassandra_config(
         self, cluster_name: str, listen_address: str, seeds: list[str], enable_tls: bool
     ) -> None:
-        """TODO."""
+        """Generate and write cassandra config."""
         config = {
             "allocate_tokens_for_local_replication_factor": 3,
             "authenticator": "AllowAllAuthenticator",
@@ -115,7 +115,7 @@ class ConfigManager:
         )
 
     def render_env(self, cassandra_limit_memory_mb: int | None) -> None:
-        """TODO."""
+        """Update environment config."""
         self.workload.cassandra_paths.env.write_text(
             self._render_env(
                 [

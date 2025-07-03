@@ -2,7 +2,7 @@
 # Copyright 2025 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""Charm the application."""
+"""Charm definition."""
 
 import logging
 
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class CassandraCharm(TypedCharmBase[CharmConfig]):
-    """Charm the application."""
+    """Application charm."""
 
     config_type = CharmConfig
 

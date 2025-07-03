@@ -2,7 +2,7 @@
 # Copyright 2025 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""TODO."""
+"""Handler for main Cassandra charm events."""
 
 import logging
 
@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 class CassandraEvents(Object):
-    """Handle all base and cassandra related events."""
+    """Handler for main Cassandra charm events."""
 
     def __init__(
         self,
@@ -174,7 +174,11 @@ class CassandraEvents(Object):
             event.add_status(Status.NO_INTERNAL_TLS.value)
 
     def _update_network_address(self) -> bool:
-        """TODO."""
+        """Update hostname & ip in this unit context.
+
+        Returns:
+            whether the hostname or ip changed.
+        """
         old_ip = self.state.unit.ip
         old_hostname = self.state.unit.hostname
         self.state.unit.ip, self.state.unit.hostname = self.cluster_manager.network_address()
