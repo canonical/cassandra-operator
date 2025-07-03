@@ -18,13 +18,13 @@ def mock_snap_cache():
 
 def test_alive_true_if_service_active(mock_snap_cache):
     workload = CassandraWorkload()
-    assert workload.alive() is True
+    assert workload.is_alive() is True
 
 
 def test_alive_false_if_service_missing(mock_snap_cache):
     mock_snap_cache.services = {}  # simulate service not found
     workload = CassandraWorkload()
-    assert workload.alive() is False
+    assert workload.is_alive() is False
 
 
 def test_exec_successful_command_returns_output():

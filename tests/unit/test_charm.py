@@ -21,7 +21,7 @@ def test_start_maintenance_status_when_starting():
     with (
         patch("managers.config.ConfigManager.render_env"),
         patch("workload.CassandraWorkload.restart"),
-        patch("workload.CassandraWorkload.alive"),
+        patch("workload.CassandraWorkload.is_alive"),
         patch(
             "managers.cluster.ClusterManager.is_healthy",
             new_callable=PropertyMock(return_value=False),
@@ -42,7 +42,7 @@ def test_start_sets_active_status_when_healthy():
     with (
         patch("managers.config.ConfigManager.render_env"),
         patch("workload.CassandraWorkload.restart"),
-        patch("workload.CassandraWorkload.alive"),
+        patch("workload.CassandraWorkload.is_alive"),
         patch(
             "managers.cluster.ClusterManager.is_healthy",
             new_callable=PropertyMock(return_value=True),
@@ -63,7 +63,7 @@ def test_start_only_after_leader_active():
     with (
         patch("managers.config.ConfigManager.render_env"),
         patch("workload.CassandraWorkload.restart") as restart,
-        patch("workload.CassandraWorkload.alive"),
+        patch("workload.CassandraWorkload.is_alive"),
         patch(
             "managers.cluster.ClusterManager.is_healthy",
             new_callable=PropertyMock(return_value=False),
@@ -81,7 +81,7 @@ def test_start_only_after_leader_active():
     with (
         patch("managers.config.ConfigManager.render_env"),
         patch("workload.CassandraWorkload.restart") as restart,
-        patch("workload.CassandraWorkload.alive"),
+        patch("workload.CassandraWorkload.is_alive"),
         patch(
             "managers.cluster.ClusterManager.is_healthy",
             new_callable=PropertyMock(return_value=False),
@@ -101,7 +101,7 @@ def test_config_changed_invalid_config():
     with (
         patch("managers.config.ConfigManager.render_env"),
         patch("workload.CassandraWorkload.restart"),
-        patch("workload.CassandraWorkload.alive"),
+        patch("workload.CassandraWorkload.is_alive"),
         patch(
             "managers.cluster.ClusterManager.is_healthy",
             new_callable=PropertyMock(return_value=False),
@@ -121,7 +121,7 @@ def test_config_changed_no_restart():
     with (
         patch("managers.config.ConfigManager.render_env"),
         patch("workload.CassandraWorkload.restart") as restart,
-        patch("workload.CassandraWorkload.alive"),
+        patch("workload.CassandraWorkload.is_alive"),
         patch(
             "managers.cluster.ClusterManager.is_healthy",
             new_callable=PropertyMock(return_value=False),
@@ -144,7 +144,7 @@ def test_collect_unit_status_active_but_not_healthy():
     with (
         patch("managers.config.ConfigManager.render_env"),
         patch("workload.CassandraWorkload.restart"),
-        patch("workload.CassandraWorkload.alive"),
+        patch("workload.CassandraWorkload.is_alive"),
         patch(
             "managers.cluster.ClusterManager.is_healthy",
             new_callable=PropertyMock(return_value=False),
@@ -164,7 +164,7 @@ def test_start_not_leader_and_cluster_state_not_active():
     with (
         patch("managers.config.ConfigManager.render_env"),
         patch("workload.CassandraWorkload.restart") as restart,
-        patch("workload.CassandraWorkload.alive"),
+        patch("workload.CassandraWorkload.is_alive"),
         patch(
             "managers.cluster.ClusterManager.is_healthy",
             new_callable=PropertyMock(return_value=False),
