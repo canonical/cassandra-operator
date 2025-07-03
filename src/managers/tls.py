@@ -176,35 +176,35 @@ class TLSManager:
                 logger.debug("Can't set truststore, missing TLS artifacts.")
                 return
             
-            try:
-                trust_aliases = [f"bundle{i}" for i in range(len(bundle))]
-                for alias in trust_aliases:
-                    self.workload.exec(
-                        command=[
-                            "charmed-cassandra.keytool",
-                            "-import",
-                            "-alias",
-                            alias,
-                            "-file",
-                            f"{scope.value}-{alias}.pem",
-                            "-keystore",
-                            f"{scope.value}-truststore.jks",
-                            "-storepass",
-                            trust_password,
-                            "-noprompt",
-                        ],
-                        cwd=self.workload.cassandra_paths.tls_directory.as_posix(),
-                    )
-
+            trust_aliases = [f"bundle{i}" for i in range(len(bundle))]
+            for alias in trust_aliases:
+              try:
                 self.workload.exec(
-                  f"chown {USER_NAME}:{GROUP} {self.get_truststore_path(scope)}".split()
-                  )
+                    command=[
+                        "charmed-cassandra.keytool",
+                        "-import",
+                        "-alias",
+                        alias,
+                        "-file",
+                        f"{scope.value}-{alias}.pem",
+                        "-keystore",
+                        f"{scope.value}-truststore.jks",
+                        "-storepass",
+                        trust_password,
+                        "-noprompt",
+                    ],
+                    cwd=self.workload.cassandra_paths.tls_directory.as_posix(),
+                )
+                self.workload.exec(
+                    f"chown {USER_NAME}:{GROUP} {self.get_truststore_path(scope)}".split()
+                )
                 self.workload.exec(f"chmod 770 {self.get_truststore_path(scope)}".split())
-            except (subprocess.CalledProcessError, ExecError) as e:
-                if e.stdout and "already exists" in e.stdout:
-                    return
-                logger.error(e.stdout)
-                raise e
+                  
+              except (subprocess.CalledProcessError, ExecError) as e:
+                 if e.stdout and "already exists" in str(e):
+                    continue
+                 logger.error(e.stdout)
+                 raise e
 
     def set_keystore(self, pk_password: str, keystore_password: str) -> None:
         for scope in self.SCOPES:        
