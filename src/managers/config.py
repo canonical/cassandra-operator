@@ -5,6 +5,7 @@
 """Config manager."""
 
 import logging
+import hashlib
 import random
 from typing import Iterable
 
@@ -52,7 +53,7 @@ class ConfigManager:
             "hints_directory": self.workload.cassandra_paths.hints_directory.as_posix(),
             "inter_dc_tcp_nodelay": False,
             "internode_compression": "dc",
-            "initial_token": self._generate_initial_token(listen_address+cluster_name),
+            "initial_token": self._generate_initial_token(listen_address+cluster_name), # TODO: initial_token is random but we have to make shure that node is not going to jump into token collision state
             "listen_address": listen_address,
             "broadcast_address": listen_address,
             "memtable": {
@@ -158,10 +159,14 @@ class ConfigManager:
         }
     
     def _generate_initial_token(self, salt: str) -> int:
-        """Generate deterministic initial token based on salt."""
-        
-        random.seed(int(salt))
-
+        """Generate deterministic initial token based on salt (64-bit signed range)."""
+    
+        # Получаем хэш от соли и используем его как seed
+        hash_bytes = hashlib.sha256(salt.encode()).digest()
+        seed = int.from_bytes(hash_bytes[:8], "big")  # 64 бита для seed
+    
+        rng = random.Random(seed)
+    
         min_token = -2**63
         max_token = 2**63 - 1
-        return random.randint(min_token, max_token)
+        return rng.randint(min_token, max_token)
