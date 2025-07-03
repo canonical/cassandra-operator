@@ -2,7 +2,7 @@
 # Copyright 2025 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""TODO."""
+"""Workload VM Implementation."""
 
 import logging
 import subprocess
@@ -51,7 +51,6 @@ class CassandraWorkload(WorkloadBase):
 
     @override
     def install(self) -> None:
-        """Install the cassandra snap."""
         logger.debug("Installing & configuring Cassandra snap")
         self._cassandra_snap.ensure(snap.SnapState.Present, revision=SNAP_REVISION)
         self._cassandra_snap.connect("process-control")
@@ -60,7 +59,7 @@ class CassandraWorkload(WorkloadBase):
         self._cassandra_snap.hold()
 
     @override
-    def alive(self) -> bool:
+    def is_alive(self) -> bool:
         try:
             return bool(self._cassandra_snap.services[SNAP_SERVICE]["active"])
         except KeyError:
@@ -96,7 +95,7 @@ class CassandraWorkload(WorkloadBase):
         return False
 
     @override
-    def exec(self, command: list[str]) -> tuple[str, str]:
+    def exec(self, command: list[str], suppress_error_log: bool = False) -> tuple[str, str]:
         try:
             result = subprocess.run(
                 command,
@@ -114,18 +113,20 @@ class CassandraWorkload(WorkloadBase):
         except subprocess.CalledProcessError as e:
             stdout = e.stdout.strip()
             stderr = e.stderr.strip()
-            logger.error(
-                "Got non-zero return code %s while executing command: %s",
-                e.returncode,
-                " ".join(command),
-            )
+            if not suppress_error_log:
+                logger.error(
+                    "Got non-zero return code %s while executing command: %s",
+                    e.returncode,
+                    " ".join(command),
+                )
             logger.debug("STDOUT: %s", e.stdout.strip())
             logger.debug("STDERR: %s", e.stderr.strip())
             raise ExecError(e.stdout.strip(), e.stderr.strip())
         except subprocess.TimeoutExpired as e:
             stdout = e.stdout.decode().strip() if e.stdout else ""
             stderr = e.stderr.decode().strip() if e.stderr else ""
-            logger.error("Got timeout error while executing command: %s", " ".join(command))
+            if not suppress_error_log:
+                logger.error("Got timeout error while executing command: %s", " ".join(command))
             logger.debug("STDOUT: %s", stdout)
             logger.debug("STDERR: %s", stderr)
             raise ExecError(stdout, stderr)

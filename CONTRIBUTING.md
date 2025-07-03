@@ -1,8 +1,8 @@
-# Contributing
+# Contributing workflow
 
 To make contributions to this charm, you'll need a working [development setup](https://juju.is/docs/sdk/dev-setup).
 
-You can create an environment for development with `tox`:
+You can, but not required to, create an environment for development with `tox`:
 
 ```shell
 tox devenv -e integration
@@ -12,15 +12,16 @@ source venv/bin/activate
 ## Testing
 
 This project uses `tox` for managing test environments. There are some pre-configured environments
-that can be used for linting and formatting code when you're preparing contributions to the charm:
+that can be used for linting, formatting and testing code when you're preparing contributions to the charm:
 
 ```shell
-tox run -e format        # update your code according to linting rules
-tox run -e lint          # code style
-tox run -e static        # static type checking
-tox run -e unit          # unit tests
-tox run -e integration   # integration tests
-tox                      # runs 'format', 'lint', 'static', and 'unit' environments
+tox run -e format                 # update your code according to linting rules
+tox run -e lint                   # verify your code according to linting rules
+tox run -e unit                   # run unit tests
+tox run -e integration-charm      # run charm integration test
+tox run -e integration-config     # run config integration test
+tox run -e integration-multinode  # run multinode integration test
+tox run -e integration-scaling    # run scaling integration test
 ```
 
 ## Build the charm

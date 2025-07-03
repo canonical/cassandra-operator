@@ -2,7 +2,7 @@
 # Copyright 2025 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""Charm config definition."""
+"""Charm config."""
 
 from typing import Literal
 
@@ -13,15 +13,15 @@ ConfigProfile = Literal["testing", "production"]
 
 
 class CharmConfig(BaseConfigModel):
-    """Manager for the structured configuration."""
+    """Structured charm config."""
 
-    profile: ConfigProfile
     cluster_name: str
+    profile: ConfigProfile
 
     @field_validator("cluster_name")
     @classmethod
     def cluster_name_values(cls, value: str) -> str:
-        """TODO."""
+        """Validate cluster_name."""
         if len(value) == 0:
             raise ValueError("cluster_name cannot be empty")
 

@@ -2,7 +2,7 @@
 # Copyright 2025 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""TODO."""
+"""Cluster manager."""
 
 import logging
 import socket
@@ -16,7 +16,7 @@ _NODETOOL = "charmed-cassandra.nodetool"
 
 
 class ClusterManager:
-    """Manage cluster members, quorum and authorization."""
+    """Manager of Cassandra cluster, including this unit."""
 
     def __init__(self, workload: WorkloadBase):
         self._workload = workload
@@ -24,14 +24,14 @@ class ClusterManager:
 
     @property
     def is_healthy(self) -> bool:
-        """TODO."""
+        """Whether Cassandra healthy and ready in this unit."""
         try:
-            stdout, _ = self._workload.exec([_NODETOOL, "info"])
+            stdout, _ = self._workload.exec([_NODETOOL, "info"], suppress_error_log=True)
             return "Native Transport active: true" in stdout
         except ExecError:
             return False
 
     def network_address(self) -> tuple[str, str]:
-        """TODO."""
+        """Get hostname and IP of this unit."""
         hostname = socket.gethostname()
         return socket.gethostbyname(hostname), hostname

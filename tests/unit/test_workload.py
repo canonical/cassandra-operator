@@ -18,16 +18,16 @@ def mock_snap_cache():
 
 def test_alive_true_if_service_active(mock_snap_cache):
     workload = CassandraWorkload()
-    assert workload.alive() is True
+    assert workload.is_alive() is True
 
 
 def test_alive_false_if_service_missing(mock_snap_cache):
     mock_snap_cache.services = {}  # simulate service not found
     workload = CassandraWorkload()
-    assert workload.alive() is False
+    assert workload.is_alive() is False
 
 
-def test_exec_successful_command_returns_output():
+def test_exec_successful_command_returns_output(mock_snap_cache):
     with patch("workload.subprocess.run") as mock_run:
         mock_run.return_value = subprocess.CompletedProcess(
             args=["echo", "hello"], returncode=0, stdout="hello\n", stderr=""
@@ -38,7 +38,7 @@ def test_exec_successful_command_returns_output():
         assert stderr == ""
 
 
-def test_exec_command_raises_on_failure():
+def test_exec_command_raises_on_failure(mock_snap_cache):
     with patch("workload.subprocess.run") as mock_run:
         mock_run.side_effect = subprocess.CalledProcessError(
             returncode=1, cmd=["false"], output="", stderr="error"
