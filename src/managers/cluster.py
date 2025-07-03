@@ -26,7 +26,10 @@ class ClusterManager:
         """Whether Cassandra healthy and ready in this unit."""
         try:
             stdout, _ = self._workload.exec([_NODETOOL, "info"], suppress_error_log=True)
-            return "Native Transport active: true" in stdout
+            return (
+                "Native Transport active: true" in stdout and \
+                "(node is not joined to the cluster)" not in stdout
+                )
         except ExecError:
             return False
 

@@ -72,14 +72,18 @@ class CassandraEvents(Object):
         self.state.unit.workload_state = UnitWorkloadState.WAITING_FOR_START
         self._update_network_address()
 
+        if not self.charm.unit.is_leader() and not self.state.cluster.is_active:
+            logger.debug("Deferring on_start for unit due to cluster isn't initialized yet")
+            event.defer()
+            return
+
         if not self.state.unit.peer_tls.ready and not self.state.cluster.internal_ca:
             if not self.charm.unit.is_leader():
                 event.defer()
                 return
 
             setup_internal_ca(self.tls_manager, self.state)
-
-
+        
         host_mapping = self.cluster_manager.get_host_mapping()
         setup_internal_credentials(
             self.tls_manager,
@@ -88,12 +92,7 @@ class CassandraEvents(Object):
             sans_dns=frozenset({self.charm.unit.name, host_mapping["hostname"]}),
             is_leader=self.charm.unit.is_leader(),
         )
-
-        if not self.charm.unit.is_leader() and not self.state.cluster.is_active:
-            logger.debug("Deferring on_start for unit due to cluster isn't initialized yet")
-            event.defer()
-            return
-
+        
         if self.charm.unit.is_leader():
             self.state.cluster.seeds = [self.state.unit.peer_url]
 
