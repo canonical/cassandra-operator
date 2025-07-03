@@ -150,6 +150,16 @@ class CassandraEvents(Object):
             if self.charm.unit.is_leader():
                 self.state.cluster.state = ClusterState.ACTIVE
 
+        # Проверяем, что нода в кольце после того как стала активной
+        if (
+            self.state.unit.workload_state == UnitWorkloadState.ACTIVE
+            and self.cluster_manager.is_healthy
+            and not self.cluster_manager.is_node_in_ring
+        ):
+            logger.warning("Node is active and healthy but not in ring, restarting...")
+            self.workload.restart()
+            self.state.unit.workload_state = UnitWorkloadState.STARTING
+
     def _on_collect_unit_status(self, event: CollectStatusEvent) -> None:
         try:
             self.charm.config

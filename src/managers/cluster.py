@@ -33,6 +33,18 @@ class ClusterManager:
         except ExecError:
             return False
 
+    @property
+    def is_node_in_ring(self) -> bool:
+        """Whether Cassandra node has been added to ring."""
+        try:
+            stdout, _ = self._workload.exec([_NODETOOL, "info"], suppress_error_log=True)
+            return (
+                "(node is not joined to the cluster)" not in stdout
+                )
+        except ExecError:
+            return False
+
+        
     def network_address(self) -> tuple[str, str]:
         """Get hostname and IP of this unit."""
         hostname = socket.gethostname()
