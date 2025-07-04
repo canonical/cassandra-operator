@@ -84,7 +84,6 @@ class ConfigManager:
             ],
             "storage_compatibility_mode": "CASSANDRA_4",
             "storage_port": 7000,
-            "initial_token": self._generate_initial_token(listen_address+cluster_name)
         }
 
         if enable_tls:
@@ -158,16 +157,3 @@ class ConfigManager:
             else "",
         }
     
-    @staticmethod
-    def _generate_initial_token(salt: str) -> int:
-        """Generate deterministic initial token based on salt (64-bit unsigned range)."""
-    
-        # Получаем хэш от соли и используем его как seed
-        hash_bytes = hashlib.sha256(salt.encode()).digest()
-        seed = int.from_bytes(hash_bytes[:8], "big")  # 64 бита для seed
-    
-        rng = random.Random(seed)
-    
-        min_token = 0
-        max_token = 2**63 - 1  # или 2**64 - 1 если хочешь полный uint64
-        return rng.randint(min_token, max_token)    
