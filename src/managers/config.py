@@ -84,6 +84,7 @@ class ConfigManager:
             ],
             "storage_compatibility_mode": "CASSANDRA_4",
             "storage_port": 7000,
+            "initial_token": self._generate_initial_token(listen_address+cluster_name)
         }
 
         if enable_tls:
@@ -123,7 +124,6 @@ class ConfigManager:
                 [
                     self._map_env(self.workload.cassandra_paths.env.read_text().split("\n")),
                     self._env_heap_config(cassandra_limit_memory_mb=cassandra_limit_memory_mb),
-                    self._env_jvm_ops(ring_delay_ms=30000),
                 ]
             )
         )
@@ -157,11 +157,17 @@ class ConfigManager:
             if cassandra_limit_memory_mb
             else "",
         }
-
+    
     @staticmethod
-    def _env_jvm_ops(ring_delay_ms: int | None) -> dict[str, str]:
-        if ring_delay_ms is not None and ring_delay_ms <= 0:
-            raise ValueError("ring_delay_ms should be at least 1000ms")
-        return {
-            "JVM_OPTS": f'"$JVM_OPTS -Dcassandra.ring_delay_ms={ring_delay_ms}ms"'
-        }
+    def _generate_initial_token(salt: str) -> int:
+        """Generate deterministic initial token based on salt (64-bit unsigned range)."""
+    
+        # Получаем хэш от соли и используем его как seed
+        hash_bytes = hashlib.sha256(salt.encode()).digest()
+        seed = int.from_bytes(hash_bytes[:8], "big")  # 64 бита для seed
+    
+        rng = random.Random(seed)
+    
+        min_token = 0
+        max_token = 2**63 - 1  # или 2**64 - 1 если хочешь полный uint64
+        return rng.randint(min_token, max_token)    
