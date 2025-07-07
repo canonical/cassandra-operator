@@ -40,7 +40,7 @@ class TLSEvents(Object):
         config_manager: ConfigManager,
         tls_manager: TLSManager,
     ):
-        super().__init__(charm, key="cassandra_events")
+        super().__init__(charm, key="tls_events")
         self.charm = charm
         self.state = state
         self.workload = workload
