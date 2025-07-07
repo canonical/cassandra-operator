@@ -101,6 +101,8 @@ class TLSManager:
             chain=[certificate, ca],
             revoked=None,
             )
+
+        logger.debug(f"Certificate sans ip: {certificate.sans_ip}, sans dns: {certificate.sans_dns}")
         
         return [provider_cert], ca_key
 
