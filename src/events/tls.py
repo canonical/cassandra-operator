@@ -46,7 +46,9 @@ class TLSEvents(Object):
         self.workload = workload
         self.tls_manager = tls_manager
     
-        self.sans = cluster_manager.network_address()
+        host_mapping = cluster_manager.network_address()
+        self.sans = self.tls_manager.build_sans(sans_ip=[host_mapping[0]], sans_dns=[host_mapping[1], self.charm.unit.name])
+        
         self.common_name = f"{self.charm.unit.name}-{self.charm.model.uuid}"
 
         peer_private_key = self.state.unit.peer_tls.private_key
@@ -58,8 +60,8 @@ class TLSEvents(Object):
             certificate_requests=[
                 CertificateRequestAttributes(
                     common_name=self.common_name,
-                    sans_ip=frozenset(self.sans[0]),
-                    sans_dns=frozenset(self.sans[1]),
+                    sans_ip=frozenset(self.sans["sans_ip"]),
+                    sans_dns=frozenset(self.sans["sans_dns"]),
                     organization=TLSScope.CLIENT.value,
                 ),
             ],
@@ -73,8 +75,8 @@ class TLSEvents(Object):
             certificate_requests=[
                 CertificateRequestAttributes(
                     common_name=self.common_name,
-                    sans_ip=frozenset(self.sans[0]),
-                    sans_dns=frozenset(self.sans[1]),
+                    sans_ip=frozenset(self.sans["sans_ip"]),
+                    sans_dns=frozenset(self.sans["sans_dns"]),
                     organization=TLSScope.PEER.value,
                 ),
             ],
@@ -165,8 +167,8 @@ class TLSEvents(Object):
             setup_internal_credentials(
                 self.tls_manager,
                 self.state,
-                sans_ip=frozenset({self.sans[0]}),
-                sans_dns=frozenset({self.charm.unit.name, self.sans[1]}),
+                sans_ip=frozenset(self.sans["sans_ip"]),
+                sans_dns=frozenset(self.sans["sans_dns"]),
                 is_leader=self.charm.unit.is_leader(),
             )
 

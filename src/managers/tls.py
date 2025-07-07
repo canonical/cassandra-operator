@@ -3,6 +3,7 @@
 
 """Manager for handling tls."""
 
+import ipaddress
 import logging
 import re
 import subprocess
@@ -56,6 +57,26 @@ class TLSManager:
         """Returns the keystore path for the given scope."""
         return (self.workload.cassandra_paths.tls_directory / f"{scope.value}-keystore.p12").as_posix()
 
+    def build_sans(self, sans_dns: List[str], sans_ip: List[str]) -> Sans:
+        dns_names = []
+        ip_addresses = []        
+    
+        for dns_name in sans_dns:
+            dns_names.append(x509.DNSName(dns_name))
+        
+        for ip_str in sans_ip:
+            try:
+                ip_obj = ipaddress.ip_address(ip_str)
+                ip_addresses.append(x509.IPAddress(ip_obj))
+            except ValueError as e:
+                logger.error(f"Invalid IP address: {ip_str}, error: {e}")
+                continue
+
+        return {
+            "sans_ip": [str(v) for v in ip_addresses],
+            "sans_dns": [str(v) for v in dns_names],
+        }
+    
     def generate_internal_ca(self,
         common_name: str,
         ) -> Tuple[Certificate, PrivateKey]:
@@ -103,7 +124,7 @@ class TLSManager:
             )
 
         logger.debug(f"Certificate sans ip: {certificate.sans_ip}, sans dns: {certificate.sans_dns}")
-        
+
         return [provider_cert], ca_key
 
 

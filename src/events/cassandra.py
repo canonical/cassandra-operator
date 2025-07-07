@@ -85,12 +85,13 @@ class CassandraEvents(Object):
             setup_internal_ca(self.tls_manager, self.state)
         
         host_mapping = self.cluster_manager.network_address()
+        sans = self.tls_manager.build_sans(sans_ip=[host_mapping[0]], sans_dns=[host_mapping[1], self.charm.unit.name])
         logger.debug(f"---------- CURRENT SANS: {host_mapping}")
         setup_internal_credentials(
             self.tls_manager,
             self.state,
-            sans_ip=frozenset({host_mapping[0]}),
-            sans_dns=frozenset({self.charm.unit.name, host_mapping[1]}),
+            sans_ip=frozenset(sans["sans_ip"]),
+            sans_dns=frozenset(sans["sans_dns"]),
             is_leader=self.charm.unit.is_leader(),
         )
         
