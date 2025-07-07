@@ -49,15 +49,3 @@ class ClusterManager:
         """Get hostname and IP of this unit."""
         hostname = socket.gethostname()
         return socket.gethostbyname(hostname), hostname
-
-    def get_host_mapping(self) -> dict[str, str]:
-        """Collect hostname mapping for current unit.
-
-        Returns:
-            dict[str, str]: Dict of string keys 'hostname', 'ip' and their values
-        """
-        hostname = socket.gethostname()
-        ip = socket.gethostbyname(hostname)
-
-        return {"hostname": hostname, "ip": ip}
-    

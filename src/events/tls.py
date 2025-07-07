@@ -8,13 +8,13 @@ from ops.charm import RelationBrokenEvent, RelationCreatedEvent
 from ops.framework import EventBase, EventSource, Object
 
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
-from charms.tls_certificates_interface.v4.tls_certificates import CertificateRequestAttributes, TLSCertificatesRequiresV4
+from charms.tls_certificates_interface.v4.tls_certificates import CertificateAvailableEvent, CertificateRequestAttributes, TLSCertificatesRequiresV4
 from core.config import CharmConfig
 from core.state import CLIENT_TLS_RELATION, PEER_RELATION, PEER_TLS_RELATION,ApplicationState, TLSScope, TLSContext, TLSState
 from core.workload import WorkloadBase
 from managers.cluster import ClusterManager
 from managers.config import ConfigManager
-from managers.tls import TLSManager
+from managers.tls import TLSManager, _configure_internal_tls
 
 from managers.tls import (
     setup_internal_ca,
@@ -46,7 +46,7 @@ class TLSEvents(Object):
         self.workload = workload
         self.tls_manager = tls_manager
     
-        self.sans = cluster_manager.get_host_mapping()
+        self.sans = cluster_manager.network_address()
         self.common_name = f"{self.charm.unit.name}-{self.charm.model.uuid}"
 
         peer_private_key = self.state.unit.peer_tls.private_key
@@ -58,8 +58,8 @@ class TLSEvents(Object):
             certificate_requests=[
                 CertificateRequestAttributes(
                     common_name=self.common_name,
-                    sans_ip=frozenset(self.sans["ip"]),
-                    sans_dns=frozenset(self.sans["hostname"]),
+                    sans_ip=frozenset(self.sans[0]),
+                    sans_dns=frozenset(self.sans[1]),
                     organization=TLSScope.CLIENT.value,
                 ),
             ],
@@ -73,8 +73,8 @@ class TLSEvents(Object):
             certificate_requests=[
                 CertificateRequestAttributes(
                     common_name=self.common_name,
-                    sans_ip=frozenset(self.sans["ip"]),
-                    sans_dns=frozenset(self.sans["hostname"]),
+                    sans_ip=frozenset(self.sans[0]),
+                    sans_dns=frozenset(self.sans[1]),
                     organization=TLSScope.PEER.value,
                 ),
             ],
@@ -88,10 +88,10 @@ class TLSEvents(Object):
             self.framework.observe(self.charm.on[rel].relation_created, self._tls_relation_created)
             self.framework.observe(self.charm.on[rel].relation_broken, self._tls_relation_broken)
 
-        # for relation in [self.client_certificate, self.peer_certificate]:
-        #     self.framework.observe(
-        #         relation.on.certificate_available, self._on_certificate_available
-        #     )
+        for relation in [self.client_certificate, self.peer_certificate]:
+            self.framework.observe(
+                relation.on.certificate_available, self._on_certificate_avaliable
+            )
 
     def _tls_relation_created(self, event: RelationCreatedEvent) -> None:
         """Handler for `certificates_relation_created` event."""
@@ -100,6 +100,44 @@ class TLSEvents(Object):
 
         if event.relation.name == PEER_TLS_RELATION:
             self.state.cluster.tls_state = TLSState.ACTIVE
+
+    def _on_certificate_avaliable(self, event: CertificateAvailableEvent) -> None:
+        if not self.state.peer_relation:
+            logger.warning("No peer relation on certificate available")
+            event.defer()
+            return
+
+        ca_changed = False
+        certificate_changed = False
+
+        requirer = (
+            self.client_certificate
+            if event.certificate.organization == TLSScope.CLIENT.value
+            else self.peer_certificate
+        )
+
+        tls_state = self.requirer_state(requirer)
+
+        if tls_state.certificate and event.certificate.raw != tls_state.certificate:
+            certificate_changed = True
+
+        if tls_state.ca and event.ca.raw != tls_state.ca:
+            ca_changed = True
+
+        tls_state.certificate = event.certificate
+        tls_state.ca = event.ca
+        tls_state.chain = event.chain
+
+        self.tls_manager.remove_stores(scope=tls_state.scope)
+        _configure_internal_tls(self.tls_manager, tls_state)
+
+        if certificate_changed or ca_changed:
+            tls_state.rotation = True
+        
+        if tls_state.scope == TLSScope.PEER and self.charm.unit.is_leader():
+            self.state.cluster.peer_cluster_ca = tls_state.bundle
+
+        self.charm.on.config_changed.emit()
         
     def _tls_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Handler for `certificates_relation_broken` event."""
@@ -127,8 +165,8 @@ class TLSEvents(Object):
             setup_internal_credentials(
                 self.tls_manager,
                 self.state,
-                sans_ip=frozenset({self.sans["ip"]}),
-                sans_dns=frozenset({self.charm.unit.name, self.sans["hostname"]}),
+                sans_ip=frozenset({self.sans[0]}),
+                sans_dns=frozenset({self.charm.unit.name, self.sans[1]}),
                 is_leader=self.charm.unit.is_leader(),
             )
 

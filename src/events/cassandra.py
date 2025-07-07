@@ -84,12 +84,13 @@ class CassandraEvents(Object):
 
             setup_internal_ca(self.tls_manager, self.state)
         
-        host_mapping = self.cluster_manager.get_host_mapping()
+        host_mapping = self.cluster_manager.network_address()
+        logger.debug(f"---------- CURRENT SANS: {host_mapping}")
         setup_internal_credentials(
             self.tls_manager,
             self.state,
-            sans_ip=frozenset({host_mapping["ip"]}),
-            sans_dns=frozenset({self.charm.unit.name, host_mapping["hostname"]}),
+            sans_ip=frozenset({host_mapping[0]}),
+            sans_dns=frozenset({self.charm.unit.name, host_mapping[1]}),
             is_leader=self.charm.unit.is_leader(),
         )
         
@@ -130,6 +131,11 @@ class CassandraEvents(Object):
             return
         if not self.state.unit.workload_state == UnitWorkloadState.ACTIVE:
             return
+
+        if self.state.unit.peer_tls.rotation or self.state.unit.client_tls.rotation:
+           self.state.unit.peer_tls.rotation = False
+           self.state.unit.client_tls.rotation = False
+        
         self.workload.restart()
         self.state.unit.workload_state = UnitWorkloadState.STARTING
 
@@ -149,16 +155,6 @@ class CassandraEvents(Object):
             self.state.unit.workload_state = UnitWorkloadState.ACTIVE
             if self.charm.unit.is_leader():
                 self.state.cluster.state = ClusterState.ACTIVE
-
-        # Проверяем, что нода в кольце после того как стала активной
-        if (
-            self.state.unit.workload_state == UnitWorkloadState.ACTIVE
-            and self.cluster_manager.is_healthy
-            and not self.cluster_manager.is_node_in_ring
-        ):
-            logger.warning("Node is active and healthy but not in ring, restarting...")
-            self.workload.restart()
-            self.state.unit.workload_state = UnitWorkloadState.STARTING
 
     def _on_collect_unit_status(self, event: CollectStatusEvent) -> None:
         try:

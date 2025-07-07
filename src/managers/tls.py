@@ -7,7 +7,7 @@ import logging
 import re
 import subprocess
 from datetime import timedelta
-from typing import FrozenSet, List, Optional, Self, Tuple
+from typing import FrozenSet, List, Optional, Self, Tuple, TypedDict
 
 from charms.tls_certificates_interface.v4.tls_certificates import (
     Certificate,
@@ -24,10 +24,12 @@ from cryptography.hazmat.primitives import hashes
 from common.exceptions import ExecError
 
 from core.workload import WorkloadBase
-from core.state import ApplicationState, TLSScope
+from core.state import ApplicationState, TLSContext, TLSScope
 from common.cassandra_client import CassandraClient
 
 logger = logging.getLogger(__name__)
+
+Sans = TypedDict("Sans", {"sans_ip": list[str], "sans_dns": list[str]})
 
 USER_NAME = "_daemon_"
 GROUP = "root"
@@ -208,7 +210,7 @@ class TLSManager:
 
     def set_keystore(self, pk_password: str, keystore_password: str) -> None:
         for scope in self.SCOPES:        
-            pk, crt, ca, bundle = self.get_private_key(scope), self.get_certificate(scope), self.get_ca(scope), self.get_bundle(scope)        
+            pk, crt, ca = self.get_private_key(scope), self.get_certificate(scope), self.get_ca(scope)
             if not (all([ca, crt, pk])):
                 logger.error("Can't set keystore, missing TLS artifacts.")
                 return
@@ -423,7 +425,7 @@ def setup_internal_credentials(
 
         if state.unit.peer_tls.ready:
             logger.debug("No need to set up internal credentials...")
-            _configure_internal_tls(tls_manager, state)
+            _configure_internal_tls(tls_manager, state.unit.peer_tls)
             return
 
         provider_crt, pk = tls_manager.generate_internal_credentials(
@@ -444,17 +446,17 @@ def setup_internal_credentials(
         state.unit.peer_tls.ca = ca
         state.unit.peer_tls.chain = provider_crt[0].chain
 
-        _configure_internal_tls(tls_manager, state)
+        _configure_internal_tls(tls_manager, state.unit.peer_tls)
 
         if is_leader:
             state.cluster.peer_cluster_ca = state.unit.peer_tls.bundle
     
 
-def _configure_internal_tls(tls_manager: TLSManager, state: ApplicationState) -> None:
-    if not state.unit.peer_tls.ready:
+def _configure_internal_tls(tls_manager: TLSManager, state: TLSContext) -> None:
+    if not state.ready:
         return
 
-    resolved = state.unit.peer_tls.resolved()
+    resolved = state.resolved()
     
     tls_manager.configure(
         pk=resolved.private_key,
