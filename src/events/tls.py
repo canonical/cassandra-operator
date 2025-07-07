@@ -10,7 +10,7 @@ from ops.framework import EventBase, EventSource, Object
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from charms.tls_certificates_interface.v4.tls_certificates import CertificateAvailableEvent, CertificateRequestAttributes, TLSCertificatesRequiresV4
 from core.config import CharmConfig
-from core.state import CLIENT_TLS_RELATION, PEER_RELATION, PEER_TLS_RELATION,ApplicationState, TLSScope, TLSContext, TLSState
+from core.state import CLIENT_TLS_RELATION, PEER_TLS_RELATION,ApplicationState, TLSScope, TLSContext, TLSState
 from core.workload import WorkloadBase
 from managers.cluster import ClusterManager
 from managers.config import ConfigManager
@@ -71,7 +71,7 @@ class TLSEvents(Object):
 
         self.peer_certificate = TLSCertificatesRequiresV4(
             self.charm,
-            PEER_RELATION,
+            PEER_TLS_RELATION,
             certificate_requests=[
                 CertificateRequestAttributes(
                     common_name=self.common_name,
