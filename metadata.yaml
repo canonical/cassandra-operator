@@ -1,3 +1,5 @@
+# Copyright 2024 Canonical Ltd.
+# See LICENSE file for licensing details.
 name: cassandra
 display-name: Apache Cassandra
 
@@ -8,6 +10,9 @@ description: |
   Apache Cassandra is a free and open-source software project by the Apache Software Foundation.
   Users can find out more at the [Apache Cassandra project page](https://cassandra.apache.org/_/index.html).
 
+peers:
+  cassandra-peers:
+    interface: cassandra_peers
 
 requires:
   client-certificates:
@@ -18,3 +23,4 @@ requires:
     interface: tls-certificates
     limit: 1
     optional: true
+
