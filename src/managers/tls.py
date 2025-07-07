@@ -113,6 +113,26 @@ class TLSManager:
             csr=csr, ca=ca, ca_private_key=ca_key, validity=timedelta(days=3650)
         )
 
+        try:
+            certificate_object = x509.load_pem_x509_certificate(data=certificate.raw.encode())
+            
+            sans = certificate_object.extensions.get_extension_for_class(
+                x509.SubjectAlternativeName
+            ).value
+
+            logger.debug(f"PARSED SANS: {sans}")
+            
+            for san in sans:
+                if isinstance(san, x509.DNSName):
+                    logger.debug(f"san: {san} x509.DNSName")
+                if isinstance(san, x509.IPAddress):
+                    logger.debug(f"san: {san} x509.IPAddress")
+                if isinstance(san, x509.RegisteredID):
+                    logger.debug(f"san: {san} x509.RegisteredID")
+        except x509.ExtensionNotFound:
+            logger.debug(f"No SANs found in certificate. sans_ip={sans_ip}, sans_dns={sans_dns}")
+        
+
         provider_cert = ProviderCertificate(
             relation_id=0,
             certificate=certificate,
