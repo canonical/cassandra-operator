@@ -80,6 +80,9 @@ class TLSManager:
         sans_dns: Optional[FrozenSet[str]],
         ) -> Tuple[List[ProviderCertificate], Optional[PrivateKey]]:
 
+        logger.debug(f"sans_ip contents: {[] if not sans_ip else [repr(i) for i in sans_ip]}")
+        logger.debug(f"sans_dns contents: {[] if not sans_dns else [repr(i) for i in sans_dns]}")        
+
         csr = generate_csr(
             private_key=ca_key,
             common_name=common_name,
