@@ -104,6 +104,7 @@ class ResolvedTLSState:
     certificate: Certificate
     chain: list[Certificate]
     bundle: list[Certificate]
+    scope: TLSScope
             
 class TLSContext(RelationState):
     """State collection metadata for TLS credentials."""
@@ -241,6 +242,7 @@ class TLSContext(RelationState):
             certificate=self.certificate,
             chain=self.chain,
             bundle=self.bundle,
+            scope=self.scope,
         )
     
 

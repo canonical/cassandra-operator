@@ -14,7 +14,7 @@ from core.state import CLIENT_TLS_RELATION, PEER_TLS_RELATION,ApplicationState, 
 from core.workload import WorkloadBase
 from managers.cluster import ClusterManager
 from managers.config import ConfigManager
-from managers.tls import TLSManager, _configure_internal_tls
+from managers.tls import TLSManager, configure_internal_tls
 
 from managers.tls import (
     setup_internal_ca,
@@ -90,33 +90,51 @@ class TLSEvents(Object):
             self.framework.observe(self.charm.on[rel].relation_created, self._tls_relation_created)
             self.framework.observe(self.charm.on[rel].relation_broken, self._tls_relation_broken)
 
-        for relation in [self.client_certificate, self.peer_certificate]:
-            self.framework.observe(
-                relation.on.certificate_available, self._on_certificate_avaliable
-            )
+        self.framework.observe(
+            self.client_certificate.on.certificate_available, self._on_client_certificate_available
+        )
 
+        self.framework.observe(
+            self.peer_certificate.on.certificate_available, self._on_client_certificate_available
+        )
+            
     def _tls_relation_created(self, event: RelationCreatedEvent) -> None:
         """Handler for `certificates_relation_created` event."""
         if not self.charm.unit.is_leader() or not self.state.peer_relation:
             return
 
-        if event.relation.name == PEER_TLS_RELATION:
+        if event.relation.name == CLIENT_TLS_RELATION:
             self.state.cluster.tls_state = TLSState.ACTIVE
 
-    def _on_certificate_avaliable(self, event: CertificateAvailableEvent) -> None:
+    def _on_peer_certificate_available(self, event: CertificateAvailableEvent) -> None:
+        """Handler for `certificate_available` event after provider updates signed certs for peer TLS relation."""
         if not self.state.peer_relation:
             logger.warning("No peer relation on certificate available")
             event.defer()
-            return
+            return        
+
+        self._handle_certificate_available_event(event, self.peer_certificate)
+        if self.charm.unit.is_leader():
+            # Update peer-cluster CA/chain.
+            self.state.cluster.peer_cluster_ca = self.state.unit.peer_tls.bundle
+
+        self.charm.on.config_changed.emit()
+
+    def _on_client_certificate_available(self, event: CertificateAvailableEvent) -> None:
+        """Handler for `certificate_available` event after provider updates signed certs for client TLS relation."""
+        if not self.state.peer_relation:
+            logger.warning("No peer relation on certificate available")
+            event.defer()
+            return        
+
+        self._handle_certificate_available_event(event, self.client_certificate)
+        self.charm.on.config_changed.emit()
+
+            
+    def _handle_certificate_available_event(self, event: CertificateAvailableEvent, requirer: TLSCertificatesRequiresV4) -> None:
 
         ca_changed = False
         certificate_changed = False
-
-        requirer = (
-            self.client_certificate
-            if event.certificate.organization == TLSScope.CLIENT.value
-            else self.peer_certificate
-        )
 
         tls_state = self.requirer_state(requirer)
 
@@ -131,15 +149,10 @@ class TLSEvents(Object):
         tls_state.chain = event.chain
 
         self.tls_manager.remove_stores(scope=tls_state.scope)
-        _configure_internal_tls(self.tls_manager, tls_state)
+        configure_internal_tls(self.tls_manager, tls_state)
 
         if certificate_changed or ca_changed:
             tls_state.rotation = True
-        
-        if tls_state.scope == TLSScope.PEER and self.charm.unit.is_leader():
-            self.state.cluster.peer_cluster_ca = tls_state.bundle
-
-        self.charm.on.config_changed.emit()
         
     def _tls_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Handler for `certificates_relation_broken` event."""
@@ -155,7 +168,6 @@ class TLSEvents(Object):
         state.chain = []
         state.ca = None
 
-        # remove all existing keystores from the unit so we don't preserve certs
         self.tls_manager.remove_stores(scope=state.scope)
 
         if state.scope == TLSScope.PEER:

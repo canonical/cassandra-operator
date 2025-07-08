@@ -25,7 +25,7 @@ from cryptography.hazmat.primitives import hashes
 from common.exceptions import ExecError
 
 from core.workload import WorkloadBase
-from core.state import ApplicationState, TLSContext, TLSScope
+from core.state import ApplicationState, ResolvedTLSState, TLSContext, TLSScope
 from common.cassandra_client import CassandraClient
 
 logger = logging.getLogger(__name__)
@@ -127,19 +127,19 @@ class TLSManager:
         return [provider_cert], ca_key
 
 
-    def set_ca(self, ca: Certificate) -> None:
+    def set_ca(self, ca: Certificate, scope: TLSScope) -> None:
         for scope in self.SCOPES:
             (self.workload.cassandra_paths.tls_directory / f"{scope.value}-ca.pem").write_text(
                 str(ca)
             )
 
-    def set_certificate(self, crt: Certificate) -> None:
+    def set_certificate(self, crt: Certificate, scope: TLSScope) -> None:
         for scope in self.SCOPES:
             (self.workload.cassandra_paths.tls_directory / f"{scope.value}-unit.pem").write_text(
                 str(crt)
             )
 
-    def set_bundle(self, ca_list: List[Certificate]) -> None:
+    def set_bundle(self, ca_list: List[Certificate], scope: TLSScope) -> None:
         raw_list = [c.raw for c in ca_list]
         
         for scope in self.SCOPES:
@@ -147,11 +147,11 @@ class TLSManager:
                 str("\n".join(raw_list))
             )        
 
-    def set_private_key(self, pk: PrivateKey) -> None:
+    def set_private_key(self, pk: PrivateKey, scope: TLSScope) -> None:
         for scope in self.SCOPES:
             (self.workload.cassandra_paths.tls_directory / f"{scope.value}-private.key").write_text(str(pk))
 
-    def set_chain(self, ca_list: List[Certificate]) -> None:
+    def set_chain(self, ca_list: List[Certificate], scope: TLSScope) -> None:
         """Sets the unit chain."""
         for scope in self.SCOPES:
             for i, chain_cert in enumerate(ca_list):
@@ -195,17 +195,16 @@ class TLSManager:
             logger.error(f"cannot read bundle: {e}")
         return bundle
 
-    def set_truststore(self, trust_password: str) -> None:
-        for scope in self.SCOPES:
-            pk, crt, ca, bundle = self.get_private_key(scope), self.get_certificate(scope), self.get_ca(scope), self.get_bundle(scope)
+    def set_truststore(self, trust_password: str, scope: TLSScope) -> None:
+        pk, crt, ca, bundle = self.get_private_key(scope), self.get_certificate(scope), self.get_ca(scope), self.get_bundle(scope)
             
-            if not all([pk, crt, ca]):
-                logger.debug("Can't set truststore, missing TLS artifacts.")
-                return
+        if not all([pk, crt, ca]):
+            logger.debug("Can't set truststore, missing TLS artifacts.")
+            return
             
-            trust_aliases = [f"bundle{i}" for i in range(len(bundle))]
-            for alias in trust_aliases:
-              try:
+        trust_aliases = [f"bundle{i}" for i in range(len(bundle))]
+        for alias in trust_aliases:
+            try:
                 self.workload.exec(
                     command=[
                         "charmed-cassandra.keytool",
@@ -227,48 +226,47 @@ class TLSManager:
                 )
                 self.workload.exec(f"chmod 770 {self.get_truststore_path(scope)}".split())
                   
-              except (subprocess.CalledProcessError, ExecError) as e:
-                 if e.stdout and "already exists" in e.stdout:
-                    continue
-                 logger.error(e.stdout)
-                 raise e
-
-    def set_keystore(self, pk_password: str, keystore_password: str) -> None:
-        for scope in self.SCOPES:        
-            pk, crt, ca = self.get_private_key(scope), self.get_certificate(scope), self.get_ca(scope)
-            if not (all([ca, crt, pk])):
-                logger.error("Can't set keystore, missing TLS artifacts.")
-                return
-
-            try:
-                self.workload.exec(
-                    command=[
-                        "openssl",
-                        "pkcs12",
-                        "-export",
-                        "-in",
-                        f"{scope.value}-bundle.pem",
-                        "-inkey",
-                        f"{scope.value}-private.key",
-                        "-passin",
-                        f"pass:{pk_password}",
-                        "-certfile",
-                        f"{scope.value}-unit.pem",
-                        "-out",
-                        f"{scope.value}-keystore.p12",
-                        "-password",
-                        f"pass:{keystore_password}",
-                    ],
-                cwd=self.workload.cassandra_paths.tls_directory.as_posix(),
-                )
-
-                self.workload.exec(
-                  f"chown {USER_NAME}:{GROUP} {self.get_keystore_path(scope)}".split()
-                  )
-                self.workload.exec(f"chmod 770 {self.get_keystore_path(scope)}".split())
             except (subprocess.CalledProcessError, ExecError) as e:
+                if e.stdout and "already exists" in e.stdout:
+                    continue
                 logger.error(e.stdout)
-                raise e                
+                raise e
+
+    def set_keystore(self, pk_password: str, keystore_password: str, scope: TLSScope) -> None:
+        pk, crt, ca = self.get_private_key(scope), self.get_certificate(scope), self.get_ca(scope)
+        if not (all([ca, crt, pk])):
+            logger.error("Can't set keystore, missing TLS artifacts.")
+            return
+
+        try:
+            self.workload.exec(
+                command=[
+                    "openssl",
+                    "pkcs12",
+                    "-export",
+                    "-in",
+                    f"{scope.value}-bundle.pem",
+                    "-inkey",
+                    f"{scope.value}-private.key",
+                    "-passin",
+                    f"pass:{pk_password}",
+                    "-certfile",
+                    f"{scope.value}-unit.pem",
+                    "-out",
+                    f"{scope.value}-keystore.p12",
+                    "-password",
+                    f"pass:{keystore_password}",
+                ],
+                cwd=self.workload.cassandra_paths.tls_directory.as_posix(),
+            )
+
+            self.workload.exec(
+                f"chown {USER_NAME}:{GROUP} {self.get_keystore_path(scope)}".split()
+            )
+            self.workload.exec(f"chmod 770 {self.get_keystore_path(scope)}".split())
+        except (subprocess.CalledProcessError, ExecError) as e:
+            logger.error(e.stdout)
+            raise e                
 
     def configure(self,
                   pk: PrivateKey,
@@ -279,14 +277,15 @@ class TLSManager:
                   pk_password: str,
                   keystore_password: str,
                   trust_password: str,
+                  scope: TLSScope,
                   ) -> None:
-        self.set_private_key(pk)
-        self.set_ca(ca)
-        self.set_bundle(chain) #TODO: explore the way in done in kafka with [certificate, ca] + chain
-        self.set_chain(chain)
-        self.set_certificate(certificate)
-        self.set_keystore(pk_password, keystore_password)
-        self.set_truststore(trust_password)
+        self.set_private_key(pk, scope)
+        self.set_ca(ca, scope)
+        self.set_bundle(bundle, scope)
+        self.set_chain(chain, scope)
+        self.set_certificate(certificate, scope)
+        self.set_keystore(pk_password, keystore_password, scope)
+        self.set_truststore(trust_password, scope)
 
     def import_cert(self, alias: str, filename: str, trust_password: str, scope: TLSScope = TLSScope.CLIENT) -> None:
         try:
@@ -450,7 +449,7 @@ def setup_internal_credentials(
 
         if state.unit.peer_tls.ready:
             logger.debug("No need to set up internal credentials...")
-            _configure_internal_tls(tls_manager, state.unit.peer_tls)
+            configure_internal_tls(tls_manager, state.unit.peer_tls)
             return
 
         provider_crt, pk = tls_manager.generate_internal_credentials(
@@ -471,13 +470,13 @@ def setup_internal_credentials(
         state.unit.peer_tls.ca = ca
         state.unit.peer_tls.chain = provider_crt[0].chain
 
-        _configure_internal_tls(tls_manager, state.unit.peer_tls)
+        configure_internal_tls(tls_manager, state.unit.peer_tls)
 
         if is_leader:
             state.cluster.peer_cluster_ca = state.unit.peer_tls.bundle
     
 
-def _configure_internal_tls(tls_manager: TLSManager, state: TLSContext) -> None:
+def configure_internal_tls(tls_manager: TLSManager, state: TLSContext) -> None:
     if not state.ready:
         return
 
@@ -492,4 +491,5 @@ def _configure_internal_tls(tls_manager: TLSManager, state: TLSContext) -> None:
         pk_password="",
         keystore_password="myStorePass",
         trust_password="myStorePass",
+        scope=resolved.scope,
     )            
