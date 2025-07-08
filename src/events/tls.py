@@ -14,7 +14,7 @@ from core.state import CLIENT_TLS_RELATION, PEER_TLS_RELATION,ApplicationState, 
 from core.workload import WorkloadBase
 from managers.cluster import ClusterManager
 from managers.config import ConfigManager
-from managers.tls import TLSManager, configure_internal_tls
+from managers.tls import TLSManager, configure_tls
 
 from managers.tls import (
     setup_internal_ca,
@@ -149,7 +149,7 @@ class TLSEvents(Object):
         tls_state.chain = event.chain
 
         self.tls_manager.remove_stores(scope=tls_state.scope)
-        configure_internal_tls(self.tls_manager, tls_state)
+        configure_tls(self.tls_manager, tls_state)
 
         if certificate_changed or ca_changed:
             tls_state.rotation = True

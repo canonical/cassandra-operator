@@ -449,7 +449,7 @@ def setup_internal_credentials(
 
         if state.unit.peer_tls.ready:
             logger.debug("No need to set up internal credentials...")
-            configure_internal_tls(tls_manager, state.unit.peer_tls)
+            configure_tls(tls_manager, state.unit.peer_tls)
             return
 
         provider_crt, pk = tls_manager.generate_internal_credentials(
@@ -470,13 +470,13 @@ def setup_internal_credentials(
         state.unit.peer_tls.ca = ca
         state.unit.peer_tls.chain = provider_crt[0].chain
 
-        configure_internal_tls(tls_manager, state.unit.peer_tls)
+        configure_tls(tls_manager, state.unit.peer_tls)
 
         if is_leader:
             state.cluster.peer_cluster_ca = state.unit.peer_tls.bundle
     
 
-def configure_internal_tls(tls_manager: TLSManager, state: TLSContext) -> None:
+def configure_tls(tls_manager: TLSManager, state: TLSContext) -> None:
     if not state.ready:
         return
 
