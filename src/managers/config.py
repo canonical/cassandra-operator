@@ -26,7 +26,7 @@ class ConfigManager:
         self.workload = workload
 
     def render_cassandra_config(
-        self, cluster_name: str, listen_address: str, seeds: list[str], enable_tls: bool
+            self, cluster_name: str, listen_address: str, seeds: list[str], enable_peer_tls: bool, enable_client_tls: bool
     ) -> None:
         """Generate and write cassandra config."""
         config = {
@@ -86,7 +86,7 @@ class ConfigManager:
             "storage_port": 7000,
         }
 
-        if enable_tls:
+        if enable_peer_tls:
             config["server_encryption_options"] = {
                 "internode_encryption": "all",
                 "keystore": self.workload.cassandra_paths.peer_keystore.as_posix(),
@@ -99,6 +99,7 @@ class ConfigManager:
                 "protocol": "TLS",
             }
 
+        if enable_client_tls:            
             config["client_encryption_options"] = {
                 "enabled": True,
                 "optional": False,

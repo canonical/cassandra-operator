@@ -86,7 +86,6 @@ class CassandraEvents(Object):
         
         host_mapping = self.cluster_manager.network_address()
         sans = self.tls_manager.build_sans(sans_ip=[host_mapping[0]], sans_dns=[host_mapping[1], self.charm.unit.name])
-        logger.debug(f"---------- CURRENT SANS: {host_mapping}")
         setup_internal_credentials(
             self.tls_manager,
             self.state,
@@ -106,7 +105,8 @@ class CassandraEvents(Object):
                 cluster_name=self.charm.config.cluster_name,
                 listen_address=self.state.unit.ip,
                 seeds=self.state.cluster.seeds,
-                enable_tls=True,
+                enable_peer_tls=self.state.unit.peer_tls.ready,
+                enable_client_tls=self.state.unit.client_tls.ready,
             )
         except ValidationError as e:
             logger.debug(f"Config haven't passed validation: {e}")
@@ -125,7 +125,8 @@ class CassandraEvents(Object):
                 cluster_name=self.charm.config.cluster_name,
                 listen_address=self.state.unit.ip,
                 seeds=self.state.cluster.seeds,
-                enable_tls=True,
+                enable_peer_tls=self.state.unit.peer_tls.ready,
+                enable_client_tls=self.state.unit.client_tls.ready,
             )
         except ValidationError as e:
             logger.debug(f"Config haven't passed validation: {e}")
