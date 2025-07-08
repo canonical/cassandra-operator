@@ -87,21 +87,21 @@ def test_start_only_after_leader_active():
     relation = testing.PeerRelation(
         id=1, endpoint=PEER_RELATION, local_app_data={"cluster_state": "active"}
     )
-    state = testing.State(leader=False, relations={relation})
+    bootstrap_relation = testing.PeerRelation(id=2, endpoint="bootstrap")
+    state = testing.State(leader=False, relations={relation, bootstrap_relation})
 
     with (
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
-        patch("charm.CassandraWorkload") as workload,
+        patch("charm.CassandraWorkload"),
         patch(
-            "managers.cluster.ClusterManager.is_healthy",
-            new_callable=PropertyMock(return_value=False),
-        ),
+            "charms.rolling_ops.v0.rollingops.RollingOpsManager._on_acquire_lock", autospec=True
+        ) as bootstrap,
     ):
         state = ctx.run(ctx.on.start(), state)
         assert state.unit_status == ops.MaintenanceStatus("waiting for Cassandra to start")
         assert state.get_relation(1).local_unit_data.get("workload_state") == "starting"
-        workload.return_value.start.assert_called()
+        bootstrap.assert_called_once()
 
 
 def test_config_changed_invalid_config():
