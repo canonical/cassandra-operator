@@ -7,6 +7,7 @@
 import logging
 
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
+from charms.rolling_ops.v0.rollingops import RollingOpsManager, RunWithLock
 from ops import main
 
 from core.config import CharmConfig
@@ -31,6 +32,9 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         workload = CassandraWorkload()
         cluster_manager = ClusterManager(workload=workload)
         config_manager = ConfigManager(workload=workload)
+        bootstrap_manager = RollingOpsManager(
+            charm=self, relation="bootstrap", callback=self.bootstrap
+        )
 
         self.cassandra_events = CassandraEvents(
             self,
@@ -38,7 +42,12 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             workload=workload,
             cluster_manager=cluster_manager,
             config_manager=config_manager,
+            bootstrap_manager=bootstrap_manager,
         )
+
+    def bootstrap(self, event: RunWithLock) -> None:
+        """Start workload and join this unit to the cluster."""
+        self.cassandra_events.bootstrap(event)
 
 
 if __name__ == "__main__":  # pragma: nocover

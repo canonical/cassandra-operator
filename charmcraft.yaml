@@ -20,6 +20,8 @@ charm-libs:
     version: "1"
   - lib: data_platform_libs.data_interfaces
     version: "0"
+  - lib: rolling_ops.rollingops
+    version: "0"
 
 config:
   options:
@@ -35,6 +37,8 @@ config:
 peers:
   cassandra-peers:
     interface: cassandra_peers
+  bootstrap:
+    interface: rolling_op
 
 parts:
   # "poetry-deps" part name is a magic constant
