@@ -17,7 +17,6 @@ from ops import (
 )
 
 from managers.tls import (
-    setup_internal_ca,
     setup_internal_credentials,
 )
 
@@ -82,19 +81,41 @@ class CassandraEvents(Object):
                 event.defer()
                 return
 
-            setup_internal_ca(self.tls_manager, self.state)
+            ca, pk = self.tls_manager.generate_internal_ca(common_name=self.state.unit.unit.app.name)
+            
+            self.state.cluster.internal_ca = ca
+            self.state.cluster.internal_ca_key = pk
         
         host_mapping = self.cluster_manager.network_address()
         sans = self.tls_manager.build_sans(sans_ip=[host_mapping[0]], sans_dns=[host_mapping[1], self.charm.unit.name])
-        setup_internal_credentials(
-            self.tls_manager,
-            self.state,
-            sans_ip=frozenset(sans["sans_ip"]),
-            sans_dns=frozenset(sans["sans_dns"]),
-            is_leader=self.charm.unit.is_leader(),
+
+        if not self.state.cluster.internal_ca or not self.state.cluster.internal_ca_key:
+            logger.debug("Deferring on_start for unit due to cluster internal CA's isn't initialized yet")
+            event.defer()
+            return
+
+        if not self.state.unit.peer_tls.ready:
+            provider_crt, pk = self.tls_manager.generate_internal_credentials(
+                ca=self.state.cluster.internal_ca,
+                ca_key=self.state.cluster.internal_ca_key,
+                common_name=self.state.unit.unit.name,
+                sans_ip=frozenset(sans["sans_ip"]),
+                sans_dns=frozenset(sans["sans_dns"]),
+            )
+            
+            self.state.unit.peer_tls.setup_provider_certificates(provider_crt)
+            self.state.unit.peer_tls.private_key = pk
+            self.state.unit.peer_tls.ca = self.state.cluster.internal_ca
+
+        self.tls_manager.configure(
+            self.state.unit.peer_tls.resolved(),
+            pk_password="",
+            keystore_password="myStorePass",
+            trust_password="myStorePass",
         )
-        
+
         if self.charm.unit.is_leader():
+            self.state.cluster.peer_cluster_ca = self.state.unit.peer_tls.bundle
             self.state.cluster.seeds = [self.state.unit.peer_url]
 
         try:

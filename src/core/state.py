@@ -21,6 +21,7 @@ from charms.tls_certificates_interface.v4.tls_certificates import (
     Certificate,
     CertificateSigningRequest,
     PrivateKey,
+    ProviderCertificate,
 )
 from ops import Application, CharmBase, Object, Relation, Unit
 
@@ -118,6 +119,12 @@ class TLSContext(RelationState):
         self.scope = scope
         super().__init__(relation, data_interface, component)
 
+
+    def setup_provider_certificates(self, crts: ProviderCertificate) -> None:
+        self.certificate = crts.certificate
+        self.csr = crts.certificate_signing_request
+        self.chain = crts.chain
+    
     @property
     def private_key(self) -> Optional[PrivateKey]:
         """The unit private-key set during `certificates_joined`.

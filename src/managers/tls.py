@@ -98,10 +98,7 @@ class TLSManager:
         common_name: str,
         sans_ip: Optional[FrozenSet[str]],
         sans_dns: Optional[FrozenSet[str]],
-        ) -> Tuple[List[ProviderCertificate], Optional[PrivateKey]]:
-
-        logger.debug(f"sans_ip contents: {sans_ip}")
-        logger.debug(f"sans_dns contents: {sans_dns}")
+        ) -> Tuple[ProviderCertificate, PrivateKey]:
 
         csr = generate_csr(
             private_key=ca_key,
@@ -124,7 +121,7 @@ class TLSManager:
 
         logger.debug(f"Certificate sans ip: {certificate.sans_ip}, sans dns: {certificate.sans_dns}")
 
-        return [provider_cert], ca_key
+        return provider_cert, ca_key
 
 
     def set_ca(self, ca: Certificate, scope: TLSScope) -> None:
@@ -268,22 +265,19 @@ class TLSManager:
             logger.error(e.stdout)
             raise e                
 
-    def configure(self,
-                  pk: PrivateKey,
-                  ca: Certificate,
-                  chain: List[Certificate],
-                  certificate: Certificate,
-                  bundle: List[Certificate],
-                  pk_password: str,
-                  keystore_password: str,
-                  trust_password: str,
-                  scope: TLSScope,
-                  ) -> None:
-        self.set_private_key(pk, scope)
-        self.set_ca(ca, scope)
-        self.set_bundle(bundle, scope)
-        self.set_chain(chain, scope)
-        self.set_certificate(certificate, scope)
+    def configure(
+            self,
+            tls_state: ResolvedTLSState,
+            pk_password: str,
+            keystore_password: str,
+            trust_password: str
+    ) -> None:
+        scope = tls_state.scope
+        self.set_private_key(tls_state.private_key, scope)
+        self.set_ca(tls_state.ca, scope)
+        self.set_bundle(tls_state.bundle, scope)
+        self.set_chain(tls_state.chain, scope)
+        self.set_certificate(tls_state.certificate, scope)
         self.set_keystore(pk_password, keystore_password, scope)
         self.set_truststore(trust_password, scope)
 
@@ -423,73 +417,3 @@ class TLSManager:
             for alias, fingerprint in matches
         }
 
-
-def setup_internal_ca(tls_manager: TLSManager, state: ApplicationState) -> None:
-        if not state.unit.unit.is_leader():
-            return
-
-        ca, pk = tls_manager.generate_internal_ca(common_name=state.unit.unit.app.name)
-
-        state.cluster.internal_ca = ca
-        state.cluster.internal_ca_key = pk
-    
-def setup_internal_credentials(
-        tls_manager: TLSManager,
-        state: ApplicationState,
-        sans_ip: Optional[FrozenSet[str]],
-        sans_dns: Optional[FrozenSet[str]],
-        is_leader: bool,
-) -> None:
-        ca = state.cluster.internal_ca
-        ca_key = state.cluster.internal_ca_key
-        
-        if ca is None or ca_key is None:
-            logger.error("Internal CA is not set up yet.")
-            return
-
-        if state.unit.peer_tls.ready:
-            logger.debug("No need to set up internal credentials...")
-            configure_tls(tls_manager, state.unit.peer_tls)
-            return
-
-        provider_crt, pk = tls_manager.generate_internal_credentials(
-            ca=ca,
-            ca_key=ca_key,
-            common_name=state.unit.unit.name,
-            sans_ip=sans_ip,
-            sans_dns=sans_dns,
-        )
-
-        if not pk:
-            logger.error("private key for internal tls is empty")
-            return
-
-        state.unit.peer_tls.certificate = provider_crt[0].certificate
-        state.unit.peer_tls.csr = provider_crt[0].certificate_signing_request
-        state.unit.peer_tls.private_key = pk
-        state.unit.peer_tls.ca = ca
-        state.unit.peer_tls.chain = provider_crt[0].chain
-
-        configure_tls(tls_manager, state.unit.peer_tls)
-
-        if is_leader:
-            state.cluster.peer_cluster_ca = state.unit.peer_tls.bundle
-    
-
-def configure_tls(tls_manager: TLSManager, state: TLSContext) -> None:
-    if not state.ready:
-        return
-
-    resolved = state.resolved()
-    
-    tls_manager.configure(
-        pk=resolved.private_key,
-        ca=resolved.ca,
-        chain=resolved.chain,
-        certificate=resolved.certificate,
-        bundle=resolved.bundle,
-        pk_password="",
-        keystore_password="myStorePass",
-        trust_password="myStorePass",
-        scope=resolved.scope,
-    )            
