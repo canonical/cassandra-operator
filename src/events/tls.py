@@ -131,10 +131,10 @@ class TLSEvents(Object):
 
         tls_state = self.requirer_state(requirer)
 
-        if tls_state.certificate and event.certificate.raw != tls_state.certificate:
+        if tls_state.certificate and event.certificate.raw != tls_state.certificate.raw:
             certificate_changed = True
 
-        if tls_state.ca and event.ca.raw != tls_state.ca:
+        if tls_state.ca and event.ca.raw != tls_state.ca.raw:
             ca_changed = True
 
         tls_state.certificate = event.certificate
@@ -143,7 +143,7 @@ class TLSEvents(Object):
 
         self.tls_manager.remove_stores(scope=tls_state.scope)
         self.tls_manager.configure(
-            self.state.unit.peer_tls.resolved(),
+            tls_state.resolved(),
             pk_password="",
             keystore_password="myStorePass",
             trust_password="myStorePass",
