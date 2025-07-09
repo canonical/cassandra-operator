@@ -88,7 +88,7 @@ class TLSEvents(Object):
         )
 
         self.framework.observe(
-            self.peer_certificate.on.certificate_available, self._on_client_certificate_available
+            self.peer_certificate.on.certificate_available, self._on_peer_certificate_available
         )
             
     def _tls_relation_created(self, event: RelationCreatedEvent) -> None:
@@ -227,7 +227,11 @@ class TLSEvents(Object):
         for requirer in (self.peer_certificate, self.client_certificate):
             _, private_key = requirer.get_assigned_certificate(requirer.certificate_requests[0])
 
-            if private_key and self.requirer_state(requirer).private_key != private_key:
+            if not private_key:
+                continue
+
+            current_key = self.requirer_state(requirer).private_key
+            if current_key is None or current_key.raw != private_key.raw:
                 self.requirer_state(requirer).private_key = private_key
 
         # generate unit private key if not already created by action

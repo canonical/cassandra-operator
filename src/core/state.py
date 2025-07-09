@@ -242,7 +242,7 @@ class TLSContext(RelationState):
 
     def resolved(self) -> ResolvedTLSState:
         if not self.certificate or not self.private_key or not self.ca:
-            raise RuntimeError("TLS state is incomplete")
+            raise RuntimeError(f"TLS state is incomplete, certificate: {True if self.certificate else False}, private_key: {True if self.private_key else False}, ca: {True if self.ca else False}")
         return ResolvedTLSState(
             private_key=self.private_key,
             ca=self.ca,
