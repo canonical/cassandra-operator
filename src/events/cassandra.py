@@ -16,14 +16,10 @@ from ops import (
     UpdateStatusEvent,
 )
 
-from managers.tls import (
-    setup_internal_credentials,
-)
-
 from pydantic import ValidationError
 
 from core.config import CharmConfig
-from core.state import ApplicationState, ClusterState, TLSScope, UnitWorkloadState
+from core.state import ApplicationState, ClusterState, UnitWorkloadState
 from core.statuses import Status
 from core.workload import WorkloadBase
 from managers.cluster import ClusterManager
