@@ -26,7 +26,7 @@ class ConfigManager:
         self.workload = workload
 
     def render_cassandra_config(
-            self, cluster_name: str, listen_address: str, seeds: list[str], enable_peer_tls: bool, enable_client_tls: bool
+            self, cluster_name: str, listen_address: str, seeds: list[str], enable_peer_tls: bool, enable_client_tls: bool, keystore_password: str | None, truststore_password: str | None,
     ) -> None:
         """Generate and write cassandra config."""
         config = {
@@ -90,9 +90,9 @@ class ConfigManager:
             config["server_encryption_options"] = {
                 "internode_encryption": "all",
                 "keystore": self.workload.cassandra_paths.peer_keystore.as_posix(),
-                "keystore_password": "myStorePass",
+                "keystore_password": keystore_password,
                 "truststore": self.workload.cassandra_paths.peer_truststore.as_posix(),
-                "truststore_password": "myStorePass",
+                "truststore_password": truststore_password,
                 "require_client_auth": True,
                 "algorithm": "SunX509",
                 "store_type": "JKS",
@@ -104,9 +104,9 @@ class ConfigManager:
                 "enabled": True,
                 "optional": False,
                 "keystore": self.workload.cassandra_paths.client_keystore.as_posix(),
-                "keystore_password": "myStorePass",
+                "keystore_password": keystore_password,
                 "truststore": self.workload.cassandra_paths.client_truststore.as_posix(),
-                "truststore_password": "myStorePass",
+                "truststore_password": truststore_password,
                 "require_client_auth": True,
                 "algorithm": "SunX509",
                 "store_type": "JKS",

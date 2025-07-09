@@ -147,8 +147,8 @@ class TLSEvents(Object):
         self.tls_manager.remove_stores(scope=tls_state.scope)
         self.tls_manager.configure(
             tls_state.resolved(),
-            keystore_password="myStorePass",
-            trust_password="myStorePass",
+            keystore_password=self.state.unit.keystore_password,
+            trust_password=self.state.unit.truststore_password,
         )
 
         if certificate_changed or ca_changed:
@@ -200,8 +200,8 @@ class TLSEvents(Object):
                 
             self.tls_manager.configure(
                 self.state.unit.peer_tls.resolved(),
-                keystore_password="myStorePass",
-                trust_password="myStorePass",
+                keystore_password=self.state.unit.keystore_password,
+                trust_password=self.state.unit.truststore_password,
             )
 
             state.rotation = True
