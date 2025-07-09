@@ -418,7 +418,7 @@ class ClusterContext(RelationState):
         self._field_setter_wrapper("bundle", json.dumps([str(c) for c in value]))
 
     @property
-    def keystore_password(self) -> str:
+    def keystore_password_secret(self) -> str:
         """The unit keystore password set during `certificates_joined`.
 
         Returns:
@@ -428,7 +428,7 @@ class ClusterContext(RelationState):
         return self.relation_data.get("keystore-password", "")
 
     @property
-    def truststore_password(self) -> str:
+    def truststore_password_secret(self) -> str:
         """The unit truststore password set during `certificates_joined`.
 
         Returns:
@@ -437,8 +437,8 @@ class ClusterContext(RelationState):
         """
         return self.relation_data.get("truststore-password", "")
 
-    @keystore_password.setter
-    def keystore_password(self, value: str) -> None:
+    @keystore_password_secret.setter
+    def keystore_password_secret(self, value: str) -> None:
         """The unit keystore password set during `certificates_joined`.
 
         Returns:
@@ -447,8 +447,8 @@ class ClusterContext(RelationState):
         """
         self._field_setter_wrapper("keystore-password", value)
 
-    @truststore_password.setter
-    def truststore_password(self, value: str) -> None:
+    @truststore_password_secret.setter
+    def truststore_password_secret(self, value: str) -> None:
         """The unit truststore password set during `certificates_joined`.
 
         Returns:

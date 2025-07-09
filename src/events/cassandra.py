@@ -106,8 +106,8 @@ class CassandraEvents(Object):
 
         self.tls_manager.configure(
             self.state.unit.peer_tls.resolved(),
-            keystore_password=self.state.cluster.keystore_password,
-            trust_password=self.state.cluster.truststore_password,
+            keystore_password=self.state.cluster.keystore_password_secret,
+            trust_password=self.state.cluster.truststore_password_secret,
         )
 
         if self.charm.unit.is_leader():
@@ -124,8 +124,8 @@ class CassandraEvents(Object):
                 seeds=self.state.cluster.seeds,
                 enable_peer_tls=self.state.unit.peer_tls.ready,
                 enable_client_tls=self.state.unit.client_tls.ready,
-                keystore_password=self.state.cluster.keystore_password,
-                truststore_password=self.state.cluster.truststore_password,
+                keystore_password=self.state.cluster.keystore_password_secret,
+                truststore_password=self.state.cluster.truststore_password_secret,
             )
         except ValidationError as e:
             logger.debug(f"Config haven't passed validation: {e}")
@@ -146,8 +146,8 @@ class CassandraEvents(Object):
                 seeds=self.state.cluster.seeds,
                 enable_peer_tls=self.state.unit.peer_tls.ready,
                 enable_client_tls=self.state.unit.client_tls.ready,
-                keystore_password=self.state.cluster.keystore_password,
-                truststore_password=self.state.cluster.truststore_password,
+                keystore_password=self.state.cluster.keystore_password_secret,
+                truststore_password=self.state.cluster.truststore_password_secret,
             )
         except ValidationError as e:
             logger.debug(f"Config haven't passed validation: {e}")
