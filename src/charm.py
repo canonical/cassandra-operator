@@ -50,7 +50,6 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             state=state,
             workload=workload,
             cluster_manager=cluster_manager,
-            config_manager=config_manager,
             tls_manager=tls_manager,
         )
 
