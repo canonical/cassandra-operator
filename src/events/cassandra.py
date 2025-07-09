@@ -94,6 +94,7 @@ class CassandraEvents(Object):
             provider_crt, pk = self.tls_manager.generate_internal_credentials(
                 ca=self.state.cluster.internal_ca,
                 ca_key=self.state.cluster.internal_ca_key,
+                unit_key=self.state.unit.peer_tls.private_key,
                 common_name=self.state.unit.unit.name,
                 sans_ip=frozenset(sans["sans_ip"]),
                 sans_dns=frozenset(sans["sans_dns"]),
@@ -105,7 +106,6 @@ class CassandraEvents(Object):
 
         self.tls_manager.configure(
             self.state.unit.peer_tls.resolved(),
-            pk_password="",
             keystore_password="myStorePass",
             trust_password="myStorePass",
         )

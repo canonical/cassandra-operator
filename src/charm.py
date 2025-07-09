@@ -16,7 +16,6 @@ from events.tls import TLSEvents
 from managers.cluster import ClusterManager
 from managers.config import ConfigManager
 from managers.tls import TLSManager
-from common.cassandra_client import CassandraClient
 from workload import CassandraWorkload
 
 logger = logging.getLogger(__name__)

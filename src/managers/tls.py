@@ -95,13 +95,18 @@ class TLSManager:
     def generate_internal_credentials(self,
         ca: Certificate,
         ca_key: PrivateKey,
+        unit_key: PrivateKey | None,
         common_name: str,
         sans_ip: Optional[FrozenSet[str]],
         sans_dns: Optional[FrozenSet[str]],
         ) -> Tuple[ProviderCertificate, PrivateKey]:
 
+        unit_key = (
+            unit_key if unit_key else generate_private_key()
+        )
+
         csr = generate_csr(
-            private_key=ca_key,
+            private_key=unit_key,
             common_name=common_name,
             sans_ip=sans_ip,
             sans_dns=sans_dns,
@@ -121,7 +126,7 @@ class TLSManager:
 
         logger.debug(f"Certificate sans ip: {certificate.sans_ip}, sans dns: {certificate.sans_dns}")
 
-        return provider_cert, ca_key
+        return provider_cert, unit_key
 
 
     def set_ca(self, ca: Certificate, scope: TLSScope) -> None:
@@ -229,7 +234,7 @@ class TLSManager:
                 logger.error(e.stdout)
                 raise e
 
-    def set_keystore(self, pk_password: str, keystore_password: str, scope: TLSScope) -> None:
+    def set_keystore(self, keystore_password: str, scope: TLSScope) -> None:
         pk, crt, ca = self.get_private_key(scope), self.get_certificate(scope), self.get_ca(scope)
         if not (all([ca, crt, pk])):
             logger.error("Can't set keystore, missing TLS artifacts.")
@@ -246,7 +251,7 @@ class TLSManager:
                     "-inkey",
                     f"{scope.value}-private.key",
                     "-passin",
-                    f"pass:{pk_password}",
+                    f"pass:",
                     "-certfile",
                     f"{scope.value}-unit.pem",
                     "-out",
@@ -268,7 +273,6 @@ class TLSManager:
     def configure(
             self,
             tls_state: ResolvedTLSState,
-            pk_password: str,
             keystore_password: str,
             trust_password: str
     ) -> None:
@@ -278,7 +282,7 @@ class TLSManager:
         self.set_bundle(tls_state.bundle, scope)
         self.set_chain(tls_state.chain, scope)
         self.set_certificate(tls_state.certificate, scope)
-        self.set_keystore(pk_password, keystore_password, scope)
+        self.set_keystore(keystore_password, scope)
         self.set_truststore(trust_password, scope)
 
     def import_cert(self, alias: str, filename: str, trust_password: str, scope: TLSScope = TLSScope.CLIENT) -> None:

@@ -3,12 +3,15 @@
 # See LICENSE file for licensing details.
 
 import logging
+import re
+import base64
 
+from ops import ActionEvent
 from ops.charm import RelationBrokenEvent, RelationCreatedEvent
 from ops.framework import EventBase, EventSource, Object
 
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
-from charms.tls_certificates_interface.v4.tls_certificates import CertificateAvailableEvent, CertificateRequestAttributes, TLSCertificatesRequiresV4
+from charms.tls_certificates_interface.v4.tls_certificates import CertificateAvailableEvent, CertificateRequestAttributes, PrivateKey, TLSCertificatesRequiresV4, generate_private_key
 from core.config import CharmConfig
 from core.state import CLIENT_TLS_RELATION, PEER_TLS_RELATION,ApplicationState, TLSScope, TLSContext, TLSState
 from core.workload import WorkloadBase
@@ -90,7 +93,7 @@ class TLSEvents(Object):
         self.framework.observe(
             self.peer_certificate.on.certificate_available, self._on_peer_certificate_available
         )
-            
+
     def _tls_relation_created(self, event: RelationCreatedEvent) -> None:
         """Handler for `certificates_relation_created` event."""
         if not self.charm.unit.is_leader() or not self.state.peer_relation:
@@ -144,7 +147,6 @@ class TLSEvents(Object):
         self.tls_manager.remove_stores(scope=tls_state.scope)
         self.tls_manager.configure(
             tls_state.resolved(),
-            pk_password="",
             keystore_password="myStorePass",
             trust_password="myStorePass",
         )
@@ -186,6 +188,7 @@ class TLSEvents(Object):
                 provider_crt, pk = self.tls_manager.generate_internal_credentials(
                     ca=self.state.cluster.internal_ca,
                     ca_key=self.state.cluster.internal_ca_key,
+                    unit_key=self.state.unit.peer_tls.private_key,
                     common_name=self.state.unit.unit.name,
                     sans_ip=frozenset(self.sans["sans_ip"]),
                     sans_dns=frozenset(self.sans["sans_dns"]),
@@ -197,7 +200,6 @@ class TLSEvents(Object):
                 
             self.tls_manager.configure(
                 self.state.unit.peer_tls.resolved(),
-                pk_password="",
                 keystore_password="myStorePass",
                 trust_password="myStorePass",
             )
@@ -239,5 +241,3 @@ class TLSEvents(Object):
             self.state.unit.keystore_password = self.workload.generate_password()
         if not self.state.unit.truststore_password:
             self.state.unit.truststore_password = self.workload.generate_password()
-
-        

@@ -467,6 +467,7 @@ class ApplicationState(Object):
         self.peer_app_interface = DataPeerData(
             self.model,
             relation_name=PEER_RELATION,
+            additional_secret_fields=["truststore-password", "keystore-password"]
         )
         self.peer_unit_interface = DataPeerUnitData(self.model, relation_name=PEER_RELATION)
 
