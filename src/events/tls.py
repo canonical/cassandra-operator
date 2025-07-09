@@ -147,8 +147,8 @@ class TLSEvents(Object):
         self.tls_manager.remove_stores(scope=tls_state.scope)
         self.tls_manager.configure(
             tls_state.resolved(),
-            keystore_password=self.state.unit.keystore_password,
-            trust_password=self.state.unit.truststore_password,
+            keystore_password=self.state.cluster.keystore_password,
+            trust_password=self.state.cluster.truststore_password,
         )
 
         if certificate_changed or ca_changed:
@@ -200,8 +200,8 @@ class TLSEvents(Object):
                 
             self.tls_manager.configure(
                 self.state.unit.peer_tls.resolved(),
-                keystore_password=self.state.unit.keystore_password,
-                trust_password=self.state.unit.truststore_password,
+                keystore_password=self.state.cluster.keystore_password,
+                trust_password=self.state.cluster.truststore_password,
             )
 
             state.rotation = True
@@ -237,7 +237,7 @@ class TLSEvents(Object):
                 self.requirer_state(requirer).private_key = private_key
 
         # generate unit private key if not already created by action
-        if not self.state.unit.keystore_password:
-            self.state.unit.keystore_password = self.workload.generate_password()
-        if not self.state.unit.truststore_password:
-            self.state.unit.truststore_password = self.workload.generate_password()
+        if not self.state.cluster.keystore_password:
+            self.state.cluster.keystore_password = self.workload.generate_password()
+        if not self.state.cluster.truststore_password:
+            self.state.cluster.truststore_password = self.workload.generate_password()
