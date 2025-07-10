@@ -53,6 +53,8 @@ def get_secrets_by_label(juju: jubilant.Juju, label: str, owner: str) -> list[di
     secrets_meta_raw = juju.cli("secrets", "--format", "json", include_model=True)
     secrets_meta = json.loads(secrets_meta_raw)
 
+    logger.debug(f"raw secrets: {secrets_meta}")
+
     selected_secret_ids = []
 
     for secret_id in secrets_meta:
@@ -64,19 +66,23 @@ def get_secrets_by_label(juju: jubilant.Juju, label: str, owner: str) -> list[di
     if len(selected_secret_ids) == 0:
         return []
 
+    logger.debug(f"selected secrets ids: {selected_secret_ids}")
+
     secret_data_list = []
     
     for selected_secret_id in selected_secret_ids:
         secrets_data_raw = juju.cli(
             "show-secret", "--reveal", "--format", "json", selected_secret_id, include_model=True
         )
+
+        logger.debug(f"revealed secret {selected_secret_id}: {secrets_data_raw}")
+
         secret_data_list.append(json.loads(secrets_data_raw)["content"]["Data"])
 
     return secret_data_list
         
 
 def check_tls(ip: str, port: int) -> bool:
-    """Проверяет, поддерживает ли сервер TLS (v1.2 или v1.3) на заданном IP и порте."""
     try:
         proc = subprocess.run(
             f"echo | openssl s_client -connect {ip}:{port}",
@@ -89,7 +95,7 @@ def check_tls(ip: str, port: int) -> bool:
         logger.debug(f"OpenSSL timeout on {ip}:{port}")
         return False
 
-    output = proc.stdout + proc.stderr  # объединяем вывод, чтобы проверить TLS-версии
+    output = proc.stdout + proc.stderr
 
     if proc.returncode != 0:
         logger.debug(f"OpenSSL exited with code {proc.returncode} on {ip}:{port}")
