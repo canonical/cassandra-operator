@@ -53,7 +53,7 @@ def get_secrets_by_label(juju: jubilant.Juju, label: str, owner: str) -> list[di
     secrets_meta_raw = juju.cli("secrets", "--format", "json", include_model=True)
     secrets_meta = json.loads(secrets_meta_raw)
 
-    logger.debug(f"raw secrets: {secrets_meta}")
+    logger.info(f"raw secrets: {secrets_meta}")
 
     selected_secret_ids = []
 
@@ -66,7 +66,7 @@ def get_secrets_by_label(juju: jubilant.Juju, label: str, owner: str) -> list[di
     if len(selected_secret_ids) == 0:
         return []
 
-    logger.debug(f"selected secrets ids: {selected_secret_ids}")
+    logger.info(f"selected secrets ids: {selected_secret_ids}")
 
     secret_data_list = []
     
@@ -75,7 +75,7 @@ def get_secrets_by_label(juju: jubilant.Juju, label: str, owner: str) -> list[di
             "show-secret", "--reveal", "--format", "json", selected_secret_id, include_model=True
         )
 
-        logger.debug(f"revealed secret {selected_secret_id}: {secrets_data_raw}")
+        logger.info(f"revealed secret {selected_secret_id}: {secrets_data_raw}")
 
         secret_data_list.append(json.loads(secrets_data_raw)["content"]["Data"])
 
