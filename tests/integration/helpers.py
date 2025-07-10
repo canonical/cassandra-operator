@@ -53,7 +53,7 @@ def get_secret_by_label(juju: jubilant.Juju, label: str, owner: str) -> dict[str
 
     
     
-    secrets_meta_raw = juju.cli("list-secrets --format json",include_model=True)
+    secrets_meta_raw = juju.cli("secrets --format json",include_model=True)
     secrets_meta = json.loads(secrets_meta_raw)
     secret_id = None
 
