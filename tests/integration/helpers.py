@@ -50,31 +50,34 @@ def connect_cql(
 
 
 def get_secret_by_label(juju: jubilant.Juju, label: str, owner: str) -> dict[str, str]:
-    
-    secrets_meta_raw = juju.cli("secrets", "--format", "json",include_model=True)
+    secrets_meta_raw = juju.cli("secrets", "--format", "json", include_model=True)
     secrets_meta = json.loads(secrets_meta_raw)
-    secret_id = None
 
+    # Сортируем секреты по убыванию revision
     sorted_secrets = sorted(
         secrets_meta.items(),
         key=lambda item: item[1].get("revision", 0),
         reverse=True,
-    )    
+    )
 
-    for secret_id in sorted_secrets:
-        if owner and not secrets_meta[secret_id]["owner"] == owner:
+    selected_secret_id = None
+
+    for secret_id, secret in sorted_secrets:
+        if owner and secret.get("owner") != owner:
             continue
-        if secrets_meta[secret_id]["label"] == label:
-            secret_id = secret_id
+        if secret.get("label") == label:
+            selected_secret_id = secret_id
             break
 
-    if not secret_id:
-        return dict()
-    
-    secrets_data_raw = juju.cli("show-secret", "--reveal", "--format", "json", secret_id, include_model=True)
+    if not selected_secret_id:
+        return {}
 
+    secrets_data_raw = juju.cli(
+        "show-secret", "--reveal", "--format", "json", selected_secret_id, include_model=True
+    )
     secret_data = json.loads(secrets_data_raw)
-    return secret_data[secret_id]["content"]["Data"]
+
+    return secret_data[selected_secret_id]["content"]["Data"]
         
 
 def check_tls(ip: str, port: int) -> bool:
