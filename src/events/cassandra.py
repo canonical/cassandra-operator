@@ -7,7 +7,7 @@
 import logging
 
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
-from charms.rolling_ops.v0.rollingops import RollingOpsManager, RunWithLock
+from charms.rolling_ops.v0.rollingops import RollingOpsManager
 from ops import (
     CollectStatusEvent,
     ConfigChangedEvent,
@@ -17,10 +17,9 @@ from ops import (
     UpdateStatusEvent,
 )
 from pydantic import ValidationError
-from tenacity import Retrying, wait_fixed
 
 from core.config import CharmConfig
-from core.state import ApplicationState, ClusterState, UnitWorkloadState
+from core.state import ApplicationState, UnitWorkloadState
 from core.statuses import Status
 from core.workload import WorkloadBase
 from managers.cluster import ClusterManager
@@ -60,71 +59,59 @@ class CassandraEvents(Object):
         self.workload.install()
 
     def _on_start(self, event: StartEvent) -> None:
-        self.state.unit.workload_state = UnitWorkloadState.WAITING_FOR_START
         self._update_network_address()
 
-        if not self.charm.unit.is_leader():
-            if self.state.cluster.is_active:
-                self.state.unit.workload_state = UnitWorkloadState.STARTING
-                self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
-            else:
-                logger.debug("Deferring on_start for unit due to cluster isn't initialized yet")
-                event.defer()
-            return
-
-        self.state.cluster.seeds = [self.state.unit.peer_url]
+        if not self.charm.unit.is_leader() and not self.state.cluster.is_active:
+            self.state.unit.workload_state = UnitWorkloadState.WAITING_FOR_START
+            logger.debug("Deferring on_start for unit due to cluster isn't initialized yet")
+            event.defer()
 
         try:
+            if self.charm.unit.is_leader():
+                self.state.cluster.cluster_name = self.charm.config.cluster_name
+                self.state.cluster.seeds = [self.state.unit.peer_url]
             self.config_manager.render_env(
                 cassandra_limit_memory_mb=1024 if self.charm.config.profile == "testing" else None
-            )
-            self.config_manager.render_cassandra_config(
-                cluster_name=self.charm.config.cluster_name,
-                listen_address=self.state.unit.ip,
-                seeds=self.state.cluster.seeds,
             )
         except ValidationError as e:
             logger.debug(f"Config haven't passed validation: {e}")
             event.defer()
             return
 
-        self.workload.start()
-        self.state.unit.workload_state = UnitWorkloadState.STARTING
+        self.config_manager.render_cassandra_config(
+            cluster_name=self.state.cluster.cluster_name,
+            listen_address=self.state.unit.ip,
+            seeds=self.state.cluster.seeds,
+        )
+
+        self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
 
     def _on_config_changed(self, _: ConfigChangedEvent) -> None:
         try:
+            # TODO: cluster_name change
             self.config_manager.render_env(
                 cassandra_limit_memory_mb=1024 if self.charm.config.profile == "testing" else None
-            )
-            self.config_manager.render_cassandra_config(
-                cluster_name=self.charm.config.cluster_name,
-                listen_address=self.state.unit.ip,
-                seeds=self.state.cluster.seeds,
             )
         except ValidationError as e:
             logger.debug(f"Config haven't passed validation: {e}")
             return
-        if not self.state.unit.workload_state == UnitWorkloadState.ACTIVE:
-            return
-        self.workload.restart()
-        self.state.unit.workload_state = UnitWorkloadState.STARTING
+
+        if self.state.unit.workload_state == UnitWorkloadState.ACTIVE:
+            self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
 
     def _on_update_status(self, _: UpdateStatusEvent) -> None:
+        # TODO: add peer relation change hook for subordinates to update leader address too
         if (
             self._update_network_address()
             and self.state.unit.workload_state == UnitWorkloadState.ACTIVE
         ):
-            self.workload.restart()
-            self.state.unit.workload_state = UnitWorkloadState.STARTING
-            return
-
-        if (
-            self.charm.unit.is_leader()
-            and self.state.unit.workload_state == UnitWorkloadState.STARTING
-            and self.cluster_manager.is_healthy
-        ):
-            self.state.unit.workload_state = UnitWorkloadState.ACTIVE
-            self.state.cluster.state = ClusterState.ACTIVE
+            if self.charm.unit.is_leader():
+                self.state.cluster.seeds = [self.state.unit.peer_url]
+            self.config_manager.render_cassandra_config(
+                listen_address=self.state.unit.ip,
+                seeds=self.state.cluster.seeds,
+            )
+            self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
 
     def _on_collect_unit_status(self, event: CollectStatusEvent) -> None:
         try:
@@ -157,28 +144,6 @@ class CassandraEvents(Object):
             event.add_status(Status.INVALID_CONFIG.value)
 
         event.add_status(Status.ACTIVE.value)
-
-    def bootstrap(self, event: RunWithLock) -> None:
-        """Start workload and join this unit to the cluster."""
-        try:
-            self.config_manager.render_env(
-                cassandra_limit_memory_mb=1024 if self.charm.config.profile == "testing" else None
-            )
-            self.config_manager.render_cassandra_config(
-                cluster_name=self.charm.config.cluster_name,
-                listen_address=self.state.unit.ip,
-                seeds=self.state.cluster.seeds,
-            )
-        except ValidationError as e:
-            logger.debug(f"Config haven't passed validation: {e}")
-            event.defer()
-            return
-
-        self.workload.start()
-        for _ in Retrying(wait=wait_fixed(10)):
-            if self.cluster_manager.is_healthy:
-                self.state.unit.workload_state = UnitWorkloadState.ACTIVE
-                return
 
     def _update_network_address(self) -> bool:
         """Update hostname & ip in this unit context.

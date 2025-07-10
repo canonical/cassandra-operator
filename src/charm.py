@@ -9,9 +9,10 @@ import logging
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from charms.rolling_ops.v0.rollingops import RollingOpsManager, RunWithLock
 from ops import main
+from tenacity import Retrying, wait_fixed
 
 from core.config import CharmConfig
-from core.state import ApplicationState
+from core.state import ApplicationState, ClusterState, UnitWorkloadState
 from events.cassandra import CassandraEvents
 from managers.cluster import ClusterManager
 from managers.config import ConfigManager
@@ -28,26 +29,42 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
     def __init__(self, *args):
         super().__init__(*args)
 
-        state = ApplicationState(self)
-        workload = CassandraWorkload()
-        cluster_manager = ClusterManager(workload=workload)
-        config_manager = ConfigManager(workload=workload)
+        self.state = ApplicationState(self)
+        self.workload = CassandraWorkload()
+        self.cluster_manager = ClusterManager(workload=self.workload)
+
+        config_manager = ConfigManager(
+            workload=self.workload,
+            cluster_name=self.state.cluster.cluster_name,
+            listen_address=self.state.unit.ip,
+            seeds=self.state.cluster.seeds,
+        )
         bootstrap_manager = RollingOpsManager(
             charm=self, relation="bootstrap", callback=self.bootstrap
         )
 
         self.cassandra_events = CassandraEvents(
             self,
-            state=state,
-            workload=workload,
-            cluster_manager=cluster_manager,
+            state=self.state,
+            workload=self.workload,
+            cluster_manager=self.cluster_manager,
             config_manager=config_manager,
             bootstrap_manager=bootstrap_manager,
         )
 
     def bootstrap(self, event: RunWithLock) -> None:
         """Start workload and join this unit to the cluster."""
-        self.cassandra_events.bootstrap(event)
+        # TODO: add leader elected hook
+        self.state.unit.workload_state = UnitWorkloadState.STARTING
+
+        self.workload.restart()
+
+        for _ in Retrying(wait=wait_fixed(10)):
+            if self.cluster_manager.is_healthy:
+                self.state.unit.workload_state = UnitWorkloadState.ACTIVE
+                if self.unit.is_leader():
+                    self.state.cluster.state = ClusterState.ACTIVE
+                return
 
 
 if __name__ == "__main__":  # pragma: nocover

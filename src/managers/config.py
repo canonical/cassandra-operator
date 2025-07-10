@@ -20,11 +20,20 @@ class ConfigManager:
     def __init__(
         self,
         workload: WorkloadBase,
+        cluster_name: str,
+        listen_address: str,
+        seeds: list[str],
     ):
         self.workload = workload
+        self.cluster_name = cluster_name
+        self.listen_address = listen_address
+        self.seeds = seeds
 
     def render_cassandra_config(
-        self, cluster_name: str, listen_address: str, seeds: list[str]
+        self,
+        cluster_name: str | None = None,
+        listen_address: str | None = None,
+        seeds: list[str] | None = None,
     ) -> None:
         """Generate and write cassandra config."""
         config = {
@@ -33,7 +42,7 @@ class ConfigManager:
             "authorizer": "AllowAllAuthorizer",
             "cas_contention_timeout": "1000ms",
             "cidr_authorizer": {"class_name": "AllowAllCIDRAuthorizer"},
-            "cluster_name": cluster_name,
+            "cluster_name": cluster_name or self.cluster_name,
             "commitlog_directory": self.workload.cassandra_paths.commitlog_directory.as_posix(),
             "commitlog_sync": "periodic",
             "commitlog_sync_period": "10000ms",
@@ -51,7 +60,7 @@ class ConfigManager:
             "hints_directory": self.workload.cassandra_paths.hints_directory.as_posix(),
             "inter_dc_tcp_nodelay": False,
             "internode_compression": "dc",
-            "listen_address": listen_address,
+            "listen_address": listen_address or self.listen_address,
             "memtable": {
                 "configurations": {
                     "default": {"inherits": "skiplist"},
@@ -68,14 +77,14 @@ class ConfigManager:
                 "cached_rows_warn_threshold": 2000,
             },
             "role_manager": "CassandraRoleManager",
-            "rpc_address": listen_address,
+            "rpc_address": listen_address or self.listen_address,
             "saved_caches_directory": (
                 self.workload.cassandra_paths.saved_caches_directory.as_posix()
             ),
             "seed_provider": [
                 {
                     "class_name": "org.apache.cassandra.locator.SimpleSeedProvider",
-                    "parameters": [{"seeds": ",".join(seeds)}],
+                    "parameters": [{"seeds": ",".join(seeds or self.seeds)}],
                 }
             ],
             "storage_compatibility_mode": "CASSANDRA_4",
