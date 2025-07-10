@@ -25,6 +25,8 @@ from charms.tls_certificates_interface.v4.tls_certificates import (
 )
 from ops import Application, CharmBase, Object, Relation, Unit
 
+from workload import SECRETS_APP, SECRETS_UNIT
+
 CLIENT_TLS_RELATION = "client-certificates"
 PEER_TLS_RELATION = "peer-certificates"
 PEER_RELATION = "cassandra-peers"
@@ -469,11 +471,12 @@ class ApplicationState(Object):
         self.peer_app_interface = DataPeerData(
             self.model,
             relation_name=PEER_RELATION,
+            additional_secret_fields=SECRETS_APP,
         )
         self.peer_unit_interface = DataPeerUnitData(
             self.model,
             relation_name=PEER_RELATION,
-            additional_secret_fields=["truststore-password", "keystore-password", "peer-private-key", "client-private-key"],
+            additional_secret_fields=SECRETS_UNIT,
         )
 
     @property
