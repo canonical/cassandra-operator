@@ -168,49 +168,47 @@ class TLSEvents(Object):
         state.ca = None
 
         self.tls_manager.remove_stores(scope=state.scope)
+        
+        is_leader = self.charm.unit.is_leader()
 
-        if state.scope == TLSScope.PEER:
-            # switch back to internal TLS
-            is_leader = self.charm.unit.is_leader()
-            if is_leader and not self.state.cluster.internal_ca:
-                ca, pk = self.tls_manager.generate_internal_ca(common_name=self.state.unit.unit.app.name)
-                
-                self.state.cluster.internal_ca = ca
-                self.state.cluster.internal_ca_key = pk
-
-            if not self.state.cluster.internal_ca or not self.state.cluster.internal_ca_key:
-                logger.debug("Deferring _tls_relation_broken for unit due to cluster internal CA's isn't initialized yet")
-                event.defer()
-                return
-                
-            if not self.state.unit.peer_tls.ready:
-                provider_crt, pk = self.tls_manager.generate_internal_credentials(
-                    ca=self.state.cluster.internal_ca,
-                    ca_key=self.state.cluster.internal_ca_key,
-                    unit_key=self.state.unit.peer_tls.private_key,
-                    common_name=self.state.unit.unit.name,
-                    sans_ip=frozenset(self.sans["sans_ip"]),
-                    sans_dns=frozenset(self.sans["sans_dns"]),
-                )
-                
-                self.state.unit.peer_tls.setup_provider_certificates(provider_crt)
-                self.state.unit.peer_tls.private_key = pk
-                self.state.unit.peer_tls.ca = self.state.cluster.internal_ca
-                
-            self.tls_manager.configure(
-                self.state.unit.peer_tls.resolved(),
-                keystore_password=self.state.unit.keystore_password,
-                trust_password=self.state.unit.truststore_password,
-            )
-
-            state.rotation = True
-            self.charm.on.config_changed.emit()
-
-        if not self.charm.unit.is_leader():
+        if state.scope == TLSScope.CLIENT and is_leader:
+            self.state.cluster.tls_state = TLSState.UNKNOWN
             return
 
-        if state.scope == TLSScope.CLIENT:
-            self.state.cluster.tls_state = TLSState.UNKNOWN
+        # switch back to internal TLS
+        if is_leader and not self.state.cluster.internal_ca:
+            ca, pk = self.tls_manager.generate_internal_ca(common_name=self.state.unit.unit.app.name)
+                
+            self.state.cluster.internal_ca = ca
+            self.state.cluster.internal_ca_key = pk
+
+        if not self.state.cluster.internal_ca or not self.state.cluster.internal_ca_key:
+            logger.debug("Deferring _tls_relation_broken for unit due to cluster internal CA's isn't initialized yet")
+            event.defer()
+            return
+                
+        if not self.state.unit.peer_tls.ready:
+            provider_crt, pk = self.tls_manager.generate_internal_credentials(
+                ca=self.state.cluster.internal_ca,
+                ca_key=self.state.cluster.internal_ca_key,
+                unit_key=self.state.unit.peer_tls.private_key,
+                common_name=self.state.unit.unit.name,
+                sans_ip=frozenset(self.sans["sans_ip"]),
+                sans_dns=frozenset(self.sans["sans_dns"]),
+            )
+                
+            self.state.unit.peer_tls.setup_provider_certificates(provider_crt)
+            self.state.unit.peer_tls.private_key = pk
+            self.state.unit.peer_tls.ca = self.state.cluster.internal_ca
+                
+        self.tls_manager.configure(
+            self.state.unit.peer_tls.resolved(),
+            keystore_password=self.state.unit.keystore_password,
+            trust_password=self.state.unit.truststore_password,
+        )
+
+        state.rotation = True
+        self.charm.on.config_changed.emit()
 
             
     def requirer_state(self, requirer: TLSCertificatesRequiresV4) -> TLSContext:

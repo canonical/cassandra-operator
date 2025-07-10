@@ -50,14 +50,18 @@ def connect_cql(
 
 
 def get_secret_by_label(juju: jubilant.Juju, label: str, owner: str) -> dict[str, str]:
-
-    
     
     secrets_meta_raw = juju.cli("secrets", "--format", "json",include_model=True)
     secrets_meta = json.loads(secrets_meta_raw)
     secret_id = None
 
-    for secret_id in secrets_meta:
+    sorted_secrets = sorted(
+        secrets_meta.items(),
+        key=lambda item: item[1].get("revision", 0),
+        reverse=True,
+    )    
+
+    for secret_id in sorted_secrets:
         if owner and not secrets_meta[secret_id]["owner"] == owner:
             continue
         if secrets_meta[secret_id]["label"] == label:
