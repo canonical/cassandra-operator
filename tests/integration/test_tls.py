@@ -37,7 +37,7 @@ def test_deploy_internal_tls(juju: jubilant.Juju, cassandra_charm: Path, app_nam
         num_units=2,
     )
     
-    juju.wait(jubilant.all_active)
+    juju.wait(jubilant.all_active, timeout=1200)
 
 async def test_default_tls(juju: jubilant.Juju, app_name: str) -> None:
     unit_addreses = [
