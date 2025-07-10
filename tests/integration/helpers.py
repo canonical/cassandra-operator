@@ -14,13 +14,8 @@ from typing import Generator
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.cluster import EXEC_PROFILE_DEFAULT, Cluster, ExecutionProfile, Session
 from cassandra.policies import DCAwareRoundRobinPolicy, TokenAwarePolicy
-import yaml
 
 logger = logging.getLogger(__name__)
-
-METADATA = yaml.safe_load((Path(__file__).resolve().parents[2] / "metadata.yaml").read_text())
-logger.debug(METADATA)
-APP_NAME = METADATA["name"]
 
 @contextmanager
 def connect_cql(
@@ -92,13 +87,14 @@ def check_tls(ip: str, port: int) -> bool:
         logger.error(f"command '{e.cmd}' return with error (code {e.returncode}): {e.output}")
         return False
 
-async def get_address(juju: jubilant.Juju, app_name=APP_NAME, unit_num=0) -> str:
+async def get_address(juju: jubilant.Juju, app_name: str, unit_num) -> str:
     """Get the address for a unit."""
+    
     status = juju.status()
     address = status.apps[app_name].units[f"{app_name}/{unit_num}"].public_address
     return address
     
-def check_node_is_up(juju: jubilant.Juju, unit_num: int, unit_addr: str, app_name: str) -> bool:
+def check_node_is_up(juju: jubilant.Juju, app_name: str, unit_num: int, unit_addr: str) -> bool:
     nd_tool_status_raw = juju.ssh(target=f"{app_name}/{unit_num}", command="sudo snap run charmed-cassandra.nodetool status")
 
     for line in nd_tool_status_raw.split('\n'):

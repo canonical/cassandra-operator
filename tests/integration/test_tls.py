@@ -7,7 +7,7 @@ import json
 import logging
 import os
 from pathlib import Path
-from helpers import APP_NAME, check_node_is_up, check_tls, get_address, get_secret_by_label
+from helpers import check_node_is_up, check_tls, get_address, get_secret_by_label
 import tempfile
 
 import jubilant
@@ -52,7 +52,7 @@ async def test_default_tls(juju: jubilant.Juju, app_name: str) -> None:
 
     # Enshure all nodes are joined to the cluster
     for i, uaddr in enumerate(unit_addreses):
-        assert check_node_is_up(juju=juju, unit_num=i, unit_addr=uaddr, app_name=app_name)
+        assert check_node_is_up(juju=juju, app_name=app_name, unit_num=i, unit_addr=uaddr)
 
     for uaddr in unit_addreses:
         assert check_tls(ip=uaddr, port=PEER_PORT)
