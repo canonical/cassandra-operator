@@ -10,7 +10,7 @@ from pathlib import Path
 from helpers import check_node_is_up, check_tls, get_address, get_secret_by_label
 import tempfile
 
-from .types import IntegrationTestsCharms
+from help_types import IntegrationTestsCharms
 
 import jubilant
 

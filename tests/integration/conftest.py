@@ -9,7 +9,7 @@ import jubilant
 import pytest
 import yaml
 
-from .types import IntegrationTestsCharms, TestCharm
+from help_types import IntegrationTestsCharms, TestCharm
 
 @pytest.fixture(scope="module")
 def juju(request: pytest.FixtureRequest) -> Generator[jubilant.Juju, None, None]:
