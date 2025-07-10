@@ -49,35 +49,30 @@ def connect_cql(
         cluster.shutdown()
 
 
-def get_secret_by_label(juju: jubilant.Juju, label: str, owner: str) -> dict[str, str]:
+def get_secrets_by_label(juju: jubilant.Juju, label: str, owner: str) -> list[dict[str, str]]:
     secrets_meta_raw = juju.cli("secrets", "--format", "json", include_model=True)
     secrets_meta = json.loads(secrets_meta_raw)
 
-    # Сортируем секреты по убыванию revision
-    sorted_secrets = sorted(
-        secrets_meta.items(),
-        key=lambda item: item[1].get("revision", 0),
-        reverse=True,
-    )
+    selected_secret_ids = []
 
-    selected_secret_id = None
-
-    for secret_id, secret in sorted_secrets:
-        if owner and secret.get("owner") != owner:
+    for secret_id in secrets_meta:
+        if owner and not secrets_meta[secret_id]["owner"] == owner:
             continue
-        if secret.get("label") == label:
-            selected_secret_id = secret_id
-            break
+        if secrets_meta[secret_id]["label"] == label:
+            selected_secret_ids.append(secret_id)
 
-    if not selected_secret_id:
-        return {}
+    if len(selected_secret_ids) == 0:
+        return []
 
-    secrets_data_raw = juju.cli(
-        "show-secret", "--reveal", "--format", "json", selected_secret_id, include_model=True
-    )
-    secret_data = json.loads(secrets_data_raw)
+    secret_data_list = []
+    
+    for selected_secret_id in selected_secret_ids:
+        secrets_data_raw = juju.cli(
+            "show-secret", "--reveal", "--format", "json", selected_secret_id, include_model=True
+        )
+        secret_data_list.append(json.loads(secrets_data_raw)["content"]["Data"])
 
-    return secret_data[selected_secret_id]["content"]["Data"]
+    return secret_data_list
         
 
 def check_tls(ip: str, port: int) -> bool:

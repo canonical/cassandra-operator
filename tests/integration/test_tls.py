@@ -7,7 +7,7 @@ import json
 import logging
 import os
 from pathlib import Path
-from helpers import check_node_is_up, check_tls, get_address, get_secret_by_label
+from helpers import check_node_is_up, check_tls, get_address, get_secrets_by_label
 import tempfile
 
 from help_types import IntegrationTestsCharms
@@ -176,22 +176,30 @@ def test_disable_client_self_signed_tls(juju: jubilant.Juju, app_name: str, char
 
     
 def unit_secret_extract(juju: jubilant.Juju, unit_name: str, secret_name: str) -> str | None:
-    user_secret = get_secret_by_label(
+    user_secret = get_secrets_by_label(
         juju,
         label=f"cluster.{unit_name.split('/')[0]}.unit",
         owner=unit_name,
     )
 
-    return user_secret.get(secret_name)
+    for secret in user_secret:
+        if found := secret.get(secret_name):
+            return found
+
+    return None
 
 def app_secret_extract(juju: jubilant.Juju, cluster_name: str, secret_name: str) -> str | None:
-    user_secret = get_secret_by_label(
+    user_secret = get_secrets_by_label(
         juju,
         label=f"cluster.{cluster_name}.application",
         owner=cluster_name,
     )
 
-    return user_secret.get(secret_name)
+    for secret in user_secret:
+        if found := secret.get(secret_name):
+            return found
+
+    return None
 
 
 
