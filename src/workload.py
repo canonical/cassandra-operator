@@ -23,23 +23,6 @@ SNAP_NAME = "charmed-cassandra"
 SNAP_REVISION = "8"
 SNAP_SERVICE = "daemon"
 
-SECRETS_UNIT = [
-    "truststore-password",
-    "keystore-password",
-    "client-ca-cert",
-    "client-certificate",
-    "client-chain",
-    "client-csr",
-    "client-private-key",
-    "peer-ca-cert",
-    "peer-certificate",
-    "peer-chain",
-    "peer-csr",
-    "peer-private-key",
-]
-
-SECRETS_APP = ["internal-ca", "internal-ca-key"]
-
 
 logger = logging.getLogger(__name__)
 

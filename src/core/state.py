@@ -25,13 +25,29 @@ from charms.tls_certificates_interface.v4.tls_certificates import (
 )
 from ops import Application, CharmBase, Object, Relation, Unit
 
-from workload import SECRETS_APP, SECRETS_UNIT
-
 CLIENT_TLS_RELATION = "client-certificates"
 PEER_TLS_RELATION = "peer-certificates"
 PEER_RELATION = "cassandra-peers"
 CASSANDRA_PEER_PORT = 7000
 CASSANDRA_CLIENT_PORT = 9042
+
+SECRETS_UNIT = [
+    "truststore-password",
+    "keystore-password",
+    "client-ca-cert",
+    "client-certificate",
+    "client-chain",
+    "client-csr",
+    "client-private-key",
+    "peer-ca-cert",
+    "peer-certificate",
+    "peer-chain",
+    "peer-csr",
+    "peer-private-key",
+]
+
+SECRETS_APP = ["internal-ca", "internal-ca-key"]
+
 
 logger = logging.getLogger(__name__)
 
