@@ -9,7 +9,7 @@ import logging
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from charms.rolling_ops.v0.rollingops import RollingOpsManager, RunWithLock
 from ops import main
-from tenacity import Retrying, wait_fixed
+from tenacity import Retrying, stop_after_delay, wait_exponential
 
 from core.config import CharmConfig
 from core.state import ApplicationState, ClusterState, UnitWorkloadState
@@ -59,12 +59,14 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
 
         self.workload.restart()
 
-        for _ in Retrying(wait=wait_fixed(10)):
+        for _ in Retrying(wait=wait_exponential(), stop=stop_after_delay(1800)):
             if self.cluster_manager.is_healthy:
                 self.state.unit.workload_state = UnitWorkloadState.ACTIVE
                 if self.unit.is_leader():
                     self.state.cluster.state = ClusterState.ACTIVE
                 return
+
+        raise Exception("bootstrap timeout exceeded")
 
 
 if __name__ == "__main__":  # pragma: nocover
