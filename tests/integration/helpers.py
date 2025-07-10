@@ -18,7 +18,7 @@ import yaml
 
 logger = logging.getLogger(__name__)
 
-METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
+METADATA = yaml.safe_load((Path(__file__).resolve().parents[2] / "metadata.yaml").read_text())
 APP_NAME = METADATA["name"]
 
 @contextmanager
