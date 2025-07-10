@@ -46,16 +46,12 @@ def test_default_tls(juju: jubilant.Juju, app_name: str) -> None:
     ]
 
     for uaddr in unit_addreses:
-        assert check_tls(
-            ip=uaddr, port=9042
-        )
-
+        assert check_tls(ip=uaddr, port=PEER_PORT)
+        
     # Enshure all nodes are joined to the cluster
     for i, uaddr in enumerate(unit_addreses):
         assert check_node_is_up(juju=juju, app_name=app_name, unit_num=i, unit_addr=uaddr)
 
-    for uaddr in unit_addreses:
-        assert check_tls(ip=uaddr, port=PEER_PORT)
     
 
 def unit_secret_extract(juju: jubilant.Juju, unit_name: str, secret_name: str) -> str | None:
