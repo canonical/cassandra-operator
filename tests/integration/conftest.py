@@ -9,6 +9,7 @@ import jubilant
 import pytest
 import yaml
 
+from .types import IntegrationTestsCharms, TestCharm
 
 @pytest.fixture(scope="module")
 def juju(request: pytest.FixtureRequest) -> Generator[jubilant.Juju, None, None]:
@@ -32,6 +33,19 @@ def pytest_addoption(parser) -> None:
         help="keep temporarily-created models",
     )
 
+@pytest.fixture(scope="module")
+def charm_versions() -> IntegrationTestsCharms:
+    return IntegrationTestsCharms(
+        tls=TestCharm(
+            name="self-signed-certificates",
+            channel="latest/stable",
+            revision=163,  # FIXME (certs): Unpin the revision once the charm is fixed
+            base="ubuntu@22.04",
+            alias="self-signed-certificates",
+        ),
+    )
+
+    
 
 @pytest.fixture(scope="module")
 def cassandra_charm() -> Path:

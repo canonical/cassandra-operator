@@ -100,10 +100,10 @@ def check_node_is_up(juju: jubilant.Juju, app_name: str, unit_num: int, unit_add
     for line in nd_tool_status_raw.split('\n'):
         line = line.strip()
         if unit_addr in line:
-            # Проверяем, начинается ли строка с "UN "
             if line.startswith('UN '):
                 return True
             else:
                 return False    
 
     return False
+
