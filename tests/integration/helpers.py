@@ -74,18 +74,25 @@ def get_secret_by_label(juju: jubilant.Juju, label: str, owner: str) -> dict[str
         
 
 def check_tls(ip: str, port: int) -> bool:
+    """Проверяет, поддерживает ли сервер TLS (v1.2 или v1.3) на заданном IP и порте."""
     try:
-        result = check_output(
+        proc = subprocess.run(
             f"echo | openssl s_client -connect {ip}:{port}",
-            stderr=PIPE,
             shell=True,
-            universal_newlines=True,
+            capture_output=True,
+            text=True,
+            timeout=5,
         )
-        return bool(result)
-
-    except subprocess.CalledProcessError as e:
-        logger.error(f"command '{e.cmd}' return with error (code {e.returncode}): {e.output}")
+    except subprocess.TimeoutExpired:
+        logger.debug(f"OpenSSL timeout on {ip}:{port}")
         return False
+
+    output = proc.stdout + proc.stderr  # объединяем вывод, чтобы проверить TLS-версии
+
+    if proc.returncode != 0:
+        logger.debug(f"OpenSSL exited with code {proc.returncode} on {ip}:{port}")
+
+    return "TLSv1.2" in output or "TLSv1.3" in output
 
 def get_address(juju: jubilant.Juju, app_name: str, unit_num) -> str:
     """Get the address for a unit."""
