@@ -325,7 +325,47 @@ class UnitContext(RelationState):
     @property
     def client_tls(self) -> TLSContext:
         """TLS state for external (client) communications."""
-        return TLSContext(self.relation, self.data_interface, self.unit, TLSScope.CLIENT)    
+        return TLSContext(self.relation, self.data_interface, self.unit, TLSScope.CLIENT)
+
+    @property
+    def keystore_password(self) -> str:
+        """The unit keystore password set during `certificates_joined`.
+
+        Returns:
+            String of password
+            None if password not yet generated
+        """
+        return self.relation_data.get("keystore-password", "")
+
+    @property
+    def truststore_password(self) -> str:
+        """The unit truststore password set during `certificates_joined`.
+
+        Returns:
+            String of password
+            None if password not yet generated
+        """
+        return self.relation_data.get("truststore-password", "")
+
+    @keystore_password.setter
+    def keystore_password(self, value: str) -> None:
+        """The unit keystore password set during `certificates_joined`.
+
+        Returns:
+            String of password
+            None if password not yet generated
+        """
+        self._field_setter_wrapper("keystore-password", value)
+
+    @truststore_password.setter
+    def truststore_password(self, value: str) -> None:
+        """The unit truststore password set during `certificates_joined`.
+
+        Returns:
+            String of password
+            None if password not yet generated
+        """
+        self._field_setter_wrapper("truststore-password", value)
 
 
 class ClusterContext(RelationState):
@@ -417,45 +457,6 @@ class ClusterContext(RelationState):
     def peer_cluster_ca(self, value: List[Certificate]) -> None:
         self._field_setter_wrapper("bundle", json.dumps([str(c) for c in value]))
 
-    @property
-    def keystore_password_secret(self) -> str:
-        """The unit keystore password set during `certificates_joined`.
-
-        Returns:
-            String of password
-            None if password not yet generated
-        """
-        return self.relation_data.get("keystore-password", "")
-
-    @property
-    def truststore_password_secret(self) -> str:
-        """The unit truststore password set during `certificates_joined`.
-
-        Returns:
-            String of password
-            None if password not yet generated
-        """
-        return self.relation_data.get("truststore-password", "")
-
-    @keystore_password_secret.setter
-    def keystore_password_secret(self, value: str) -> None:
-        """The unit keystore password set during `certificates_joined`.
-
-        Returns:
-            String of password
-            None if password not yet generated
-        """
-        self._field_setter_wrapper("keystore-password", value)
-
-    @truststore_password_secret.setter
-    def truststore_password_secret(self, value: str) -> None:
-        """The unit truststore password set during `certificates_joined`.
-
-        Returns:
-            String of password
-            None if password not yet generated
-        """
-        self._field_setter_wrapper("truststore-password", value)
         
     
 
