@@ -87,7 +87,7 @@ def check_tls(ip: str, port: int) -> bool:
         logger.error(f"command '{e.cmd}' return with error (code {e.returncode}): {e.output}")
         return False
 
-async def get_address(juju: jubilant.Juju, app_name: str, unit_num) -> str:
+def get_address(juju: jubilant.Juju, app_name: str, unit_num) -> str:
     """Get the address for a unit."""
     
     status = juju.status()

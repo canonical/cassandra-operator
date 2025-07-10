@@ -39,10 +39,10 @@ def test_deploy_internal_tls(juju: jubilant.Juju, cassandra_charm: Path, app_nam
     
     juju.wait(jubilant.all_active, timeout=1200)
 
-async def test_default_tls(juju: jubilant.Juju, app_name: str) -> None:
+def test_default_tls(juju: jubilant.Juju, app_name: str) -> None:
     unit_addreses = [
-        await get_address(juju=juju, app_name=app_name, unit_num=0),
-        await get_address(juju=juju, app_name=app_name, unit_num=1),
+        get_address(juju=juju, app_name=app_name, unit_num=0),
+        get_address(juju=juju, app_name=app_name, unit_num=1),
     ]
 
     for uaddr in unit_addreses:
