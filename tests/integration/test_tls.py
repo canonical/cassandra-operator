@@ -75,8 +75,11 @@ def test_peer_self_signed_tls(juju: jubilant.Juju, app_name: str, charm_versions
     juju.integrate(f"{charm_versions.tls.app}:certificates", f"{app_name}:peer-certificates")
 
     # Wait for peer_certs rotation
-    juju.wait(jubilant.all_agents_idle and jubilant.all_active, delay=50)
-
+    juju.wait(
+        ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
+        delay=3
+    )
+    
     for uaddr in unit_addreses:
         assert check_tls(ip=uaddr, port=PEER_PORT)
         
