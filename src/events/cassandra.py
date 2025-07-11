@@ -81,9 +81,9 @@ class CassandraEvents(Object):
 
         try:
             if self.charm.unit.is_leader():
-                self.state.cluster.peer_cluster_ca = self.state.unit.peer_tls.bundle
                 self.state.cluster.cluster_name = self.charm.config.cluster_name
                 self.state.cluster.seeds = [self.state.unit.peer_url]
+                self.state.cluster.peer_cluster_ca = self.state.unit.peer_tls.bundle
             self.config_manager.render_env(
                 cassandra_limit_memory_mb=1024 if self.charm.config.profile == "testing" else None
             )
@@ -105,15 +105,13 @@ class CassandraEvents(Object):
         self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
 
     def _on_config_changed(self, _: ConfigChangedEvent) -> None:
+        # TODO: add peer relation change hook for subordinates to update leader address too
         try:
             # TODO: cluster_name change
             self.config_manager.render_env(
                 cassandra_limit_memory_mb=1024 if self.charm.config.profile == "testing" else None
             )
             self.config_manager.render_cassandra_config(
-                cluster_name=self.charm.config.cluster_name,
-                listen_address=self.state.unit.ip,
-                seeds=self.state.cluster.seeds,
                 enable_peer_tls=self.state.unit.peer_tls.ready,
                 enable_client_tls=self.state.unit.client_tls.ready,
                 keystore_password=self.state.unit.keystore_password,
@@ -123,15 +121,13 @@ class CassandraEvents(Object):
             logger.debug(f"Config haven't passed validation: {e}")
             return
 
-        if self.state.unit.workload_state == UnitWorkloadState.ACTIVE:
-            self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
-            
         if self.state.unit.peer_tls.rotation or self.state.unit.client_tls.rotation:
            self.state.unit.peer_tls.rotation = False
            self.state.unit.client_tls.rotation = False
-        
-        self.workload.restart()
-        self.state.unit.workload_state = UnitWorkloadState.STARTING
+
+
+        if self.state.unit.workload_state == UnitWorkloadState.ACTIVE:
+            self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
 
     def _on_update_status(self, _: UpdateStatusEvent) -> None:
         # TODO: add peer relation change hook for subordinates to update leader address too
@@ -141,10 +137,14 @@ class CassandraEvents(Object):
         ):
             if self.charm.unit.is_leader():
                 self.state.cluster.seeds = [self.state.unit.peer_url]
+
             self.config_manager.render_cassandra_config(
                 listen_address=self.state.unit.ip,
                 seeds=self.state.cluster.seeds,
+                keystore_password=self.state.unit.keystore_password,
+                truststore_password=self.state.unit.truststore_password,
             )
+
             self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
 
     def _on_collect_unit_status(self, event: CollectStatusEvent) -> None:
