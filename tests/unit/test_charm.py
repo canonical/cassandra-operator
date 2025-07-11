@@ -11,165 +11,120 @@ from ops import testing
 from charm import CassandraCharm
 from core.state import PEER_RELATION
 
+BOOTSTRAP_RELATION = "bootstrap"
 
-def test_start_maintenance_status_when_starting():
-    """Charm enters MaintenanceStatus when Cassandra is not yet healthy."""
+
+def test_start_leader():
+    """Leader should render all required configs and start workload."""
     ctx = testing.Context(CassandraCharm)
     relation = testing.PeerRelation(id=1, endpoint=PEER_RELATION)
-    state_in = testing.State(leader=True, relations={relation})
+    bootstrap_relation = testing.PeerRelation(id=2, endpoint=BOOTSTRAP_RELATION)
+    state = testing.State(leader=True, relations={relation, bootstrap_relation})
 
     with (
-        patch("managers.config.ConfigManager.render_env"),
-        patch("workload.CassandraWorkload.restart"),
-        patch("workload.CassandraWorkload.alive"),
-        patch(
-            "managers.cluster.ClusterManager.is_healthy",
-            new_callable=PropertyMock(return_value=False),
-        ),
-    ):
-        state_out = ctx.run(ctx.on.start(), state_in)
-        assert state_out.unit_status == ops.MaintenanceStatus("waiting for Cassandra to start")
-        assert state_out.get_relation(1).local_unit_data.get("workload_state") == "active"
-        assert state_out.get_relation(1).local_app_data.get("cluster_state") == "active"
-
-
-def test_start_sets_active_status_when_healthy():
-    """Charm enters ActiveStatus when Cassandra is healthy after start."""
-    ctx = testing.Context(CassandraCharm)
-    relation = testing.PeerRelation(id=1, endpoint=PEER_RELATION)
-    state_in = testing.State(leader=True, relations={relation})
-
-    with (
-        patch("managers.config.ConfigManager.render_env"),
-        patch("workload.CassandraWorkload.restart"),
-        patch("workload.CassandraWorkload.alive"),
+        patch("managers.config.ConfigManager.render_env") as render_env,
+        patch("managers.config.ConfigManager.render_cassandra_config") as render_cassandra_config,
+        patch("charm.CassandraWorkload") as workload,
         patch(
             "managers.cluster.ClusterManager.is_healthy",
             new_callable=PropertyMock(return_value=True),
         ),
     ):
-        state_out = ctx.run(ctx.on.start(), state_in)
-        assert state_out.unit_status == ops.ActiveStatus()
-        assert state_out.get_relation(1).local_unit_data.get("workload_state") == "active"
-        assert state_out.get_relation(1).local_app_data.get("cluster_state") == "active"
+        state = ctx.run(ctx.on.start(), state)
+        render_env.assert_called()
+        render_cassandra_config.assert_called()
+        workload.return_value.restart.assert_called_once()
+        assert state.unit_status == ops.ActiveStatus()
 
 
-def test_start_only_after_leader_active():
-    """Ensure Cassandra node starts only after leader is active and cluster_state is 'active'."""
+def test_start_subordinate_only_after_leader_active():
+    """Subordinate should start only after leader initialized cluster."""
     ctx = testing.Context(CassandraCharm)
     relation = testing.PeerRelation(id=1, endpoint=PEER_RELATION)
-    state_in = testing.State(leader=False, relations={relation})
+    state = testing.State(leader=False, relations={relation})
 
     with (
         patch("managers.config.ConfigManager.render_env"),
-        patch("workload.CassandraWorkload.restart") as restart,
-        patch("workload.CassandraWorkload.alive"),
+        patch("managers.config.ConfigManager.render_cassandra_config"),
+        patch("charm.CassandraWorkload"),
         patch(
-            "managers.cluster.ClusterManager.is_healthy",
-            new_callable=PropertyMock(return_value=False),
-        ),
+            "charms.rolling_ops.v0.rollingops.RollingOpsManager._on_acquire_lock", autospec=True
+        ) as bootstrap,
     ):
-        state_out = ctx.run(ctx.on.start(), state_in)
-        assert state_out.unit_status == ops.MaintenanceStatus("installing Cassandra")
-        restart.assert_not_called()
+        state = ctx.run(ctx.on.start(), state)
+        bootstrap.assert_not_called()
 
-    relation = testing.PeerRelation(
-        id=1, endpoint=PEER_RELATION, local_app_data={"cluster_state": "active"}
-    )
-    state_in = testing.State(leader=False, relations={relation})
+        relation = testing.PeerRelation(
+            id=1, endpoint=PEER_RELATION, local_app_data={"cluster_state": "active"}
+        )
+        state = testing.State(leader=False, relations={relation})
+
+        state = ctx.run(ctx.on.start(), state)
+        bootstrap.assert_called_once()
+
+
+def test_start_invalid_config():
+    """Both leader and subordinate should wait for config to be fixed prior starting workload."""
+    ctx = testing.Context(CassandraCharm)
+    relation = testing.PeerRelation(id=1, endpoint=PEER_RELATION)
+    state = testing.State(leader=True, relations={relation}, config={"profile": "invalid"})
 
     with (
         patch("managers.config.ConfigManager.render_env"),
-        patch("workload.CassandraWorkload.restart") as restart,
-        patch("workload.CassandraWorkload.alive"),
+        patch("managers.config.ConfigManager.render_cassandra_config"),
+        patch("charm.CassandraWorkload") as workload,
         patch(
-            "managers.cluster.ClusterManager.is_healthy",
-            new_callable=PropertyMock(return_value=False),
-        ),
+            "charms.rolling_ops.v0.rollingops.RollingOpsManager._on_acquire_lock", autospec=True
+        ) as bootstrap,
     ):
-        state_out = ctx.run(ctx.on.start(), state_in)
-        assert state_out.unit_status == ops.MaintenanceStatus("waiting for Cassandra to start")
-        assert state_out.get_relation(1).local_unit_data.get("workload_state") == "active"
-        restart.assert_called()
+        state = ctx.run(ctx.on.start(), state)
+        workload.return_value.restart.assert_not_called()
+
+        state = testing.State(leader=False, relations={relation})
+
+        state = ctx.run(ctx.on.start(), state)
+        bootstrap.assert_not_called()
 
 
 def test_config_changed_invalid_config():
-    """Ensure charm enters BlockedStatus if config is invalid during config_changed event."""
+    """Charm should enter BlockedStatus if config is invalid during config_changed event."""
     ctx = testing.Context(CassandraCharm)
     relation = testing.PeerRelation(id=1, endpoint=PEER_RELATION)
-    state_in = testing.State(leader=True, relations={relation}, config={"profile": "invalid"})
+    state = testing.State(leader=True, relations={relation}, config={"profile": "invalid"})
+
     with (
         patch("managers.config.ConfigManager.render_env"),
-        patch("workload.CassandraWorkload.restart"),
-        patch("workload.CassandraWorkload.alive"),
-        patch(
-            "managers.cluster.ClusterManager.is_healthy",
-            new_callable=PropertyMock(return_value=False),
-        ),
+        patch("managers.config.ConfigManager.render_cassandra_config"),
+        patch("charm.CassandraWorkload"),
     ):
-        state_out = ctx.run(ctx.on.config_changed(), state_in)
-        assert state_out.unit_status == ops.BlockedStatus("invalid config")
+        state = ctx.run(ctx.on.config_changed(), state)
+        assert state.unit_status == ops.BlockedStatus("invalid config")
 
 
-def test_config_changed_no_restart():
-    """Ensure node is not restarted if workload_state is 'starting' during config_changed event."""
+def test_config_changed():
+    """Charm should restart workload only if it's active when config is changed."""
     ctx = testing.Context(CassandraCharm)
-    relation = testing.PeerRelation(
-        id=1, endpoint=PEER_RELATION, local_unit_data={"workload_state": "starting"}
-    )
-    state_in = testing.State(leader=True, relations={relation})
+    relation = testing.PeerRelation(id=1, endpoint=PEER_RELATION)
+    bootstrap_relation = testing.PeerRelation(id=2, endpoint=BOOTSTRAP_RELATION)
+    state = testing.State(leader=True, relations={relation, bootstrap_relation})
     with (
-        patch("managers.config.ConfigManager.render_env"),
-        patch("workload.CassandraWorkload.restart") as restart,
-        patch("workload.CassandraWorkload.alive"),
+        patch("managers.config.ConfigManager.render_env") as render_env,
+        patch("charm.CassandraWorkload") as workload,
         patch(
             "managers.cluster.ClusterManager.is_healthy",
-            new_callable=PropertyMock(return_value=False),
+            new_callable=PropertyMock(return_value=True),
         ),
     ):
-        state_out = ctx.run(ctx.on.config_changed(), state_in)
-        assert state_out.unit_status == ops.MaintenanceStatus("waiting for Cassandra to start")
-        restart.assert_not_called()
+        state = ctx.run(ctx.on.config_changed(), state)
+        render_env.assert_called()
+        workload.return_value.restart.assert_not_called()
 
+        relation = testing.PeerRelation(
+            id=1, endpoint=PEER_RELATION, local_unit_data={"workload_state": "active"}
+        )
+        state = testing.State(leader=True, relations={relation, bootstrap_relation})
 
-def test_collect_unit_status_active_but_not_healthy():
-    """Ensure unit is MaintenanceStatus if workload_state is 'active' but node is not healthy."""
-    ctx = testing.Context(CassandraCharm)
-    relation = testing.PeerRelation(
-        id=1,
-        endpoint=PEER_RELATION,
-        local_unit_data={"workload_state": "active"},
-    )
-    state_in = testing.State(leader=True, relations={relation})
-    with (
-        patch("managers.config.ConfigManager.render_env"),
-        patch("workload.CassandraWorkload.restart"),
-        patch("workload.CassandraWorkload.alive"),
-        patch(
-            "managers.cluster.ClusterManager.is_healthy",
-            new_callable=PropertyMock(return_value=False),
-        ),
-    ):
-        state_out = ctx.run(ctx.on.collect_unit_status(), state_in)
-        assert state_out.unit_status == ops.MaintenanceStatus("waiting for Cassandra to start")
-
-
-def test_start_not_leader_and_cluster_state_not_active():
-    """Ensure charm does not start Cassandra if not leader and cluster_state is not 'active'."""
-    ctx = testing.Context(CassandraCharm)
-    relation = testing.PeerRelation(
-        id=1, endpoint=PEER_RELATION, local_app_data={"cluster_state": "pending"}
-    )
-    state_in = testing.State(leader=False, relations={relation})
-    with (
-        patch("managers.config.ConfigManager.render_env"),
-        patch("workload.CassandraWorkload.restart") as restart,
-        patch("workload.CassandraWorkload.alive"),
-        patch(
-            "managers.cluster.ClusterManager.is_healthy",
-            new_callable=PropertyMock(return_value=False),
-        ),
-    ):
-        state_out = ctx.run(ctx.on.start(), state_in)
-        assert state_out.unit_status == ops.MaintenanceStatus("installing Cassandra")
-        restart.assert_not_called()
+        render_env.reset_mock()
+        state = ctx.run(ctx.on.config_changed(), state)
+        render_env.assert_called()
+        workload.return_value.restart.assert_called_once()

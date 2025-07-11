@@ -233,7 +233,7 @@ version = "3.29.2"
 description = "DataStax Driver for Apache Cassandra"
 optional = false
 python-versions = "*"
-groups = ["main"]
+groups = ["main", "integration"]
 files = [
     {file = "cassandra-driver-3.29.2.tar.gz", hash = "sha256:c4310a7d0457f51a63fb019d8ef501588c491141362b53097fbc62fa06559b7c"},
     {file = "cassandra_driver-3.29.2-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:957208093ff2353230d0d83edf8c8e8582e4f2999d9a33292be6558fec943562"},
@@ -490,7 +490,7 @@ version = "8.2.1"
 description = "Composable command line interface toolkit"
 optional = false
 python-versions = ">=3.10"
-groups = ["main"]
+groups = ["main", "integration"]
 files = [
     {file = "click-8.2.1-py3-none-any.whl", hash = "sha256:61a3265b914e850b85317d0b3109c7f8cd35a670f963866005d6ef1d5175a12b"},
     {file = "click-8.2.1.tar.gz", hash = "sha256:27c491cc05d968d271d5a1db13e3b5a184636d9d930f148c50b038f0d0646202"},
@@ -528,7 +528,7 @@ files = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {file = "colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
 ]
-markers = {main = "platform_system == \"Windows\"", integration = "sys_platform == \"win32\"", unit = "sys_platform == \"win32\""}
+markers = {main = "platform_system == \"Windows\"", integration = "platform_system == \"Windows\" or sys_platform == \"win32\"", unit = "sys_platform == \"win32\""}
 
 [[package]]
 name = "coverage"
@@ -709,7 +709,7 @@ version = "0.2.1.post1"
 description = "GeoJSON <-> WKT/WKB conversion utilities"
 optional = false
 python-versions = ">2.6, !=3.3.*, <4"
-groups = ["main"]
+groups = ["main", "integration"]
 files = [
     {file = "geomet-0.2.1.post1-py3-none-any.whl", hash = "sha256:a41a1e336b381416d6cbed7f1745c848e91defaa4d4c1bdc1312732e46ffad2b"},
     {file = "geomet-0.2.1.post1.tar.gz", hash = "sha256:91d754f7c298cbfcabd3befdb69c641c27fe75e808b27aa55028605761d17e95"},
@@ -967,42 +967,41 @@ importlib-metadata = ">=6.0,<8.7.0"
 
 [[package]]
 name = "ops"
-version = "2.22.0"
+version = "2.23.0"
 description = "The Python library behind great charms"
 optional = false
 python-versions = ">=3.8"
 groups = ["main", "charm-libs", "unit"]
 files = [
-    {file = "ops-2.22.0-py3-none-any.whl", hash = "sha256:ad44326bc065e33357b47e1cf4c73e811b2fdb3c89dd0c9bdf421a7a028bdcf7"},
-    {file = "ops-2.22.0.tar.gz", hash = "sha256:bd1cd1229e83efb8ae2d97d8878c7db3deceb6819eb5a38fb6e235a959528ec2"},
+    {file = "ops-2.23.0-py3-none-any.whl", hash = "sha256:7a42840410e8570acc3a4b498973a5bcd3fd0b12dd06837f57b9379b3acdfac3"},
+    {file = "ops-2.23.0.tar.gz", hash = "sha256:3e6c29a8f2119c7b8eaa88c82b5371de236dfcb7a7bf0012a6e2a829f0837fb7"},
 ]
 
 [package.dependencies]
 importlib-metadata = "*"
 opentelemetry-api = ">=1.0,<2.0"
-ops-scenario = {version = "7.22.0", optional = true, markers = "extra == \"testing\""}
+ops-scenario = {version = "7.23.0", optional = true, markers = "extra == \"testing\""}
 PyYAML = "==6.*"
 websocket-client = "==1.*"
 
 [package.extras]
-docs = ["canonical-sphinx-extensions", "furo", "linkify-it-py", "myst-parser", "pyspelling", "sphinx (>=8.0.0,<8.1.0)", "sphinx-autobuild", "sphinx-copybutton", "sphinx-design", "sphinx-notfound-page", "sphinx-tabs", "sphinxcontrib-jquery", "sphinxext-opengraph"]
-testing = ["ops-scenario (==7.22.0)"]
-tracing = ["ops-tracing (==2.22.0)"]
+testing = ["ops-scenario (==7.23.0)"]
+tracing = ["ops-tracing (==2.23.0)"]
 
 [[package]]
 name = "ops-scenario"
-version = "7.22.0"
+version = "7.23.0"
 description = "Python library providing a state-transition testing API for Operator Framework charms."
 optional = false
 python-versions = ">=3.8"
 groups = ["unit"]
 files = [
-    {file = "ops_scenario-7.22.0-py3-none-any.whl", hash = "sha256:a42d3acf831fc46f213286268e31d14c2ffc5ea72452c49955de76895f62437c"},
-    {file = "ops_scenario-7.22.0.tar.gz", hash = "sha256:15921e6849773b81df90ad4d78f573e0af5f5b9ddbfc82603c991c29648d8070"},
+    {file = "ops_scenario-7.23.0-py3-none-any.whl", hash = "sha256:88ddb6b8b41688c580b38fc10dfa3706ab65a481931c26b07a298f2dd82a86ae"},
+    {file = "ops_scenario-7.23.0.tar.gz", hash = "sha256:32a40966a92138779e5f47fff0653037e98e4561fcb30a02014733a88a68c998"},
 ]
 
 [package.dependencies]
-ops = "2.22.0"
+ops = "2.23.0"
 PyYAML = ">=6.0.1"
 
 [[package]]
@@ -1322,14 +1321,14 @@ pytz = "*"
 
 [[package]]
 name = "pyright"
-version = "1.1.402"
+version = "1.1.403"
 description = "Command line wrapper for pyright"
 optional = false
 python-versions = ">=3.7"
 groups = ["lint"]
 files = [
-    {file = "pyright-1.1.402-py3-none-any.whl", hash = "sha256:2c721f11869baac1884e846232800fe021c33f1b4acb3929cff321f7ea4e2982"},
-    {file = "pyright-1.1.402.tar.gz", hash = "sha256:85a33c2d40cd4439c66aa946fd4ce71ab2f3f5b8c22ce36a623f59ac22937683"},
+    {file = "pyright-1.1.403-py3-none-any.whl", hash = "sha256:c0eeca5aa76cbef3fcc271259bbd785753c7ad7bcac99a9162b4c4c7daed23b3"},
+    {file = "pyright-1.1.403.tar.gz", hash = "sha256:3ab69b9f41c67fb5bbb4d7a36243256f0d549ed3608678d381d5f51863921104"},
 ]
 
 [package.dependencies]
@@ -1924,4 +1923,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "3cfe94147fdf7547f612e4aeb156b4ca33effdc140b061c2dec9ceda1d2e3d2b"
+content-hash = "9cea58acf0c8c9aed155b1a3c0cccf4b3b35495750d89df05f4a10b14f7133c1"

@@ -2,16 +2,17 @@
 # Copyright 2025 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""Charm the application."""
+"""Charm definition."""
 
 import logging
 
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
-from ops import CollectStatusEvent, main
+from charms.rolling_ops.v0.rollingops import RollingOpsManager, RunWithLock
+from ops import main
+from tenacity import Retrying, stop_after_delay, wait_exponential
 
 from core.config import CharmConfig
-from core.state import ApplicationState
-from core.statuses import Status
+from core.state import ApplicationState, ClusterState, UnitWorkloadState
 from events.cassandra import CassandraEvents
 from managers.cluster import ClusterManager
 from managers.config import ConfigManager
@@ -21,34 +22,51 @@ logger = logging.getLogger(__name__)
 
 
 class CassandraCharm(TypedCharmBase[CharmConfig]):
-    """Charm the application."""
+    """Application charm."""
 
     config_type = CharmConfig
 
     def __init__(self, *args):
         super().__init__(*args)
 
-        state = ApplicationState(self)
-        workload = CassandraWorkload()
-        cluster_manager = ClusterManager(workload=workload)
-        config_manager = ConfigManager(workload=workload)
+        self.state = ApplicationState(self)
+        self.workload = CassandraWorkload()
+        self.cluster_manager = ClusterManager(workload=self.workload)
 
-        self.framework.observe(self.on.collect_unit_status, self._on_collect_unit_status)
-        self.framework.observe(self.on.collect_app_status, self._on_collect_app_status)
+        config_manager = ConfigManager(
+            workload=self.workload,
+            cluster_name=self.state.cluster.cluster_name,
+            listen_address=self.state.unit.ip,
+            seeds=self.state.cluster.seeds,
+        )
+        bootstrap_manager = RollingOpsManager(
+            charm=self, relation="bootstrap", callback=self.bootstrap
+        )
 
         self.cassandra_events = CassandraEvents(
             self,
-            state=state,
-            workload=workload,
-            cluster_manager=cluster_manager,
+            state=self.state,
+            workload=self.workload,
+            cluster_manager=self.cluster_manager,
             config_manager=config_manager,
+            bootstrap_manager=bootstrap_manager,
         )
 
-    def _on_collect_unit_status(self, event: CollectStatusEvent) -> None:
-        event.add_status(Status.ACTIVE.value)
+    def bootstrap(self, event: RunWithLock) -> None:
+        """Start workload and join this unit to the cluster."""
+        # TODO: add leader elected hook
+        self.state.unit.workload_state = UnitWorkloadState.STARTING
 
-    def _on_collect_app_status(self, event: CollectStatusEvent) -> None:
-        event.add_status(Status.ACTIVE.value)
+        self.workload.restart()
+
+        for _ in Retrying(wait=wait_exponential(), stop=stop_after_delay(1800)):
+            if self.cluster_manager.is_healthy:
+                self.state.unit.workload_state = UnitWorkloadState.ACTIVE
+                if self.unit.is_leader():
+                    self.state.cluster.state = ClusterState.ACTIVE
+                return
+
+        raise Exception("bootstrap timeout exceeded")
 
 
 if __name__ == "__main__":  # pragma: nocover
