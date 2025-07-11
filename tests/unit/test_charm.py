@@ -3,7 +3,7 @@
 #
 # Learn more about testing at: https://juju.is/docs/sdk/testing
 
-from unittest.mock import PropertyMock, patch
+from unittest.mock import PropertyMock, patch, MagicMock
 
 import ops
 from ops import testing
@@ -29,6 +29,11 @@ def test_start_leader():
             "managers.cluster.ClusterManager.is_healthy",
             new_callable=PropertyMock(return_value=True),
         ),
+        patch("events.cassandra.CassandraEvents._check_and_set_certificates", return_value=True),
+        patch("core.state.UnitContext.keystore_password", new_callable=PropertyMock(return_value="keystore_password")),
+        patch("core.state.UnitContext.truststore_password", new_callable=PropertyMock(return_value="truststore_password")),
+        patch("core.state.TLSContext.bundle", new_callable=PropertyMock(return_value=[])),
+        patch("core.state.TLSContext.ready", new_callable=PropertyMock(return_value=True)),
     ):
         state = ctx.run(ctx.on.start(), state)
         render_env.assert_called()
@@ -47,6 +52,14 @@ def test_start_subordinate_only_after_leader_active():
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
         patch("charm.CassandraWorkload"),
+        patch("core.state.UnitContext.keystore_password", new_callable=PropertyMock(return_value="keystore_password")),   
+        patch("core.state.UnitContext.truststore_password", new_callable=PropertyMock(return_value="truststore_password")), 
+        patch("core.state.TLSContext.private_key", new_callable=PropertyMock(return_value=MagicMock())),
+        patch("core.state.TLSContext.csr", new_callable=PropertyMock(return_value=MagicMock())),
+        patch("core.state.TLSContext.certificate", new_callable=PropertyMock(return_value=MagicMock())),
+        patch("core.state.TLSContext.ca", new_callable=PropertyMock(return_value=MagicMock())),
+        patch("core.state.TLSContext.chain", new_callable=PropertyMock(return_value=MagicMock())),
+        patch("core.state.TLSContext.bundle", new_callable=PropertyMock(return_value=MagicMock())),    
         patch(
             "charms.rolling_ops.v0.rollingops.RollingOpsManager._on_acquire_lock", autospec=True
         ) as bootstrap,
@@ -73,6 +86,14 @@ def test_start_invalid_config():
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
         patch("charm.CassandraWorkload") as workload,
+        patch("core.state.UnitContext.keystore_password", new_callable=PropertyMock(return_value="keystore_password")),
+        patch("core.state.UnitContext.truststore_password", new_callable=PropertyMock(return_value="truststore_password")),
+        patch("core.state.TLSContext.private_key", new_callable=PropertyMock(return_value=MagicMock())),
+        patch("core.state.TLSContext.csr", new_callable=PropertyMock(return_value=MagicMock())),
+        patch("core.state.TLSContext.certificate", new_callable=PropertyMock(return_value=MagicMock())),
+        patch("core.state.TLSContext.ca", new_callable=PropertyMock(return_value=MagicMock())),
+        patch("core.state.TLSContext.chain", new_callable=PropertyMock(return_value=MagicMock())),
+        patch("core.state.TLSContext.bundle", new_callable=PropertyMock(return_value=MagicMock())),
         patch(
             "charms.rolling_ops.v0.rollingops.RollingOpsManager._on_acquire_lock", autospec=True
         ) as bootstrap,
@@ -95,6 +116,14 @@ def test_config_changed_invalid_config():
     with (
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
+        patch("core.state.UnitContext.keystore_password", new_callable=PropertyMock(return_value="keystore_password")),
+        patch("core.state.UnitContext.truststore_password", new_callable=PropertyMock(return_value="truststore_password")),
+        patch("core.state.TLSContext.private_key", new_callable=PropertyMock(return_value=MagicMock())),
+        patch("core.state.TLSContext.csr", new_callable=PropertyMock(return_value=MagicMock())),
+        patch("core.state.TLSContext.certificate", new_callable=PropertyMock(return_value=MagicMock())),
+        patch("core.state.TLSContext.ca", new_callable=PropertyMock(return_value=MagicMock())),
+        patch("core.state.TLSContext.chain", new_callable=PropertyMock(return_value=MagicMock())),
+        patch("core.state.TLSContext.bundle", new_callable=PropertyMock(return_value=MagicMock())),
         patch("charm.CassandraWorkload"),
     ):
         state = ctx.run(ctx.on.config_changed(), state)
@@ -110,6 +139,14 @@ def test_config_changed():
     with (
         patch("managers.config.ConfigManager.render_env") as render_env,
         patch("charm.CassandraWorkload") as workload,
+        patch("core.state.UnitContext.keystore_password", new_callable=PropertyMock(return_value="keystore_password")),
+        patch("core.state.UnitContext.truststore_password", new_callable=PropertyMock(return_value="truststore_password")),
+        patch("core.state.TLSContext.private_key", new_callable=PropertyMock(return_value=MagicMock())),
+        patch("core.state.TLSContext.csr", new_callable=PropertyMock(return_value=MagicMock())),
+        patch("core.state.TLSContext.certificate", new_callable=PropertyMock(return_value=MagicMock())),
+        patch("core.state.TLSContext.ca", new_callable=PropertyMock(return_value=MagicMock())),
+        patch("core.state.TLSContext.chain", new_callable=PropertyMock(return_value=MagicMock())),
+        patch("core.state.TLSContext.bundle", new_callable=PropertyMock(return_value=MagicMock())),
         patch(
             "managers.cluster.ClusterManager.is_healthy",
             new_callable=PropertyMock(return_value=True),

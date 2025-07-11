@@ -117,7 +117,7 @@ class RelationState:
             self.relation_data.update({field: value})            
 
 @dataclass
-class ResolvedTLSState:
+class ResolvedTLSContext:
     private_key: PrivateKey
     ca: Certificate
     certificate: Certificate
@@ -258,10 +258,10 @@ class TLSContext(RelationState):
         """Returns True if all the necessary TLS relation data has been set, False otherwise."""
         return all([self.certificate, self.ca, self.private_key])
 
-    def resolved(self) -> ResolvedTLSState:
+    def resolved(self) -> ResolvedTLSContext:
         if not self.certificate or not self.private_key or not self.ca:
             raise RuntimeError(f"TLS state is incomplete, certificate: {True if self.certificate else False}, private_key: {True if self.private_key else False}, ca: {True if self.ca else False}")
-        return ResolvedTLSState(
+        return ResolvedTLSContext(
             private_key=self.private_key,
             ca=self.ca,
             certificate=self.certificate,

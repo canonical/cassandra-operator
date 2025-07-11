@@ -39,6 +39,7 @@ class CassandraWorkload(WorkloadBase):
         self.cassandra_paths.env = self.root / "/etc/environment"
         self.cassandra_paths.config_dir = self.root / f"{SNAP_VAR_CURRENT_PATH}/etc/cassandra"
         self.cassandra_paths.data_dir = self.root / f"{SNAP_VAR_COMMON_PATH}/var/lib/cassandra"
+        self.cassandra_paths.tls_dir = self.root / f"{SNAP_VAR_COMMON_PATH}/etc/cassandra/tls"
 
         self._cassandra_snap = snap.SnapCache()[SNAP_NAME]
 

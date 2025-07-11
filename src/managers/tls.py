@@ -25,7 +25,7 @@ from cryptography.hazmat.primitives import hashes
 from common.exceptions import ExecError
 
 from core.workload import WorkloadBase
-from core.state import ApplicationState, ResolvedTLSState, TLSContext, TLSScope
+from core.state import ApplicationState, ResolvedTLSContext, TLSContext, TLSScope
 from common.cassandra_client import CassandraClient
 
 logger = logging.getLogger(__name__)
@@ -41,6 +41,7 @@ class TLSManager:
 
     DEFAULT_HASH_ALGORITHM: hashes.HashAlgorithm = hashes.SHA256()
     SCOPES = (TLSScope.PEER, TLSScope.CLIENT)
+    keytool = "charmed-cassandra.keytool"
 
     def __init__(self, workload: WorkloadBase):
         self.workload = workload
@@ -51,11 +52,11 @@ class TLSManager:
 
     def get_truststore_path(self, scope: TLSScope) -> str:
         """Returns the truststore path for the given scope."""
-        return (self.workload.cassandra_paths.tls_directory / f"{scope.value}-truststore.jks").as_posix()
+        return (self.workload.cassandra_paths.tls_dir / f"{scope.value}-truststore.jks").as_posix()
 
     def get_keystore_path(self, scope: TLSScope) -> str:
         """Returns the keystore path for the given scope."""
-        return (self.workload.cassandra_paths.tls_directory / f"{scope.value}-keystore.p12").as_posix()
+        return (self.workload.cassandra_paths.tls_dir / f"{scope.value}-keystore.p12").as_posix()
 
     def build_sans(self, sans_dns: List[str], sans_ip: List[str]) -> Sans:
         dns_names: list[str] = []
@@ -131,13 +132,13 @@ class TLSManager:
 
     def set_ca(self, ca: Certificate, scope: TLSScope) -> None:
         for scope in self.SCOPES:
-            (self.workload.cassandra_paths.tls_directory / f"{scope.value}-ca.pem").write_text(
+            (self.workload.cassandra_paths.tls_dir / f"{scope.value}-ca.pem").write_text(
                 str(ca)
             )
 
     def set_certificate(self, crt: Certificate, scope: TLSScope) -> None:
         for scope in self.SCOPES:
-            (self.workload.cassandra_paths.tls_directory / f"{scope.value}-unit.pem").write_text(
+            (self.workload.cassandra_paths.tls_dir / f"{scope.value}-unit.pem").write_text(
                 str(crt)
             )
 
@@ -145,44 +146,44 @@ class TLSManager:
         raw_list = [c.raw for c in ca_list]
         
         for scope in self.SCOPES:
-            (self.workload.cassandra_paths.tls_directory / f"{scope.value}-bundle.pem").write_text(
+            (self.workload.cassandra_paths.tls_dir / f"{scope.value}-bundle.pem").write_text(
                 str("\n".join(raw_list))
             )        
 
     def set_private_key(self, pk: PrivateKey, scope: TLSScope) -> None:
         for scope in self.SCOPES:
-            (self.workload.cassandra_paths.tls_directory / f"{scope.value}-private.key").write_text(str(pk))
+            (self.workload.cassandra_paths.tls_dir / f"{scope.value}-private.key").write_text(str(pk))
 
     def set_chain(self, ca_list: List[Certificate], scope: TLSScope) -> None:
         """Sets the unit chain."""
         for scope in self.SCOPES:
             for i, chain_cert in enumerate(ca_list):
-                (self.workload.cassandra_paths.tls_directory / f"{scope.value}-bundle{i}.pem").write_text(str(chain_cert))
+                (self.workload.cassandra_paths.tls_dir / f"{scope.value}-bundle{i}.pem").write_text(str(chain_cert))
 
     def get_ca(self, scope: TLSScope) -> Optional[Certificate]:
         try:
-            return Certificate.from_string((self.workload.cassandra_paths.tls_directory / f"{scope.value}-ca.pem").read_text())
+            return Certificate.from_string((self.workload.cassandra_paths.tls_dir / f"{scope.value}-ca.pem").read_text())
         except Exception as e:
             logger.error(f"can not read CA certificate: {e}")
             return None
 
     def get_certificate(self, scope: TLSScope) -> Optional[Certificate]:
         try:
-            return Certificate.from_string((self.workload.cassandra_paths.tls_directory / f"{scope.value}-unit.pem").read_text())
+            return Certificate.from_string((self.workload.cassandra_paths.tls_dir / f"{scope.value}-unit.pem").read_text())
         except Exception as e:
             logger.error(f"can not read certificate {e}")
             return None
 
     def get_private_key(self, scope: TLSScope) -> Optional[PrivateKey]:
         try:        
-            return PrivateKey.from_string((self.workload.cassandra_paths.tls_directory / f"{scope.value}-private.key").read_text())
+            return PrivateKey.from_string((self.workload.cassandra_paths.tls_dir / f"{scope.value}-private.key").read_text())
         except Exception as e:
             logger.error(f"can not read private key: {e}")
             return None
 
     def get_bundle(self, scope: TLSScope) -> List[Certificate]:
         bundle = []
-        path = self.workload.cassandra_paths.tls_directory / f"{scope.value}-bundle.pem"
+        path = self.workload.cassandra_paths.tls_dir / f"{scope.value}-bundle.pem"
         try:
             text = path.read_text()
             cert_blocks = text.split('-----BEGIN CERTIFICATE-----')[1:]
@@ -209,7 +210,7 @@ class TLSManager:
             try:
                 self.workload.exec(
                     command=[
-                        "charmed-cassandra.keytool",
+                        f"{self.keytool}",
                         "-import",
                         "-alias",
                         alias,
@@ -221,7 +222,7 @@ class TLSManager:
                         trust_password,
                         "-noprompt",
                     ],
-                    cwd=self.workload.cassandra_paths.tls_directory.as_posix(),
+                    cwd=self.workload.cassandra_paths.tls_dir.as_posix(),
                 )
                 self.workload.exec(
                     f"chown {USER_NAME}:{GROUP} {self.get_truststore_path(scope)}".split()
@@ -259,7 +260,7 @@ class TLSManager:
                     "-password",
                     f"pass:{keystore_password}",
                 ],
-                cwd=self.workload.cassandra_paths.tls_directory.as_posix(),
+                cwd=self.workload.cassandra_paths.tls_dir.as_posix(),
             )
 
             self.workload.exec(
@@ -272,7 +273,7 @@ class TLSManager:
 
     def configure(
             self,
-            tls_state: ResolvedTLSState,
+            tls_state: ResolvedTLSContext,
             keystore_password: str,
             trust_password: str
     ) -> None:
@@ -289,7 +290,7 @@ class TLSManager:
         try:
             self.workload.exec(
                 command=[
-                    "charmed-cassandra.keytool",
+                    f"{self.keytool}",
                     "-import",
                     "-alias",
                     alias,
@@ -301,7 +302,7 @@ class TLSManager:
                     trust_password,
                     "-noprompt",
                 ],
-                cwd=self.workload.cassandra_paths.tls_directory.as_posix(),
+                cwd=self.workload.cassandra_paths.tls_dir.as_posix(),
             )
         except (subprocess.CalledProcessError, ExecError) as e:
             # in case this reruns and fails
@@ -313,7 +314,7 @@ class TLSManager:
 
     def reload_truststore(self, scope: TLSScope = TLSScope.CLIENT) -> None:
         """Reloads the truststore using `mgmt-api`."""
-        if not (self.workload.cassandra_paths.tls_directory / f"{scope.value}-truststore.jks").exists():
+        if not (self.workload.cassandra_paths.tls_dir / f"{scope.value}-truststore.jks").exists():
             logger.warning("Truststore does not exist")
             return
 
@@ -327,7 +328,7 @@ class TLSManager:
         try:
             self.workload.exec(
                 command=[
-                    "charmed-cassandra.keytool",
+                    f"{self.keytool}",
                     "-delete",
                     "-v",
                     "-alias",
@@ -338,7 +339,7 @@ class TLSManager:
                     trust_password,
                     "-noprompt",
                 ],
-                cwd=self.workload.cassandra_paths.tls_directory.as_posix(),
+                cwd=self.workload.cassandra_paths.tls_dir.as_posix(),
             )
         except (subprocess.CalledProcessError, ExecError) as e:
             if e.stdout and "does not exist" in e.stdout:
@@ -351,7 +352,7 @@ class TLSManager:
         """Update a certificate in the truststore."""
         # we should remove the previous cert first. If it doesn't exist, it will not raise an error.
         self.remove_cert(alias=alias, trust_password=trust_password, scope=scope)
-        file = (self.workload.cassandra_paths.tls_directory / f"{scope.value}-{alias}.pem")
+        file = (self.workload.cassandra_paths.tls_dir / f"{scope.value}-{alias}.pem")
         file.write_text(cert)
         self.import_cert(alias=f"{alias}", filename=file.as_posix(), trust_password=trust_password, scope=scope)
 
@@ -365,7 +366,7 @@ class TLSManager:
     def remove_stores(self, scope: TLSScope = TLSScope.CLIENT) -> None:
         """Cleans up all keys/certs/stores on a unit."""
         for pattern in ["*.pem", "*.key", "*.p12", "*.jks"]:
-            for path in (self.workload.cassandra_paths.tls_directory).glob(
+            for path in (self.workload.cassandra_paths.tls_dir).glob(
                 f"{scope.value}-{pattern}"
             ):
                 logger.debug(f"Removing {path}")
@@ -392,12 +393,12 @@ class TLSManager:
     @property
     def get_trusted_certificates(self, scope: TLSScope = TLSScope.CLIENT) -> dict[str, bytes]:
         """Returns a mapping of alias to certificate fingerprint (hash) for all certificates in the truststore."""
-        if not (self.workload.cassandra_paths.tls_directory / "truststore.jks").exists():
+        if not (self.workload.cassandra_paths.tls_dir / "truststore.jks").exists():
             logger.warning("Truststore does not exist")
             return {}
 
         command = [
-            "charmed-cassandra.keytool",
+            f"{self.keytool}",
             "-list",
             "-keystore",
             f"{scope.value}-truststore.jks",
@@ -407,7 +408,7 @@ class TLSManager:
         ]
 
         stdout, _ = self.workload.exec(
-            command=command, cwd=self.workload.cassandra_paths.tls_directory.as_posix()
+            command=command, cwd=self.workload.cassandra_paths.tls_dir.as_posix()
         )
 
         # Extract alias and SHA-256 fingerprint from keytool output

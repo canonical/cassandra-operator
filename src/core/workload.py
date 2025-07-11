@@ -23,6 +23,7 @@ class CassandraPaths:
     env: pathops.PathProtocol
     config_dir: pathops.PathProtocol
     data_dir: pathops.PathProtocol
+    tls_dir: pathops.PathProtocol
 
     @property
     def config(self) -> pathops.PathProtocol:
@@ -30,29 +31,24 @@ class CassandraPaths:
         return self.config_dir / "cassandra.yaml"
 
     @property
-    def tls_directory(self) -> pathops.PathProtocol:
-        """TODO."""
-        return self.config_dir / "tls"
-
-    @property
     def peer_truststore(self) -> pathops.PathProtocol:
         """TODO."""
-        return self.tls_directory / f"{TLSScope.PEER.value}-truststore.jks"    
+        return self.tls_dir / f"{TLSScope.PEER.value}-truststore.jks"    
 
     @property
     def peer_keystore(self) -> pathops.PathProtocol:
         """TODO."""
-        return self.tls_directory / f"{TLSScope.PEER.value}-keystore.p12"    
+        return self.tls_dir / f"{TLSScope.PEER.value}-keystore.p12"    
 
     @property
     def client_truststore(self) -> pathops.PathProtocol:
         """TODO."""
-        return self.tls_directory / f"{TLSScope.CLIENT.value}-truststore.jks"    
+        return self.tls_dir / f"{TLSScope.CLIENT.value}-truststore.jks"    
 
     @property
     def client_keystore(self) -> pathops.PathProtocol:
         """TODO."""
-        return self.tls_directory / f"{TLSScope.CLIENT.value}-keystore.p12"    
+        return self.tls_dir / f"{TLSScope.CLIENT.value}-keystore.p12"    
 
     
     @property

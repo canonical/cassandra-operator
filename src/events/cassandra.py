@@ -64,7 +64,7 @@ class CassandraEvents(Object):
         self.workload.install()
 
         # TODO: move to snap?
-        self.workload.cassandra_paths.tls_directory.mkdir(exist_ok=True)
+        self.workload.cassandra_paths.tls_dir.mkdir(exist_ok=True)
 
     def _on_start(self, event: StartEvent) -> None:
         self._update_network_address()
@@ -75,50 +75,13 @@ class CassandraEvents(Object):
             event.defer()
             return
 
-        if not self.state.unit.peer_tls.ready and not self.state.cluster.internal_ca:
-            if not self.charm.unit.is_leader():
-                event.defer()
-                return
-
-            ca, pk = self.tls_manager.generate_internal_ca(common_name=self.state.unit.unit.app.name)
-            
-            self.state.cluster.internal_ca = ca
-            self.state.cluster.internal_ca_key = pk
-        
-        host_mapping = self.cluster_manager.network_address()
-        sans = self.tls_manager.build_sans(sans_ip=[host_mapping[0]], sans_dns=[host_mapping[1], self.charm.unit.name])
-
-        if not self.state.cluster.internal_ca or not self.state.cluster.internal_ca_key:
-            logger.debug("Deferring on_start for unit due to cluster internal CA's isn't initialized yet")
+        if not self._check_and_set_certificates():
             event.defer()
             return
 
-        if not self.state.unit.peer_tls.ready:
-            provider_crt, pk = self.tls_manager.generate_internal_credentials(
-                ca=self.state.cluster.internal_ca,
-                ca_key=self.state.cluster.internal_ca_key,
-                unit_key=self.state.unit.peer_tls.private_key,
-                common_name=self.state.unit.unit.name,
-                sans_ip=frozenset(sans["sans_ip"]),
-                sans_dns=frozenset(sans["sans_dns"]),
-            )
-            
-            self.state.unit.peer_tls.setup_provider_certificates(provider_crt)
-            self.state.unit.peer_tls.private_key = pk
-            self.state.unit.peer_tls.ca = self.state.cluster.internal_ca
-
-        self.tls_manager.configure(
-            self.state.unit.peer_tls.resolved(),
-            keystore_password=self.state.unit.keystore_password,
-            trust_password=self.state.unit.truststore_password,
-        )
-
-        if self.charm.unit.is_leader():
-            self.state.cluster.peer_cluster_ca = self.state.unit.peer_tls.bundle
-            self.state.cluster.seeds = [self.state.unit.peer_url]
-
         try:
             if self.charm.unit.is_leader():
+                self.state.cluster.peer_cluster_ca = self.state.unit.peer_tls.bundle
                 self.state.cluster.cluster_name = self.charm.config.cluster_name
                 self.state.cluster.seeds = [self.state.unit.peer_url]
             self.config_manager.render_env(
@@ -233,6 +196,45 @@ class CassandraEvents(Object):
             and old_hostname is not None
             and (old_ip != self.state.unit.ip or old_hostname != self.state.unit.hostname)
         )
+
+    def _check_and_set_certificates(self) -> bool:
+        if not self.state.unit.peer_tls.ready and not self.state.cluster.internal_ca:
+            if not self.charm.unit.is_leader():
+                return False
+
+            ca, pk = self.tls_manager.generate_internal_ca(common_name=self.state.unit.unit.app.name)
+            
+            self.state.cluster.internal_ca = ca
+            self.state.cluster.internal_ca_key = pk
+        
+        host_mapping = self.cluster_manager.network_address()
+        sans = self.tls_manager.build_sans(sans_ip=[host_mapping[0]], sans_dns=[host_mapping[1], self.charm.unit.name])
+
+        if not self.state.cluster.internal_ca or not self.state.cluster.internal_ca_key:
+            logger.debug("Deferring on_start for unit due to cluster internal CA's isn't initialized yet")
+            return False
+
+        if not self.state.unit.peer_tls.ready:
+            provider_crt, pk = self.tls_manager.generate_internal_credentials(
+                ca=self.state.cluster.internal_ca,
+                ca_key=self.state.cluster.internal_ca_key,
+                unit_key=self.state.unit.peer_tls.private_key,
+                common_name=self.state.unit.unit.name,
+                sans_ip=frozenset(sans["sans_ip"]),
+                sans_dns=frozenset(sans["sans_dns"]),
+            )
+            
+            self.state.unit.peer_tls.setup_provider_certificates(provider_crt)
+            self.state.unit.peer_tls.private_key = pk
+            self.state.unit.peer_tls.ca = self.state.cluster.internal_ca
+
+        self.tls_manager.configure(
+            self.state.unit.peer_tls.resolved(),
+            keystore_password=self.state.unit.keystore_password,
+            trust_password=self.state.unit.truststore_password,
+        )
+
+        return True
 
     @property
     def _cassandra(self) -> CassandraClient:
