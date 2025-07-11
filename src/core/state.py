@@ -404,6 +404,15 @@ class ClusterContext(RelationState):
 
 
     @property
+    def cluster_name(self) -> str:
+        """Established Cassandra cluster name."""
+        return self.relation_data.get("cluster_name", "")
+
+    @cluster_name.setter
+    def cluster_name(self, value: str) -> None:
+        self._field_setter_wrapper("cluster_name", value)
+
+    @property
     def seeds(self) -> list[str]:
         """List of peer urls of Cassandra seed nodes."""
         seeds = self.relation_data.get("seeds", "")

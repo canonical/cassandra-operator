@@ -12,8 +12,13 @@ charm-libs:
     version: "1"
   - lib: data_platform_libs.data_interfaces
     version: "0"
+<<<<<<< HEAD
   - lib: tls_certificates_interface.tls_certificates
     version: "4"
+=======
+  - lib: rolling_ops.rollingops
+    version: "0"
+>>>>>>> multinode
 
 config:
   options:
@@ -25,7 +30,17 @@ config:
       # TODO: description
       type: string
       default: Test Cluster
+<<<<<<< HEAD
     
+=======
+
+peers:
+  cassandra-peers:
+    interface: cassandra_peers
+  bootstrap:
+    interface: rolling_op
+
+>>>>>>> multinode
 parts:
   # "poetry-deps" part name is a magic constant
   # https://github.com/canonical/craft-parts/pull/901
