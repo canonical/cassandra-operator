@@ -65,6 +65,7 @@ class CassandraEvents(Object):
             self.state.unit.workload_state = UnitWorkloadState.WAITING_FOR_START
             logger.debug("Deferring on_start for unit due to cluster isn't initialized yet")
             event.defer()
+            return
 
         try:
             if self.charm.unit.is_leader():
