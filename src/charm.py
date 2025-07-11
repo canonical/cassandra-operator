@@ -52,8 +52,8 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             workload=self.workload,
             cluster_manager=self.cluster_manager,
             config_manager=config_manager,
-            tls_manager=self.tls_manager,
             bootstrap_manager=bootstrap_manager,
+            tls_manager=self.tls_manager,
         )
 
         self.tls_events = TLSEvents(

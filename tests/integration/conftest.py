@@ -58,5 +58,5 @@ def cassandra_charm() -> Path:
 
 @pytest.fixture(scope="module")
 def app_name() -> str:
-    metadata = yaml.safe_load(Path("./metadata.yaml").read_text())
+    metadata = yaml.safe_load(Path("./charmcraft.yaml").read_text())
     return metadata["name"]

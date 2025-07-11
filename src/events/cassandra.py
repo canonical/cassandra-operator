@@ -41,8 +41,8 @@ class CassandraEvents(Object):
         workload: WorkloadBase,
         cluster_manager: ClusterManager,
         config_manager: ConfigManager,
-        tls_manager: TLSManager,
         bootstrap_manager: RollingOpsManager,
+        tls_manager: TLSManager,
     ):
         super().__init__(charm, key="cassandra_events")
         self.charm = charm
@@ -50,8 +50,8 @@ class CassandraEvents(Object):
         self.workload = workload
         self.cluster_manager = cluster_manager
         self.config_manager = config_manager
-        self.tls_manager = tls_manager.with_client(self._cassandra)
         self.bootstrap_manager = bootstrap_manager
+        self.tls_manager = tls_manager.with_client(self._cassandra)
 
         self.framework.observe(self.charm.on.start, self._on_start)
         self.framework.observe(self.charm.on.install, self._on_install)

@@ -4,6 +4,14 @@ type: charm
 platforms:
   ubuntu@24.04:amd64:
 
+name: cassandra
+summary: |
+  Charmed Apache Cassandra Operator
+description: |
+  Apache Cassandra is a free and open-source database management system designed to handle large volumes of data across multiple commodity servers. This charm deploys and operate Apache Cassandra on a VM machine environment.
+  Apache Cassandra is a free and open-source software project by the Apache Software Foundation.
+  Users can find out more at the [Apache Cassandra project page](https://cassandra.apache.org/_/index.html).
+
 charm-libs:
   - lib: operator_libs_linux.snap
     version: "2"
@@ -11,10 +19,10 @@ charm-libs:
     version: "1"
   - lib: data_platform_libs.data_interfaces
     version: "0"
-  - lib: tls_certificates_interface.tls_certificates
-    version: "4"
   - lib: rolling_ops.rollingops
     version: "0"
+  - lib: tls_certificates_interface.tls_certificates
+    version: "4"
 
 config:
   options:
@@ -26,7 +34,23 @@ config:
       # TODO: description
       type: string
       default: Test Cluster
-    
+
+peers:
+  cassandra-peers:
+    interface: cassandra_peers
+  bootstrap:
+    interface: rolling_op
+
+requires:
+  client-certificates:
+    interface: tls-certificates
+    limit: 1
+    optional: true
+  peer-certificates:
+    interface: tls-certificates
+    limit: 1
+    optional: true
+
 parts:
   # "poetry-deps" part name is a magic constant
   # https://github.com/canonical/craft-parts/pull/901
