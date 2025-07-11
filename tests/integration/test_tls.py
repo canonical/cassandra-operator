@@ -10,6 +10,8 @@ from pathlib import Path
 from helpers import check_node_is_up, check_tls, get_address, get_secrets_by_label
 import tempfile
 
+logger = logging.getLogger(__name__)
+
 from help_types import IntegrationTestsCharms
 
 import jubilant
@@ -131,15 +133,18 @@ def test_disable_peer_self_signed_tls(juju: jubilant.Juju, app_name: str, charm_
         get_address(juju=juju, app_name=app_name, unit_num=0),
         get_address(juju=juju, app_name=app_name, unit_num=1),
     ]
-    
+
+    logger.info("[test_disable_peer_self_signed_tls] Get peer ca 1")
     peer_ca_1 = unit_secret_extract(juju, unit_name=f"{app_name}/{num_unit}", secret_name=PEER_CA_CERT)
     
     juju.remove_relation(f"{charm_versions.tls.app}:certificates", f"{app_name}:peer-certificates")
 
+    
     # Wait for peer_certs rotation
     juju.wait(
         ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
-        delay=3
+        delay=20,
+        successes=4,
     )
     
     for uaddr in unit_addreses:
@@ -149,6 +154,7 @@ def test_disable_peer_self_signed_tls(juju: jubilant.Juju, app_name: str, charm_
     for i, uaddr in enumerate(unit_addreses):
         assert check_node_is_up(juju=juju, app_name=app_name, unit_num=i, unit_addr=uaddr)
 
+    logger.info("[test_disable_peer_self_signed_tls] Get peer ca 2")        
     peer_ca_2 = unit_secret_extract(juju, unit_name=f"{app_name}/{num_unit}", secret_name=PEER_CA_CERT)
 
     assert peer_ca_1 != peer_ca_2
@@ -166,7 +172,8 @@ def test_disable_client_self_signed_tls(juju: jubilant.Juju, app_name: str, char
     # Wait for peer_certs rotation
     juju.wait(
         ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
-        delay=3
+        delay=20,
+        successes=4,
     )
 
     for uaddr in unit_addreses:
