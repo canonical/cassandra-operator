@@ -140,7 +140,7 @@ def test_disable_peer_self_signed_tls(juju: jubilant.Juju, app_name: str, charm_
     juju.remove_relation(f"{charm_versions.tls.app}:certificates", f"{app_name}:peer-certificates")
 
     
-    # Wait for peer_certs rotation
+    # Wait for peer_certs rotation. Sometimes it does not waits for cert rotation due to low delay
     juju.wait(
         ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
         delay=20,
@@ -169,7 +169,7 @@ def test_disable_client_self_signed_tls(juju: jubilant.Juju, app_name: str, char
 
     juju.remove_relation(f"{charm_versions.tls.app}:certificates", f"{app_name}:client-certificates")
 
-    # Wait for peer_certs rotation
+    # Wait for client_certs rotation. Sometimes it does not waits for cert rotation due to low delay
     juju.wait(
         ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
         delay=20,
