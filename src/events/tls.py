@@ -156,9 +156,9 @@ class TLSEvents(Object):
     def _tls_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Handler for `certificates_relation_broken` event."""
         state = (
-            self.state.unit.client_tls
+            self.state.unit.peer_tls
             if event.relation.name == PEER_TLS_RELATION
-            else self.state.unit.peer_tls
+            else self.state.unit.client_tls
         )
 
         # clear TLS state
