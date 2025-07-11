@@ -50,10 +50,16 @@ def test_deploy_internal_tls(juju: jubilant.Juju, cassandra_charm: Path, app_nam
     juju.wait(jubilant.all_active, timeout=1200, delay=3)
 
 def test_default_tls(juju: jubilant.Juju, app_name: str) -> None:
+    num_unit = 0
+    
     unit_addreses = [
         get_address(juju=juju, app_name=app_name, unit_num=0),
         get_address(juju=juju, app_name=app_name, unit_num=1),
     ]
+
+    peer_ca = unit_secret_extract(juju, unit_name=f"{app_name}/{num_unit}", secret_name=PEER_CA_CERT)
+
+    assert peer_ca
 
     for uaddr in unit_addreses:
         assert check_tls(ip=uaddr, port=PEER_PORT)

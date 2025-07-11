@@ -77,7 +77,7 @@ def get_secrets_by_label(juju: jubilant.Juju, label: str, owner: str) -> list[di
 
         logger.info(f"revealed secret {selected_secret_id}: {secrets_data_raw}")
 
-        secret_data_list.append(json.loads(secrets_data_raw)["content"]["Data"])
+        secret_data_list.append(json.loads(secrets_data_raw)[selected_secret_id]["content"]["Data"])
 
     return secret_data_list
         
