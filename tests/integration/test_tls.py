@@ -19,19 +19,9 @@ import jubilant
 TRUSTSTORE_PASSWORD = "truststore-password"
 KEYSTORE_PASSWORD = "keystore-password"
 CLIENT_CA_CERT = "client-ca-cert"
-CLIENT_CERTIFICATE = "client-certificate"
-CLIENT_CHAIN = "client-chain"
-CLIENT_CSR = "client-csr"
-CLIENT_PRIVATE_KEY = "client-private-key"
 PEER_CA_CERT = "peer-ca-cert"
-PEER_CERTIFICATE = "peer-certificate"
-PEER_CHAIN = "peer-chain"
-PEER_CSR = "peer-csr"
-PEER_PRIVATE_KEY = "peer-private-key"
-INTERNAL_PRIVATE_KEY = "internal-ca-key"
 
 TLS_NAME = "self-signed-certificates"
-
 
 PEER_PORT = 7000
 CLIENT_PORT = 9042
