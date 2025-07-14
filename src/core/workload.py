@@ -132,3 +132,18 @@ class WorkloadBase(ABC):
             String of 32 randomized letter+digit characters
         """
         return "".join([secrets.choice(string.ascii_letters + string.digits) for _ in range(32)])    
+
+    @abstractmethod
+    def peer_tls_ready(self) -> bool:
+        """Whether Cassandra Peer TLS files are ready."""
+        pass
+
+    @abstractmethod
+    def client_tls_ready(self) -> bool:
+        """Whether Cassandra Client TLS files are ready."""
+        pass
+
+    @property
+    @abstractmethod
+    def installed(self) -> bool:
+        """Checks whether the workload service is installed."""

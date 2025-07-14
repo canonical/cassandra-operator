@@ -51,7 +51,7 @@ class CassandraEvents(Object):
         self.cluster_manager = cluster_manager
         self.config_manager = config_manager
         self.bootstrap_manager = bootstrap_manager
-        self.tls_manager = tls_manager.with_client(self._cassandra)
+        self.tls_manager = tls_manager
 
         self.framework.observe(self.charm.on.start, self._on_start)
         self.framework.observe(self.charm.on.install, self._on_install)
@@ -75,6 +75,11 @@ class CassandraEvents(Object):
             event.defer()
             return
 
+        if self.state.unit.peer_tls.rotation or self.state.unit.client_tls.rotation:
+           self.state.unit.peer_tls.rotation = False
+           self.state.unit.client_tls.rotation = False
+
+
         if not self._check_and_set_certificates():
             event.defer()
             return
@@ -83,7 +88,6 @@ class CassandraEvents(Object):
             if self.charm.unit.is_leader():
                 self.state.cluster.cluster_name = self.charm.config.cluster_name
                 self.state.cluster.seeds = [self.state.unit.peer_url]
-                self.state.cluster.peer_cluster_ca = self.state.unit.peer_tls.bundle
             self.config_manager.render_env(
                 cassandra_limit_memory_mb=1024 if self.charm.config.profile == "testing" else None
             )
@@ -121,11 +125,6 @@ class CassandraEvents(Object):
             logger.debug(f"Config haven't passed validation: {e}")
             return
 
-        if self.state.unit.peer_tls.rotation or self.state.unit.client_tls.rotation:
-           self.state.unit.peer_tls.rotation = False
-           self.state.unit.client_tls.rotation = False
-
-
         if self.state.unit.workload_state == UnitWorkloadState.ACTIVE:
             self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
 
@@ -151,11 +150,23 @@ class CassandraEvents(Object):
         try:
             self.charm.config
         except ValidationError:
-            event.add_status(Status.INVALID_CONFIG.value)
-
+            event.add_status(Status.INVALID_CONFIG.value)  
+            
         if self.state.unit.workload_state == UnitWorkloadState.INSTALLING:
             event.add_status(Status.INSTALLING.value)
 
+        if self.state.unit.peer_tls.ready and self.state.unit.peer_tls.rotation:
+            event.add_status(Status.ROTATING_PEER_TLS.value)
+
+        if self.state.unit.peer_tls.ready and self.state.unit.client_tls.rotation:
+            event.add_status(Status.ROTATING_CLIENT_TLS.value)
+
+        if not self.state.cluster.internal_ca:
+            event.add_status(Status.WAITING_FOR_INTERNAL_TLS.value)
+
+        if self.state.cluster.tls_state and not self.workload.client_tls_ready:
+            event.add_status(Status.WAITING_FOR_TLS.value)      
+            
         if (
             self.state.unit.workload_state == UnitWorkloadState.WAITING_FOR_START
             and not self.charm.unit.is_leader()
@@ -176,12 +187,9 @@ class CassandraEvents(Object):
             self.charm.config
         except ValidationError:
             event.add_status(Status.INVALID_CONFIG.value)
-
+            
         event.add_status(Status.ACTIVE.value)
-
-        if not self.state.unit.peer_tls.ready and not self.state.cluster.internal_ca:
-            event.add_status(Status.NO_INTERNAL_TLS.value)
-
+        
     def _update_network_address(self) -> bool:
         """Update hostname & ip in this unit context.
 
@@ -198,20 +206,24 @@ class CassandraEvents(Object):
         )
 
     def _check_and_set_certificates(self) -> bool:
+        if not self.workload.installed:
+            logger.warning("Workload is not yet installed")
+            return False
+        
         if not self.state.unit.peer_tls.ready and not self.state.cluster.internal_ca:
             if not self.charm.unit.is_leader():
                 return False
 
             ca, pk = self.tls_manager.generate_internal_ca(common_name=self.state.unit.unit.app.name)
-            
+
             self.state.cluster.internal_ca = ca
             self.state.cluster.internal_ca_key = pk
-        
+
         host_mapping = self.cluster_manager.network_address()
         sans = self.tls_manager.build_sans(sans_ip=[host_mapping[0]], sans_dns=[host_mapping[1], self.charm.unit.name])
 
         if not self.state.cluster.internal_ca or not self.state.cluster.internal_ca_key:
-            logger.debug("Deferring on_start for unit due to cluster internal CA's isn't initialized yet")
+            logger.warning("Internal CA is not ready yet")
             return False
 
         if not self.state.unit.peer_tls.ready:
@@ -223,7 +235,7 @@ class CassandraEvents(Object):
                 sans_ip=frozenset(sans["sans_ip"]),
                 sans_dns=frozenset(sans["sans_dns"]),
             )
-            
+
             self.state.unit.peer_tls.setup_provider_certificates(provider_crt)
             self.state.unit.peer_tls.private_key = pk
             self.state.unit.peer_tls.ca = self.state.cluster.internal_ca

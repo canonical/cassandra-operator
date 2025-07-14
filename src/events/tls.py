@@ -95,6 +95,7 @@ class TLSEvents(Object):
 
     def _tls_relation_created(self, event: RelationCreatedEvent) -> None:
         """Handler for `certificates_relation_created` event."""
+
         if not self.charm.unit.is_leader() or not self.state.peer_relation:
             return
 
@@ -106,13 +107,14 @@ class TLSEvents(Object):
         if not self.state.peer_relation:
             logger.warning("No peer relation on certificate available")
             event.defer()
-            return        
+            return
+        
+        if not self.workload.installed:
+            logger.warning("Workload is not yet installed")
+            event.defer()
+            return
 
         self._handle_certificate_available_event(event, self.peer_certificate)
-        if self.charm.unit.is_leader():
-            # Update peer-cluster CA/chain.
-            self.state.cluster.peer_cluster_ca = self.state.unit.peer_tls.bundle
-
         self.charm.on.config_changed.emit()
 
     def _on_client_certificate_available(self, event: CertificateAvailableEvent) -> None:
@@ -120,24 +122,27 @@ class TLSEvents(Object):
         if not self.state.peer_relation:
             logger.warning("No peer relation on certificate available")
             event.defer()
-            return        
+            return
 
+        if not self.workload.installed:
+            logger.warning("Workload is not yet installed")
+            event.defer()
+            return
+        
         self._handle_certificate_available_event(event, self.client_certificate)
         self.charm.on.config_changed.emit()
 
-            
     def _handle_certificate_available_event(self, event: CertificateAvailableEvent, requirer: TLSCertificatesRequiresV4) -> None:
 
-        ca_changed = False
-        certificate_changed = False
+        tls_changed = False
 
         tls_state = self.requirer_state(requirer)
 
         if tls_state.certificate and event.certificate.raw != tls_state.certificate.raw:
-            certificate_changed = True
+            tls_changed = True
 
         if tls_state.ca and event.ca.raw != tls_state.ca.raw:
-            ca_changed = True
+            tls_changed = True
 
         tls_state.certificate = event.certificate
         tls_state.ca = event.ca
@@ -150,7 +155,7 @@ class TLSEvents(Object):
             trust_password=self.state.unit.truststore_password,
         )
 
-        if certificate_changed or ca_changed:
+        if tls_changed:
             tls_state.rotation = True
         
     def _tls_relation_broken(self, event: RelationBrokenEvent) -> None:

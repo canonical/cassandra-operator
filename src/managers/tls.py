@@ -26,7 +26,6 @@ from common.exceptions import ExecError
 
 from core.workload import WorkloadBase
 from core.state import ApplicationState, ResolvedTLSContext, TLSContext, TLSScope
-from common.cassandra_client import CassandraClient
 
 logger = logging.getLogger(__name__)
 
@@ -45,10 +44,6 @@ class TLSManager:
 
     def __init__(self, workload: WorkloadBase):
         self.workload = workload
-
-    def with_client(self, client: CassandraClient) -> Self:
-        self.cassandra_client = client
-        return self
 
     def get_truststore_path(self, scope: TLSScope) -> str:
         """Returns the truststore path for the given scope."""
@@ -311,17 +306,6 @@ class TLSManager:
                 return
             logger.error(e.stdout)
             raise e
-
-    def reload_truststore(self, scope: TLSScope = TLSScope.CLIENT) -> None:
-        """Reloads the truststore using `mgmt-api`."""
-        if not (self.workload.cassandra_paths.tls_dir / f"{scope.value}-truststore.jks").exists():
-            logger.warning("Truststore does not exist")
-            return
-
-        # TODO: nodetool reloadssl
-
-        logger.debug("Truststore reloaded")
-        return
 
     def remove_cert(self, alias: str, trust_password: str, scope: TLSScope = TLSScope.CLIENT) -> None:
         """Remove a cert from the truststore."""

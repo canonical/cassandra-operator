@@ -23,6 +23,10 @@ def test_start_leader():
     with (
         patch("managers.config.ConfigManager.render_env") as render_env,
         patch("managers.config.ConfigManager.render_cassandra_config") as render_cassandra_config,
+        patch("events.cassandra.CassandraEvents._check_and_set_certificates", return_value=True),
+        patch("core.state.UnitContext.keystore_password", new_callable=PropertyMock(return_value="keystore_password")),
+        patch("core.state.UnitContext.truststore_password", new_callable=PropertyMock(return_value="truststore_password")),
+        patch("core.state.ClusterContext.internal_ca", new_callable=PropertyMock(return_value=True)),
         patch("charm.CassandraWorkload") as workload,
         patch(
             "managers.cluster.ClusterManager.is_healthy",
@@ -45,6 +49,9 @@ def test_start_subordinate_only_after_leader_active():
     with (
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
+        patch("events.cassandra.CassandraEvents._check_and_set_certificates", return_value=True),
+        patch("core.state.UnitContext.keystore_password", new_callable=PropertyMock(return_value="keystore_password")),
+        patch("core.state.UnitContext.truststore_password", new_callable=PropertyMock(return_value="truststore_password")),
         patch("charm.CassandraWorkload"),
         patch(
             "charms.rolling_ops.v0.rollingops.RollingOpsManager._on_acquire_lock", autospec=True
@@ -71,6 +78,9 @@ def test_start_invalid_config():
     with (
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
+        patch("events.cassandra.CassandraEvents._check_and_set_certificates", return_value=True),
+        patch("core.state.UnitContext.keystore_password", new_callable=PropertyMock(return_value="keystore_password")),
+        patch("core.state.UnitContext.truststore_password", new_callable=PropertyMock(return_value="truststore_password")),
         patch("charm.CassandraWorkload") as workload,
         patch(
             "charms.rolling_ops.v0.rollingops.RollingOpsManager._on_acquire_lock", autospec=True
@@ -94,6 +104,9 @@ def test_config_changed_invalid_config():
     with (
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
+        patch("events.cassandra.CassandraEvents._check_and_set_certificates", return_value=True),
+        patch("core.state.UnitContext.keystore_password", new_callable=PropertyMock(return_value="keystore_password")),
+        patch("core.state.UnitContext.truststore_password", new_callable=PropertyMock(return_value="truststore_password")),
         patch("charm.CassandraWorkload"),
     ):
         state = ctx.run(ctx.on.config_changed(), state)
@@ -108,7 +121,11 @@ def test_config_changed():
     state = testing.State(leader=True, relations={relation, bootstrap_relation})
     with (
         patch("managers.config.ConfigManager.render_env") as render_env,
+        patch("managers.config.ConfigManager.render_cassandra_config") as render_cassandra_config,
         patch("charm.CassandraWorkload") as workload,
+        patch("events.cassandra.CassandraEvents._check_and_set_certificates", return_value=True),
+        patch("core.state.UnitContext.keystore_password", new_callable=PropertyMock(return_value="keystore_password")),
+        patch("core.state.UnitContext.truststore_password", new_callable=PropertyMock(return_value="truststore_password")),
         patch(
             "managers.cluster.ClusterManager.is_healthy",
             new_callable=PropertyMock(return_value=True),
@@ -116,6 +133,7 @@ def test_config_changed():
     ):
         state = ctx.run(ctx.on.config_changed(), state)
         render_env.assert_called()
+        render_cassandra_config.assert_called()
         workload.return_value.restart.assert_not_called()
 
         relation = testing.PeerRelation(
@@ -126,4 +144,5 @@ def test_config_changed():
         render_env.reset_mock()
         state = ctx.run(ctx.on.config_changed(), state)
         render_env.assert_called()
+        render_cassandra_config.assert_called()
         workload.return_value.restart.assert_called_once()

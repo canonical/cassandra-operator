@@ -134,3 +134,28 @@ class CassandraWorkload(WorkloadBase):
             logger.debug("STDOUT: %s", stdout)
             logger.debug("STDERR: %s", stderr)
             raise ExecError(stdout, stderr)
+
+    @override        
+    def peer_tls_ready(self) -> bool:
+        return all(
+            self.path_exists(f.as_posix())
+            for f in [
+                self.cassandra_paths.peer_truststore,
+                self.cassandra_paths.peer_keystore,
+            ]
+        )
+
+    @override        
+    def client_tls_ready(self) -> bool:
+        return all(
+            self.path_exists(f.as_posix())
+            for f in [
+                self.cassandra_paths.client_truststore,
+                self.cassandra_paths.client_keystore,
+            ]
+        )
+
+    @property
+    @override
+    def installed(self) -> bool:
+        return self._cassandra_snap.present

@@ -8,6 +8,8 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
+from ops.testing import Secret
+from typing import Iterable
 
 from charms.tls_certificates_interface.v4.tls_certificates import (
     generate_ca,
@@ -17,6 +19,7 @@ from charms.tls_certificates_interface.v4.tls_certificates import (
     Certificate,
     PrivateKey,
     CertificateSigningRequest,
+    ProviderCertificate,
 )
 from cryptography import x509
 
@@ -27,8 +30,10 @@ class TLSArtifacts:
     private_key: PrivateKey
     ca: Certificate
     chain: list[Certificate]
+    bundle: list[Certificate]
     signing_cert: CertificateSigningRequest
     signing_key: PrivateKey
+    provider_cert: ProviderCertificate
 
 
 def generate_tls_artifacts(
@@ -86,11 +91,39 @@ def generate_tls_artifacts(
         )
     cert = generate_certificate(csr, signing_cert, signing_key, validity=timedelta(365))
 
+    chain = [cert, ca]
+
     return TLSArtifacts(
         certificate=cert,
         private_key=key,
         ca=ca,
-        chain=[cert, ca],
+        chain=chain,
         signing_cert=csr,
         signing_key=signing_key,
+        bundle=[],
+        provider_cert=ProviderCertificate(
+            relation_id=0,
+            certificate=cert,
+            certificate_signing_request=csr,
+            ca=ca,
+            chain=[cert, ca],
+            revoked=None,
+        )
     )
+
+
+def get_secrets_latest_content_by_label(
+    secrets: Iterable["Secret"], label: str, owner: str
+) -> dict[str, str]:
+    """
+    Возвращает объединённый словарь latest_content по label и owner из Iterable Secret-объектов.
+    """
+    result = {}
+    for secret in secrets:
+        if owner and getattr(secret, "owner", None) != owner:
+            continue
+        if getattr(secret, "label", None) == label:
+            if hasattr(secret, "latest_content"):
+                if secret.latest_content:
+                    result.update(secret.latest_content)
+    return result

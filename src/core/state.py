@@ -260,7 +260,7 @@ class TLSContext(RelationState):
 
     def resolved(self) -> ResolvedTLSContext:
         if not self.certificate or not self.private_key or not self.ca:
-            raise RuntimeError(f"TLS state is incomplete, certificate: {True if self.certificate else False}, private_key: {True if self.private_key else False}, ca: {True if self.ca else False}")
+            raise RuntimeError(f"TLS state is incomplete, certificate: {True if self.certificate else False}, private_key: {True if self.private_key else False}, ca: {True if self.ca else False} for scope: {self.scope}")
         return ResolvedTLSContext(
             private_key=self.private_key,
             ca=self.ca,
@@ -473,20 +473,6 @@ class ClusterContext(RelationState):
     @internal_ca_key.setter
     def internal_ca_key(self, value: PrivateKey) -> None:
         self._field_setter_wrapper("internal-ca-key", str(value))
-
-    @property
-    def peer_cluster_ca(self) -> List[Certificate]:
-        raw = self.relation_data.get("bundle", "")
-        if not raw:
-            return []
-        return [Certificate.from_string(c) for c in json.loads(raw)]
-
-    @peer_cluster_ca.setter
-    def peer_cluster_ca(self, value: List[Certificate]) -> None:
-        self._field_setter_wrapper("bundle", json.dumps([str(c) for c in value]))
-
-        
-    
 
 class ApplicationState(Object):
     """Mappings for the charm relations that forms global application state."""
