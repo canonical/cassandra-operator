@@ -132,7 +132,7 @@ def default_certificate_context(ctx: Context) -> DefaultSertificateContext:
     )
 
 
-def fetch_default_certificates(relation: PeerRelation, default_certificates: DefaultSertificateContext):
+def apply_default_certificates(relation: PeerRelation, default_certificates: DefaultSertificateContext):
     unit_secret = {
         "peer-private-key": default_certificates.default_requirer_private_key.raw,
         "peer-ca-cert": default_certificates.default_provider_ca_certificate.raw,
@@ -148,6 +148,30 @@ def fetch_default_certificates(relation: PeerRelation, default_certificates: Def
 
     relation.local_unit_data.update(unit_secret)
     relation.local_app_data.update(app_secret)
+
+def apply_avaliable_certificates(relation: PeerRelation, new_certificates: CertificateAvailableContext):
+    unit_secret = {
+        "peer-private-key": new_certificates.requirer_private_key.raw,
+        "peer-ca-cert": new_certificates.provider_ca_certificate.raw,
+        "peer-certificate": new_certificates.peer_certificate.raw,
+        "peer-csr": new_certificates.peer_csr.raw,
+        "peer-chain": json.dumps([str(c) for c in new_certificates.peer_provider_certificate.chain]),
+
+        "client-private-key": new_certificates.requirer_private_key.raw,
+        "client-ca-cert": new_certificates.provider_ca_certificate.raw,
+        "client-certificate": new_certificates.client_certificate.raw,
+        "client-csr": new_certificates.client_csr.raw,
+        "client-chain": json.dumps([str(c) for c in new_certificates.client_provider_certificate.chain]),
+    }
+
+    app_secret = {
+        "internal-ca": new_certificates.provider_ca_certificate.raw,
+        "internal-ca-key": new_certificates.provider_private_key.raw,
+    }
+
+    relation.local_unit_data.update(unit_secret)
+    relation.local_app_data.update(app_secret)
+
 
 
 def certificate_available_context(ctx: Context, is_leader: bool = True) -> CertificateAvailableContext:
@@ -336,7 +360,7 @@ def test_tls_enabled_but_not_ready(ctx, is_leader) -> None:
     """Ensure that charm unit goes to maintenance state when TLS enabled but files is not set yet."""
     default_tls_context = default_certificate_context(ctx)
     default_tls_context.peer_relation.local_unit_data.update({"workload_state": "active"})
-    fetch_default_certificates(default_tls_context.peer_relation, default_tls_context)
+    apply_default_certificates(default_tls_context.peer_relation, default_tls_context)
 
     state_in = testing.State(
         relations=[default_tls_context.peer_relation,
@@ -397,16 +421,20 @@ def test_certificate_available_new_cluster(ctx, is_leader) -> None:
         leader=is_leader,
     )
 
-    fetch_default_certificates(new_tls_context.peer_relation, default_tls_context)
+    apply_default_certificates(new_tls_context.peer_relation, default_tls_context)
     with (
+        patch(
+            "events.tls.TLSCertificatesRequiresV4.get_assigned_certificate",
+            return_value=(peer_provider_certificate, requirer_private_key),
+        ),
+        patch(
+            "events.tls.TLSCertificatesRequiresV4.get_assigned_certificates",
+            return_value=(peer_provider_certificate, requirer_private_key),
+        ),
         context(context.on.relation_created(peer_tls_relation), state=state_in) as manager,
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
         patch("managers.tls.TLSManager.configure"),
-        patch(
-            "charms.tls_certificates_interface.v4.tls_certificates.TLSCertificatesRequiresV4.get_assigned_certificates",
-            return_value=([peer_provider_certificate], requirer_private_key),
-        ),
     ):
         charm: CassandraCharm = manager.charm
 
@@ -429,15 +457,20 @@ def test_certificate_available_new_cluster(ctx, is_leader) -> None:
         assert tls_state.ca == provider_ca_certificate
         assert tls_state.rotation is True
 
+    apply_default_certificates(new_tls_context.peer_relation, default_tls_context)
     with (
+        patch(
+            "events.tls.TLSCertificatesRequiresV4.get_assigned_certificate",
+            return_value=(client_provider_certificate, requirer_private_key),
+        ),
+        patch(
+            "events.tls.TLSCertificatesRequiresV4.get_assigned_certificates",
+            return_value=(client_provider_certificate, requirer_private_key),
+        ),
         context(context.on.relation_created(client_tls_relation), state=state_in) as manager,
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
         patch("managers.tls.TLSManager.configure"),
-        patch(
-            "charms.tls_certificates_interface.v4.tls_certificates.TLSCertificatesRequiresV4.get_assigned_certificates",
-            return_value=([client_provider_certificate], requirer_private_key),
-        ),
     ):
         charm: CassandraCharm = manager.charm
 
@@ -449,57 +482,81 @@ def test_certificate_available_new_cluster(ctx, is_leader) -> None:
         certificate_available_event.ca = provider_ca_certificate
         certificate_available_event.certificate_signing_request = client_provider_certificate.certificate_signing_request
         certificate_available_event.chain = client_provider_certificate.chain
+        certificate_available_event.private_key = requirer_private_key
 
         charm.tls_events._on_client_certificate_available(certificate_available_event)
 
         manager.run()
 
         assert config_changed_observer.called, "Expected config_changed to be emitted"
-        tls_state = charm.tls_events.requirer_state(charm.tls_events.peer_certificate)
+        tls_state = charm.tls_events.requirer_state(charm.tls_events.client_certificate)
+
         assert tls_state.certificate == client_certificate
         assert tls_state.ca == provider_ca_certificate
-        assert tls_state.rotation is True
+
+        # In new cluster, client certs are empty, so no rotation
+        assert tls_state.rotation is False
 
 @pytest.mark.parametrize("is_leader", [True, False])
 def test_relation_broken(ctx, is_leader) -> None:
+    """Test behavior when the TLS relation is broken (peer or client)."""
     new_tls_context = certificate_available_context(ctx, is_leader)
     default_tls_context = default_certificate_context(ctx)
-
-    context = new_tls_context.context
-    peer_relation = new_tls_context.peer_relation
-    bootstrap_relation = new_tls_context.bootstrap_relation
-    peer_tls_relation = new_tls_context.peer_tls_relation
-    client_tls_relation = new_tls_context.client_tls_relation
-
-    provider_ca_certificate = new_tls_context.provider_ca_certificate
-
-    peer_provider_certificate = new_tls_context.peer_provider_certificate
-    peer_certificate = new_tls_context.peer_certificate
-    requirer_private_key = new_tls_context.requirer_private_key
-
-    client_provider_certificate = new_tls_context.client_provider_certificate
-    client_certificate = new_tls_context.client_certificate
-    client_provider_certificate = new_tls_context.client_provider_certificate
+    apply_avaliable_certificates(new_tls_context.peer_relation, new_tls_context)
 
     state_in = testing.State(
-        relations=[peer_relation, peer_tls_relation, client_tls_relation, bootstrap_relation],
+        relations=[
+            new_tls_context.peer_relation,
+            new_tls_context.peer_tls_relation,
+            new_tls_context.client_tls_relation,
+            new_tls_context.bootstrap_relation,
+        ],
         leader=is_leader,
     )
 
     with (
-        context(context.on.relation_broken(peer_tls_relation), state=state_in) as manager,
+        new_tls_context.context(new_tls_context.context.on.relation_broken(new_tls_context.peer_tls_relation), state=state_in) as manager,
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
-        patch("managers.tls.TLSManager.configure"),
-        patch(
-            "charms.tls_certificates_interface.v4.tls_certificates.TLSCertificatesRequiresV4.get_assigned_certificates",
-            return_value=([peer_provider_certificate], requirer_private_key),
-        ),
+        patch("managers.tls.TLSManager.configure") as mock_configure,
+        patch("managers.tls.TLSManager.remove_stores") as mock_remove_stores,
+        patch("managers.tls.TLSManager.generate_internal_ca") as mock_gen_ca,
+        patch("managers.tls.TLSManager.generate_internal_credentials") as mock_gen_internal_creds,
     ):
         charm: CassandraCharm = manager.charm
 
         config_changed_observer = TestObserver(charm)
         charm.framework.observe(charm.on.config_changed, config_changed_observer.handler)
 
+        mock_gen_internal_creds.return_value = (
+            default_tls_context.default_peer_provider_certificate,
+            default_tls_context.default_requirer_private_key,
+        )
+
         manager.run()
+
+        # Check that cert-related data was wiped
+        peer_tls = charm.tls_events.requirer_state(charm.tls_events.peer_certificate)
+        assert peer_tls.certificate != new_tls_context.peer_certificate
+        assert peer_tls.ca == new_tls_context.provider_ca_certificate
+        assert peer_tls.chain != new_tls_context.peer_provider_certificate.chain
+        assert peer_tls.csr != new_tls_context.peer_csr
+        assert peer_tls.rotation is True
+
+        # Check manager methods were called
+        mock_remove_stores.assert_called_once()
+        mock_configure.assert_called_once()
+
+        if is_leader:
+            # internal CA should be created
+            mock_gen_ca.assert_not_called()
+            mock_gen_internal_creds.assert_called_once()
+        else:
+            mock_gen_ca.assert_not_called()
+            mock_gen_internal_creds.assert_called_once()
+
+        # Check config-changed emitted
+        assert config_changed_observer.called
+
+
 
