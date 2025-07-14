@@ -54,58 +54,38 @@ def generate_tls_artifacts(
     sans_ip: list[str] = ["127.0.0.1"],
     with_intermediate: bool = False,
 ) -> TLSArtifacts:
-    """Generates necessary TLS artifacts for TLS tests.
-
-    Args:
-        subject (str, optional): Certificate Subject Name. Defaults to "some-app/0".
-        sans_dns (list[str], optional): List of SANS DNS addresses. Defaults to ["localhost"].
-        sans_ip (list[str], optional): List of SANS IP addresses. Defaults to ["127.0.0.1"].
-        with_intermediate (bool, optional): Whether or not should use and intermediate CA to sign the end cert. Defaults to False.
-
-    Returns:
-        TLSArtifacts: Object containing required TLS Artifacts.
-    """
-    # CA
+    """Generate all required TLS artifacts for TLS tests."""
     ca_key = generate_private_key()
     ca = generate_ca(
         private_key=ca_key, 
         validity=timedelta(365), 
         common_name="some-CN",
     )
-    
     signing_cert, signing_key = ca, ca_key
-
-    # Intermediate?
     if with_intermediate:
         intermediate_key = generate_private_key()
-
         intermediate_csr = generate_csr(
             private_key=intermediate_key,
             common_name="some-inter-CN",
             sans_ip=frozenset(sans_ip),
             sans_dns=frozenset(sans_dns),
         )
-
         intermediate_cert = generate_certificate(
             csr=intermediate_csr, 
             ca=ca, 
             ca_private_key=ca_key, 
             validity=timedelta(365),
         )
-        
         signing_cert, signing_key = intermediate_cert, intermediate_key
-
     key = generate_private_key()
     csr = generate_csr(
-            private_key=key,
-            common_name="some-inter-CN",
-            sans_ip=frozenset(sans_ip),
-            sans_dns=frozenset(sans_dns),
-        )
+        private_key=key,
+        common_name="some-inter-CN",
+        sans_ip=frozenset(sans_ip),
+        sans_dns=frozenset(sans_dns),
+    )
     cert = generate_certificate(csr, signing_cert, signing_key, validity=timedelta(365))
-
     chain = [cert, ca]
-
     return TLSArtifacts(
         certificate=cert,
         private_key=key,
@@ -132,11 +112,9 @@ def _exec(
 ) -> str:
     _command = " ".join(command) if isinstance(command, list) else command
     print(_command)
-
     for bin in ("chown", "chmod"):
         if _command.startswith(bin):
             return "ok"
-
     try:
         output = subprocess.check_output(
             command,
@@ -150,34 +128,31 @@ def _exec(
     except subprocess.CalledProcessError as e:
         raise e
 
-
 try:
     _exec(KEYTOOL)
     _exec("java -version")
-    JAVA_TESTS_DISABLED = False
+    java_tests_disabled = False
 except subprocess.CalledProcessError:
-    JAVA_TESTS_DISABLED = True
+    java_tests_disabled = True
 
 @contextlib.contextmanager
 def simple_ssl_server(certfile: str, keyfile: str, port: int = 10443):
+    """Context manager for a simple SSL server during a test."""
     httpd = http.server.HTTPServer(("127.0.0.1", port), http.server.SimpleHTTPRequestHandler)
     ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
     ctx.load_cert_chain(certfile=certfile, keyfile=keyfile)
     httpd.socket = ctx.wrap_socket(httpd.socket, server_side=True)
-
     process = Process(target=httpd.serve_forever)
     process.start()
     yield
-
     process.kill()
 
 @pytest.fixture()
 def tls_manager(tmp_path_factory, monkeypatch):
-    """A TLSManager instance with minimal functioning mock `Workload`."""
+    """Fixture: TLSManager with a minimal mocked Workload."""
     config_dir = tmp_path_factory.mktemp("config")
     data_dir = tmp_path_factory.mktemp("data")
     tls_dir = tmp_path_factory.mktemp("tls")
-
 
     cassandra_paths = CassandraPaths()
     cassandra_paths.config_dir = config_dir
@@ -193,37 +168,32 @@ def tls_manager(tmp_path_factory, monkeypatch):
 
     mgr = TLSManager(workload=mock_workload)
     mgr.keytool = KEYTOOL
-
     yield mgr
 
 def _get_tls_context(
     mgr: TLSManager, tls_artifacts: TLSArtifacts | None = None, scope: TLSScope = TLSScope.CLIENT
 ) -> TLSContext:
+    """Helper function to create a TLSContext with artifacts."""
     mock_relation = MagicMock()
     mock_relation.id = 1
-
     ctx = TLSContext(
         mock_relation,
         MagicMock(),
         MagicMock(),
         scope=scope,
     )
-
     ctx.relation_data = {}
-
     if tls_artifacts:
         ctx.ca = tls_artifacts.ca
         ctx.certificate = tls_artifacts.certificate
         ctx.chain = tls_artifacts.chain
         ctx.private_key = tls_artifacts.private_key
-
     logger.info(f"ctx.ca: {ctx.ca}")
-    
     return ctx
 
 def _tls_manager_set_everything(mgr: TLSManager, tls_context: ResolvedTLSContext) -> None:
+    """Helper: sets all values in TLSManager for the given context."""
     scope = tls_context.scope
-
     mgr.set_ca(tls_context.ca, scope)
     mgr.set_chain(tls_context.chain, scope)
     mgr.set_private_key(tls_context.private_key, scope)
@@ -232,8 +202,10 @@ def _tls_manager_set_everything(mgr: TLSManager, tls_context: ResolvedTLSContext
     mgr.set_keystore("keystore-password", scope)
     mgr.set_truststore("truststore-password", scope)
 
+# ===================== TESTS =====================
+
 @pytest.mark.skipif(
-    JAVA_TESTS_DISABLED, reason=f"Can't locate {KEYTOOL} and/or java in the test environment."
+    java_tests_disabled, reason=f"Can't locate {KEYTOOL} and/or java in the test environment."
 )
 @pytest.mark.parametrize(
     "with_intermediate", [False, True], ids=["NO intermediate CA", "ONE intermediate CA"]
@@ -244,37 +216,32 @@ def test_tls_manager_set_methods(
     caplog: pytest.LogCaptureFixture,
     with_intermediate: bool,
 ):
-    """Tests the lifecycle of adding/removing certs from Java and TLSManager points of view."""
-    # Генерируем артефакты TLS
-
+    """Test: Checks the lifecycle of adding/removing certificates from the perspective of Java and TLSManager."""
     peer_tls_artifacts = generate_tls_artifacts(with_intermediate=with_intermediate)
-
-    # Создаем ResolvedTLSContext
     peer_tls_context = _get_tls_context(mgr=tls_manager, tls_artifacts=peer_tls_artifacts, scope=TLSScope.PEER)
-
     peer_tls_artifacts.bundle = peer_tls_context.bundle
 
     caplog.set_level(logging.DEBUG)
+
     _tls_manager_set_everything(tls_manager, peer_tls_context.resolved())
 
-    # Проверяем, что файлы созданы и содержат правильные данные
     tls_dir = tls_manager.workload.cassandra_paths.tls_dir
+
+    # Check that files are created and contain correct data
     assert (tls_dir / "peer-unit.pem").read_text() == peer_tls_artifacts.certificate.raw
     assert (tls_dir / "peer-ca.pem").read_text() == peer_tls_artifacts.ca.raw
     assert (tls_dir / "peer-bundle0.pem").read_text() == peer_tls_artifacts.bundle[0].raw
     assert (tls_dir / "peer-bundle1.pem").read_text() == peer_tls_artifacts.bundle[1].raw
     assert (tls_dir / "peer-private.key").read_text() == peer_tls_artifacts.private_key.raw
 
-
     client_tls_artifacts = generate_tls_artifacts(with_intermediate=with_intermediate)
-
     client_tls_context = _get_tls_context(tls_manager, client_tls_artifacts, TLSScope.CLIENT)
-
     client_tls_artifacts.bundle = client_tls_context.bundle
 
     caplog.set_level(logging.DEBUG)
-    _tls_manager_set_everything(tls_manager, client_tls_context.resolved())
 
+    _tls_manager_set_everything(tls_manager, client_tls_context.resolved())
+    
     assert (tls_dir / "client-unit.pem").read_text() == client_tls_artifacts.certificate.raw
     assert (tls_dir / "client-ca.pem").read_text() == client_tls_artifacts.ca.raw
     assert (tls_dir / "client-bundle0.pem").read_text() == client_tls_artifacts.bundle[0].raw
@@ -288,7 +255,7 @@ def test_tls_manager_sans(
     tls_manager: TLSManager,
     with_intermediate: bool,
 ) -> None:
-    """Tests the lifecycle of adding/removing certs from Java and TLSManager points of view."""
+    """Test: Checks SANs handling when generating and setting certificates."""
     tls_artifacts = generate_tls_artifacts(
         sans_ip=[INTERNAL_ADDRESS],
         sans_dns=[UNIT_NAME],
@@ -296,7 +263,6 @@ def test_tls_manager_sans(
     )
     tls_context = _get_tls_context(tls_manager, tls_artifacts, TLSScope.CLIENT)
     _tls_manager_set_everything(tls_manager, tls_context.resolved())
-    # check SANs
     current_sans =  {
         "sans_ip": [INTERNAL_ADDRESS],
         "sans_dns": [UNIT_NAME],

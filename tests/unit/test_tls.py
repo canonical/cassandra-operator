@@ -283,21 +283,26 @@ def test_tls_relation_broken_resets_certificates_and_triggers_config(ctx, is_lea
         charm: CassandraCharm = manager.charm
         config_changed_observer = TestObserver(charm)
         charm.framework.observe(charm.on.config_changed, config_changed_observer.handler)
+        
         mock_gen_internal_creds.return_value = (
             default_tls_context.default_peer_provider_certificate,
             default_tls_context.default_requirer_private_key,
         )
+
         manager.run()
         peer_tls = charm.tls_events.requirer_state(charm.tls_events.peer_certificate)
+
         assert peer_tls.certificate != new_tls_context.peer_certificate
         assert peer_tls.ca == new_tls_context.provider_ca_certificate
         assert peer_tls.chain != new_tls_context.peer_provider_certificate.chain
         assert peer_tls.csr != new_tls_context.peer_csr
         assert peer_tls.rotation is True
+
         mock_remove_stores.assert_called_once()
         mock_configure.assert_called_once()
         mock_gen_ca.assert_not_called()
         mock_gen_internal_creds.assert_called_once()
+
         assert config_changed_observer.called
 
 @pytest.mark.parametrize("is_leader", [True, False])
@@ -336,6 +341,7 @@ def test_tls_relation_created_sets_tls_state(ctx, is_leader):
     client_tls_relation = testing.PeerRelation(id=3, endpoint=CLIENT_TLS_RELATION)
     state = testing.State(leader=is_leader, relations={relation, bootstrap_relation, client_tls_relation})
     state_out = ctx.run(ctx.on.relation_created(client_tls_relation), state)
+
     assert state_out.get_relation(relation.id).local_app_data.get("tls_state", "") == (
         "active" if is_leader else ""
     )
@@ -366,17 +372,20 @@ def test_tls_default_certificates_files_setup(ctx):
         latest_content = get_secrets_latest_content_by_label(
             state.secrets, "cassandra-peers.cassandra.app", "application"
         )
+
         assert "internal-ca" in latest_content
         assert "internal-ca-key" in latest_content
         latest_content = get_secrets_latest_content_by_label(
             state.secrets, "cassandra-peers.cassandra.unit", "unit"
         )
+
         assert "peer-ca-cert" in latest_content
         assert "peer-private-key" in latest_content
         assert "peer-chain" in latest_content
         assert "peer-csr" in latest_content
         assert "peer-certificate" in latest_content
         assert state.unit_status == ops.ActiveStatus()
+
     default_tls_context = default_certificate_context(ctx)
     state_in = testing.State(
         relations=[
@@ -437,6 +446,7 @@ def test_tls_certificate_available_event_triggers_config_and_rotation(ctx, is_le
         relations=[peer_relation, peer_tls_relation, client_tls_relation, bootstrap_relation],
         leader=is_leader,
     )
+
     apply_default_certificates(new_tls_context.peer_relation, default_tls_context)
     with (
         patch(
@@ -455,18 +465,23 @@ def test_tls_certificate_available_event_triggers_config_and_rotation(ctx, is_le
         charm: CassandraCharm = manager.charm
         config_changed_observer = TestObserver(charm)
         charm.framework.observe(charm.on.config_changed, config_changed_observer.handler)
+
         certificate_available_event = MagicMock(spec=CertificateAvailableEvent)
         certificate_available_event.certificate = peer_certificate
         certificate_available_event.ca = provider_ca_certificate
         certificate_available_event.certificate_signing_request = peer_provider_certificate.certificate_signing_request
         certificate_available_event.chain = peer_provider_certificate.chain
+
         charm.tls_events._on_peer_certificate_available(certificate_available_event)
+
         manager.run()
+
         assert config_changed_observer.called, "Expected config_changed to be emitted"
         tls_state = charm.tls_events.requirer_state(charm.tls_events.peer_certificate)
         assert tls_state.certificate == peer_certificate
         assert tls_state.ca == provider_ca_certificate
         assert tls_state.rotation is True
+
     apply_default_certificates(new_tls_context.peer_relation, default_tls_context)
     with (
         patch(
@@ -485,14 +500,18 @@ def test_tls_certificate_available_event_triggers_config_and_rotation(ctx, is_le
         charm: CassandraCharm = manager.charm
         config_changed_observer = TestObserver(charm)
         charm.framework.observe(charm.on.config_changed, config_changed_observer.handler)
+
         certificate_available_event = MagicMock(spec=CertificateAvailableEvent)
         certificate_available_event.certificate = client_certificate
         certificate_available_event.ca = provider_ca_certificate
         certificate_available_event.certificate_signing_request = client_provider_certificate.certificate_signing_request
         certificate_available_event.chain = client_provider_certificate.chain
         certificate_available_event.private_key = requirer_private_key
+
         charm.tls_events._on_client_certificate_available(certificate_available_event)
+
         manager.run()
+
         assert config_changed_observer.called, "Expected config_changed to be emitted"
         tls_state = charm.tls_events.requirer_state(charm.tls_events.client_certificate)
         assert tls_state.certificate == client_certificate
