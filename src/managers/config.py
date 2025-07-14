@@ -5,8 +5,6 @@
 """Config manager."""
 
 import logging
-import hashlib
-import random
 from typing import Iterable
 
 import yaml
@@ -36,9 +34,9 @@ class ConfigManager:
         cluster_name: str | None = None,
         listen_address: str | None = None,
         seeds: list[str] | None = None,
-        enable_peer_tls: bool = False, 
-        enable_client_tls: bool = False, 
-        keystore_password: str | None = None, 
+        enable_peer_tls: bool = False,
+        enable_client_tls: bool = False,
+        keystore_password: str | None = None,
         truststore_password: str | None = None,
     ) -> None:
         """Generate and write cassandra config."""
@@ -112,7 +110,7 @@ class ConfigManager:
                 "protocol": "TLS",
             }
 
-        if enable_client_tls:            
+        if enable_client_tls:
             config["client_encryption_options"] = {
                 "enabled": True,
                 "optional": False,
@@ -170,4 +168,3 @@ class ConfigManager:
             if cassandra_limit_memory_mb
             else "",
         }
-    

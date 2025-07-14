@@ -3,7 +3,7 @@
 #
 # Learn more about testing at: https://juju.is/docs/sdk/testing
 
-from unittest.mock import PropertyMock, patch, MagicMock
+from unittest.mock import PropertyMock, patch
 
 import ops
 from ops import testing
@@ -12,6 +12,7 @@ from charm import CassandraCharm
 from core.state import PEER_RELATION
 
 BOOTSTRAP_RELATION = "bootstrap"
+
 
 def test_start_leader():
     """Leader should render all required configs and start workload."""
@@ -24,9 +25,17 @@ def test_start_leader():
         patch("managers.config.ConfigManager.render_env") as render_env,
         patch("managers.config.ConfigManager.render_cassandra_config") as render_cassandra_config,
         patch("events.cassandra.CassandraEvents._check_and_set_certificates", return_value=True),
-        patch("core.state.UnitContext.keystore_password", new_callable=PropertyMock(return_value="keystore_password")),
-        patch("core.state.UnitContext.truststore_password", new_callable=PropertyMock(return_value="truststore_password")),
-        patch("core.state.ClusterContext.internal_ca", new_callable=PropertyMock(return_value=True)),
+        patch(
+            "core.state.UnitContext.keystore_password",
+            new_callable=PropertyMock(return_value="keystore_password"),
+        ),
+        patch(
+            "core.state.UnitContext.truststore_password",
+            new_callable=PropertyMock(return_value="truststore_password"),
+        ),
+        patch(
+            "core.state.ClusterContext.internal_ca", new_callable=PropertyMock(return_value=True)
+        ),
         patch("charm.CassandraWorkload") as workload,
         patch(
             "managers.cluster.ClusterManager.is_healthy",
@@ -50,8 +59,14 @@ def test_start_subordinate_only_after_leader_active():
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
         patch("events.cassandra.CassandraEvents._check_and_set_certificates", return_value=True),
-        patch("core.state.UnitContext.keystore_password", new_callable=PropertyMock(return_value="keystore_password")),
-        patch("core.state.UnitContext.truststore_password", new_callable=PropertyMock(return_value="truststore_password")),
+        patch(
+            "core.state.UnitContext.keystore_password",
+            new_callable=PropertyMock(return_value="keystore_password"),
+        ),
+        patch(
+            "core.state.UnitContext.truststore_password",
+            new_callable=PropertyMock(return_value="truststore_password"),
+        ),
         patch("charm.CassandraWorkload"),
         patch(
             "charms.rolling_ops.v0.rollingops.RollingOpsManager._on_acquire_lock", autospec=True
@@ -79,8 +94,14 @@ def test_start_invalid_config():
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
         patch("events.cassandra.CassandraEvents._check_and_set_certificates", return_value=True),
-        patch("core.state.UnitContext.keystore_password", new_callable=PropertyMock(return_value="keystore_password")),
-        patch("core.state.UnitContext.truststore_password", new_callable=PropertyMock(return_value="truststore_password")),
+        patch(
+            "core.state.UnitContext.keystore_password",
+            new_callable=PropertyMock(return_value="keystore_password"),
+        ),
+        patch(
+            "core.state.UnitContext.truststore_password",
+            new_callable=PropertyMock(return_value="truststore_password"),
+        ),
         patch("charm.CassandraWorkload") as workload,
         patch(
             "charms.rolling_ops.v0.rollingops.RollingOpsManager._on_acquire_lock", autospec=True
@@ -105,8 +126,14 @@ def test_config_changed_invalid_config():
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
         patch("events.cassandra.CassandraEvents._check_and_set_certificates", return_value=True),
-        patch("core.state.UnitContext.keystore_password", new_callable=PropertyMock(return_value="keystore_password")),
-        patch("core.state.UnitContext.truststore_password", new_callable=PropertyMock(return_value="truststore_password")),
+        patch(
+            "core.state.UnitContext.keystore_password",
+            new_callable=PropertyMock(return_value="keystore_password"),
+        ),
+        patch(
+            "core.state.UnitContext.truststore_password",
+            new_callable=PropertyMock(return_value="truststore_password"),
+        ),
         patch("charm.CassandraWorkload"),
     ):
         state = ctx.run(ctx.on.config_changed(), state)
@@ -124,8 +151,14 @@ def test_config_changed():
         patch("managers.config.ConfigManager.render_cassandra_config") as render_cassandra_config,
         patch("charm.CassandraWorkload") as workload,
         patch("events.cassandra.CassandraEvents._check_and_set_certificates", return_value=True),
-        patch("core.state.UnitContext.keystore_password", new_callable=PropertyMock(return_value="keystore_password")),
-        patch("core.state.UnitContext.truststore_password", new_callable=PropertyMock(return_value="truststore_password")),
+        patch(
+            "core.state.UnitContext.keystore_password",
+            new_callable=PropertyMock(return_value="keystore_password"),
+        ),
+        patch(
+            "core.state.UnitContext.truststore_password",
+            new_callable=PropertyMock(return_value="truststore_password"),
+        ),
         patch(
             "managers.cluster.ClusterManager.is_healthy",
             new_callable=PropertyMock(return_value=True),

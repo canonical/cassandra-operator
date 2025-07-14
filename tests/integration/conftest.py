@@ -8,8 +8,8 @@ from typing import Generator
 import jubilant
 import pytest
 import yaml
-
 from help_types import IntegrationTestsCharms, TestCharm
+
 
 @pytest.fixture(scope="module")
 def juju(request: pytest.FixtureRequest) -> Generator[jubilant.Juju, None, None]:
@@ -33,6 +33,7 @@ def pytest_addoption(parser) -> None:
         help="keep temporarily-created models",
     )
 
+
 @pytest.fixture(scope="module")
 def charm_versions() -> IntegrationTestsCharms:
     return IntegrationTestsCharms(
@@ -45,7 +46,6 @@ def charm_versions() -> IntegrationTestsCharms:
         ),
     )
 
-    
 
 @pytest.fixture(scope="module")
 def cassandra_charm() -> Path:

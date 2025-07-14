@@ -3,6 +3,7 @@
 # See LICENSE file for licensing details.
 from pydantic import BaseModel
 
+
 class TestCharm(BaseModel):
     """An abstraction of metadata of a charm to be deployed.
 

@@ -6,7 +6,6 @@
 
 import secrets
 import string
-
 from abc import ABC, abstractmethod
 from typing import Literal
 
@@ -33,24 +32,23 @@ class CassandraPaths:
     @property
     def peer_truststore(self) -> pathops.PathProtocol:
         """TODO."""
-        return self.tls_dir / f"{TLSScope.PEER.value}-truststore.jks"    
+        return self.tls_dir / f"{TLSScope.PEER.value}-truststore.jks"
 
     @property
     def peer_keystore(self) -> pathops.PathProtocol:
         """TODO."""
-        return self.tls_dir / f"{TLSScope.PEER.value}-keystore.p12"    
+        return self.tls_dir / f"{TLSScope.PEER.value}-keystore.p12"
 
     @property
     def client_truststore(self) -> pathops.PathProtocol:
         """TODO."""
-        return self.tls_dir / f"{TLSScope.CLIENT.value}-truststore.jks"    
+        return self.tls_dir / f"{TLSScope.CLIENT.value}-truststore.jks"
 
     @property
     def client_keystore(self) -> pathops.PathProtocol:
         """TODO."""
-        return self.tls_dir / f"{TLSScope.CLIENT.value}-keystore.p12"    
+        return self.tls_dir / f"{TLSScope.CLIENT.value}-keystore.p12"
 
-    
     @property
     def commitlog_directory(self) -> pathops.PathProtocol:
         """Commitlog data directory."""
@@ -120,18 +118,22 @@ class WorkloadBase(ABC):
 
     @abstractmethod
     def exec(
-        self, command: list[str], cwd: str | None = None, suppress_error_log: bool = False) -> tuple[str, str]:
+        self,
+        command: list[str],
+        cwd: str | None = None,
+        suppress_error_log: bool = False,
+    ) -> tuple[str, str]:
         """Run a command on the workload substrate."""
         pass
 
     @staticmethod
     def generate_password() -> str:
-        """Creates randomized string for use as app passwords.
+        """Create randomized string for use as app passwords.
 
         Returns:
             String of 32 randomized letter+digit characters
         """
-        return "".join([secrets.choice(string.ascii_letters + string.digits) for _ in range(32)])    
+        return "".join([secrets.choice(string.ascii_letters + string.digits) for _ in range(32)])
 
     @abstractmethod
     def peer_tls_ready(self) -> bool:

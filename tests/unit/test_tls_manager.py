@@ -7,28 +7,27 @@ import http.server
 import logging
 import ssl
 import subprocess
+from dataclasses import dataclass
+from datetime import timedelta
 from multiprocessing import Process
 from typing import Mapping
 from unittest.mock import MagicMock
 
-from dataclasses import dataclass
-from datetime import timedelta
-
-from core.workload import WorkloadBase, CassandraPaths
-from managers.tls import TLSManager
-from core.state import TLSScope, TLSContext, ResolvedTLSContext
 import pytest
-
 from charms.tls_certificates_interface.v4.tls_certificates import (
+    Certificate,
+    CertificateSigningRequest,
+    PrivateKey,
+    ProviderCertificate,
     generate_ca,
     generate_certificate,
     generate_csr,
     generate_private_key,
-    Certificate,
-    PrivateKey,
-    CertificateSigningRequest,
-    ProviderCertificate,
 )
+
+from core.state import ResolvedTLSContext, TLSContext, TLSScope
+from core.workload import CassandraPaths, WorkloadBase
+from managers.tls import TLSManager
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +35,7 @@ UNIT_NAME = "cassandra/0"
 INTERNAL_ADDRESS = "10.10.10.10"
 BIND_ADDRESS = "10.20.20.20"
 KEYTOOL = "keytool"
+
 
 @dataclass
 class TLSArtifacts:
@@ -57,8 +57,8 @@ def generate_tls_artifacts(
     """Generate all required TLS artifacts for TLS tests."""
     ca_key = generate_private_key()
     ca = generate_ca(
-        private_key=ca_key, 
-        validity=timedelta(365), 
+        private_key=ca_key,
+        validity=timedelta(365),
         common_name="some-CN",
     )
     signing_cert, signing_key = ca, ca_key
@@ -71,9 +71,9 @@ def generate_tls_artifacts(
             sans_dns=frozenset(sans_dns),
         )
         intermediate_cert = generate_certificate(
-            csr=intermediate_csr, 
-            ca=ca, 
-            ca_private_key=ca_key, 
+            csr=intermediate_csr,
+            ca=ca,
+            ca_private_key=ca_key,
             validity=timedelta(365),
         )
         signing_cert, signing_key = intermediate_cert, intermediate_key
@@ -101,8 +101,9 @@ def generate_tls_artifacts(
             ca=ca,
             chain=[cert, ca],
             revoked=None,
-        )
+        ),
     )
+
 
 def _exec(
     command: list[str] | str,
@@ -128,12 +129,14 @@ def _exec(
     except subprocess.CalledProcessError as e:
         raise e
 
+
 try:
     _exec(KEYTOOL)
     _exec("java -version")
     java_tests_disabled = False
 except subprocess.CalledProcessError:
     java_tests_disabled = True
+
 
 @contextlib.contextmanager
 def simple_ssl_server(certfile: str, keyfile: str, port: int = 10443):
@@ -146,6 +149,7 @@ def simple_ssl_server(certfile: str, keyfile: str, port: int = 10443):
     process.start()
     yield
     process.kill()
+
 
 @pytest.fixture()
 def tls_manager(tmp_path_factory, monkeypatch):
@@ -170,10 +174,11 @@ def tls_manager(tmp_path_factory, monkeypatch):
     mgr.keytool = KEYTOOL
     yield mgr
 
+
 def _get_tls_context(
-    mgr: TLSManager, tls_artifacts: TLSArtifacts | None = None, scope: TLSScope = TLSScope.CLIENT
+    tls_artifacts: TLSArtifacts | None = None, scope: TLSScope = TLSScope.CLIENT
 ) -> TLSContext:
-    """Helper function to create a TLSContext with artifacts."""
+    """Create a TLSContext with artifacts."""
     mock_relation = MagicMock()
     mock_relation.id = 1
     ctx = TLSContext(
@@ -191,8 +196,9 @@ def _get_tls_context(
     logger.info(f"ctx.ca: {ctx.ca}")
     return ctx
 
+
 def _tls_manager_set_everything(mgr: TLSManager, tls_context: ResolvedTLSContext) -> None:
-    """Helper: sets all values in TLSManager for the given context."""
+    """Set all values in TLSManager for the given context."""
     scope = tls_context.scope
     mgr.set_ca(tls_context.ca, scope)
     mgr.set_chain(tls_context.chain, scope)
@@ -202,7 +208,9 @@ def _tls_manager_set_everything(mgr: TLSManager, tls_context: ResolvedTLSContext
     mgr.set_keystore("keystore-password", scope)
     mgr.set_truststore("truststore-password", scope)
 
+
 # ===================== TESTS =====================
+
 
 @pytest.mark.skipif(
     java_tests_disabled, reason=f"Can't locate {KEYTOOL} and/or java in the test environment."
@@ -216,9 +224,9 @@ def test_tls_manager_set_methods(
     caplog: pytest.LogCaptureFixture,
     with_intermediate: bool,
 ):
-    """Test: Checks the lifecycle of adding/removing certificates from the perspective of Java and TLSManager."""
+    """Checks the lifecycle of adding/removing certificates with TLSManager."""
     peer_tls_artifacts = generate_tls_artifacts(with_intermediate=with_intermediate)
-    peer_tls_context = _get_tls_context(mgr=tls_manager, tls_artifacts=peer_tls_artifacts, scope=TLSScope.PEER)
+    peer_tls_context = _get_tls_context(tls_artifacts=peer_tls_artifacts, scope=TLSScope.PEER)
     peer_tls_artifacts.bundle = peer_tls_context.bundle
 
     caplog.set_level(logging.DEBUG)
@@ -235,18 +243,19 @@ def test_tls_manager_set_methods(
     assert (tls_dir / "peer-private.key").read_text() == peer_tls_artifacts.private_key.raw
 
     client_tls_artifacts = generate_tls_artifacts(with_intermediate=with_intermediate)
-    client_tls_context = _get_tls_context(tls_manager, client_tls_artifacts, TLSScope.CLIENT)
+    client_tls_context = _get_tls_context(client_tls_artifacts, TLSScope.CLIENT)
     client_tls_artifacts.bundle = client_tls_context.bundle
 
     caplog.set_level(logging.DEBUG)
 
     _tls_manager_set_everything(tls_manager, client_tls_context.resolved())
-    
+
     assert (tls_dir / "client-unit.pem").read_text() == client_tls_artifacts.certificate.raw
     assert (tls_dir / "client-ca.pem").read_text() == client_tls_artifacts.ca.raw
     assert (tls_dir / "client-bundle0.pem").read_text() == client_tls_artifacts.bundle[0].raw
     assert (tls_dir / "client-bundle1.pem").read_text() == client_tls_artifacts.bundle[1].raw
     assert (tls_dir / "client-private.key").read_text() == client_tls_artifacts.private_key.raw
+
 
 @pytest.mark.parametrize(
     "with_intermediate", [False, True], ids=["NO intermediate CA", "ONE intermediate CA"]
@@ -261,9 +270,9 @@ def test_tls_manager_sans(
         sans_dns=[UNIT_NAME],
         with_intermediate=with_intermediate,
     )
-    tls_context = _get_tls_context(tls_manager, tls_artifacts, TLSScope.CLIENT)
+    tls_context = _get_tls_context(tls_artifacts, TLSScope.CLIENT)
     _tls_manager_set_everything(tls_manager, tls_context.resolved())
-    current_sans =  {
+    current_sans = {
         "sans_ip": [INTERNAL_ADDRESS],
         "sans_dns": [UNIT_NAME],
     }

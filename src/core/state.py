@@ -4,9 +4,9 @@
 
 """Application state definition."""
 
-from dataclasses import dataclass
-import logging
 import json
+import logging
+from dataclasses import dataclass
 from enum import StrEnum
 from typing import List, Optional
 
@@ -16,7 +16,6 @@ from charms.data_platform_libs.v0.data_interfaces import (
     DataPeerOtherUnitData,
     DataPeerUnitData,
 )
-
 from charms.tls_certificates_interface.v4.tls_certificates import (
     Certificate,
     CertificateSigningRequest,
@@ -51,11 +50,13 @@ SECRETS_APP = ["internal-ca", "internal-ca-key"]
 
 logger = logging.getLogger(__name__)
 
+
 class TLSScope(StrEnum):
     """Enum for TLS scopes."""
-    
+
     PEER = "peer"  # for internal communications
     CLIENT = "client"  # for external/client communications
+
 
 class TLSState(StrEnum):
     """Current state of the Cassandra cluster."""
@@ -64,7 +65,7 @@ class TLSState(StrEnum):
     ACTIVE = "active"
     """Cassandra cluster is initialized by the leader unit and active."""
 
-    
+
 class ClusterState(StrEnum):
     """Current state of the Cassandra cluster."""
 
@@ -86,7 +87,7 @@ class UnitWorkloadState(StrEnum):
     ACTIVE = "active"
     """Cassandra is active and ready."""
 
-    
+
 class RelationState:
     """Basic class for relation bag mapping classes."""
 
@@ -114,35 +115,40 @@ class RelationState:
             except KeyError:
                 pass
         else:
-            self.relation_data.update({field: value})            
+            self.relation_data.update({field: value})
+
 
 @dataclass
 class ResolvedTLSContext:
+    """..."""
+
     private_key: PrivateKey
     ca: Certificate
     certificate: Certificate
     chain: list[Certificate]
     bundle: list[Certificate]
     scope: TLSScope
-            
+
+
 class TLSContext(RelationState):
     """State collection metadata for TLS credentials."""
 
     def __init__(
-        self,
-        relation: Relation | None,
-        data_interface: Data,
-        component: Unit,
-        scope: TLSScope):
+        self, relation: Relation | None, data_interface: Data, component: Unit, scope: TLSScope
+    ):
         self.scope = scope
         super().__init__(relation, data_interface, component)
 
-
     def setup_provider_certificates(self, crts: ProviderCertificate) -> None:
+        """Set up certificate, CSR, and chain from a ProviderCertificate object.
+
+        Args:
+            crts: ProviderCertificate object containing certificate, CSR, and chain.
+        """
         self.certificate = crts.certificate
         self.csr = crts.certificate_signing_request
         self.chain = crts.chain
-    
+
     @property
     def private_key(self) -> Optional[PrivateKey]:
         """The unit private-key set during `certificates_joined`.
@@ -159,7 +165,7 @@ class TLSContext(RelationState):
     @private_key.setter
     def private_key(self, value: PrivateKey | None) -> None:
         if not value:
-            return self._field_setter_wrapper(f"{self.scope.value}-private-key", "")            
+            return self._field_setter_wrapper(f"{self.scope.value}-private-key", "")
         self._field_setter_wrapper(f"{self.scope.value}-private-key", value.raw)
 
     @property
@@ -192,7 +198,7 @@ class TLSContext(RelationState):
     @certificate.setter
     def certificate(self, value: Certificate | None) -> None:
         if not value:
-          return self._field_setter_wrapper(f"{self.scope.value}-certificate", "")
+            return self._field_setter_wrapper(f"{self.scope.value}-certificate", "")
         self._field_setter_wrapper(f"{self.scope.value}-certificate", value.raw)
 
     @property
@@ -226,10 +232,12 @@ class TLSContext(RelationState):
 
     @chain.setter
     def chain(self, value: List[Certificate]) -> None:
-        """Sets the chain used to sign the unit cert."""
+        """Set the chain used to sign the unit cert."""
         if len(value) == 0:
-            return self._field_setter_wrapper(f"{self.scope.value}-chain", "")            
-        self._field_setter_wrapper(f"{self.scope.value}-chain", json.dumps([str(c) for c in value]))
+            return self._field_setter_wrapper(f"{self.scope.value}-chain", "")
+        self._field_setter_wrapper(
+            f"{self.scope.value}-chain", json.dumps([str(c) for c in value])
+        )
 
     @property
     def bundle(self) -> List[Certificate]:
@@ -242,7 +250,7 @@ class TLSContext(RelationState):
         if not cert or not ca:
             return []
         return list(dict.fromkeys([cert, ca] + self.chain))
-    
+
     @property
     def rotation(self) -> bool:
         """Whether or not CA/chain rotation is in progress."""
@@ -259,8 +267,12 @@ class TLSContext(RelationState):
         return all([self.certificate, self.ca, self.private_key])
 
     def resolved(self) -> ResolvedTLSContext:
+        """Return a ResolvedTLSContext if all required TLS fields are present.
+
+        Else raise RuntimeError.
+        """
         if not self.certificate or not self.private_key or not self.ca:
-            raise RuntimeError(f"TLS state is incomplete, certificate: {True if self.certificate else False}, private_key: {True if self.private_key else False}, ca: {True if self.ca else False} for scope: {self.scope}")
+            raise RuntimeError("TLS state is incomplete")
         return ResolvedTLSContext(
             private_key=self.private_key,
             ca=self.ca,
@@ -269,9 +281,8 @@ class TLSContext(RelationState):
             bundle=self.bundle,
             scope=self.scope,
         )
-    
 
-            
+
 class UnitContext(RelationState):
     """Unit context of the application state.
 
@@ -284,7 +295,6 @@ class UnitContext(RelationState):
         data_interface: DataPeerUnitData,
         component: Unit,
     ):
-        
         super().__init__(relation, data_interface, component)
         self.unit = component
 
@@ -348,7 +358,7 @@ class UnitContext(RelationState):
 
     @property
     def keystore_password(self) -> str:
-        """The unit keystore password set during `certificates_joined`.
+        """Get keystore password.
 
         Returns:
             String of password
@@ -358,7 +368,7 @@ class UnitContext(RelationState):
 
     @property
     def truststore_password(self) -> str:
-        """The unit truststore password set during `certificates_joined`.
+        """Get truststore password.
 
         Returns:
             String of password
@@ -368,7 +378,7 @@ class UnitContext(RelationState):
 
     @keystore_password.setter
     def keystore_password(self, value: str) -> None:
-        """The unit keystore password set during `certificates_joined`.
+        """Set keystore password.
 
         Returns:
             String of password
@@ -378,7 +388,7 @@ class UnitContext(RelationState):
 
     @truststore_password.setter
     def truststore_password(self, value: str) -> None:
-        """The unit truststore password set during `certificates_joined`.
+        """Set truststore password.
 
         Returns:
             String of password
@@ -401,7 +411,6 @@ class ClusterContext(RelationState):
     ):
         super().__init__(relation, data_interface, component)
         self.app = component
-
 
     @property
     def cluster_name(self) -> str:
@@ -445,7 +454,6 @@ class ClusterContext(RelationState):
     def tls_state(self, value: TLSState) -> None:
         self._field_setter_wrapper("tls_state", value.value)
 
-    
     # --- TLS ---
     @property
     def internal_ca(self) -> Certificate | None:
@@ -473,6 +481,7 @@ class ClusterContext(RelationState):
     @internal_ca_key.setter
     def internal_ca_key(self, value: PrivateKey) -> None:
         self._field_setter_wrapper("internal-ca-key", str(value))
+
 
 class ApplicationState(Object):
     """Mappings for the charm relations that forms global application state."""

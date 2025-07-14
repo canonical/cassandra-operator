@@ -8,20 +8,19 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
-from ops.testing import Secret
 from typing import Iterable
 
 from charms.tls_certificates_interface.v4.tls_certificates import (
+    Certificate,
+    CertificateSigningRequest,
+    PrivateKey,
+    ProviderCertificate,
     generate_ca,
     generate_certificate,
     generate_csr,
     generate_private_key,
-    Certificate,
-    PrivateKey,
-    CertificateSigningRequest,
-    ProviderCertificate,
 )
-from cryptography import x509
+from ops.testing import Secret
 
 
 @dataclass
@@ -41,13 +40,14 @@ def generate_tls_artifacts(
     sans_ip: list[str] = ["127.0.0.1"],
     with_intermediate: bool = False,
 ) -> TLSArtifacts:
-    """Generates necessary TLS artifacts for TLS tests.
+    """Generate necessary TLS artifacts for TLS tests.
 
     Args:
         subject (str, optional): Certificate Subject Name. Defaults to "some-app/0".
         sans_dns (list[str], optional): List of SANS DNS addresses. Defaults to ["localhost"].
         sans_ip (list[str], optional): List of SANS IP addresses. Defaults to ["127.0.0.1"].
-        with_intermediate (bool, optional): Whether or not should use and intermediate CA to sign the end cert. Defaults to False.
+        with_intermediate (bool, optional): Whether or not should use and intermediate CA
+                                            to sign the end cert. Defaults to False.
 
     Returns:
         TLSArtifacts: Object containing required TLS Artifacts.
@@ -55,11 +55,11 @@ def generate_tls_artifacts(
     # CA
     ca_key = generate_private_key()
     ca = generate_ca(
-        private_key=ca_key, 
-        validity=timedelta(365), 
+        private_key=ca_key,
+        validity=timedelta(365),
         common_name="some-CN",
     )
-    
+
     signing_cert, signing_key = ca, ca_key
 
     # Intermediate?
@@ -74,21 +74,21 @@ def generate_tls_artifacts(
         )
 
         intermediate_cert = generate_certificate(
-            csr=intermediate_csr, 
-            ca=ca, 
-            ca_private_key=ca_key, 
+            csr=intermediate_csr,
+            ca=ca,
+            ca_private_key=ca_key,
             validity=timedelta(365),
         )
-        
+
         signing_cert, signing_key = intermediate_cert, intermediate_key
 
     key = generate_private_key()
     csr = generate_csr(
-            private_key=key,
-            common_name="some-inter-CN",
-            sans_ip=frozenset(sans_ip),
-            sans_dns=frozenset(sans_dns),
-        )
+        private_key=key,
+        common_name="some-inter-CN",
+        sans_ip=frozenset(sans_ip),
+        sans_dns=frozenset(sans_dns),
+    )
     cert = generate_certificate(csr, signing_cert, signing_key, validity=timedelta(365))
 
     chain = [cert, ca]
@@ -108,16 +108,14 @@ def generate_tls_artifacts(
             ca=ca,
             chain=[cert, ca],
             revoked=None,
-        )
+        ),
     )
 
 
 def get_secrets_latest_content_by_label(
     secrets: Iterable["Secret"], label: str, owner: str
 ) -> dict[str, str]:
-    """
-    Возвращает объединённый словарь latest_content по label и owner из Iterable Secret-объектов.
-    """
+    """Return a concatenated dictionary of Secret objects."""
     result = {}
     for secret in secrets:
         if owner and getattr(secret, "owner", None) != owner:

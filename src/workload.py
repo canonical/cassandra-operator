@@ -98,7 +98,11 @@ class CassandraWorkload(WorkloadBase):
 
     @override
     def exec(
-        self, command: list[str], cwd: str | None = None, suppress_error_log: bool = False) -> tuple[str, str]:
+        self,
+        command: list[str],
+        cwd: str | None = None,
+        suppress_error_log: bool = False,
+    ) -> tuple[str, str]:
         try:
             result = subprocess.run(
                 command,
@@ -135,7 +139,7 @@ class CassandraWorkload(WorkloadBase):
             logger.debug("STDERR: %s", stderr)
             raise ExecError(stdout, stderr)
 
-    @override        
+    @override
     def peer_tls_ready(self) -> bool:
         return all(
             self.path_exists(f.as_posix())
@@ -145,7 +149,7 @@ class CassandraWorkload(WorkloadBase):
             ]
         )
 
-    @override        
+    @override
     def client_tls_ready(self) -> bool:
         return all(
             self.path_exists(f.as_posix())

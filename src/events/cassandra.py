@@ -16,9 +16,9 @@ from ops import (
     StartEvent,
     UpdateStatusEvent,
 )
-
 from pydantic import ValidationError
 
+from common.cassandra_client import CassandraClient
 from core.config import CharmConfig
 from core.state import ApplicationState, UnitWorkloadState
 from core.statuses import Status
@@ -26,7 +26,6 @@ from core.workload import WorkloadBase
 from managers.cluster import ClusterManager
 from managers.config import ConfigManager
 from managers.tls import TLSManager
-from common.cassandra_client import CassandraClient
 
 logger = logging.getLogger(__name__)
 
@@ -76,9 +75,8 @@ class CassandraEvents(Object):
             return
 
         if self.state.unit.peer_tls.rotation or self.state.unit.client_tls.rotation:
-           self.state.unit.peer_tls.rotation = False
-           self.state.unit.client_tls.rotation = False
-
+            self.state.unit.peer_tls.rotation = False
+            self.state.unit.client_tls.rotation = False
 
         if not self._check_and_set_certificates():
             event.defer()
@@ -150,8 +148,8 @@ class CassandraEvents(Object):
         try:
             self.charm.config
         except ValidationError:
-            event.add_status(Status.INVALID_CONFIG.value)  
-            
+            event.add_status(Status.INVALID_CONFIG.value)
+
         if self.state.unit.workload_state == UnitWorkloadState.INSTALLING:
             event.add_status(Status.INSTALLING.value)
 
@@ -165,8 +163,8 @@ class CassandraEvents(Object):
             event.add_status(Status.WAITING_FOR_INTERNAL_TLS.value)
 
         if self.state.cluster.tls_state and not self.workload.client_tls_ready:
-            event.add_status(Status.WAITING_FOR_TLS.value)      
-            
+            event.add_status(Status.WAITING_FOR_TLS.value)
+
         if (
             self.state.unit.workload_state == UnitWorkloadState.WAITING_FOR_START
             and not self.charm.unit.is_leader()
@@ -187,9 +185,9 @@ class CassandraEvents(Object):
             self.charm.config
         except ValidationError:
             event.add_status(Status.INVALID_CONFIG.value)
-            
+
         event.add_status(Status.ACTIVE.value)
-        
+
     def _update_network_address(self) -> bool:
         """Update hostname & ip in this unit context.
 
@@ -209,18 +207,23 @@ class CassandraEvents(Object):
         if not self.workload.installed:
             logger.warning("Workload is not yet installed")
             return False
-        
+
         if not self.state.unit.peer_tls.ready and not self.state.cluster.internal_ca:
             if not self.charm.unit.is_leader():
                 return False
 
-            ca, pk = self.tls_manager.generate_internal_ca(common_name=self.state.unit.unit.app.name)
+            ca, pk = self.tls_manager.generate_internal_ca(
+                common_name=self.state.unit.unit.app.name
+            )
 
             self.state.cluster.internal_ca = ca
             self.state.cluster.internal_ca_key = pk
 
         host_mapping = self.cluster_manager.network_address()
-        sans = self.tls_manager.build_sans(sans_ip=[host_mapping[0]], sans_dns=[host_mapping[1], self.charm.unit.name])
+        sans = self.tls_manager.build_sans(
+            sans_ip=[host_mapping[0]],
+            sans_dns=[host_mapping[1], self.charm.unit.name],
+        )
 
         if not self.state.cluster.internal_ca or not self.state.cluster.internal_ca_key:
             logger.warning("Internal CA is not ready yet")
@@ -250,6 +253,4 @@ class CassandraEvents(Object):
 
     @property
     def _cassandra(self) -> CassandraClient:
-        return CassandraClient(
-            [self.state.unit.ip]
-        )        
+        return CassandraClient([self.state.unit.ip])
