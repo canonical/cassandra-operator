@@ -4,25 +4,31 @@
 # Learn more about testing at: https://juju.is/docs/sdk/testing
 import contextlib
 import http.server
-import json
 import logging
-import os
 import ssl
 import subprocess
 from multiprocessing import Process
-from telnetlib import TLS
 from typing import Mapping
 from unittest.mock import MagicMock
 
-from charmlibs import pathops
+from dataclasses import dataclass
+from datetime import timedelta
 
 from core.workload import WorkloadBase, CassandraPaths
 from managers.tls import TLSManager
-from helpers import TLSArtifacts, generate_tls_artifacts
 from core.state import TLSScope, TLSContext, ResolvedTLSContext
-from ops.testing import Relation
 import pytest
-import os
+
+from charms.tls_certificates_interface.v4.tls_certificates import (
+    generate_ca,
+    generate_certificate,
+    generate_csr,
+    generate_private_key,
+    Certificate,
+    PrivateKey,
+    CertificateSigningRequest,
+    ProviderCertificate,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +36,93 @@ UNIT_NAME = "cassandra/0"
 INTERNAL_ADDRESS = "10.10.10.10"
 BIND_ADDRESS = "10.20.20.20"
 KEYTOOL = "keytool"
+
+@dataclass
+class TLSArtifacts:
+    certificate: Certificate
+    private_key: PrivateKey
+    ca: Certificate
+    chain: list[Certificate]
+    bundle: list[Certificate]
+    signing_cert: CertificateSigningRequest
+    signing_key: PrivateKey
+    provider_cert: ProviderCertificate
+
+
+def generate_tls_artifacts(
+    sans_dns: list[str] = ["localhost"],
+    sans_ip: list[str] = ["127.0.0.1"],
+    with_intermediate: bool = False,
+) -> TLSArtifacts:
+    """Generates necessary TLS artifacts for TLS tests.
+
+    Args:
+        subject (str, optional): Certificate Subject Name. Defaults to "some-app/0".
+        sans_dns (list[str], optional): List of SANS DNS addresses. Defaults to ["localhost"].
+        sans_ip (list[str], optional): List of SANS IP addresses. Defaults to ["127.0.0.1"].
+        with_intermediate (bool, optional): Whether or not should use and intermediate CA to sign the end cert. Defaults to False.
+
+    Returns:
+        TLSArtifacts: Object containing required TLS Artifacts.
+    """
+    # CA
+    ca_key = generate_private_key()
+    ca = generate_ca(
+        private_key=ca_key, 
+        validity=timedelta(365), 
+        common_name="some-CN",
+    )
+    
+    signing_cert, signing_key = ca, ca_key
+
+    # Intermediate?
+    if with_intermediate:
+        intermediate_key = generate_private_key()
+
+        intermediate_csr = generate_csr(
+            private_key=intermediate_key,
+            common_name="some-inter-CN",
+            sans_ip=frozenset(sans_ip),
+            sans_dns=frozenset(sans_dns),
+        )
+
+        intermediate_cert = generate_certificate(
+            csr=intermediate_csr, 
+            ca=ca, 
+            ca_private_key=ca_key, 
+            validity=timedelta(365),
+        )
+        
+        signing_cert, signing_key = intermediate_cert, intermediate_key
+
+    key = generate_private_key()
+    csr = generate_csr(
+            private_key=key,
+            common_name="some-inter-CN",
+            sans_ip=frozenset(sans_ip),
+            sans_dns=frozenset(sans_dns),
+        )
+    cert = generate_certificate(csr, signing_cert, signing_key, validity=timedelta(365))
+
+    chain = [cert, ca]
+
+    return TLSArtifacts(
+        certificate=cert,
+        private_key=key,
+        ca=ca,
+        chain=chain,
+        signing_cert=csr,
+        signing_key=signing_key,
+        bundle=[],
+        provider_cert=ProviderCertificate(
+            relation_id=0,
+            certificate=cert,
+            certificate_signing_request=csr,
+            ca=ca,
+            chain=[cert, ca],
+            revoked=None,
+        )
+    )
 
 def _exec(
     command: list[str] | str,
@@ -81,19 +174,16 @@ def simple_ssl_server(certfile: str, keyfile: str, port: int = 10443):
 @pytest.fixture()
 def tls_manager(tmp_path_factory, monkeypatch):
     """A TLSManager instance with minimal functioning mock `Workload`."""
-    # Создаем временные директории для config и data
     config_dir = tmp_path_factory.mktemp("config")
     data_dir = tmp_path_factory.mktemp("data")
     tls_dir = tmp_path_factory.mktemp("tls")
 
 
-    # Настраиваем мок cassandra_paths
     cassandra_paths = CassandraPaths()
     cassandra_paths.config_dir = config_dir
     cassandra_paths.data_dir = data_dir
     cassandra_paths.tls_dir = tls_dir
 
-    # Мокаем workload
     mock_workload = MagicMock(spec=WorkloadBase)
     mock_workload.cassandra_paths = cassandra_paths
     mock_workload.exec = _exec
@@ -191,10 +281,6 @@ def test_tls_manager_set_methods(
     assert (tls_dir / "client-bundle1.pem").read_text() == client_tls_artifacts.bundle[1].raw
     assert (tls_dir / "client-private.key").read_text() == client_tls_artifacts.private_key.raw
 
-
-@pytest.mark.skipif(
-    JAVA_TESTS_DISABLED, reason=f"Can't locate {KEYTOOL} and/or java in the test environment."
-)
 @pytest.mark.parametrize(
     "with_intermediate", [False, True], ids=["NO intermediate CA", "ONE intermediate CA"]
 )
