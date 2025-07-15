@@ -29,7 +29,6 @@ from charm import CassandraCharm
 from core.state import CLIENT_TLS_RELATION, PEER_RELATION, PEER_TLS_RELATION, TLSScope
 
 BOOTSTRAP_RELATION = "bootstrap"
-CERTS_REL_NAME = "certificates"
 TLS_NAME = "self-signed-certificates"
 
 
@@ -321,7 +320,7 @@ def test_tls_relation_broken_resets_certificates_and_triggers_config(ctx, is_lea
 
 @pytest.mark.parametrize("is_leader", [True, False])
 def test_tls_enabled_but_not_ready_sets_waiting_status(ctx, is_leader):
-    """Test: If TLS is enabled but files are not set, unit goes to WaitingStatus."""
+    """If TLS is enabled but files are not set, unit goes to WaitingStatus."""
     default_tls_context = default_certificate_context(ctx)
     default_tls_context.peer_relation.local_unit_data.update({"workload_state": "active"})
     apply_default_certificates(default_tls_context.peer_relation, default_tls_context)
@@ -360,7 +359,7 @@ def test_tls_enabled_but_not_ready_sets_waiting_status(ctx, is_leader):
 
 @pytest.mark.parametrize("is_leader", [True, False])
 def test_tls_relation_created_sets_tls_state(ctx, is_leader):
-    """Test: Relating the charm toggles TLS state in the databag depending on leadership."""
+    """Relating the charm toggles TLS state in the databag depending on leadership."""
     relation = testing.PeerRelation(id=1, endpoint=PEER_RELATION)
     bootstrap_relation = testing.PeerRelation(id=2, endpoint=BOOTSTRAP_RELATION)
     client_tls_relation = testing.PeerRelation(id=3, endpoint=CLIENT_TLS_RELATION)
@@ -375,7 +374,7 @@ def test_tls_relation_created_sets_tls_state(ctx, is_leader):
 
 
 def test_tls_default_certificates_files_setup(ctx):
-    """Test: Default internal TLS of a new cluster creates all required files."""
+    """Default internal TLS of a new cluster creates all required files."""
     default_tls_context = default_certificate_context(ctx)
     state_in = testing.State(
         relations=[default_tls_context.peer_relation, default_tls_context.bootstrap_relation],
@@ -399,15 +398,15 @@ def test_tls_default_certificates_files_setup(ctx):
             new_callable=PropertyMock(return_value=True),
         ),
     ):
-        state = ctx.run(ctx.on.start(), state_in)
+        state_out = ctx.run(ctx.on.start(), state_in)
         latest_content = get_secrets_latest_content_by_label(
-            state.secrets, "cassandra-peers.cassandra.app", "application"
+            state_out.secrets, "cassandra-peers.cassandra.app", "application"
         )
 
         assert "internal-ca" in latest_content
         assert "internal-ca-key" in latest_content
         latest_content = get_secrets_latest_content_by_label(
-            state.secrets, "cassandra-peers.cassandra.unit", "unit"
+            state_out.secrets, "cassandra-peers.cassandra.unit", "unit"
         )
 
         assert "peer-ca-cert" in latest_content
@@ -415,7 +414,7 @@ def test_tls_default_certificates_files_setup(ctx):
         assert "peer-chain" in latest_content
         assert "peer-csr" in latest_content
         assert "peer-certificate" in latest_content
-        assert state.unit_status == ops.ActiveStatus()
+        assert state_out.unit_status == ops.ActiveStatus()
 
     default_tls_context = default_certificate_context(ctx)
     state_in = testing.State(
@@ -460,7 +459,7 @@ def test_tls_default_certificates_files_setup(ctx):
     ):
         state_out = ctx.run(ctx.on.start(), state_in)
         latest_content = get_secrets_latest_content_by_label(
-            state.secrets, "cassandra-peers.cassandra.unit", "unit"
+            state_out.secrets, "cassandra-peers.cassandra.unit", "unit"
         )
         assert "peer-ca-cert" in latest_content
         assert "peer-private-key" in latest_content
@@ -472,7 +471,7 @@ def test_tls_default_certificates_files_setup(ctx):
 
 @pytest.mark.parametrize("is_leader", [True, False])
 def test_tls_certificate_available_event_triggers_config_and_rotation(ctx, is_leader):
-    """Test: CertificateAvailable event triggers config-changed and certificate rotation logic."""
+    """CertificateAvailable event triggers config-changed and certificate rotation logic."""
     new_tls_context = certificate_available_context(ctx, is_leader)
     default_tls_context = default_certificate_context(ctx)
     context = new_tls_context.context
@@ -507,6 +506,7 @@ def test_tls_certificate_available_event_triggers_config_and_rotation(ctx, is_le
             return_value=(peer_provider_crt, requirer_private_key),
         ),
         context(context.on.relation_created(peer_tls_relation), state=state_in) as manager,
+        patch("charm.CassandraWorkload.installed", new_callable=PropertyMock(return_value=True)),
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
         patch("managers.tls.TLSManager.configure"),
@@ -544,6 +544,7 @@ def test_tls_certificate_available_event_triggers_config_and_rotation(ctx, is_le
             return_value=(client_provider_crt, requirer_private_key),
         ),
         context(context.on.relation_created(client_tls_relation), state=state_in) as manager,
+        patch("charm.CassandraWorkload.installed", new_callable=PropertyMock(return_value=True)),
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
         patch("managers.tls.TLSManager.configure"),
