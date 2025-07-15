@@ -239,7 +239,7 @@ def certificate_available_context(
     )
 
 
-class TestObserver(Object):
+class TLSObserver(Object):
     def __init__(self, charm):
         super().__init__(charm, "test_observer")
         self.called = False
@@ -293,7 +293,7 @@ def test_tls_relation_broken_resets_certificates_and_triggers_config(ctx, is_lea
         patch("managers.tls.TLSManager.generate_internal_credentials") as mock_gen_internal_creds,
     ):
         charm: CassandraCharm = manager.charm
-        config_changed_observer = TestObserver(charm)
+        config_changed_observer = TLSObserver(charm)
         charm.framework.observe(charm.on.config_changed, config_changed_observer.handler)
 
         mock_gen_internal_creds.return_value = (
@@ -498,6 +498,14 @@ def test_tls_certificate_available_event_triggers_config_and_rotation(ctx, is_le
     apply_default_certificates(new_tls_context.peer_relation, default_tls_context)
     with (
         patch(
+            "core.state.UnitContext.keystore_password",
+            new_callable=PropertyMock(return_value="keystore_password"),
+        ),
+        patch(
+            "core.state.UnitContext.truststore_password",
+            new_callable=PropertyMock(return_value="truststore_password"),
+        ),
+        patch(
             "events.tls.TLSCertificatesRequiresV4.get_assigned_certificate",
             return_value=(peer_provider_crt, requirer_private_key),
         ),
@@ -505,15 +513,15 @@ def test_tls_certificate_available_event_triggers_config_and_rotation(ctx, is_le
             "events.tls.TLSCertificatesRequiresV4.get_assigned_certificates",
             return_value=(peer_provider_crt, requirer_private_key),
         ),
-        context(context.on.relation_created(peer_tls_relation), state=state_in) as manager,
         patch("charm.CassandraWorkload") as workload,
+        context(context.on.relation_created(peer_tls_relation), state=state_in) as manager,
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
         patch("managers.tls.TLSManager.configure"),
     ):
         workload.return_value.installed = True
         charm: CassandraCharm = manager.charm
-        config_changed_observer = TestObserver(charm)
+        config_changed_observer = TLSObserver(charm)
         charm.framework.observe(charm.on.config_changed, config_changed_observer.handler)
 
         certificate_available_event = MagicMock(spec=CertificateAvailableEvent)
@@ -537,6 +545,14 @@ def test_tls_certificate_available_event_triggers_config_and_rotation(ctx, is_le
     apply_default_certificates(new_tls_context.peer_relation, default_tls_context)
     with (
         patch(
+            "core.state.UnitContext.keystore_password",
+            new_callable=PropertyMock(return_value="keystore_password"),
+        ),
+        patch(
+            "core.state.UnitContext.truststore_password",
+            new_callable=PropertyMock(return_value="truststore_password"),
+        ),
+        patch(
             "events.tls.TLSCertificatesRequiresV4.get_assigned_certificate",
             return_value=(client_provider_crt, requirer_private_key),
         ),
@@ -544,15 +560,15 @@ def test_tls_certificate_available_event_triggers_config_and_rotation(ctx, is_le
             "events.tls.TLSCertificatesRequiresV4.get_assigned_certificates",
             return_value=(client_provider_crt, requirer_private_key),
         ),
-        context(context.on.relation_created(client_tls_relation), state=state_in) as manager,
         patch("charm.CassandraWorkload") as workload,
+        context(context.on.relation_created(client_tls_relation), state=state_in) as manager,
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
         patch("managers.tls.TLSManager.configure"),
     ):
         workload.return_value.installed = True
         charm: CassandraCharm = manager.charm
-        config_changed_observer = TestObserver(charm)
+        config_changed_observer = TLSObserver(charm)
         charm.framework.observe(charm.on.config_changed, config_changed_observer.handler)
 
         certificate_available_event = MagicMock(spec=CertificateAvailableEvent)
