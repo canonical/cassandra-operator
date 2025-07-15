@@ -506,11 +506,12 @@ def test_tls_certificate_available_event_triggers_config_and_rotation(ctx, is_le
             return_value=(peer_provider_crt, requirer_private_key),
         ),
         context(context.on.relation_created(peer_tls_relation), state=state_in) as manager,
-        patch("charm.CassandraWorkload.installed", new_callable=PropertyMock(return_value=True)),
+        patch("charm.CassandraWorkload") as workload,
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
         patch("managers.tls.TLSManager.configure"),
     ):
+        workload.return_value.installed = True
         charm: CassandraCharm = manager.charm
         config_changed_observer = TestObserver(charm)
         charm.framework.observe(charm.on.config_changed, config_changed_observer.handler)
@@ -544,11 +545,12 @@ def test_tls_certificate_available_event_triggers_config_and_rotation(ctx, is_le
             return_value=(client_provider_crt, requirer_private_key),
         ),
         context(context.on.relation_created(client_tls_relation), state=state_in) as manager,
-        patch("charm.CassandraWorkload.installed", new_callable=PropertyMock(return_value=True)),
+        patch("charm.CassandraWorkload") as workload,
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
         patch("managers.tls.TLSManager.configure"),
     ):
+        workload.return_value.installed = True
         charm: CassandraCharm = manager.charm
         config_changed_observer = TestObserver(charm)
         charm.framework.observe(charm.on.config_changed, config_changed_observer.handler)
