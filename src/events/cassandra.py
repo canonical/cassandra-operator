@@ -62,9 +62,6 @@ class CassandraEvents(Object):
     def _on_install(self, _: InstallEvent) -> None:
         self.workload.install()
 
-        # TODO: move to snap?
-        self.workload.cassandra_paths.tls_dir.mkdir(exist_ok=True)
-
     def _on_start(self, event: StartEvent) -> None:
         self._update_network_address()
 
