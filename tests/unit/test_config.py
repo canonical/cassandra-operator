@@ -23,6 +23,7 @@ def test_render_env_preserves_existing_vars():
         enable_client_tls=False,
         keystore_password="",
         truststore_password="",
+        authentication=False,
     )
 
     workload.cassandra_paths.env.read_text.return_value = (
