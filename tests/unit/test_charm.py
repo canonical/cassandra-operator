@@ -10,12 +10,44 @@ from ops import testing
 
 from charm import CassandraCharm
 from core.state import PEER_RELATION
-from managers.config import ConfigManager
 
 BOOTSTRAP_RELATION = "bootstrap"
 PEER_SECRET = "cassandra-peers.cassandra.app"
 
-# TODO: add start change password unit test
+
+def test_start_change_password():
+    """Leader should generate & configure cassandra password."""
+    ctx = testing.Context(CassandraCharm)
+    relation = testing.PeerRelation(id=1, endpoint=PEER_RELATION)
+    bootstrap_relation = testing.PeerRelation(id=2, endpoint=BOOTSTRAP_RELATION)
+    secret = testing.Secret(label=PEER_SECRET, tracked_content={}, owner="app")
+    state = testing.State(leader=True, relations={relation, bootstrap_relation}, secrets={secret})
+
+    with (
+        patch("managers.config.ConfigManager.render_env") as render_env,
+        patch("managers.config.ConfigManager.render_cassandra_config") as render_cassandra_config,
+        patch(
+            "managers.database.DatabaseManager.update_system_user_password"
+        ) as update_system_user_password,
+        patch("charm.CassandraWorkload") as workload,
+        patch(
+            "managers.cluster.ClusterManager.is_healthy",
+            new_callable=PropertyMock(return_value=True),
+        ),
+    ):
+        workload.return_value.generate_password.return_value = "password"
+
+        state = ctx.run(ctx.on.start(), state)
+        render_env.assert_called()
+        render_cassandra_config.assert_called_once()
+        assert render_cassandra_config.call_args.kwargs["authentication"] is False
+        workload.return_value.start.assert_called()
+
+        render_cassandra_config.reset_mock()
+        state = ctx.run(ctx.on.start(), state)
+        update_system_user_password.assert_called_once_with("cassandra", "password")
+        assert render_cassandra_config.call_args.kwargs["authentication"] is True
+        workload.return_value.restart.assert_called()
 
 
 def test_start_leader():
@@ -23,7 +55,9 @@ def test_start_leader():
     ctx = testing.Context(CassandraCharm)
     relation = testing.PeerRelation(id=1, endpoint=PEER_RELATION)
     bootstrap_relation = testing.PeerRelation(id=2, endpoint=BOOTSTRAP_RELATION)
-    secret = testing.Secret(label=PEER_SECRET, tracked_content={"cassandra-password": "ua"})
+    secret = testing.Secret(
+        label=PEER_SECRET, tracked_content={"cassandra-password": "ua"}, owner="app"
+    )
     state = testing.State(leader=True, relations={relation, bootstrap_relation}, secrets={secret})
 
     with (
