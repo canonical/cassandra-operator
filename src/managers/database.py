@@ -2,7 +2,7 @@
 # Copyright 2025 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""Cassandra CQL client."""
+"""Database manager."""
 
 import logging
 from contextlib import contextmanager
@@ -16,24 +16,22 @@ from cassandra.policies import DCAwareRoundRobinPolicy, TokenAwarePolicy
 logger = logging.getLogger(__name__)
 
 
-class CassandraClient:
-    """Cassandra CQL client."""
+class DatabaseManager:
+    """Manager of Cassandra database."""
 
-    def __init__(self, hosts: list[str], user: str | None = None, password: str | None = None):
+    def __init__(self, hosts: list[str], user: str, password: str):
         self.execution_profile = ExecutionProfile(
             load_balancing_policy=TokenAwarePolicy(DCAwareRoundRobinPolicy())
         )
         self.auth_provider = (
-            PlainTextAuthProvider(username=user, password=password)
-            if user is not None and password is not None
-            else None
+            PlainTextAuthProvider(username=user, password=password) if user and password else None
         )
         self.hosts = hosts
 
         return
 
-    def change_superuser_password(self, user: str, password: str) -> None:
-        """TODO."""
+    def update_system_user_password(self, user: str, password: str) -> None:
+        """Change password for the role in system_auth."""
         with self._session() as session:
             session.execute(
                 "UPDATE system_auth.roles SET salted_hash = %s WHERE role = %s",
@@ -42,11 +40,6 @@ class CassandraClient:
                     user,
                 ],
             )
-
-    def change_user_password(self, user: str, password: str) -> None:
-        """TODO."""
-        with self._session() as session:
-            session.execute("ALTER USER %s WITH PASSWORD %s", [user, password])
 
     @contextmanager
     def _session(self, keyspace: str | None = None) -> Generator[Session, None, None]:

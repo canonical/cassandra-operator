@@ -19,7 +19,6 @@ from ops import (
 )
 from pydantic import ValidationError
 
-from common.cassandra_client import CassandraClient
 from core.config import CharmConfig
 from core.state import ApplicationState, UnitWorkloadState
 from core.statuses import Status
@@ -27,6 +26,7 @@ from core.workload import WorkloadBase
 from managers.cluster import ClusterManager
 from managers.config import ConfigManager
 from managers.tls import Sans, TLSManager
+from managers.database import DatabaseManager
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +44,7 @@ class CassandraEvents(Object):
         bootstrap_manager: RollingOpsManager,
         tls_manager: TLSManager,
         configure_certificates: Callable[[Sans], bool],
+        database_manager: DatabaseManager,
     ):
         super().__init__(charm, key="cassandra_events")
         self.charm = charm
@@ -54,6 +55,7 @@ class CassandraEvents(Object):
         self.bootstrap_manager = bootstrap_manager
         self.tls_manager = tls_manager
         self.configure_certificates = configure_certificates
+        self.database_manager = database_manager
 
         self.framework.observe(self.charm.on.start, self._on_start)
         self.framework.observe(self.charm.on.install, self._on_install)
@@ -132,7 +134,7 @@ class CassandraEvents(Object):
             event.defer()
             return
         password = self.workload.generate_password()
-        self._cassandra.change_superuser_password("cassandra", password)
+        self.database_manager.update_system_user_password("cassandra", password)
         self.state.cluster.cassandra_password_secret = password
         self.cluster_manager.flush_tables("system_auth", ["roles"])
         self.config_manager.render_cassandra_config(
@@ -250,12 +252,4 @@ class CassandraEvents(Object):
             old_ip is not None
             and old_hostname is not None
             and (old_ip != self.state.unit.ip or old_hostname != self.state.unit.hostname)
-        )
-
-    @property
-    def _cassandra(self) -> CassandraClient:
-        return CassandraClient(
-            [self.state.unit.ip if self.state.cluster.cassandra_password_secret else "127.0.0.1"],
-            "cassandra",
-            self.state.cluster.cassandra_password_secret or None,
         )
