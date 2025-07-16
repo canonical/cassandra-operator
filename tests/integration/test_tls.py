@@ -91,7 +91,8 @@ def test_enable_peer_self_signed_tls(
     # Wait for peer_certs rotation
     juju.wait(
         ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
-        delay=3,
+        delay=20,
+        successes=4,        
     )
 
     for uaddr in unit_addreses:
@@ -132,7 +133,8 @@ def test_enable_client_self_signed_tls(
     # Wait for peer_certs rotation
     juju.wait(
         ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
-        delay=3,
+        delay=20,
+        successes=4,        
     )
 
     for uaddr in unit_addreses:
