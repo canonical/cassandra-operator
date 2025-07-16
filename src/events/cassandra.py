@@ -71,10 +71,6 @@ class CassandraEvents(Object):
             event.defer()
             return
 
-        if self.state.unit.peer_tls.rotation or self.state.unit.client_tls.rotation:
-            self.state.unit.peer_tls.rotation = False
-            self.state.unit.client_tls.rotation = False
-
         if not self._check_and_set_certificates():
             event.defer()
             return
@@ -119,6 +115,10 @@ class CassandraEvents(Object):
         except ValidationError as e:
             logger.debug(f"Config haven't passed validation: {e}")
             return
+
+        if self.state.unit.peer_tls.rotation or self.state.unit.client_tls.rotation:
+            self.state.unit.peer_tls.rotation = False
+            self.state.unit.client_tls.rotation = False
 
         if self.state.unit.workload_state == UnitWorkloadState.ACTIVE:
             self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
