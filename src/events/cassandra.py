@@ -153,7 +153,7 @@ class CassandraEvents(Object):
         if self.state.unit.peer_tls.ready and self.state.unit.peer_tls.rotation:
             event.add_status(Status.ROTATING_PEER_TLS.value)
 
-        if self.state.unit.peer_tls.ready and self.state.unit.client_tls.rotation:
+        if self.state.unit.client_tls.ready and self.state.unit.client_tls.rotation:
             event.add_status(Status.ROTATING_CLIENT_TLS.value)
 
         if not self.state.cluster.internal_ca:

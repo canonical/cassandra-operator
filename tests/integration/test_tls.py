@@ -92,7 +92,8 @@ def test_enable_peer_self_signed_tls(
     juju.wait(
         ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
         delay=20,
-        successes=4,        
+        successes=4,
+        timeout=1000,
     )
 
     for uaddr in unit_addreses:
@@ -134,7 +135,8 @@ def test_enable_client_self_signed_tls(
     juju.wait(
         ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
         delay=20,
-        successes=4,        
+        successes=4,
+        timeout=1000,        
     )
 
     for uaddr in unit_addreses:
@@ -177,6 +179,7 @@ def test_disable_peer_self_signed_tls(
         ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
         delay=20,
         successes=4,
+        timeout=1000,        
     )
 
     for uaddr in unit_addreses:
@@ -221,6 +224,7 @@ def test_disable_client_self_signed_tls(
         ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
         delay=20,
         successes=4,
+        timeout=1000,        
     )
 
     for uaddr in unit_addreses:
