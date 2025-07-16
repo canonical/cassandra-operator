@@ -258,7 +258,7 @@ class TLSContext(RelationState):
 
     @rotation.setter
     def rotation(self, value: bool) -> None:
-        _value = "" if not value else "true"
+        _value = "" if not value else "false"
         self._field_setter_wrapper(f"{self.scope.value}-rotation", _value)
 
     @property
