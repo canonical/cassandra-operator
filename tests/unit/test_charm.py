@@ -10,8 +10,12 @@ from ops import testing
 
 from charm import CassandraCharm
 from core.state import PEER_RELATION
+from managers.config import ConfigManager
 
 BOOTSTRAP_RELATION = "bootstrap"
+PEER_SECRET = "cassandra-peers.cassandra.app"
+
+# TODO: add start change password unit test
 
 
 def test_start_leader():
@@ -19,7 +23,8 @@ def test_start_leader():
     ctx = testing.Context(CassandraCharm)
     relation = testing.PeerRelation(id=1, endpoint=PEER_RELATION)
     bootstrap_relation = testing.PeerRelation(id=2, endpoint=BOOTSTRAP_RELATION)
-    state = testing.State(leader=True, relations={relation, bootstrap_relation})
+    secret = testing.Secret(label=PEER_SECRET, tracked_content={"cassandra-password": "ua"})
+    state = testing.State(leader=True, relations={relation, bootstrap_relation}, secrets={secret})
 
     with (
         patch("managers.config.ConfigManager.render_env") as render_env,
@@ -78,7 +83,8 @@ def test_start_subordinate_only_after_leader_active():
         relation = testing.PeerRelation(
             id=1, endpoint=PEER_RELATION, local_app_data={"cluster_state": "active"}
         )
-        state = testing.State(leader=False, relations={relation})
+        secret = testing.Secret(label=PEER_SECRET, tracked_content={"cassandra-password": "ua"})
+        state = testing.State(leader=False, relations={relation}, secrets={secret})
 
         state = ctx.run(ctx.on.start(), state)
         bootstrap.assert_called_once()
@@ -165,8 +171,8 @@ def test_config_changed():
         ),
     ):
         state = ctx.run(ctx.on.config_changed(), state)
-        render_env.assert_called()
-        render_cassandra_config.assert_called()
+        render_env.assert_not_called()
+        render_cassandra_config.assert_not_called()
         workload.return_value.restart.assert_not_called()
 
         relation = testing.PeerRelation(
