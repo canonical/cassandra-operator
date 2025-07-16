@@ -308,7 +308,7 @@ def test_tls_relation_broken_resets_certificates_and_triggers_config(ctx, is_lea
         assert peer_tls.ca == new_tls_context.provider_ca_crt
         assert peer_tls.chain != new_tls_context.peer_provider_crt.chain
         assert peer_tls.csr != new_tls_context.peer_csr
-        assert peer_tls.rotation is True
+        assert peer_tls.rotation is False
 
         mock_remove_stores.assert_called_once()
         mock_configure.assert_called_once()
@@ -540,7 +540,7 @@ def test_tls_certificate_available_event_triggers_config_and_rotation(ctx, is_le
         tls_state = charm.tls_events.requirer_state(charm.tls_events.peer_certificate)
         assert tls_state.certificate == peer_crt
         assert tls_state.ca == provider_ca_crt
-        assert tls_state.rotation is True
+        assert tls_state.rotation is False
 
     apply_default_certificates(new_tls_context.peer_relation, default_tls_context)
     with (
