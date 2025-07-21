@@ -30,26 +30,6 @@ class CassandraPaths:
         return self.config_dir / "cassandra.yaml"
 
     @property
-    def peer_truststore(self) -> pathops.PathProtocol:
-        """TODO."""
-        return self.tls_dir / f"{TLSScope.PEER.value}-truststore.jks"
-
-    @property
-    def peer_keystore(self) -> pathops.PathProtocol:
-        """TODO."""
-        return self.tls_dir / f"{TLSScope.PEER.value}-keystore.p12"
-
-    @property
-    def client_truststore(self) -> pathops.PathProtocol:
-        """TODO."""
-        return self.tls_dir / f"{TLSScope.CLIENT.value}-truststore.jks"
-
-    @property
-    def client_keystore(self) -> pathops.PathProtocol:
-        """TODO."""
-        return self.tls_dir / f"{TLSScope.CLIENT.value}-keystore.p12"
-
-    @property
     def commitlog_directory(self) -> pathops.PathProtocol:
         """Commitlog data directory."""
         return self.data_dir / "commitlog"
@@ -68,6 +48,14 @@ class CassandraPaths:
     def saved_caches_directory(self) -> pathops.PathProtocol:
         """Saved caches data directory."""
         return self.data_dir / "saved_caches"
+
+    def get_truststore(self, scope: TLSScope) -> pathops.PathProtocol:
+        """Get keystore path for the scope."""
+        return self.tls_dir / f"{scope.value}-truststore.jks"
+
+    def get_keystore(self, scope: TLSScope) -> pathops.PathProtocol:
+        """Get keystore path for the scope."""
+        return self.tls_dir / f"{scope.value}-keystore.p12"
 
 
 class WorkloadBase(ABC):
@@ -134,16 +122,6 @@ class WorkloadBase(ABC):
             String of 32 randomized letter+digit characters
         """
         return "".join([secrets.choice(string.ascii_letters + string.digits) for _ in range(32)])
-
-    @abstractmethod
-    def peer_tls_ready(self) -> bool:
-        """Whether Cassandra Peer TLS files are ready."""
-        pass
-
-    @abstractmethod
-    def client_tls_ready(self) -> bool:
-        """Whether Cassandra Client TLS files are ready."""
-        pass
 
     @property
     @abstractmethod

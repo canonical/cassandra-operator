@@ -88,7 +88,7 @@ class CassandraEvents(Object):
             return
 
         self.config_manager.render_cassandra_config(
-            cluster_name=self.charm.config.cluster_name,
+            cluster_name=self.state.cluster.cluster_name,
             listen_address=self.state.unit.ip,
             seeds=self.state.cluster.seeds,
             enable_peer_tls=self.state.unit.peer_tls.ready,
@@ -159,7 +159,7 @@ class CassandraEvents(Object):
         if not self.state.cluster.internal_ca:
             event.add_status(Status.WAITING_FOR_INTERNAL_TLS.value)
 
-        if self.state.cluster.tls_state and not self.workload.client_tls_ready:
+        if self.state.cluster.tls_state and not self.tls_manager.client_tls_ready:
             event.add_status(Status.WAITING_FOR_TLS.value)
 
         if (
@@ -232,16 +232,18 @@ class CassandraEvents(Object):
                 ca_key=self.state.cluster.internal_ca_key,
                 unit_key=self.state.unit.peer_tls.private_key,
                 common_name=self.state.unit.unit.name,
-                sans_ip=frozenset(sans["sans_ip"]),
-                sans_dns=frozenset(sans["sans_dns"]),
+                sans_ip=frozenset(sans.sans_ip),
+                sans_dns=frozenset(sans.sans_dns),
             )
 
-            self.state.unit.peer_tls.setup_provider_certificates(provider_crt)
+            self.state.unit.peer_tls.certificate = provider_crt.certificate
+            self.state.unit.peer_tls.csr = provider_crt.certificate_signing_request
+            self.state.unit.peer_tls.chain = provider_crt.chain
             self.state.unit.peer_tls.private_key = pk
             self.state.unit.peer_tls.ca = self.state.cluster.internal_ca
 
         self.tls_manager.configure(
-            self.state.unit.peer_tls.resolved(),
+            self.state.unit.peer_tls.resolved,
             keystore_password=self.state.unit.keystore_password,
             trust_password=self.state.unit.truststore_password,
         )

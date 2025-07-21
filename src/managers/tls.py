@@ -8,8 +8,8 @@ import ipaddress
 import logging
 import re
 import subprocess
+from dataclasses import dataclass
 from datetime import timedelta
-from typing import FrozenSet, List, Optional, Tuple, TypedDict
 
 from charms.tls_certificates_interface.v4.tls_certificates import (
     Certificate,
@@ -30,10 +30,16 @@ from core.workload import WorkloadBase
 
 logger = logging.getLogger(__name__)
 
-Sans = TypedDict("Sans", {"sans_ip": list[str], "sans_dns": list[str]})
-
 USER_NAME = "_daemon_"
 GROUP = "root"
+
+
+@dataclass
+class Sans:
+    """Sans IP and DNS names."""
+
+    sans_ip: list[str]
+    sans_dns: list[str]
 
 
 class TLSManager:
@@ -48,13 +54,24 @@ class TLSManager:
 
     def get_truststore_path(self, scope: TLSScope) -> str:
         """Return the truststore path for the given scope."""
-        return (self.workload.cassandra_paths.tls_dir / f"{scope.value}-truststore.jks").as_posix()
+        return self.workload.cassandra_paths.get_truststore(scope).as_posix()
 
     def get_keystore_path(self, scope: TLSScope) -> str:
         """Return the keystore path for the given scope."""
-        return (self.workload.cassandra_paths.tls_dir / f"{scope.value}-keystore.p12").as_posix()
+        return self.workload.cassandra_paths.get_keystore(scope).as_posix()
 
-    def build_sans(self, sans_dns: List[str], sans_ip: List[str]) -> Sans:
+    @property
+    def client_tls_ready(self) -> bool:
+        """Return the readiness of client TLS configuration files."""
+        return all(
+            self.workload.path_exists(f.as_posix())
+            for f in [
+                self.workload.cassandra_paths.get_truststore(TLSScope.CLIENT),
+                self.workload.cassandra_paths.get_keystore(TLSScope.CLIENT),
+            ]
+        )
+
+    def build_sans(self, sans_dns: list[str], sans_ip: list[str]) -> Sans:
         """Build a SANs dictionary from lists of DNS names and IP addresses.
 
         Args:
@@ -77,15 +94,15 @@ class TLSManager:
                 logger.error(f"Invalid IP address: {ip_str}, error: {e}")
                 continue
 
-        return {
-            "sans_ip": ip_addresses,
-            "sans_dns": dns_names,
-        }
+        return Sans(
+            sans_ip=ip_addresses,
+            sans_dns=dns_names,
+        )
 
     def generate_internal_ca(
         self,
         common_name: str,
-    ) -> Tuple[Certificate, PrivateKey]:
+    ) -> tuple[Certificate, PrivateKey]:
         """Set up internal CA to issue self-signed certificates for internal communications.
 
         Should only run on leader unit.
@@ -105,9 +122,9 @@ class TLSManager:
         ca_key: PrivateKey,
         unit_key: PrivateKey | None,
         common_name: str,
-        sans_ip: Optional[FrozenSet[str]],
-        sans_dns: Optional[FrozenSet[str]],
-    ) -> Tuple[ProviderCertificate, PrivateKey]:
+        sans_ip: frozenset[str] | None,
+        sans_dns: frozenset[str] | None,
+    ) -> tuple[ProviderCertificate, PrivateKey]:
         """Generate a ProviderCertificate and private key for internal use.
 
         Args:
@@ -151,8 +168,7 @@ class TLSManager:
 
     def set_ca(self, ca: Certificate, scope: TLSScope) -> None:
         """Write the CA certificate to the appropriate file for each scope."""
-        for scope in self.SCOPES:
-            (self.workload.cassandra_paths.tls_dir / f"{scope.value}-ca.pem").write_text(str(ca))
+        (self.workload.cassandra_paths.tls_dir / f"{scope.value}-ca.pem").write_text(str(ca))
 
     def set_certificate(self, crt: Certificate, scope: TLSScope) -> None:
         """Write the unit certificate to the appropriate file for each scope."""
@@ -161,30 +177,25 @@ class TLSManager:
                 str(crt)
             )
 
-    def set_bundle(self, ca_list: List[Certificate], scope: TLSScope) -> None:
+    def set_bundle(self, ca_list: list[Certificate], scope: TLSScope) -> None:
         """Write the bundle of certificates to a PEM file for each scope."""
         raw_list = [c.raw for c in ca_list]
-        for scope in self.SCOPES:
-            (self.workload.cassandra_paths.tls_dir / f"{scope.value}-bundle.pem").write_text(
-                str("\n".join(raw_list))
-            )
+        (self.workload.cassandra_paths.tls_dir / f"{scope.value}-bundle.pem").write_text(
+            str("\n".join(raw_list))
+        )
 
     def set_private_key(self, pk: PrivateKey, scope: TLSScope) -> None:
         """Write the private key to the appropriate file for each scope."""
-        for scope in self.SCOPES:
-            (self.workload.cassandra_paths.tls_dir / f"{scope.value}-private.key").write_text(
-                str(pk)
+        (self.workload.cassandra_paths.tls_dir / f"{scope.value}-private.key").write_text(str(pk))
+
+    def set_chain(self, ca_list: list[Certificate], scope: TLSScope) -> None:
+        """Write each certificate in the chain to a separate PEM file for each scope."""
+        for i, chain_cert in enumerate(ca_list):
+            (self.workload.cassandra_paths.tls_dir / f"{scope.value}-bundle{i}.pem").write_text(
+                str(chain_cert)
             )
 
-    def set_chain(self, ca_list: List[Certificate], scope: TLSScope) -> None:
-        """Write each certificate in the chain to a separate PEM file for each scope."""
-        for scope in self.SCOPES:
-            for i, chain_cert in enumerate(ca_list):
-                (
-                    self.workload.cassandra_paths.tls_dir / f"{scope.value}-bundle{i}.pem"
-                ).write_text(str(chain_cert))
-
-    def get_ca(self, scope: TLSScope) -> Optional[Certificate]:
+    def get_ca(self, scope: TLSScope) -> Certificate | None:
         """Read and return the CA certificate for the given scope, or None if not found."""
         try:
             return Certificate.from_string(
@@ -194,7 +205,7 @@ class TLSManager:
             logger.error(f"can not read CA certificate: {e}")
             return None
 
-    def get_certificate(self, scope: TLSScope) -> Optional[Certificate]:
+    def get_certificate(self, scope: TLSScope) -> Certificate | None:
         """Read and return the unit certificate for the given scope, or None if not found."""
         try:
             return Certificate.from_string(
@@ -204,7 +215,7 @@ class TLSManager:
             logger.error(f"can not read certificate {e}")
             return None
 
-    def get_private_key(self, scope: TLSScope) -> Optional[PrivateKey]:
+    def get_private_key(self, scope: TLSScope) -> PrivateKey | None:
         """Read and return the private key for the given scope.
 
         Or None if not found.
@@ -217,7 +228,7 @@ class TLSManager:
             logger.error(f"can not read private key: {e}")
             return None
 
-    def get_bundle(self, scope: TLSScope) -> List[Certificate]:
+    def get_bundle(self, scope: TLSScope) -> list[Certificate]:
         """Read and return a list of Certificate objects for the given scope.
 
         Args:

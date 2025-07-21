@@ -9,6 +9,7 @@ from typing import Iterable
 
 import yaml
 
+from core.state import TLSScope
 from core.workload import WorkloadBase
 
 logger = logging.getLogger(__name__)
@@ -23,11 +24,19 @@ class ConfigManager:
         cluster_name: str,
         listen_address: str,
         seeds: list[str],
+        enable_peer_tls: bool,
+        enable_client_tls: bool,
+        keystore_password: str | None,
+        truststore_password: str | None,
     ):
         self.workload = workload
         self.cluster_name = cluster_name
         self.listen_address = listen_address
         self.seeds = seeds
+        self.enable_peer_tls = enable_peer_tls
+        self.enable_client_tls = enable_client_tls
+        self.keystore_password = keystore_password
+        self.truststore_password = truststore_password
 
     def render_cassandra_config(
         self,
@@ -65,7 +74,6 @@ class ConfigManager:
             "inter_dc_tcp_nodelay": False,
             "internode_compression": "dc",
             "listen_address": listen_address or self.listen_address,
-            "broadcast_address": listen_address or self.listen_address,
             "memtable": {
                 "configurations": {
                     "default": {"inherits": "skiplist"},
@@ -83,7 +91,6 @@ class ConfigManager:
             },
             "role_manager": "CassandraRoleManager",
             "rpc_address": listen_address or self.listen_address,
-            "broadcast_rpc_address": listen_address or self.listen_address,
             "saved_caches_directory": (
                 self.workload.cassandra_paths.saved_caches_directory.as_posix()
             ),
@@ -97,27 +104,31 @@ class ConfigManager:
             "storage_port": 7000,
         }
 
-        if enable_peer_tls:
+        if enable_peer_tls or self.enable_peer_tls:
             config["server_encryption_options"] = {
                 "internode_encryption": "all",
-                "keystore": self.workload.cassandra_paths.peer_keystore.as_posix(),
-                "keystore_password": keystore_password,
-                "truststore": self.workload.cassandra_paths.peer_truststore.as_posix(),
-                "truststore_password": truststore_password,
+                "keystore": self.workload.cassandra_paths.get_keystore(TLSScope.PEER).as_posix(),
+                "keystore_password": keystore_password or self.keystore_password,
+                "truststore": self.workload.cassandra_paths.get_truststore(
+                    TLSScope.PEER
+                ).as_posix(),
+                "truststore_password": truststore_password or self.truststore_password,
                 "require_client_auth": True,
                 "algorithm": "SunX509",
                 "store_type": "JKS",
                 "protocol": "TLS",
             }
 
-        if enable_client_tls:
+        if enable_client_tls or self.enable_client_tls:
             config["client_encryption_options"] = {
                 "enabled": True,
                 "optional": False,
-                "keystore": self.workload.cassandra_paths.client_keystore.as_posix(),
-                "keystore_password": keystore_password,
-                "truststore": self.workload.cassandra_paths.client_truststore.as_posix(),
-                "truststore_password": truststore_password,
+                "keystore": self.workload.cassandra_paths.get_keystore(TLSScope.CLIENT).as_posix(),
+                "keystore_password": keystore_password or self.keystore_password,
+                "truststore": self.workload.cassandra_paths.get_truststore(
+                    TLSScope.CLIENT
+                ).as_posix(),
+                "truststore_password": truststore_password or self.truststore_password,
                 "require_client_auth": True,
                 "algorithm": "SunX509",
                 "store_type": "JKS",

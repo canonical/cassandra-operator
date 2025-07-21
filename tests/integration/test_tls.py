@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 
 TRUSTSTORE_PASSWORD = "truststore-password"
 KEYSTORE_PASSWORD = "keystore-password"
-CLIENT_CA_CERT = "client-ca-cert"
-PEER_CA_CERT = "peer-ca-cert"
+CLIENT_CA_CERT = "client-ca-cert-secret"
+PEER_CA_CERT = "peer-ca-cert-secret"
 
 TLS_NAME = "self-signed-certificates"
 

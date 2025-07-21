@@ -8,7 +8,6 @@ import json
 import logging
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import List, Optional
 
 from charms.data_platform_libs.v0.data_interfaces import (
     Data,
@@ -20,7 +19,6 @@ from charms.tls_certificates_interface.v4.tls_certificates import (
     Certificate,
     CertificateSigningRequest,
     PrivateKey,
-    ProviderCertificate,
 )
 from ops import Application, CharmBase, Object, Relation, Unit
 
@@ -31,21 +29,21 @@ CASSANDRA_PEER_PORT = 7000
 CASSANDRA_CLIENT_PORT = 9042
 
 SECRETS_UNIT = [
-    "truststore-password",
-    "keystore-password",
-    "client-ca-cert",
-    "client-certificate",
-    "client-chain",
-    "client-csr",
-    "client-private-key",
-    "peer-ca-cert",
-    "peer-certificate",
-    "peer-chain",
-    "peer-csr",
-    "peer-private-key",
+    "truststore-password-secret",
+    "keystore-password-secret",
+    "client-ca-cert-secret",
+    "client-certificate-secret",
+    "client-chain-secret",
+    "client-csr-secret",
+    "client-private-key-secret",
+    "peer-ca-cert-secret",
+    "peer-certificate-secret",
+    "peer-chain-secret",
+    "peer-csr-secret",
+    "peer-private-key-secret",
 ]
 
-SECRETS_APP = ["internal-ca", "internal-ca-key"]
+SECRETS_APP = ["internal-ca-secret", "internal-ca-key-secret"]
 
 
 logger = logging.getLogger(__name__)
@@ -139,25 +137,15 @@ class TLSContext(RelationState):
         self.scope = scope
         super().__init__(relation, data_interface, component)
 
-    def setup_provider_certificates(self, crts: ProviderCertificate) -> None:
-        """Set up certificate, CSR, and chain from a ProviderCertificate object.
-
-        Args:
-            crts: ProviderCertificate object containing certificate, CSR, and chain.
-        """
-        self.certificate = crts.certificate
-        self.csr = crts.certificate_signing_request
-        self.chain = crts.chain
-
     @property
-    def private_key(self) -> Optional[PrivateKey]:
+    def private_key(self) -> PrivateKey | None:
         """The unit private-key set during `certificates_joined`.
 
         Returns:
             String of key contents
             Empty if key not yet generated
         """
-        raw = self.relation_data.get(f"{self.scope.value}-private-key", "")
+        raw = self.relation_data.get(f"{self.scope.value}-private-key-secret", "")
         if not raw:
             return None
         return PrivateKey.from_string(raw)
@@ -165,18 +153,18 @@ class TLSContext(RelationState):
     @private_key.setter
     def private_key(self, value: PrivateKey | None) -> None:
         if not value:
-            return self._field_setter_wrapper(f"{self.scope.value}-private-key", "")
-        self._field_setter_wrapper(f"{self.scope.value}-private-key", value.raw)
+            return self._field_setter_wrapper(f"{self.scope.value}-private-key-secret", "")
+        self._field_setter_wrapper(f"{self.scope.value}-private-key-secret", value.raw)
 
     @property
-    def csr(self) -> Optional[CertificateSigningRequest]:
+    def csr(self) -> CertificateSigningRequest | None:
         """The unit cert signing request.
 
         Returns:
             String of csr contents
             Empty if csr not yet generated
         """
-        raw = self.relation_data.get(f"{self.scope.value}-csr", "")
+        raw = self.relation_data.get(f"{self.scope.value}-csr-secret", "")
         if not raw:
             return None
         return CertificateSigningRequest.from_string(raw)
@@ -184,13 +172,13 @@ class TLSContext(RelationState):
     @csr.setter
     def csr(self, value: CertificateSigningRequest | None) -> None:
         if not value:
-            return self._field_setter_wrapper(f"{self.scope.value}-csr", "")
-        self._field_setter_wrapper(f"{self.scope.value}-csr", value.raw)
+            return self._field_setter_wrapper(f"{self.scope.value}-csr-secret", "")
+        self._field_setter_wrapper(f"{self.scope.value}-csr-secret", value.raw)
 
     @property
-    def certificate(self) -> Optional[Certificate]:
+    def certificate(self) -> Certificate | None:
         """The signed unit certificate from the provider relation."""
-        raw = self.relation_data.get(f"{self.scope.value}-certificate", "")
+        raw = self.relation_data.get(f"{self.scope.value}-certificate-secret", "")
         if not raw:
             return None
         return Certificate.from_string(raw)
@@ -198,11 +186,11 @@ class TLSContext(RelationState):
     @certificate.setter
     def certificate(self, value: Certificate | None) -> None:
         if not value:
-            return self._field_setter_wrapper(f"{self.scope.value}-certificate", "")
-        self._field_setter_wrapper(f"{self.scope.value}-certificate", value.raw)
+            return self._field_setter_wrapper(f"{self.scope.value}-certificate-secret", "")
+        self._field_setter_wrapper(f"{self.scope.value}-certificate-secret", value.raw)
 
     @property
-    def ca(self) -> Optional[Certificate]:
+    def ca(self) -> Certificate | None:
         """The ca used to sign unit cert.
 
         Returns:
@@ -210,7 +198,7 @@ class TLSContext(RelationState):
             Empty if cert not yet generated/signed
         """
         # defaults to ca for backwards compatibility after field change introduced with secrets
-        raw = self.relation_data.get(f"{self.scope.value}-ca-cert", "")
+        raw = self.relation_data.get(f"{self.scope.value}-ca-cert-secret", "")
         if not raw:
             return None
 
@@ -219,28 +207,28 @@ class TLSContext(RelationState):
     @ca.setter
     def ca(self, value: Certificate | None) -> None:
         if not value:
-            return self._field_setter_wrapper(f"{self.scope.value}-ca-cert", "")
-        self._field_setter_wrapper(f"{self.scope.value}-ca-cert", value.raw)
+            return self._field_setter_wrapper(f"{self.scope.value}-ca-cert-secret", "")
+        self._field_setter_wrapper(f"{self.scope.value}-ca-cert-secret", value.raw)
 
     @property
-    def chain(self) -> List[Certificate]:
+    def chain(self) -> list[Certificate]:
         """The chain used to sign the unit cert."""
-        raw = self.relation_data.get(f"{self.scope.value}-chain")
+        raw = self.relation_data.get(f"{self.scope.value}-chain-secret")
         if not raw:
             return []
         return [Certificate.from_string(c) for c in json.loads(raw)]
 
     @chain.setter
-    def chain(self, value: List[Certificate]) -> None:
+    def chain(self, value: list[Certificate]) -> None:
         """Set the chain used to sign the unit cert."""
         if len(value) == 0:
-            return self._field_setter_wrapper(f"{self.scope.value}-chain", "")
+            return self._field_setter_wrapper(f"{self.scope.value}-chain-secret", "")
         self._field_setter_wrapper(
-            f"{self.scope.value}-chain", json.dumps([str(c) for c in value])
+            f"{self.scope.value}-chain-secret", json.dumps([str(c) for c in value])
         )
 
     @property
-    def bundle(self) -> List[Certificate]:
+    def bundle(self) -> list[Certificate]:
         """The cert bundle used for TLS identity."""
         if not all([self.certificate, self.ca]):
             return []
@@ -266,6 +254,7 @@ class TLSContext(RelationState):
         """Returns True if all the necessary TLS relation data has been set, False otherwise."""
         return all([self.certificate, self.ca, self.private_key])
 
+    @property
     def resolved(self) -> ResolvedTLSContext:
         """Return a ResolvedTLSContext if all required TLS fields are present.
 
@@ -364,7 +353,7 @@ class UnitContext(RelationState):
             String of password
             None if password not yet generated
         """
-        return self.relation_data.get("keystore-password", "")
+        return self.relation_data.get("keystore-password-secret", "")
 
     @property
     def truststore_password(self) -> str:
@@ -374,7 +363,7 @@ class UnitContext(RelationState):
             String of password
             None if password not yet generated
         """
-        return self.relation_data.get("truststore-password", "")
+        return self.relation_data.get("truststore-password-secret", "")
 
     @keystore_password.setter
     def keystore_password(self, value: str) -> None:
@@ -384,7 +373,7 @@ class UnitContext(RelationState):
             String of password
             None if password not yet generated
         """
-        self._field_setter_wrapper("keystore-password", value)
+        self._field_setter_wrapper("keystore-password-secret", value)
 
     @truststore_password.setter
     def truststore_password(self, value: str) -> None:
@@ -394,7 +383,7 @@ class UnitContext(RelationState):
             String of password
             None if password not yet generated
         """
-        self._field_setter_wrapper("truststore-password", value)
+        self._field_setter_wrapper("truststore-password-secret", value)
 
 
 class ClusterContext(RelationState):
@@ -458,7 +447,7 @@ class ClusterContext(RelationState):
     @property
     def internal_ca(self) -> Certificate | None:
         """The internal CA certificate used for the peer relations."""
-        ca = self.relation_data.get("internal-ca", "")
+        ca = self.relation_data.get("internal-ca-secret", "")
         ca_key = self.internal_ca_key
 
         if ca_key is None or not ca:
@@ -468,19 +457,19 @@ class ClusterContext(RelationState):
 
     @internal_ca.setter
     def internal_ca(self, value: Certificate) -> None:
-        self._field_setter_wrapper("internal-ca", str(value))
+        self._field_setter_wrapper("internal-ca-secret", str(value))
 
     @property
     def internal_ca_key(self) -> PrivateKey | None:
         """The private key of internal CA certificate used for the peer relations."""
-        if not (ca_key := self.relation_data.get("internal-ca-key", "")):
+        if not (ca_key := self.relation_data.get("internal-ca-key-secret", "")):
             return None
 
         return PrivateKey.from_string(ca_key)
 
     @internal_ca_key.setter
     def internal_ca_key(self, value: PrivateKey) -> None:
-        self._field_setter_wrapper("internal-ca-key", str(value))
+        self._field_setter_wrapper("internal-ca-key-secret", str(value))
 
 
 class ApplicationState(Object):

@@ -27,7 +27,7 @@ from charms.tls_certificates_interface.v4.tls_certificates import (
 
 from core.state import ResolvedTLSContext, TLSContext, TLSScope
 from core.workload import CassandraPaths, WorkloadBase
-from managers.tls import TLSManager
+from managers.tls import Sans, TLSManager
 
 logger = logging.getLogger(__name__)
 
@@ -231,7 +231,7 @@ def test_tls_manager_set_methods(
 
     caplog.set_level(logging.DEBUG)
 
-    _tls_manager_set_everything(tls_manager, peer_tls_context.resolved())
+    _tls_manager_set_everything(tls_manager, peer_tls_context.resolved)
 
     tls_dir = tls_manager.workload.cassandra_paths.tls_dir
 
@@ -248,7 +248,7 @@ def test_tls_manager_set_methods(
 
     caplog.set_level(logging.DEBUG)
 
-    _tls_manager_set_everything(tls_manager, client_tls_context.resolved())
+    _tls_manager_set_everything(tls_manager, client_tls_context.resolved)
 
     assert (tls_dir / "client-unit.pem").read_text() == client_tls_artifacts.certificate.raw
     assert (tls_dir / "client-ca.pem").read_text() == client_tls_artifacts.ca.raw
@@ -271,10 +271,7 @@ def test_tls_manager_sans(
         with_intermediate=with_intermediate,
     )
     tls_context = _get_tls_context(tls_artifacts, TLSScope.CLIENT)
-    _tls_manager_set_everything(tls_manager, tls_context.resolved())
-    current_sans = {
-        "sans_ip": [INTERNAL_ADDRESS],
-        "sans_dns": [UNIT_NAME],
-    }
+    _tls_manager_set_everything(tls_manager, tls_context.resolved)
+    current_sans = Sans(sans_ip=[INTERNAL_ADDRESS], sans_dns=[UNIT_NAME])
     expected_sans = tls_manager.build_sans(sans_ip=[INTERNAL_ADDRESS], sans_dns=[UNIT_NAME])
     assert expected_sans == current_sans

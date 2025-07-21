@@ -129,15 +129,17 @@ def default_certificate_context(ctx: Context[CassandraCharm]) -> DefaultCertific
 
 def apply_default_certificates(relation: PeerRelation, default_crts: DefaultCertificateContext):
     unit_secret = {
-        "peer-private-key": default_crts.default_requirer_private_key.raw,
-        "peer-ca-cert": default_crts.default_provider_ca_crt.raw,
-        "peer-certificate": default_crts.default_peer_crt.raw,
-        "peer-csr": default_crts.default_peer_csr.raw,
-        "peer-chain": json.dumps([str(c) for c in default_crts.default_peer_provider_crt.chain]),
+        "peer-private-key-secret": default_crts.default_requirer_private_key.raw,
+        "peer-ca-cert-secret": default_crts.default_provider_ca_crt.raw,
+        "peer-certificate-secret": default_crts.default_peer_crt.raw,
+        "peer-csr-secret": default_crts.default_peer_csr.raw,
+        "peer-chain-secret": json.dumps(
+            [str(c) for c in default_crts.default_peer_provider_crt.chain]
+        ),
     }
     app_secret = {
-        "internal-ca": default_crts.default_provider_ca_crt.raw,
-        "internal-ca-key": default_crts.default_provider_pk.raw,
+        "internal-ca-secret": default_crts.default_provider_ca_crt.raw,
+        "internal-ca-key-secret": default_crts.default_provider_pk.raw,
     }
     relation.local_unit_data.update(unit_secret)
     relation.local_app_data.update(app_secret)
@@ -145,20 +147,20 @@ def apply_default_certificates(relation: PeerRelation, default_crts: DefaultCert
 
 def apply_available_certificates(relation: PeerRelation, new_crts: CertificateAvailableContext):
     unit_secret = {
-        "peer-private-key": new_crts.requirer_private_key.raw,
-        "peer-ca-cert": new_crts.provider_ca_crt.raw,
-        "peer-certificate": new_crts.peer_crt.raw,
-        "peer-csr": new_crts.peer_csr.raw,
-        "peer-chain": json.dumps([str(c) for c in new_crts.peer_provider_crt.chain]),
-        "client-private-key": new_crts.requirer_private_key.raw,
-        "client-ca-cert": new_crts.provider_ca_crt.raw,
-        "client-certificate": new_crts.client_crt.raw,
-        "client-csr": new_crts.client_csr.raw,
-        "client-chain": json.dumps([str(c) for c in new_crts.client_provider_crt.chain]),
+        "peer-private-key-secret": new_crts.requirer_private_key.raw,
+        "peer-ca-cert-secret": new_crts.provider_ca_crt.raw,
+        "peer-certificate-secret": new_crts.peer_crt.raw,
+        "peer-csr-secret": new_crts.peer_csr.raw,
+        "peer-chain-secret": json.dumps([str(c) for c in new_crts.peer_provider_crt.chain]),
+        "client-private-key-secret": new_crts.requirer_private_key.raw,
+        "client-ca-cert-secret-secret": new_crts.provider_ca_crt.raw,
+        "client-certificate-secret": new_crts.client_crt.raw,
+        "client-csr-secret": new_crts.client_csr.raw,
+        "client-chain-secret": json.dumps([str(c) for c in new_crts.client_provider_crt.chain]),
     }
     app_secret = {
-        "internal-ca": new_crts.provider_ca_crt.raw,
-        "internal-ca-key": new_crts.provider_pk.raw,
+        "internal-ca-secret": new_crts.provider_ca_crt.raw,
+        "internal-ca-key-secret": new_crts.provider_pk.raw,
     }
     relation.local_unit_data.update(unit_secret)
     relation.local_app_data.update(app_secret)
@@ -345,12 +347,15 @@ def test_tls_enabled_but_not_ready_sets_waiting_status(ctx, is_leader):
             new_callable=PropertyMock(return_value="truststore_password"),
         ),
         patch("managers.tls.TLSManager.configure"),
-        patch("charm.CassandraWorkload") as workload,
+        patch(
+            "managers.tls.TLSManager.client_tls_ready",
+            new_callable=PropertyMock(return_value=False),
+        ),
+        patch("charm.CassandraWorkload"),
         patch(
             "core.state.ClusterContext.tls_state", new_callable=PropertyMock(return_value="active")
         ),
     ):
-        workload.return_value.client_tls_ready = False
         state_out = ctx.run(
             ctx.on.relation_created(default_tls_context.client_tls_relation), state_in
         )
@@ -403,17 +408,17 @@ def test_tls_default_certificates_files_setup(ctx):
             state_out.secrets, "cassandra-peers.cassandra.app", "application"
         )
 
-        assert "internal-ca" in latest_content
-        assert "internal-ca-key" in latest_content
+        assert "internal-ca-secret" in latest_content
+        assert "internal-ca-key-secret" in latest_content
         latest_content = get_secrets_latest_content_by_label(
             state_out.secrets, "cassandra-peers.cassandra.unit", "unit"
         )
 
-        assert "peer-ca-cert" in latest_content
-        assert "peer-private-key" in latest_content
-        assert "peer-chain" in latest_content
-        assert "peer-csr" in latest_content
-        assert "peer-certificate" in latest_content
+        assert "peer-ca-cert-secret" in latest_content
+        assert "peer-private-key-secret" in latest_content
+        assert "peer-chain-secret" in latest_content
+        assert "peer-csr-secret" in latest_content
+        assert "peer-certificate-secret" in latest_content
         assert state_out.unit_status == ops.ActiveStatus()
 
     default_tls_context = default_certificate_context(ctx)
@@ -461,11 +466,11 @@ def test_tls_default_certificates_files_setup(ctx):
         latest_content = get_secrets_latest_content_by_label(
             state_out.secrets, "cassandra-peers.cassandra.unit", "unit"
         )
-        assert "peer-ca-cert" in latest_content
-        assert "peer-private-key" in latest_content
-        assert "peer-chain" in latest_content
-        assert "peer-csr" in latest_content
-        assert "peer-certificate" in latest_content
+        assert "peer-ca-cert-secret" in latest_content
+        assert "peer-private-key-secret" in latest_content
+        assert "peer-chain-secret" in latest_content
+        assert "peer-csr-secret" in latest_content
+        assert "peer-certificate-secret" in latest_content
         assert state_out.unit_status == ops.ActiveStatus()
 
 

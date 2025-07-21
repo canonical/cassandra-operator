@@ -71,8 +71,8 @@ class TLSEvents(Object):
             certificate_requests=[
                 CertificateRequestAttributes(
                     common_name=self.common_name,
-                    sans_ip=frozenset(self.sans["sans_ip"]),
-                    sans_dns=frozenset(self.sans["sans_dns"]),
+                    sans_ip=frozenset(self.sans.sans_ip),
+                    sans_dns=frozenset(self.sans.sans_dns),
                     organization=TLSScope.CLIENT.value,
                 ),
             ],
@@ -86,8 +86,8 @@ class TLSEvents(Object):
             certificate_requests=[
                 CertificateRequestAttributes(
                     common_name=self.common_name,
-                    sans_ip=frozenset(self.sans["sans_ip"]),
-                    sans_dns=frozenset(self.sans["sans_dns"]),
+                    sans_ip=frozenset(self.sans.sans_ip),
+                    sans_dns=frozenset(self.sans.sans_dns),
                     organization=TLSScope.PEER.value,
                 ),
             ],
@@ -173,7 +173,7 @@ class TLSEvents(Object):
 
         self.tls_manager.remove_stores(scope=tls_state.scope)
         self.tls_manager.configure(
-            tls_state.resolved(),
+            tls_state.resolved,
             keystore_password=self.state.unit.keystore_password,
             trust_password=self.state.unit.truststore_password,
         )
@@ -226,16 +226,18 @@ class TLSEvents(Object):
                 ca_key=self.state.cluster.internal_ca_key,
                 unit_key=self.state.unit.peer_tls.private_key,
                 common_name=self.state.unit.unit.name,
-                sans_ip=frozenset(self.sans["sans_ip"]),
-                sans_dns=frozenset(self.sans["sans_dns"]),
+                sans_ip=frozenset(self.sans.sans_ip),
+                sans_dns=frozenset(self.sans.sans_dns),
             )
 
-            self.state.unit.peer_tls.setup_provider_certificates(provider_crt)
+            self.state.unit.peer_tls.certificate = provider_crt.certificate
+            self.state.unit.peer_tls.csr = provider_crt.certificate_signing_request
+            self.state.unit.peer_tls.chain = provider_crt.chain
             self.state.unit.peer_tls.private_key = pk
             self.state.unit.peer_tls.ca = self.state.cluster.internal_ca
 
         self.tls_manager.configure(
-            self.state.unit.peer_tls.resolved(),
+            self.state.unit.peer_tls.resolved,
             keystore_password=self.state.unit.keystore_password,
             trust_password=self.state.unit.truststore_password,
         )

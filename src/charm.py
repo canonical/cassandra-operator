@@ -41,6 +41,10 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             cluster_name=self.state.cluster.cluster_name,
             listen_address=self.state.unit.ip,
             seeds=self.state.cluster.seeds,
+            enable_peer_tls=False,
+            enable_client_tls=False,
+            keystore_password=self.state.unit.keystore_password,
+            truststore_password=self.state.unit.truststore_password,
         )
         bootstrap_manager = RollingOpsManager(
             charm=self, relation="bootstrap", callback=self.bootstrap
