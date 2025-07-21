@@ -17,7 +17,7 @@ from events.cassandra import CassandraEvents
 from events.tls import TLSEvents
 from managers.cluster import ClusterManager
 from managers.config import ConfigManager
-from managers.tls import TLSManager
+from managers.tls import Sans, TLSManager
 from workload import CassandraWorkload
 
 logger = logging.getLogger(__name__)
@@ -58,6 +58,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             config_manager=config_manager,
             bootstrap_manager=bootstrap_manager,
             tls_manager=self.tls_manager,
+            configure_certificates=self.configure_internal_certificates,
         )
 
         self.tls_events = TLSEvents(
@@ -66,6 +67,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             workload=self.workload,
             cluster_manager=self.cluster_manager,
             tls_manager=self.tls_manager,
+            configure_certificates=self.configure_internal_certificates,
         )
 
     def bootstrap(self, event: RunWithLock) -> None:
@@ -83,6 +85,58 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
                 return
 
         raise Exception("bootstrap timeout exceeded")
+
+    def configure_internal_certificates(self, sans: Sans) -> bool:
+        """Configure internal TLS certificates for the current unit using an internally managed CA.
+
+        Args:
+            sans (Sans): Subject Alternative Names to include in the generated certificate.
+
+        Returns:
+            bool: True if the internal certificates were successfully configured, False otherwise.
+        """
+        if not self.workload.installed:
+            logger.warning("Workload is not yet installed")
+            return False
+
+        if not self.state.unit.peer_tls.ready and not self.state.cluster.internal_ca:
+            if not self.unit.is_leader():
+                return False
+
+            ca, pk = self.tls_manager.generate_internal_ca(
+                common_name=self.state.unit.unit.app.name
+            )
+
+            self.state.cluster.internal_ca = ca
+            self.state.cluster.internal_ca_key = pk
+
+        if not self.state.cluster.internal_ca or not self.state.cluster.internal_ca_key:
+            logger.warning("Internal CA is not ready yet")
+            return False
+
+        if not self.state.unit.peer_tls.ready:
+            provider_crt, pk = self.tls_manager.generate_internal_credentials(
+                ca=self.state.cluster.internal_ca,
+                ca_key=self.state.cluster.internal_ca_key,
+                unit_key=self.state.unit.peer_tls.private_key,
+                common_name=self.state.unit.unit.name,
+                sans_ip=frozenset(sans.sans_ip),
+                sans_dns=frozenset(sans.sans_dns),
+            )
+
+            self.state.unit.peer_tls.certificate = provider_crt.certificate
+            self.state.unit.peer_tls.csr = provider_crt.certificate_signing_request
+            self.state.unit.peer_tls.chain = provider_crt.chain
+            self.state.unit.peer_tls.private_key = pk
+            self.state.unit.peer_tls.ca = self.state.cluster.internal_ca
+
+        self.tls_manager.configure(
+            self.state.unit.peer_tls.resolved,
+            keystore_password=self.state.unit.keystore_password,
+            trust_password=self.state.unit.truststore_password,
+        )
+
+        return True
 
 
 if __name__ == "__main__":  # pragma: nocover

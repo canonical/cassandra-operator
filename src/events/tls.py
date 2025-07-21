@@ -5,6 +5,7 @@
 """TLS event handling and related logic for the charm."""
 
 import logging
+from typing import Callable
 
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from charms.tls_certificates_interface.v4.tls_certificates import (
@@ -26,7 +27,7 @@ from core.state import (
 )
 from core.workload import WorkloadBase
 from managers.cluster import ClusterManager
-from managers.tls import TLSManager
+from managers.tls import Sans, TLSManager
 
 logger = logging.getLogger(__name__)
 
@@ -47,12 +48,14 @@ class TLSEvents(Object):
         workload: WorkloadBase,
         cluster_manager: ClusterManager,
         tls_manager: TLSManager,
+        configure_certificates: Callable[[Sans], bool],
     ):
         super().__init__(charm, key="tls_events")
         self.charm = charm
         self.state = state
         self.workload = workload
         self.tls_manager = tls_manager
+        self.configure_certificates = configure_certificates
 
         host_mapping = cluster_manager.network_address()
         self.sans = self.tls_manager.build_sans(
@@ -204,43 +207,9 @@ class TLSEvents(Object):
             return
 
         # switch back to internal TLS
-        if is_leader and not self.state.cluster.internal_ca:
-            ca, pk = self.tls_manager.generate_internal_ca(
-                common_name=self.state.unit.unit.app.name,
-            )
-
-            self.state.cluster.internal_ca = ca
-            self.state.cluster.internal_ca_key = pk
-
-        if not self.state.cluster.internal_ca or not self.state.cluster.internal_ca_key:
-            logger.debug(
-                "Deferring _tls_relation_broken for unit \
-               due to cluster internal CA's isn't initialized yet"
-            )
+        if not self.configure_certificates(self.sans):
             event.defer()
             return
-
-        if not self.state.unit.peer_tls.ready:
-            provider_crt, pk = self.tls_manager.generate_internal_credentials(
-                ca=self.state.cluster.internal_ca,
-                ca_key=self.state.cluster.internal_ca_key,
-                unit_key=self.state.unit.peer_tls.private_key,
-                common_name=self.state.unit.unit.name,
-                sans_ip=frozenset(self.sans.sans_ip),
-                sans_dns=frozenset(self.sans.sans_dns),
-            )
-
-            self.state.unit.peer_tls.certificate = provider_crt.certificate
-            self.state.unit.peer_tls.csr = provider_crt.certificate_signing_request
-            self.state.unit.peer_tls.chain = provider_crt.chain
-            self.state.unit.peer_tls.private_key = pk
-            self.state.unit.peer_tls.ca = self.state.cluster.internal_ca
-
-        self.tls_manager.configure(
-            self.state.unit.peer_tls.resolved,
-            keystore_password=self.state.unit.keystore_password,
-            trust_password=self.state.unit.truststore_password,
-        )
 
         state.rotation = True
         self.charm.on.config_changed.emit()

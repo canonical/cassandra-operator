@@ -5,6 +5,7 @@
 """Handler for main Cassandra charm events."""
 
 import logging
+from typing import Callable
 
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from charms.rolling_ops.v0.rollingops import RollingOpsManager
@@ -25,7 +26,7 @@ from core.statuses import Status
 from core.workload import WorkloadBase
 from managers.cluster import ClusterManager
 from managers.config import ConfigManager
-from managers.tls import TLSManager
+from managers.tls import Sans, TLSManager
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +43,7 @@ class CassandraEvents(Object):
         config_manager: ConfigManager,
         bootstrap_manager: RollingOpsManager,
         tls_manager: TLSManager,
+        configure_certificates: Callable[[Sans], bool],
     ):
         super().__init__(charm, key="cassandra_events")
         self.charm = charm
@@ -51,6 +53,7 @@ class CassandraEvents(Object):
         self.config_manager = config_manager
         self.bootstrap_manager = bootstrap_manager
         self.tls_manager = tls_manager
+        self.configure_certificates = configure_certificates
 
         self.framework.observe(self.charm.on.start, self._on_start)
         self.framework.observe(self.charm.on.install, self._on_install)
@@ -71,7 +74,13 @@ class CassandraEvents(Object):
             event.defer()
             return
 
-        if not self._check_and_set_certificates():
+        host_mapping = self.cluster_manager.network_address()
+        sans = self.tls_manager.build_sans(
+            sans_ip=[host_mapping[0]],
+            sans_dns=[host_mapping[1], self.charm.unit.name],
+        )
+
+        if not self.configure_certificates(sans):
             event.defer()
             return
 
@@ -199,56 +208,6 @@ class CassandraEvents(Object):
             and old_hostname is not None
             and (old_ip != self.state.unit.ip or old_hostname != self.state.unit.hostname)
         )
-
-    def _check_and_set_certificates(self) -> bool:
-        if not self.workload.installed:
-            logger.warning("Workload is not yet installed")
-            return False
-
-        if not self.state.unit.peer_tls.ready and not self.state.cluster.internal_ca:
-            if not self.charm.unit.is_leader():
-                return False
-
-            ca, pk = self.tls_manager.generate_internal_ca(
-                common_name=self.state.unit.unit.app.name
-            )
-
-            self.state.cluster.internal_ca = ca
-            self.state.cluster.internal_ca_key = pk
-
-        host_mapping = self.cluster_manager.network_address()
-        sans = self.tls_manager.build_sans(
-            sans_ip=[host_mapping[0]],
-            sans_dns=[host_mapping[1], self.charm.unit.name],
-        )
-
-        if not self.state.cluster.internal_ca or not self.state.cluster.internal_ca_key:
-            logger.warning("Internal CA is not ready yet")
-            return False
-
-        if not self.state.unit.peer_tls.ready:
-            provider_crt, pk = self.tls_manager.generate_internal_credentials(
-                ca=self.state.cluster.internal_ca,
-                ca_key=self.state.cluster.internal_ca_key,
-                unit_key=self.state.unit.peer_tls.private_key,
-                common_name=self.state.unit.unit.name,
-                sans_ip=frozenset(sans.sans_ip),
-                sans_dns=frozenset(sans.sans_dns),
-            )
-
-            self.state.unit.peer_tls.certificate = provider_crt.certificate
-            self.state.unit.peer_tls.csr = provider_crt.certificate_signing_request
-            self.state.unit.peer_tls.chain = provider_crt.chain
-            self.state.unit.peer_tls.private_key = pk
-            self.state.unit.peer_tls.ca = self.state.cluster.internal_ca
-
-        self.tls_manager.configure(
-            self.state.unit.peer_tls.resolved,
-            keystore_password=self.state.unit.keystore_password,
-            trust_password=self.state.unit.truststore_password,
-        )
-
-        return True
 
     @property
     def _cassandra(self) -> CassandraClient:
