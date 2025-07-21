@@ -24,7 +24,7 @@ def test_start_leader():
     with (
         patch("managers.config.ConfigManager.render_env") as render_env,
         patch("managers.config.ConfigManager.render_cassandra_config") as render_cassandra_config,
-        patch("events.cassandra.CassandraEvents._check_and_set_certificates", return_value=True),
+        patch("charm.CassandraCharm.configure_internal_certificates", return_value=True),
         patch(
             "core.state.UnitContext.keystore_password",
             new_callable=PropertyMock(return_value="keystore_password"),
@@ -58,7 +58,7 @@ def test_start_subordinate_only_after_leader_active():
     with (
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
-        patch("events.cassandra.CassandraEvents._check_and_set_certificates", return_value=True),
+        patch("charm.CassandraCharm.configure_internal_certificates", return_value=True),
         patch(
             "core.state.UnitContext.keystore_password",
             new_callable=PropertyMock(return_value="keystore_password"),
@@ -93,7 +93,7 @@ def test_start_invalid_config():
     with (
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
-        patch("events.cassandra.CassandraEvents._check_and_set_certificates", return_value=True),
+        patch("charm.CassandraCharm.configure_internal_certificates", return_value=True),
         patch(
             "core.state.UnitContext.keystore_password",
             new_callable=PropertyMock(return_value="keystore_password"),
@@ -125,7 +125,7 @@ def test_config_changed_invalid_config():
     with (
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
-        patch("events.cassandra.CassandraEvents._check_and_set_certificates", return_value=True),
+        patch("charm.CassandraCharm.configure_internal_certificates", return_value=True),
         patch(
             "core.state.UnitContext.keystore_password",
             new_callable=PropertyMock(return_value="keystore_password"),
@@ -150,7 +150,7 @@ def test_config_changed():
         patch("managers.config.ConfigManager.render_env") as render_env,
         patch("managers.config.ConfigManager.render_cassandra_config") as render_cassandra_config,
         patch("charm.CassandraWorkload") as workload,
-        patch("events.cassandra.CassandraEvents._check_and_set_certificates", return_value=True),
+        patch("charm.CassandraCharm.configure_internal_certificates", return_value=True),
         patch(
             "core.state.UnitContext.keystore_password",
             new_callable=PropertyMock(return_value="keystore_password"),
