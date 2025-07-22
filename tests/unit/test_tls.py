@@ -27,7 +27,6 @@ from ops.testing import Context, PeerRelation, Secret
 
 from charm import CassandraCharm
 from core.state import CLIENT_TLS_RELATION, PEER_RELATION, PEER_TLS_RELATION, TLSScope
-from workload import CassandraWorkload
 
 BOOTSTRAP_RELATION = "bootstrap"
 TLS_NAME = "self-signed-certificates"
@@ -284,7 +283,6 @@ def test_tls_relation_broken_resets_certificates_and_triggers_config(ctx, is_lea
         leader=is_leader,
     )
     with (
-        patch.object(CassandraWorkload, "installed", True),
         new_tls_context.context(
             new_tls_context.context.on.relation_broken(new_tls_context.peer_tls_relation),
             state=state_in,
@@ -338,7 +336,6 @@ def test_tls_enabled_but_not_ready_sets_waiting_status(ctx, is_leader):
         leader=is_leader,
     )
     with (
-        patch.object(CassandraWorkload, "installed", True),
         patch("charm.CassandraWorkload"),
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
@@ -389,7 +386,6 @@ def test_tls_default_certificates_files_setup(ctx):
         leader=True,
     )
     with (
-        patch.object(CassandraWorkload, "installed", True),
         patch("charm.CassandraWorkload"),
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
@@ -438,7 +434,6 @@ def test_tls_default_certificates_files_setup(ctx):
     default_tls_context.peer_relation.local_app_data.update({"cluster_state": "active"})
     default_tls_context.peer_relation.local_unit_data.update({"workload_state": "active"})
     with (
-        patch.object(CassandraWorkload, "installed", True),
         patch("charm.CassandraWorkload"),
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
@@ -507,8 +502,7 @@ def test_tls_certificate_available_event_triggers_config_and_rotation(ctx, is_le
 
     apply_default_certificates(new_tls_context.peer_relation, default_tls_context)
     with (
-        patch.object(CassandraWorkload, "installed", True),
-        patch("charm.CassandraWorkload") as workload,
+        patch("charm.CassandraWorkload"),
         patch(
             "core.state.UnitContext.keystore_password",
             new_callable=PropertyMock(return_value="keystore_password"),
@@ -530,7 +524,6 @@ def test_tls_certificate_available_event_triggers_config_and_rotation(ctx, is_le
         patch("managers.config.ConfigManager.render_cassandra_config"),
         patch("managers.tls.TLSManager.configure"),
     ):
-        workload.return_value.installed = True
         charm: CassandraCharm = manager.charm
         config_changed_observer = TLSObserver(charm)
         charm.framework.observe(charm.on.config_changed, config_changed_observer.handler)
@@ -555,8 +548,7 @@ def test_tls_certificate_available_event_triggers_config_and_rotation(ctx, is_le
 
     apply_default_certificates(new_tls_context.peer_relation, default_tls_context)
     with (
-        patch.object(CassandraWorkload, "installed", True),
-        patch("charm.CassandraWorkload") as workload,
+        patch("charm.CassandraWorkload"),
         patch(
             "core.state.UnitContext.keystore_password",
             new_callable=PropertyMock(return_value="keystore_password"),
@@ -578,7 +570,6 @@ def test_tls_certificate_available_event_triggers_config_and_rotation(ctx, is_le
         patch("managers.config.ConfigManager.render_cassandra_config"),
         patch("managers.tls.TLSManager.configure"),
     ):
-        workload.return_value.installed = True
         charm: CassandraCharm = manager.charm
         config_changed_observer = TLSObserver(charm)
         charm.framework.observe(charm.on.config_changed, config_changed_observer.handler)

@@ -129,11 +129,6 @@ class TLSEvents(Object):
             event.defer()
             return
 
-        if not self.workload.installed:
-            logger.warning("Workload is not yet installed")
-            event.defer()
-            return
-
         self._handle_certificate_available_event(event, self.peer_certificate)
         self.charm.on.config_changed.emit()
 
@@ -144,11 +139,6 @@ class TLSEvents(Object):
         """
         if not self.state.peer_relation:
             logger.warning("No peer relation on certificate available")
-            event.defer()
-            return
-
-        if not self.workload.installed:
-            logger.warning("Workload is not yet installed")
             event.defer()
             return
 

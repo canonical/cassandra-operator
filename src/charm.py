@@ -95,10 +95,6 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         Returns:
             bool: True if the internal certificates were successfully configured, False otherwise.
         """
-        if not self.workload.installed:
-            logger.warning("Workload is not yet installed")
-            return False
-
         if not self.state.unit.peer_tls.ready and not self.state.cluster.internal_ca:
             if not self.unit.is_leader():
                 return False

@@ -138,8 +138,3 @@ class CassandraWorkload(WorkloadBase):
             logger.debug("STDOUT: %s", stdout)
             logger.debug("STDERR: %s", stderr)
             raise ExecError(stdout, stderr)
-
-    @property
-    @override
-    def installed(self) -> bool:
-        return self._cassandra_snap.present
