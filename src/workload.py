@@ -16,6 +16,8 @@ from common.exceptions import ExecError
 from core.workload import CassandraPaths, WorkloadBase
 
 SNAP_VAR_PATH = "/var/snap/charmed-cassandra"
+SNAP_PATH = "/snap/charmed-cassandra"
+SNAP_CURRENT_PATH = f"{SNAP_PATH}/current"
 SNAP_VAR_COMMON_PATH = f"{SNAP_VAR_PATH}/common"
 SNAP_VAR_CURRENT_PATH = f"{SNAP_VAR_PATH}/current"
 
@@ -38,6 +40,8 @@ class CassandraWorkload(WorkloadBase):
         self.cassandra_paths.env = self.root / "/etc/environment"
         self.cassandra_paths.config_dir = self.root / f"{SNAP_VAR_CURRENT_PATH}/etc/cassandra"
         self.cassandra_paths.data_dir = self.root / f"{SNAP_VAR_COMMON_PATH}/var/lib/cassandra"
+
+        self.cassandra_paths.lib_dir = self.root / f"{SNAP_CURRENT_PATH}/opt/cassandra/lib"
 
         self._cassandra_snap = snap.SnapCache()[SNAP_NAME]
 

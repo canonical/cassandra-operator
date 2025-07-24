@@ -19,7 +19,7 @@ from ops import (
 from pydantic import ValidationError
 
 from core.config import CharmConfig
-from core.state import ApplicationState, UnitWorkloadState
+from core.state import JMX_EXPORTER_PORT, ApplicationState, UnitWorkloadState
 from core.statuses import Status
 from core.workload import WorkloadBase
 from managers.cluster import ClusterManager
@@ -72,7 +72,8 @@ class CassandraEvents(Object):
                 self.state.cluster.cluster_name = self.charm.config.cluster_name
                 self.state.cluster.seeds = [self.state.unit.peer_url]
             self.config_manager.render_env(
-                cassandra_limit_memory_mb=1024 if self.charm.config.profile == "testing" else None
+                cassandra_limit_memory_mb=1024 if self.charm.config.profile == "testing" else None,
+                jmx_exporter_port=JMX_EXPORTER_PORT,
             )
         except ValidationError as e:
             logger.debug(f"Config haven't passed validation: {e}")
@@ -91,7 +92,8 @@ class CassandraEvents(Object):
         try:
             # TODO: cluster_name change
             self.config_manager.render_env(
-                cassandra_limit_memory_mb=1024 if self.charm.config.profile == "testing" else None
+                cassandra_limit_memory_mb=1024 if self.charm.config.profile == "testing" else None,
+                jmx_exporter_port=JMX_EXPORTER_PORT,
             )
         except ValidationError as e:
             logger.debug(f"Config haven't passed validation: {e}")

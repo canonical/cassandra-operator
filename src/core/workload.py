@@ -18,6 +18,7 @@ class CassandraPaths:
     env: pathops.PathProtocol
     config_dir: pathops.PathProtocol
     data_dir: pathops.PathProtocol
+    lib_dir: pathops.PathProtocol
 
     @property
     def config(self) -> pathops.PathProtocol:
@@ -44,7 +45,16 @@ class CassandraPaths:
         """Saved caches data directory."""
         return self.data_dir / "saved_caches"
 
+    @property
+    def jmx_exporter(self) -> pathops.PathProtocol:
+        """Main config file."""
+        return self.lib_dir / "jmx_prometheus_javaagent-1.0.0.jar"
 
+    @property
+    def jmx_exporter_config(self) -> pathops.PathProtocol:
+        """Main config file."""
+        return self.config_dir / "jmx_exporter.yaml"    
+    
 class WorkloadBase(ABC):
     """Base interface for workload operations."""
 
