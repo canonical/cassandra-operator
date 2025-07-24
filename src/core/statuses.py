@@ -17,3 +17,7 @@ class Status(Enum):
     STARTING = MaintenanceStatus("waiting for Cassandra to start")
     WAITING_FOR_CLUSTER = WaitingStatus("waiting for cluster to start")
     INVALID_CONFIG = BlockedStatus("invalid config")
+    WAITING_FOR_INTERNAL_TLS = WaitingStatus("waiting for internal TLS setup")
+    WAITING_FOR_TLS = WaitingStatus("waiting for TLS setup")
+    ROTATING_PEER_TLS = MaintenanceStatus("waiting for peer tls rotation to complete")
+    ROTATING_CLIENT_TLS = MaintenanceStatus("waiting for client tls rotation to complete")

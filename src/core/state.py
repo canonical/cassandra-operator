@@ -4,7 +4,9 @@
 
 """Application state definition."""
 
+import json
 import logging
+from dataclasses import dataclass
 from enum import StrEnum
 
 from charms.data_platform_libs.v0.data_interfaces import (
@@ -13,13 +15,53 @@ from charms.data_platform_libs.v0.data_interfaces import (
     DataPeerOtherUnitData,
     DataPeerUnitData,
 )
+from charms.tls_certificates_interface.v4.tls_certificates import (
+    Certificate,
+    CertificateSigningRequest,
+    PrivateKey,
+)
 from ops import Application, CharmBase, Object, Relation, Unit
 
+CLIENT_TLS_RELATION = "client-certificates"
+PEER_TLS_RELATION = "peer-certificates"
 PEER_RELATION = "cassandra-peers"
 CASSANDRA_PEER_PORT = 7000
 CASSANDRA_CLIENT_PORT = 9042
 
+SECRETS_UNIT = [
+    "truststore-password-secret",
+    "keystore-password-secret",
+    "client-ca-cert-secret",
+    "client-certificate-secret",
+    "client-chain-secret",
+    "client-csr-secret",
+    "client-private-key-secret",
+    "peer-ca-cert-secret",
+    "peer-certificate-secret",
+    "peer-chain-secret",
+    "peer-csr-secret",
+    "peer-private-key-secret",
+]
+
+SECRETS_APP = ["internal-ca-secret", "internal-ca-key-secret"]
+
+
 logger = logging.getLogger(__name__)
+
+
+class TLSScope(StrEnum):
+    """Enum for TLS scopes."""
+
+    PEER = "peer"  # for internal communications
+    CLIENT = "client"  # for external/client communications
+
+
+class TLSState(StrEnum):
+    """Current state of the Cassandra cluster."""
+
+    UNKNOWN = ""
+    ACTIVE = "active"
+    """Cassandra cluster is initialized by the leader unit and active."""
 
 
 class ClusterState(StrEnum):
@@ -72,6 +114,162 @@ class RelationState:
                 pass
         else:
             self.relation_data.update({field: value})
+
+
+@dataclass
+class ResolvedTLSContext:
+    """..."""
+
+    private_key: PrivateKey
+    ca: Certificate
+    certificate: Certificate
+    chain: list[Certificate]
+    bundle: list[Certificate]
+    scope: TLSScope
+
+
+class TLSContext(RelationState):
+    """State collection metadata for TLS credentials."""
+
+    def __init__(
+        self, relation: Relation | None, data_interface: Data, component: Unit, scope: TLSScope
+    ):
+        self.scope = scope
+        super().__init__(relation, data_interface, component)
+
+    @property
+    def private_key(self) -> PrivateKey | None:
+        """The unit private-key set during `certificates_joined`.
+
+        Returns:
+            String of key contents
+            Empty if key not yet generated
+        """
+        raw = self.relation_data.get(f"{self.scope.value}-private-key-secret", "")
+        if not raw:
+            return None
+        return PrivateKey.from_string(raw)
+
+    @private_key.setter
+    def private_key(self, value: PrivateKey | None) -> None:
+        if not value:
+            return self._field_setter_wrapper(f"{self.scope.value}-private-key-secret", "")
+        self._field_setter_wrapper(f"{self.scope.value}-private-key-secret", value.raw)
+
+    @property
+    def csr(self) -> CertificateSigningRequest | None:
+        """The unit cert signing request.
+
+        Returns:
+            String of csr contents
+            Empty if csr not yet generated
+        """
+        raw = self.relation_data.get(f"{self.scope.value}-csr-secret", "")
+        if not raw:
+            return None
+        return CertificateSigningRequest.from_string(raw)
+
+    @csr.setter
+    def csr(self, value: CertificateSigningRequest | None) -> None:
+        if not value:
+            return self._field_setter_wrapper(f"{self.scope.value}-csr-secret", "")
+        self._field_setter_wrapper(f"{self.scope.value}-csr-secret", value.raw)
+
+    @property
+    def certificate(self) -> Certificate | None:
+        """The signed unit certificate from the provider relation."""
+        raw = self.relation_data.get(f"{self.scope.value}-certificate-secret", "")
+        if not raw:
+            return None
+        return Certificate.from_string(raw)
+
+    @certificate.setter
+    def certificate(self, value: Certificate | None) -> None:
+        if not value:
+            return self._field_setter_wrapper(f"{self.scope.value}-certificate-secret", "")
+        self._field_setter_wrapper(f"{self.scope.value}-certificate-secret", value.raw)
+
+    @property
+    def ca(self) -> Certificate | None:
+        """The ca used to sign unit cert.
+
+        Returns:
+            String of ca contents in PEM format
+            Empty if cert not yet generated/signed
+        """
+        # defaults to ca for backwards compatibility after field change introduced with secrets
+        raw = self.relation_data.get(f"{self.scope.value}-ca-cert-secret", "")
+        if not raw:
+            return None
+
+        return Certificate.from_string(raw)
+
+    @ca.setter
+    def ca(self, value: Certificate | None) -> None:
+        if not value:
+            return self._field_setter_wrapper(f"{self.scope.value}-ca-cert-secret", "")
+        self._field_setter_wrapper(f"{self.scope.value}-ca-cert-secret", value.raw)
+
+    @property
+    def chain(self) -> list[Certificate]:
+        """The chain used to sign the unit cert."""
+        raw = self.relation_data.get(f"{self.scope.value}-chain-secret")
+        if not raw:
+            return []
+        return [Certificate.from_string(c) for c in json.loads(raw)]
+
+    @chain.setter
+    def chain(self, value: list[Certificate]) -> None:
+        """Set the chain used to sign the unit cert."""
+        if len(value) == 0:
+            return self._field_setter_wrapper(f"{self.scope.value}-chain-secret", "")
+        self._field_setter_wrapper(
+            f"{self.scope.value}-chain-secret", json.dumps([str(c) for c in value])
+        )
+
+    @property
+    def bundle(self) -> list[Certificate]:
+        """The cert bundle used for TLS identity."""
+        if not all([self.certificate, self.ca]):
+            return []
+
+        cert = self.certificate
+        ca = self.ca
+        if not cert or not ca:
+            return []
+        return list(dict.fromkeys([cert, ca] + self.chain))
+
+    @property
+    def rotation(self) -> bool:
+        """Whether or not CA/chain rotation is in progress."""
+        return bool(self.relation_data.get(f"{self.scope.value}-rotation", ""))
+
+    @rotation.setter
+    def rotation(self, value: bool) -> None:
+        _value = "" if not value else "true"
+        self._field_setter_wrapper(f"{self.scope.value}-rotation", _value)
+
+    @property
+    def ready(self) -> bool:
+        """Returns True if all the necessary TLS relation data has been set, False otherwise."""
+        return all([self.certificate, self.ca, self.private_key])
+
+    @property
+    def resolved(self) -> ResolvedTLSContext:
+        """Return a ResolvedTLSContext if all required TLS fields are present.
+
+        Else raise RuntimeError.
+        """
+        if not self.certificate or not self.private_key or not self.ca:
+            raise RuntimeError("TLS state is incomplete")
+        return ResolvedTLSContext(
+            private_key=self.private_key,
+            ca=self.ca,
+            certificate=self.certificate,
+            chain=self.chain,
+            bundle=self.bundle,
+            scope=self.scope,
+        )
 
 
 class UnitContext(RelationState):
@@ -136,6 +334,57 @@ class UnitContext(RelationState):
     def workload_state(self, value: UnitWorkloadState) -> None:
         self._field_setter_wrapper("workload_state", value.value)
 
+    # --- TLS ---
+    @property
+    def peer_tls(self) -> TLSContext:
+        """TLS state for internal (peer) communications."""
+        return TLSContext(self.relation, self.data_interface, self.unit, TLSScope.PEER)
+
+    @property
+    def client_tls(self) -> TLSContext:
+        """TLS state for external (client) communications."""
+        return TLSContext(self.relation, self.data_interface, self.unit, TLSScope.CLIENT)
+
+    @property
+    def keystore_password(self) -> str:
+        """Get keystore password.
+
+        Returns:
+            String of password
+            None if password not yet generated
+        """
+        return self.relation_data.get("keystore-password-secret", "")
+
+    @property
+    def truststore_password(self) -> str:
+        """Get truststore password.
+
+        Returns:
+            String of password
+            None if password not yet generated
+        """
+        return self.relation_data.get("truststore-password-secret", "")
+
+    @keystore_password.setter
+    def keystore_password(self, value: str) -> None:
+        """Set keystore password.
+
+        Returns:
+            String of password
+            None if password not yet generated
+        """
+        self._field_setter_wrapper("keystore-password-secret", value)
+
+    @truststore_password.setter
+    def truststore_password(self, value: str) -> None:
+        """Set truststore password.
+
+        Returns:
+            String of password
+            None if password not yet generated
+        """
+        self._field_setter_wrapper("truststore-password-secret", value)
+
 
 class ClusterContext(RelationState):
     """Cluster context of the application state.
@@ -185,6 +434,43 @@ class ClusterContext(RelationState):
         """Whether Cassandra cluster state is `ACTIVE`."""
         return self.state == ClusterState.ACTIVE
 
+    @property
+    def tls_state(self) -> TLSState:
+        """Current state of the Cassandra cluster."""
+        return TLSState(self.relation_data.get("tls_state", TLSState.UNKNOWN))
+
+    @tls_state.setter
+    def tls_state(self, value: TLSState) -> None:
+        self._field_setter_wrapper("tls_state", value.value)
+
+    # --- TLS ---
+    @property
+    def internal_ca(self) -> Certificate | None:
+        """The internal CA certificate used for the peer relations."""
+        ca = self.relation_data.get("internal-ca-secret", "")
+        ca_key = self.internal_ca_key
+
+        if ca_key is None or not ca:
+            return None
+
+        return Certificate.from_string(ca)
+
+    @internal_ca.setter
+    def internal_ca(self, value: Certificate) -> None:
+        self._field_setter_wrapper("internal-ca-secret", str(value))
+
+    @property
+    def internal_ca_key(self) -> PrivateKey | None:
+        """The private key of internal CA certificate used for the peer relations."""
+        if not (ca_key := self.relation_data.get("internal-ca-key-secret", "")):
+            return None
+
+        return PrivateKey.from_string(ca_key)
+
+    @internal_ca_key.setter
+    def internal_ca_key(self, value: PrivateKey) -> None:
+        self._field_setter_wrapper("internal-ca-key-secret", str(value))
+
 
 class ApplicationState(Object):
     """Mappings for the charm relations that forms global application state."""
@@ -194,8 +480,13 @@ class ApplicationState(Object):
         self.peer_app_interface = DataPeerData(
             self.model,
             relation_name=PEER_RELATION,
+            additional_secret_fields=SECRETS_APP,
         )
-        self.peer_unit_interface = DataPeerUnitData(self.model, relation_name=PEER_RELATION)
+        self.peer_unit_interface = DataPeerUnitData(
+            self.model,
+            relation_name=PEER_RELATION,
+            additional_secret_fields=SECRETS_UNIT,
+        )
 
     @property
     def peer_relation(self) -> Relation | None:

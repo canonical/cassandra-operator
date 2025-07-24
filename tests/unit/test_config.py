@@ -12,7 +12,16 @@ from managers.config import ConfigManager
 def test_render_env_preserves_existing_vars():
     """`render_env` should preserve existing environment variables."""
     workload = MagicMock(cassandra_paths=MagicMock(env=MagicMock()))
-    config_manager = ConfigManager(workload=workload, cluster_name="", listen_address="", seeds=[])
+    config_manager = ConfigManager(
+        workload=workload,
+        cluster_name="",
+        listen_address="",
+        seeds=[],
+        enable_peer_tls=False,
+        enable_client_tls=False,
+        keystore_password="",
+        truststore_password="",
+    )
 
     workload.cassandra_paths.env.read_text.return_value = (
         "EXTRA_VAR=extra_value\nPATH=/custom/path\n"
