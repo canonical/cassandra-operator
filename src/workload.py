@@ -56,7 +56,8 @@ class CassandraWorkload(WorkloadBase):
     @override
     def install(self) -> None:
         logger.debug("Installing & configuring Cassandra snap")
-        self._cassandra_snap.ensure(snap.SnapState.Present, revision=SNAP_REVISION)
+        snap.install_local("cassandra_5.0.4_amd64.snap", dangerous=True).ensure(snap.SnapState.Present)
+        #self._cassandra_snap.ensure(snap.SnapState.Present, revision=SNAP_REVISION)
         self._cassandra_snap.connect("process-control")
         self._cassandra_snap.connect("system-observe")
         self._cassandra_snap.connect("mount-observe")
