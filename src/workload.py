@@ -57,7 +57,7 @@ class CassandraWorkload(WorkloadBase):
     def install(self) -> None:
         logger.debug("Installing & configuring Cassandra snap")
         tmp = snap.install_local("charmed-cassandra_5.0.4_amd64.snap", dangerous=True)
-        tmp.ensure(snap.SnapState.Present)
+        #tmp.ensure(snap.SnapState.Present)
 
         self._cassandra_snap = tmp
         
