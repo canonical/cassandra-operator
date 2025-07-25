@@ -16,6 +16,7 @@ class CharmConfig(BaseConfigModel):
     """Structured charm config."""
 
     cluster_name: str
+    system_users: str
     profile: ConfigProfile
 
     @field_validator("cluster_name")
