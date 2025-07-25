@@ -28,8 +28,8 @@ from core.statuses import Status
 from core.workload import WorkloadBase
 from managers.cluster import ClusterManager
 from managers.config import ConfigManager
-from managers.tls import Sans, TLSManager
 from managers.database import DatabaseManager
+from managers.tls import Sans, TLSManager
 
 logger = logging.getLogger(__name__)
 
