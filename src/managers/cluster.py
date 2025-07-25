@@ -35,6 +35,6 @@ class ClusterManager:
         hostname = socket.gethostname()
         return socket.gethostbyname(hostname), hostname
 
-    def flush_tables(self, keyspace: str, tables: list[str]) -> None:
-        """Flush tables in keyspace to disk."""
-        self._workload.exec(["charmed-cassandra.nodetool", "flush", keyspace, *tables])
+    def prepare_shutdown(self) -> None:
+        """TODO."""
+        self._workload.exec([_NODETOOL, "drain"])

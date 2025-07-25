@@ -33,8 +33,11 @@ class DatabaseManager:
     def update_system_user_password(self, user: str, password: str) -> None:
         """Change password for the role in system_auth."""
         with self._session() as session:
+            # TODO: increase replication factor of system_auth.
             session.execute(
-                "UPDATE system_auth.roles SET salted_hash = %s WHERE role = %s",
+                "UPDATE system_auth.roles SET"
+                " can_login = true, is_superuser = true, salted_hash = %s"
+                " WHERE role = %s",
                 [
                     hashpw(password.encode(), gensalt(prefix=b"2a")).decode(),
                     user,

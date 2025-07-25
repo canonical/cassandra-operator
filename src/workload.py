@@ -109,7 +109,7 @@ class CassandraWorkload(WorkloadBase):
                 check=True,
                 text=True,
                 capture_output=True,
-                timeout=10,
+                timeout=300,
                 cwd=cwd,
             )
             stdout = result.stdout.strip()
