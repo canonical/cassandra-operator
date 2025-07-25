@@ -34,3 +34,7 @@ class ClusterManager:
         """Get hostname and IP of this unit."""
         hostname = socket.gethostname()
         return socket.gethostbyname(hostname), hostname
+
+    def prepare_shutdown(self) -> None:
+        """TODO."""
+        self._workload.exec([_NODETOOL, "drain"])

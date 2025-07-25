@@ -17,6 +17,7 @@ from events.cassandra import CassandraEvents
 from events.tls import TLSEvents
 from managers.cluster import ClusterManager
 from managers.config import ConfigManager
+from managers.database import DatabaseManager
 from managers.tls import Sans, TLSManager
 from workload import CassandraWorkload
 
@@ -45,6 +46,16 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             enable_client_tls=False,
             keystore_password=self.state.unit.keystore_password,
             truststore_password=self.state.unit.truststore_password,
+            authentication=bool(self.state.cluster.cassandra_password_secret),
+        )
+        database_manager = DatabaseManager(
+            hosts=[
+                "127.0.0.1"
+                if self.state.unit.workload_state == UnitWorkloadState.CHANGING_PASSWORD
+                else self.state.unit.ip
+            ],
+            user="cassandra",
+            password=self.state.cluster.cassandra_password_secret,
         )
         bootstrap_manager = RollingOpsManager(
             charm=self, relation="bootstrap", callback=self.bootstrap
@@ -56,6 +67,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             workload=self.workload,
             cluster_manager=self.cluster_manager,
             config_manager=config_manager,
+            database_manager=database_manager,
             bootstrap_manager=bootstrap_manager,
             tls_manager=self.tls_manager,
             configure_certificates=self.configure_internal_certificates,
