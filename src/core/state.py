@@ -476,6 +476,7 @@ class ClusterContext(RelationState):
     def internal_ca_key(self, value: PrivateKey) -> None:
         self._field_setter_wrapper("internal-ca-key-secret", str(value))
 
+    @property
     def cassandra_password_secret(self) -> str:
         """Password of `cassandra` system user."""
         return self.relation_data.get("cassandra-password", "")

@@ -162,6 +162,10 @@ class CassandraEvents(Object):
             cluster_name=self.state.cluster.cluster_name,
             listen_address=self.state.unit.ip,
             seeds=self.state.cluster.seeds,
+            enable_peer_tls=self.state.unit.peer_tls.ready,
+            enable_client_tls=self.state.unit.client_tls.ready,
+            keystore_password=self.state.unit.keystore_password,
+            truststore_password=self.state.unit.truststore_password,
             authentication=True,
         )
         self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
