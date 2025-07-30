@@ -186,12 +186,7 @@ class CassandraEvents(Object):
             self.config_manager.render_env(
                 cassandra_limit_memory_mb=1024 if self.charm.config.profile == "testing" else None
             )
-            self.config_manager.render_cassandra_config(
-                enable_peer_tls=self.state.unit.peer_tls.ready,
-                enable_client_tls=self.state.unit.client_tls.ready,
-                keystore_password=self.state.unit.keystore_password,
-                truststore_password=self.state.unit.truststore_password,
-            )
+            self.config_manager.render_cassandra_config()
         except ValidationError as e:
             logger.debug(f"Config haven't passed validation: {e}")
             return
@@ -233,8 +228,6 @@ class CassandraEvents(Object):
             self.config_manager.render_cassandra_config(
                 listen_address=self.state.unit.ip,
                 seeds=self.state.cluster.seeds,
-                keystore_password=self.state.unit.keystore_password,
-                truststore_password=self.state.unit.truststore_password,
             )
 
             self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
