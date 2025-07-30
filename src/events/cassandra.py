@@ -46,7 +46,7 @@ class CassandraEvents(Object):
         config_manager: ConfigManager,
         bootstrap_manager: RollingOpsManager,
         tls_manager: TLSManager,
-        configure_certificates: Callable[[Sans], bool],
+        setup_internal_certificates: Callable[[Sans], bool],
         database_manager: DatabaseManager,
     ):
         super().__init__(charm, key="cassandra_events")
@@ -57,7 +57,7 @@ class CassandraEvents(Object):
         self.config_manager = config_manager
         self.bootstrap_manager = bootstrap_manager
         self.tls_manager = tls_manager
-        self.configure_certificates = configure_certificates
+        self.setup_internal_certificates = setup_internal_certificates
         self.database_manager = database_manager
 
         self.framework.observe(self.charm.on.start, self._on_start)
@@ -80,13 +80,12 @@ class CassandraEvents(Object):
             event.defer()
             return
 
-        host_mapping = self.cluster_manager.network_address()
-        sans = self.tls_manager.build_sans(
-            sans_ip=[host_mapping[0]],
-            sans_dns=[host_mapping[1], self.charm.unit.name],
-        )
-
-        if not self.configure_certificates(sans):
+        if not self.setup_internal_certificates(
+            self.tls_manager.build_sans(
+                sans_ip=[self.state.unit.ip],
+                sans_dns=[self.state.unit.hostname, self.charm.unit.name],
+            )
+        ):
             event.defer()
             return
 
@@ -196,10 +195,6 @@ class CassandraEvents(Object):
         except ValidationError as e:
             logger.debug(f"Config haven't passed validation: {e}")
             return
-
-        if self.state.unit.peer_tls.rotation or self.state.unit.client_tls.rotation:
-            self.state.unit.peer_tls.rotation = False
-            self.state.unit.client_tls.rotation = False
 
         self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
 

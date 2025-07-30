@@ -8,6 +8,7 @@ import logging
 from typing import Callable
 
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
+from charms.rolling_ops.v0.rollingops import RollingOpsManager
 from charms.tls_certificates_interface.v4.tls_certificates import (
     CertificateAvailableEvent,
     CertificateRequestAttributes,
@@ -24,6 +25,7 @@ from core.state import (
     TLSContext,
     TLSScope,
     TLSState,
+    UnitWorkloadState,
 )
 from core.workload import WorkloadBase
 from managers.cluster import ClusterManager
@@ -47,20 +49,22 @@ class TLSEvents(Object):
         state: ApplicationState,
         workload: WorkloadBase,
         cluster_manager: ClusterManager,
+        bootstrap_manager: RollingOpsManager,
         tls_manager: TLSManager,
-        configure_certificates: Callable[[Sans], bool],
+        setup_internal_certificates: Callable[[Sans], bool],
     ):
         super().__init__(charm, key="tls_events")
         self.charm = charm
         self.state = state
         self.workload = workload
+        self.bootstrap_manager = bootstrap_manager
         self.tls_manager = tls_manager
-        self.configure_certificates = configure_certificates
+        self.setup_internal_certificates = setup_internal_certificates
 
-        host_mapping = cluster_manager.network_address()
+        ip, hostname = cluster_manager.network_address()
         self.sans = self.tls_manager.build_sans(
-            sans_ip=[host_mapping[0]],
-            sans_dns=[host_mapping[1], self.charm.unit.name],
+            sans_ip=[ip],
+            sans_dns=[hostname, self.charm.unit.name],
         )
 
         self.common_name = f"{self.charm.unit.name}-{self.charm.model.uuid}"
@@ -124,41 +128,30 @@ class TLSEvents(Object):
 
         After provider updates signed certs for peer TLS relation.
         """
-        if not self.state.peer_relation:
-            logger.warning("No peer relation on certificate available")
-            event.defer()
-            return
-
-        self._handle_certificate_available_event(event, self.peer_certificate)
-        self.charm.on.config_changed.emit()
+        self._handle_certificate_available_event(event, self.requirer_state(self.peer_certificate))
 
     def _on_client_certificate_available(self, event: CertificateAvailableEvent) -> None:
         """Handle `certificate_available` event.
 
         After provider updates signed certs for client TLS relation.
         """
+        self._handle_certificate_available_event(
+            event, self.requirer_state(self.client_certificate)
+        )
+
+    def _handle_certificate_available_event(
+        self,
+        event: CertificateAvailableEvent,
+        tls_state: TLSContext,
+    ) -> None:
         if not self.state.peer_relation:
             logger.warning("No peer relation on certificate available")
             event.defer()
             return
 
-        self._handle_certificate_available_event(event, self.client_certificate)
-        self.charm.on.config_changed.emit()
-
-    def _handle_certificate_available_event(
-        self,
-        event: CertificateAvailableEvent,
-        requirer: TLSCertificatesRequiresV4,
-    ) -> None:
-        tls_changed = False
-
-        tls_state = self.requirer_state(requirer)
-
-        if tls_state.certificate and event.certificate.raw != tls_state.certificate.raw:
-            tls_changed = True
-
-        if tls_state.ca and event.ca.raw != tls_state.ca.raw:
-            tls_changed = True
+        tls_changed = (
+            tls_state.certificate and event.certificate.raw != tls_state.certificate.raw
+        ) or (tls_state.ca and event.ca.raw != tls_state.ca.raw)
 
         tls_state.certificate = event.certificate
         tls_state.ca = event.ca
@@ -173,6 +166,8 @@ class TLSEvents(Object):
 
         if tls_changed:
             tls_state.rotation = True
+            if self.state.unit.workload_state == UnitWorkloadState.ACTIVE:
+                self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
 
     def _tls_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Handle `certificates_relation_broken` event."""
@@ -197,7 +192,7 @@ class TLSEvents(Object):
             return
 
         # switch back to internal TLS
-        if not self.configure_certificates(self.sans):
+        if not self.setup_internal_certificates(self.sans):
             event.defer()
             return
 

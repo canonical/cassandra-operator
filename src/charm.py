@@ -77,7 +77,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             database_manager=database_manager,
             bootstrap_manager=bootstrap_manager,
             tls_manager=self.tls_manager,
-            configure_certificates=self.configure_internal_certificates,
+            setup_internal_certificates=self.setup_internal_certificates,
         )
 
         self.tls_events = TLSEvents(
@@ -85,8 +85,9 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             state=self.state,
             workload=self.workload,
             cluster_manager=self.cluster_manager,
+            bootstrap_manager=bootstrap_manager,
             tls_manager=self.tls_manager,
-            configure_certificates=self.configure_internal_certificates,
+            setup_internal_certificates=self.setup_internal_certificates,
         )
 
         self._grafana_agent = COSAgentProvider(
@@ -107,6 +108,8 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
 
         for _ in Retrying(wait=wait_exponential(), stop=stop_after_delay(1800)):
             if self.cluster_manager.is_healthy:
+                self.state.unit.peer_tls.rotation = False
+                self.state.unit.client_tls.rotation = False
                 self.state.unit.workload_state = UnitWorkloadState.ACTIVE
                 if self.unit.is_leader():
                     self.state.cluster.state = ClusterState.ACTIVE
@@ -114,7 +117,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
 
         raise Exception("bootstrap timeout exceeded")
 
-    def configure_internal_certificates(self, sans: Sans) -> bool:
+    def setup_internal_certificates(self, sans: Sans) -> bool:
         """Configure internal TLS certificates for the current unit using an internally managed CA.
 
         Args:
