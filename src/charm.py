@@ -49,8 +49,8 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             cluster_name=self.state.cluster.cluster_name,
             listen_address=self.state.unit.ip,
             seeds=self.state.cluster.seeds,
-            enable_peer_tls=False,
-            enable_client_tls=False,
+            enable_peer_tls=self.state.unit.peer_tls.ready,
+            enable_client_tls=self.state.unit.client_tls.ready,
             keystore_password=self.state.unit.keystore_password,
             truststore_password=self.state.unit.truststore_password,
             authentication=bool(self.state.cluster.cassandra_password_secret),
@@ -108,8 +108,10 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
 
         for _ in Retrying(wait=wait_exponential(), stop=stop_after_delay(1800)):
             if self.cluster_manager.is_healthy:
-                self.state.unit.peer_tls.rotation = False
-                self.state.unit.client_tls.rotation = False
+                if self.state.unit.peer_tls.rotation:
+                    self.state.unit.peer_tls.rotation = False
+                if self.state.unit.client_tls.rotation:
+                    self.state.unit.client_tls.rotation = False
                 self.state.unit.workload_state = UnitWorkloadState.ACTIVE
                 if self.unit.is_leader():
                     self.state.cluster.state = ClusterState.ACTIVE

@@ -197,7 +197,8 @@ class TLSEvents(Object):
             return
 
         state.rotation = True
-        self.charm.on.config_changed.emit()
+        if self.state.unit.workload_state == UnitWorkloadState.ACTIVE:
+            self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
 
     def requirer_state(self, requirer: TLSCertificatesRequiresV4) -> TLSContext:
         """Return the appropriate TLSState based on the scope."""
