@@ -36,5 +36,5 @@ class ClusterManager:
         return socket.gethostbyname(hostname), hostname
 
     def prepare_shutdown(self) -> None:
-        """TODO."""
+        """Prepare Cassandra unit for safe shutdown."""
         self._workload.exec([_NODETOOL, "drain"])
