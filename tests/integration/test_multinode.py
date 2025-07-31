@@ -24,7 +24,7 @@ def test_deploy(juju: jubilant.Juju, cassandra_charm: Path, app_name: str) -> No
 
 def test_write(juju: jubilant.Juju, app_name: str) -> None:
     host = juju.status().apps[app_name].units[f"{app_name}/0"].public_address
-    with connect_cql(hosts=[host], timeout=300) as session:
+    with connect_cql(juju=juju, app_name=app_name, hosts=[host], timeout=300) as session:
         session.execute(
             "CREATE KEYSPACE test "
             "WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 3}",
@@ -36,7 +36,7 @@ def test_write(juju: jubilant.Juju, app_name: str) -> None:
 
 def test_read(juju: jubilant.Juju, app_name: str) -> None:
     host = juju.status().apps[app_name].units[f"{app_name}/2"].public_address
-    with connect_cql(hosts=[host], keyspace="test") as session:
+    with connect_cql(juju=juju, app_name=app_name, hosts=[host], keyspace="test") as session:
         res = session.execute("SELECT message FROM test", timeout=300)
         assert (
             isinstance(res, ResultSet)
