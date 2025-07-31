@@ -18,20 +18,21 @@ logger = logging.getLogger(__name__)
 
 @contextmanager
 def connect_cql(
+    juju: jubilant.Juju,
+    app_name: str,
     hosts: list[str],
-    user: str | None = None,
-    password: str | None = None,
     keyspace: str | None = None,
     timeout: float | None = None,
 ) -> Generator[Session, None, None]:
+    secrets = get_secrets_by_label(juju, f"cassandra-peers.{app_name}.app", app_name)
+    assert len(secrets) == 1
+
     execution_profile = ExecutionProfile(
         load_balancing_policy=TokenAwarePolicy(DCAwareRoundRobinPolicy()),
         request_timeout=timeout or 10,
     )
-    auth_provider = (
-        PlainTextAuthProvider(username=user, password=password)
-        if user is not None and password is not None
-        else None
+    auth_provider = PlainTextAuthProvider(
+        username="cassandra", password=secrets[0]["cassandra-password"]
     )
     cluster = Cluster(
         auth_provider=auth_provider,
