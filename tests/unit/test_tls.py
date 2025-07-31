@@ -22,12 +22,10 @@ from charms.tls_certificates_interface.v4.tls_certificates import (
     generate_private_key,
 )
 from ops import testing
-from ops.framework import Object
 from ops.testing import Context, PeerRelation, Secret
 
 from charm import CassandraCharm
 from core.state import CLIENT_TLS_RELATION, PEER_RELATION, PEER_TLS_RELATION, TLSScope
-from workload import SNAP_NAME, SNAP_SERVICE
 
 BOOTSTRAP_RELATION = "bootstrap"
 TLS_NAME = "self-signed-certificates"
