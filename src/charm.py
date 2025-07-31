@@ -85,6 +85,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             state=self.state,
             workload=self.workload,
             cluster_manager=self.cluster_manager,
+            config_manager=config_manager,
             bootstrap_manager=bootstrap_manager,
             tls_manager=self.tls_manager,
             setup_internal_certificates=self.setup_internal_certificates,
