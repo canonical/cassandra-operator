@@ -197,12 +197,13 @@ class TLSEvents(Object):
 
         if state.scope == TLSScope.CLIENT and self.charm.unit.is_leader():
             self.state.cluster.tls_state = TLSState.UNKNOWN
-            return
+        else:
+            # switch back to internal TLS
+            if not self.setup_internal_certificates(self.sans):
+                event.defer()
+                return
+            state.rotation = True
 
-        # switch back to internal TLS
-        if not self.setup_internal_certificates(self.sans):
-            event.defer()
-            return
         self.config_manager.render_cassandra_config(
             enable_peer_tls=self.state.unit.peer_tls.ready,
             enable_client_tls=self.state.unit.client_tls.ready,
@@ -210,7 +211,6 @@ class TLSEvents(Object):
             truststore_password=self.state.unit.truststore_password,
         )
 
-        state.rotation = True
         if self.state.unit.workload_state == UnitWorkloadState.ACTIVE:
             self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
 
