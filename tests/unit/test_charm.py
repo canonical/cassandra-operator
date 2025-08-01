@@ -42,16 +42,9 @@ def test_start_change_password():
         render_cassandra_config.assert_called_once()
         assert render_cassandra_config.call_args.kwargs["authentication"] is False
         workload.return_value.start.assert_called_once()
-        assert len(state.deferred) == 1 and state.deferred[0].observer == "_on_start"
-
-        state = testing.State(
-            leader=True,
-            relations=state.relations,
-            secrets=state.secrets,
-        )
 
         render_cassandra_config.reset_mock()
-        state = ctx.run(ctx.on.start(), state)
+        state = ctx.run(ctx.on.update_status(), state)
         update_system_user_password.assert_called_once_with("cassandra", "password")
         assert render_cassandra_config.call_args.kwargs["authentication"] is True
         workload.return_value.restart.assert_called()
