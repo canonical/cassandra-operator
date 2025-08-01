@@ -45,8 +45,8 @@ class ConfigManager:
         cluster_name: str | None = None,
         listen_address: str | None = None,
         seeds: list[str] | None = None,
-        enable_peer_tls: bool = False,
-        enable_client_tls: bool = False,
+        enable_peer_tls: bool | None = None,
+        enable_client_tls: bool | None = None,
         keystore_password: str | None = None,
         truststore_password: str | None = None,
         authentication: bool | None = None,
@@ -67,12 +67,16 @@ class ConfigManager:
                             authentication if authentication is not None else self.authentication
                         ),
                         self._cassandra_peer_tls_config(
-                            enabled=enable_peer_tls or self.enable_peer_tls,
+                            enabled=enable_peer_tls
+                            if enable_peer_tls is not None
+                            else self.enable_peer_tls,
                             keystore_password=keystore_password or self.keystore_password,
                             truststore_password=truststore_password or self.truststore_password,
                         ),
                         self._cassandra_client_tls_config(
-                            enabled=enable_client_tls or self.enable_client_tls,
+                            enabled=enable_client_tls
+                            if enable_client_tls is not None
+                            else self.enable_client_tls,
                             keystore_password=keystore_password or self.keystore_password,
                             truststore_password=truststore_password or self.truststore_password,
                         ),
