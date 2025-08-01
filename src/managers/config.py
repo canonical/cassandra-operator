@@ -146,7 +146,7 @@ class ConfigManager:
     @staticmethod
     def _env_jmx_exporter_config(agent_path: str | None, agent_config_path: str | None, port: int | None) -> dict[str, str]:
         return {
-            "JVM_OPTS": f"-javaagent:{agent_path}={port}:{agent_config_path}"
+            "JVM_EXTRA_OPTS": f"-javaagent:{agent_path}={port}:{agent_config_path}"
             if agent_path
             else "",
         }
