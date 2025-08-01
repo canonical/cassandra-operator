@@ -5,7 +5,7 @@ groups:
   # Base Cassandra Rules
   # ===================
 
-  - alert: Cassandra Heap Memory High
+  - alert: CassandraHeapMemoryHigh
     expr: (sum by (instance)(cassandra_memory_heap_used_bytes) / sum by (instance)(cassandra_memory_heap_max_bytes)) * 100 > 80
     for: 2m
     labels:
@@ -15,4 +15,15 @@ groups:
       description: |
         Cassandra JVM heap memory is above 80%.
         VALUE = {{ $value }}
+        LABELS = {{ $labels }}
+
+  - alert: CassandraInstanceDown
+    expr: up{job="cassandra"} == 0
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Cassandra instance down ({{ $labels.instance }})"
+      description: |
+        Target is down for more than 1 minute.
         LABELS = {{ $labels }}
