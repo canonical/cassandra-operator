@@ -17,6 +17,7 @@ from events.cassandra import CassandraEvents
 from events.tls import TLSEvents
 from managers.cluster import ClusterManager
 from managers.config import ConfigManager
+from managers.database import DatabaseManager
 from managers.tls import Sans, TLSManager
 from workload import CassandraWorkload
 
@@ -41,10 +42,20 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             cluster_name=self.state.cluster.cluster_name,
             listen_address=self.state.unit.ip,
             seeds=self.state.cluster.seeds,
-            enable_peer_tls=False,
-            enable_client_tls=False,
+            enable_peer_tls=self.state.unit.peer_tls.ready,
+            enable_client_tls=self.state.unit.client_tls.ready,
             keystore_password=self.state.unit.keystore_password,
             truststore_password=self.state.unit.truststore_password,
+            authentication=bool(self.state.cluster.cassandra_password_secret),
+        )
+        database_manager = DatabaseManager(
+            hosts=[
+                "127.0.0.1"
+                if self.state.unit.workload_state == UnitWorkloadState.CHANGING_PASSWORD
+                else self.state.unit.ip
+            ],
+            user="cassandra",
+            password=self.state.cluster.cassandra_password_secret,
         )
         bootstrap_manager = RollingOpsManager(
             charm=self, relation="bootstrap", callback=self.bootstrap
@@ -56,9 +67,10 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             workload=self.workload,
             cluster_manager=self.cluster_manager,
             config_manager=config_manager,
+            database_manager=database_manager,
             bootstrap_manager=bootstrap_manager,
             tls_manager=self.tls_manager,
-            configure_certificates=self.configure_internal_certificates,
+            setup_internal_certificates=self.setup_internal_certificates,
         )
 
         self.tls_events = TLSEvents(
@@ -66,8 +78,10 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             state=self.state,
             workload=self.workload,
             cluster_manager=self.cluster_manager,
+            config_manager=config_manager,
+            bootstrap_manager=bootstrap_manager,
             tls_manager=self.tls_manager,
-            configure_certificates=self.configure_internal_certificates,
+            setup_internal_certificates=self.setup_internal_certificates,
         )
 
     def bootstrap(self, event: RunWithLock) -> None:
@@ -79,6 +93,10 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
 
         for _ in Retrying(wait=wait_exponential(), stop=stop_after_delay(1800)):
             if self.cluster_manager.is_healthy:
+                if self.state.unit.peer_tls.rotation:
+                    self.state.unit.peer_tls.rotation = False
+                if self.state.unit.client_tls.rotation:
+                    self.state.unit.client_tls.rotation = False
                 self.state.unit.workload_state = UnitWorkloadState.ACTIVE
                 if self.unit.is_leader():
                     self.state.cluster.state = ClusterState.ACTIVE
@@ -86,7 +104,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
 
         raise Exception("bootstrap timeout exceeded")
 
-    def configure_internal_certificates(self, sans: Sans) -> bool:
+    def setup_internal_certificates(self, sans: Sans) -> bool:
         """Configure internal TLS certificates for the current unit using an internally managed CA.
 
         Args:

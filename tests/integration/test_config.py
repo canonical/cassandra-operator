@@ -29,7 +29,7 @@ def test_deploy_resolve_config(juju: jubilant.Juju, app_name: str) -> None:
 
 def test_write(juju: jubilant.Juju, app_name: str) -> None:
     host = juju.status().apps[app_name].units[f"{app_name}/0"].public_address
-    with connect_cql(hosts=[host], timeout=300) as session:
+    with connect_cql(juju=juju, app_name=app_name, hosts=[host], timeout=300) as session:
         session.execute(
             "CREATE KEYSPACE test "
             "WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 3}",
@@ -41,7 +41,7 @@ def test_write(juju: jubilant.Juju, app_name: str) -> None:
 
 def test_read(juju: jubilant.Juju, app_name: str) -> None:
     host = juju.status().apps[app_name].units[f"{app_name}/0"].public_address
-    with connect_cql(hosts=[host], keyspace="test") as session:
+    with connect_cql(juju=juju, app_name=app_name, hosts=[host], keyspace="test") as session:
         res = session.execute("SELECT message FROM test")
         assert (
             isinstance(res, ResultSet)
@@ -57,7 +57,7 @@ def test_bad_config(juju: jubilant.Juju, app_name: str) -> None:
 
 def test_read_bad_config(juju: jubilant.Juju, app_name: str) -> None:
     host = juju.status().apps[app_name].units[f"{app_name}/0"].public_address
-    with connect_cql(hosts=[host], keyspace="test") as session:
+    with connect_cql(juju=juju, app_name=app_name, hosts=[host], keyspace="test") as session:
         res = session.execute("SELECT message FROM test")
         assert (
             isinstance(res, ResultSet)
@@ -73,7 +73,7 @@ def test_resolve_config(juju: jubilant.Juju, app_name: str) -> None:
 
 def test_read_after_resolve(juju: jubilant.Juju, app_name: str) -> None:
     host = juju.status().apps[app_name].units[f"{app_name}/0"].public_address
-    with connect_cql(hosts=[host], keyspace="test") as session:
+    with connect_cql(juju=juju, app_name=app_name, hosts=[host], keyspace="test") as session:
         res = session.execute("SELECT message FROM test")
         assert (
             isinstance(res, ResultSet)

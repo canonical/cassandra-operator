@@ -172,10 +172,7 @@ class TLSManager:
 
     def set_certificate(self, crt: Certificate, scope: TLSScope) -> None:
         """Write the unit certificate to the appropriate file for each scope."""
-        for scope in self.SCOPES:
-            (self.workload.cassandra_paths.tls_dir / f"{scope.value}-unit.pem").write_text(
-                str(crt)
-            )
+        (self.workload.cassandra_paths.tls_dir / f"{scope.value}-unit.pem").write_text(str(crt))
 
     def set_bundle(self, ca_list: list[Certificate], scope: TLSScope) -> None:
         """Write the bundle of certificates to a PEM file for each scope."""
