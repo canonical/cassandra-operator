@@ -20,7 +20,6 @@ class ClusterManager:
 
     def __init__(self, workload: WorkloadBase):
         self._workload = workload
-        pass
 
     @property
     def is_healthy(self) -> bool:

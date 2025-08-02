@@ -22,8 +22,9 @@ SNAP_VAR_COMMON_PATH = f"{SNAP_VAR_PATH}/common"
 SNAP_VAR_CURRENT_PATH = f"{SNAP_VAR_PATH}/current"
 
 SNAP_NAME = "charmed-cassandra"
-SNAP_REVISION = "8"
+SNAP_REVISION = "10"
 SNAP_SERVICE = "daemon"
+
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +41,7 @@ class CassandraWorkload(WorkloadBase):
         self.cassandra_paths.env = self.root / "/etc/environment"
         self.cassandra_paths.config_dir = self.root / f"{SNAP_VAR_CURRENT_PATH}/etc/cassandra"
         self.cassandra_paths.data_dir = self.root / f"{SNAP_VAR_COMMON_PATH}/var/lib/cassandra"
+        self.cassandra_paths.tls_dir = self.root / f"{SNAP_VAR_CURRENT_PATH}/etc/cassandra/tls"
 
         self.cassandra_paths.lib_dir = self.root / f"{SNAP_CURRENT_PATH}/opt/cassandra/lib"
 
@@ -56,12 +58,7 @@ class CassandraWorkload(WorkloadBase):
     @override
     def install(self) -> None:
         logger.debug("Installing & configuring Cassandra snap")
-        tmp = snap.install_local("charmed-cassandra_5.0.4_amd64.snap", dangerous=True)
-        #tmp.ensure(snap.SnapState.Present)
-
-        self._cassandra_snap = tmp
-        
-        #self._cassandra_snap.ensure(snap.SnapState.Present, revision=SNAP_REVISION)
+        self._cassandra_snap.ensure(snap.SnapState.Present, revision=SNAP_REVISION)
         self._cassandra_snap.connect("process-control")
         self._cassandra_snap.connect("system-observe")
         self._cassandra_snap.connect("mount-observe")
@@ -104,7 +101,12 @@ class CassandraWorkload(WorkloadBase):
         return False
 
     @override
-    def exec(self, command: list[str], suppress_error_log: bool = False) -> tuple[str, str]:
+    def exec(
+        self,
+        command: list[str],
+        cwd: str | None = None,
+        suppress_error_log: bool = False,
+    ) -> tuple[str, str]:
         try:
             result = subprocess.run(
                 command,
@@ -112,6 +114,7 @@ class CassandraWorkload(WorkloadBase):
                 text=True,
                 capture_output=True,
                 timeout=10,
+                cwd=cwd,
             )
             stdout = result.stdout.strip()
             stderr = result.stderr.strip()
