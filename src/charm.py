@@ -7,19 +7,25 @@
 import logging
 
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
-from charms.rolling_ops.v0.rollingops import RollingOpsManager, RunWithLock
 from charms.grafana_agent.v0.cos_agent import COSAgentProvider
+from charms.rolling_ops.v0.rollingops import RollingOpsManager, RunWithLock
 from ops import main
 from tenacity import Retrying, stop_after_delay, wait_exponential
 
 from core.config import CharmConfig
-from core.state import JMX_EXPORTER_PORT, METRICS_RULES_DIR, ApplicationState, ClusterState, UnitWorkloadState
+from core.state import (
+    JMX_EXPORTER_PORT,
+    METRICS_RULES_DIR,
+    ApplicationState,
+    ClusterState,
+    UnitWorkloadState,
+)
 from events.cassandra import CassandraEvents
 from events.tls import TLSEvents
 from managers.cluster import ClusterManager
 from managers.config import ConfigManager
-from workload import SNAP_NAME, CassandraWorkload
 from managers.tls import Sans, TLSManager
+from workload import SNAP_NAME, CassandraWorkload
 
 logger = logging.getLogger(__name__)
 

@@ -66,8 +66,9 @@ class CassandraPaths:
     @property
     def jmx_exporter_config(self) -> pathops.PathProtocol:
         """Main config file."""
-        return self.config_dir / "jmx_exporter.yaml"    
-    
+        return self.config_dir / "jmx_exporter.yaml"
+
+
 class WorkloadBase(ABC):
     """Base interface for workload operations."""
 

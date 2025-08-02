@@ -139,20 +139,20 @@ class ConfigManager:
             yaml.dump(config, allow_unicode=True, default_flow_style=False)
         )
 
-    def render_env(self, cassandra_limit_memory_mb: int | None, jmx_exporter_port: int | None) -> None:
+    def render_env(
+        self, cassandra_limit_memory_mb: int | None, jmx_exporter_port: int | None
+    ) -> None:
         """Update environment config."""
         self.workload.cassandra_paths.env.write_text(
             self._render_env(
                 [
                     self._map_env(self.workload.cassandra_paths.env.read_text().split("\n")),
-                    
                     self._env_heap_config(cassandra_limit_memory_mb=cassandra_limit_memory_mb),
-                    
                     self._env_jmx_exporter_config(
                         self.workload.cassandra_paths.jmx_exporter.as_posix(),
                         self.workload.cassandra_paths.jmx_exporter_config.as_posix(),
                         jmx_exporter_port,
-                    )
+                    ),
                 ]
             )
         )
@@ -188,10 +188,11 @@ class ConfigManager:
         }
 
     @staticmethod
-    def _env_jmx_exporter_config(agent_path: str | None, agent_config_path: str | None, port: int | None) -> dict[str, str]:
+    def _env_jmx_exporter_config(
+        agent_path: str | None, agent_config_path: str | None, port: int | None
+    ) -> dict[str, str]:
         return {
             "JVM_EXTRA_OPTS": f"-javaagent:{agent_path}={port}:{agent_config_path}"
             if agent_path
             else "",
         }
-    
