@@ -23,6 +23,7 @@ class CassandraPaths:
     config_dir: pathops.PathProtocol
     data_dir: pathops.PathProtocol
     tls_dir: pathops.PathProtocol
+    lib_dir: pathops.PathProtocol
 
     @property
     def config(self) -> pathops.PathProtocol:
@@ -57,7 +58,16 @@ class CassandraPaths:
         """Get keystore path for the scope."""
         return self.tls_dir / f"{scope.value}-keystore.p12"
 
+    @property
+    def jmx_exporter(self) -> pathops.PathProtocol:
+        """Main config file."""
+        return self.lib_dir / "jmx_prometheus_javaagent-1.0.0.jar"
 
+    @property
+    def jmx_exporter_config(self) -> pathops.PathProtocol:
+        """Main config file."""
+        return self.config_dir / "jmx_exporter.yaml"    
+    
 class WorkloadBase(ABC):
     """Base interface for workload operations."""
 
