@@ -10,6 +10,7 @@ from managers.config import ConfigManager
 
 JMX_EXPORTER_PORT = 7071
 
+
 def test_render_env_preserves_existing_vars():
     """`render_env` should preserve existing environment variables."""
     workload = MagicMock(cassandra_paths=MagicMock(env=MagicMock()))
