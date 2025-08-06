@@ -15,6 +15,8 @@ from core.state import TLSScope
 
 Substrate = Literal["vm", "k8s"]
 
+JMX_EXPORTER_AGENT_FILE = "jmx_prometheus_javaagent-1.0.1.jar"
+
 
 class CassandraPaths:
     """Filesystem paths of the Cassandra workload."""
@@ -61,7 +63,7 @@ class CassandraPaths:
     @property
     def jmx_exporter(self) -> pathops.PathProtocol:
         """Main config file."""
-        return self.lib_dir / "jmx_prometheus_javaagent-1.0.0.jar"
+        return self.lib_dir / JMX_EXPORTER_AGENT_FILE
 
     @property
     def jmx_exporter_config(self) -> pathops.PathProtocol:

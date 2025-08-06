@@ -29,7 +29,7 @@ def test_render_env_preserves_existing_vars():
         "EXTRA_VAR=extra_value\nPATH=/custom/path\nJVM_EXTRA_OPTS=-javaagent\n"
     )
 
-    config_manager.render_env(cassandra_limit_memory_mb=1024, jmx_exporter_port=JMX_EXPORTER_PORT)
+    config_manager.render_env(cassandra_limit_memory_mb=1024)
 
     workload.cassandra_paths.env.read_text.assert_called()
     workload.cassandra_paths.env.write_text.assert_called()
