@@ -22,7 +22,7 @@ SNAP_VAR_COMMON_PATH = f"{SNAP_VAR_PATH}/common"
 SNAP_VAR_CURRENT_PATH = f"{SNAP_VAR_PATH}/current"
 
 SNAP_NAME = "charmed-cassandra"
-SNAP_REVISION = "10"
+SNAP_REVISION = "11"
 SNAP_SERVICE = "daemon"
 
 
