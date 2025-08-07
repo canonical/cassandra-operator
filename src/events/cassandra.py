@@ -89,7 +89,7 @@ class CassandraEvents(Object):
                 self.state.cluster.cluster_name = self.charm.config.cluster_name
                 self.state.cluster.seeds = [self.state.unit.peer_url]
             self.config_manager.render_env(
-                cassandra_limit_memory_mb=1024 if self.charm.config.profile == "testing" else None
+                cassandra_limit_memory_mb=1024 if self.charm.config.profile == "testing" else None,
             )
         except ValidationError as e:
             logger.debug(f"Config haven't passed validation: {e}")

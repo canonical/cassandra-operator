@@ -1,0 +1,26 @@
+groups:
+- name: cassandra.logs
+  rules:
+  - alert: CassandraErrorLogs
+    expr: |
+      sum(rate({job="cassandra"} |= "ERROR" [5m])) by (instance) > 0
+    for: 2m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Cassandra error logs detected ({{ $labels.instance }})"
+      description: |
+        One or more ERROR log lines appeared in the last 5 minutes.
+        LABELS = {{ $labels }}
+
+  - alert: CassandraOOMDetected
+    expr: |
+      sum(rate({job="cassandra"} |= "OutOfMemoryError" [5m])) by (instance) > 0
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Cassandra OutOfMemoryError detected ({{ $labels.instance }})"
+      description: |
+        Cassandra reported OutOfMemoryError in logs.
+        LABELS = {{ $labels }}

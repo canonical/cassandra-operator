@@ -9,7 +9,7 @@ from typing import Iterable
 
 import yaml
 
-from core.state import TLSScope
+from core.state import JMX_EXPORTER_PORT, TLSScope
 from core.workload import WorkloadBase
 
 logger = logging.getLogger(__name__)
@@ -146,6 +146,10 @@ class ConfigManager:
                 [
                     self._map_env(self.workload.cassandra_paths.env.read_text().split("\n")),
                     self._env_heap_config(cassandra_limit_memory_mb=cassandra_limit_memory_mb),
+                    self._env_jmx_exporter_config(
+                        self.workload.cassandra_paths.jmx_exporter.as_posix(),
+                        self.workload.cassandra_paths.jmx_exporter_config.as_posix(),
+                    ),
                 ]
             )
         )
@@ -177,5 +181,15 @@ class ConfigManager:
             "MAX_HEAP_SIZE": f"{cassandra_limit_memory_mb}M" if cassandra_limit_memory_mb else "",
             "HEAP_NEWSIZE": f"{cassandra_limit_memory_mb // 2}M"
             if cassandra_limit_memory_mb
+            else "",
+        }
+
+    @staticmethod
+    def _env_jmx_exporter_config(
+        agent_path: str | None, agent_config_path: str | None
+    ) -> dict[str, str]:
+        return {
+            "JVM_EXTRA_OPTS": f"-javaagent:{agent_path}={JMX_EXPORTER_PORT}:{agent_config_path}"
+            if agent_path
             else "",
         }

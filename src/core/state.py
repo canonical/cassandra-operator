@@ -27,6 +27,9 @@ PEER_TLS_RELATION = "peer-certificates"
 PEER_RELATION = "cassandra-peers"
 CASSANDRA_PEER_PORT = 7000
 CASSANDRA_CLIENT_PORT = 9042
+JMX_EXPORTER_PORT = 7071
+
+METRICS_RULES_DIR = "./src/alert_rules/prometheus"
 
 SECRETS_UNIT = [
     "truststore-password-secret",

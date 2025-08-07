@@ -23,6 +23,8 @@ charm-libs:
     version: "0"
   - lib: tls_certificates_interface.tls_certificates
     version: "4"
+  - lib: grafana_agent.cos_agent
+    version: "0"
 
 config:
   options:
@@ -34,6 +36,11 @@ config:
       # TODO: description
       type: string
       default: Test Cluster
+
+provides:
+  cos-agent:
+    interface: cos_agent
+    optional: true
 
 peers:
   cassandra-peers:
