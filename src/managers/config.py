@@ -64,9 +64,7 @@ class ConfigManager:
                             seeds=seeds or self.seeds,
                         ),
                         self._cassandra_authentication_config(
-                            authentication
-                            if authentication is not None
-                            else self.authentication
+                            authentication if authentication is not None else self.authentication
                         ),
                         self._cassandra_peer_tls_config(
                             enabled=enable_peer_tls
@@ -95,12 +93,8 @@ class ConfigManager:
             self._render_env(
                 self._merge_dicts(
                     [
-                        self._map_env(
-                            self.workload.cassandra_paths.env.read_text().split("\n")
-                        ),
-                        self._env_heap_config(
-                            cassandra_limit_memory_mb=cassandra_limit_memory_mb
-                        ),
+                        self._map_env(self.workload.cassandra_paths.env.read_text().split("\n")),
+                        self._env_heap_config(cassandra_limit_memory_mb=cassandra_limit_memory_mb),
                         self._env_jmx_exporter_config(
                             self.workload.cassandra_paths.jmx_exporter.as_posix(),
                             self.workload.cassandra_paths.jmx_exporter_config.as_posix(),
@@ -138,9 +132,7 @@ class ConfigManager:
         if cassandra_limit_memory_mb is not None and cassandra_limit_memory_mb < 1024:
             raise ValueError("cassandra_limit_memory_mb should be at least 1024")
         return {
-            "MAX_HEAP_SIZE": f"{cassandra_limit_memory_mb}M"
-            if cassandra_limit_memory_mb
-            else "",
+            "MAX_HEAP_SIZE": f"{cassandra_limit_memory_mb}M" if cassandra_limit_memory_mb else "",
             "HEAP_NEWSIZE": f"{cassandra_limit_memory_mb // 2}M"
             if cassandra_limit_memory_mb
             else "",
@@ -216,9 +208,7 @@ class ConfigManager:
     @staticmethod
     def _cassandra_authentication_config(enabled: bool) -> dict[str, Any]:
         return {
-            "authenticator": "PasswordAuthenticator"
-            if enabled
-            else "AllowAllAuthenticator",
+            "authenticator": "PasswordAuthenticator" if enabled else "AllowAllAuthenticator",
         }
 
     @staticmethod
