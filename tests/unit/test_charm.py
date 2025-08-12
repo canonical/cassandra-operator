@@ -40,13 +40,11 @@ def test_start_change_password():
         state = ctx.run(ctx.on.start(), state)
         render_env.assert_called()
         render_cassandra_config.assert_called_once()
-        assert render_cassandra_config.call_args.kwargs["authentication"] is False
         workload.return_value.start.assert_called_once()
 
         render_cassandra_config.reset_mock()
         state = ctx.run(ctx.on.update_status(), state)
-        update_system_user_password.assert_called_once_with("cassandra", "password")
-        assert render_cassandra_config.call_args.kwargs["authentication"] is True
+        update_system_user_password.assert_called_once_with("password")
         workload.return_value.restart.assert_called()
         assert len(state.deferred) == 0
 

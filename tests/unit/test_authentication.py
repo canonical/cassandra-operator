@@ -54,7 +54,7 @@ def test_start_custom_secret(bad_secret: bool):
             peer_secret.latest_content
             and peer_secret.latest_content.get("cassandra-password") == targeted_password
         )
-        update_system_user_password.assert_called_once_with("cassandra", targeted_password)
+        update_system_user_password.assert_called_once_with(targeted_password)
 
 
 def test_update_custom_secret():
@@ -89,4 +89,4 @@ def test_update_custom_secret():
             peer_secret.latest_content
             and peer_secret.latest_content.get("cassandra-password") == "updated_password"
         )
-        update_system_user_password.assert_called_once_with("cassandra", "updated_password")
+        update_system_user_password.assert_called_once_with("updated_password")
