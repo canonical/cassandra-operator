@@ -143,7 +143,6 @@ class CassandraEvents(Object):
             cluster_name=self.state.cluster.cluster_name,
             listen_address="127.0.0.1",
             seeds=["127.0.0.1:7000"],
-            authentication=False,
         )
         self.workload.start()
         self.state.unit.workload_state = UnitWorkloadState.CHANGING_PASSWORD
@@ -154,7 +153,7 @@ class CassandraEvents(Object):
             event.defer()
             return
         self.database_manager.update_system_user_password(
-            "cassandra", self.state.cluster.cassandra_password_secret
+            self.state.cluster.cassandra_password_secret
         )
         self.cluster_manager.prepare_shutdown()
         self.config_manager.render_cassandra_config(
@@ -165,7 +164,6 @@ class CassandraEvents(Object):
             enable_client_tls=self.state.unit.client_tls.ready,
             keystore_password=self.state.unit.keystore_password,
             truststore_password=self.state.unit.truststore_password,
-            authentication=True,
         )
         self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
 
@@ -179,7 +177,7 @@ class CassandraEvents(Object):
             if self.charm.unit.is_leader() and self.state.cluster.cassandra_password_secret != (
                 password := self._acquire_cassandra_password()
             ):
-                self.database_manager.update_system_user_password("cassandra", password)
+                self.database_manager.update_system_user_password(password)
                 self.state.cluster.cassandra_password_secret = password
                 self.cluster_manager.prepare_shutdown()
             # TODO: cluster_name change
@@ -211,7 +209,7 @@ class CassandraEvents(Object):
             if self.state.cluster.cassandra_password_secret != (
                 password := self._acquire_cassandra_password()
             ):
-                self.database_manager.update_system_user_password("cassandra", password)
+                self.database_manager.update_system_user_password(password)
                 self.state.cluster.cassandra_password_secret = password
         except ValidationError:
             return

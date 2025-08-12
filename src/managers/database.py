@@ -8,7 +8,6 @@ import logging
 from contextlib import contextmanager
 from typing import Generator
 
-from bcrypt import gensalt, hashpw
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.cluster import EXEC_PROFILE_DEFAULT, Cluster, ExecutionProfile, Session
 from cassandra.policies import DCAwareRoundRobinPolicy, TokenAwarePolicy
@@ -30,18 +29,13 @@ class DatabaseManager:
 
         return
 
-    def update_system_user_password(self, user: str, password: str) -> None:
-        """Change password for the role in system_auth."""
+    def update_system_user_password(self, password: str) -> None:
+        """Change password of cassandra system user."""
         with self._session() as session:
             # TODO: increase replication factor of system_auth.
             session.execute(
-                "UPDATE system_auth.roles SET"
-                " can_login = true, is_superuser = true, salted_hash = %s"
-                " WHERE role = %s",
-                [
-                    hashpw(password.encode(), gensalt(prefix=b"2a")).decode(),
-                    user,
-                ],
+                "ALTER USER cassandra WITH PASSWORD %s",
+                [password],
             )
 
     @contextmanager
