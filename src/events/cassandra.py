@@ -155,7 +155,6 @@ class CassandraEvents(Object):
         self.database_manager.update_system_user_password(
             self.state.cluster.cassandra_password_secret
         )
-        self.cluster_manager.prepare_shutdown()
         self.config_manager.render_cassandra_config(
             cluster_name=self.state.cluster.cluster_name,
             listen_address=self.state.unit.ip,
@@ -165,6 +164,7 @@ class CassandraEvents(Object):
             keystore_password=self.state.unit.keystore_password,
             truststore_password=self.state.unit.truststore_password,
         )
+        self.cluster_manager.prepare_shutdown()
         self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
 
     def _on_config_changed(self, event: ConfigChangedEvent) -> None:
@@ -179,7 +179,6 @@ class CassandraEvents(Object):
             ):
                 self.database_manager.update_system_user_password(password)
                 self.state.cluster.cassandra_password_secret = password
-                self.cluster_manager.prepare_shutdown()
             # TODO: cluster_name change
             self.config_manager.render_env(
                 cassandra_limit_memory_mb=1024 if self.charm.config.profile == "testing" else None
@@ -189,6 +188,7 @@ class CassandraEvents(Object):
             logger.debug(f"Config haven't passed validation: {e}")
             return
 
+        self.cluster_manager.prepare_shutdown()
         self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
 
     def _on_secret_changed(self, event: SecretChangedEvent) -> None:
@@ -228,6 +228,7 @@ class CassandraEvents(Object):
                 seeds=self.state.cluster.seeds,
             )
 
+            self.cluster_manager.prepare_shutdown()
             self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
 
     def _on_collect_unit_status(self, event: CollectStatusEvent) -> None:
