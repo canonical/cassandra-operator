@@ -107,6 +107,10 @@ class CassandraEvents(Object):
             cluster_name=self.state.cluster.cluster_name,
             listen_address="127.0.0.1",
             seeds=["127.0.0.1:7000"],
+            enable_peer_tls=self.state.unit.peer_tls.ready,
+            enable_client_tls=self.state.unit.client_tls.ready,
+            keystore_password=self.state.unit.keystore_password,
+            truststore_password=self.state.unit.truststore_password,
         )
         self.workload.start()
 

@@ -7,6 +7,7 @@ from pathlib import Path
 
 import jubilant
 from helpers import connect_cql, get_address, get_secrets_by_label
+from pytest import raises
 
 logger = logging.getLogger(__name__)
 
@@ -98,3 +99,25 @@ def test_remove_custom_secret(juju: jubilant.Juju, app_name: str) -> None:
         juju=juju, app_name=app_name, hosts=[get_address(juju, app_name, 0)], keyspace="test"
     ) as session:
         session.execute("INSERT INTO test(message) VALUES ('!')")
+
+
+def test_bad_credentials(juju: jubilant.Juju, app_name: str) -> None:
+    with raises(match="AuthenticationFailed"):
+        with connect_cql(
+            juju=juju,
+            app_name=app_name,
+            hosts=[get_address(juju, app_name, 0)],
+            username="bad",
+            keyspace="test",
+        ) as session:
+            session.execute("INSERT INTO test(message) VALUES ('bad')")
+
+    with raises(match="AuthenticationFailed"):
+        with connect_cql(
+            juju=juju,
+            app_name=app_name,
+            hosts=[get_address(juju, app_name, 0)],
+            password="bad",
+            keyspace="test",
+        ) as session:
+            session.execute("INSERT INTO test(message) VALUES ('password')")

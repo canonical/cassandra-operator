@@ -21,19 +21,23 @@ def connect_cql(
     juju: jubilant.Juju,
     app_name: str,
     hosts: list[str],
+    username: str | None = None,
+    password: str | None = None,
     keyspace: str | None = None,
     timeout: float | None = None,
 ) -> Generator[Session, None, None]:
-    secrets = get_secrets_by_label(juju, f"cassandra-peers.{app_name}.app", app_name)
-    assert len(secrets) == 1
+    if username is None:
+        username = "cassandra"
+    if password is None:
+        secrets = get_secrets_by_label(juju, f"cassandra-peers.{app_name}.app", app_name)
+        assert len(secrets) == 1
+        password = secrets[0]["cassandra-password"]
 
     execution_profile = ExecutionProfile(
         load_balancing_policy=TokenAwarePolicy(DCAwareRoundRobinPolicy()),
         request_timeout=timeout or 10,
     )
-    auth_provider = PlainTextAuthProvider(
-        username="cassandra", password=secrets[0]["cassandra-password"]
-    )
+    auth_provider = PlainTextAuthProvider(username=username, password=password)
     cluster = Cluster(
         auth_provider=auth_provider,
         contact_points=hosts,
