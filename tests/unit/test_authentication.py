@@ -46,7 +46,6 @@ def test_start_custom_secret(bad_secret: bool):
         workload.return_value.generate_password.return_value = "password"
 
         state = ctx.run(ctx.on.start(), state)
-        state = ctx.run(ctx.on.update_status(), state)
 
         targeted_password = "password" if bad_secret else "custom_password"
         peer_secret = state.get_secret(label="cassandra-peers.cassandra.app")
