@@ -83,8 +83,6 @@ class UnitWorkloadState(StrEnum):
     """Cassandra is installing."""
     WAITING_FOR_START = "waiting_for_start"
     """Subordinate unit is waiting for leader to initialize cluster before it starts workload."""
-    CHANGING_PASSWORD = "changing_password"
-    """Leader unit executes password change sequence before cluster is announced as ready."""
     STARTING = "starting"
     """Cassandra is starting."""
     ACTIVE = "active"

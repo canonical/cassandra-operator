@@ -21,6 +21,7 @@ from ops import (
     UpdateStatusEvent,
 )
 from pydantic import ValidationError
+from tenacity import Retrying, stop_after_delay, wait_exponential
 
 from core.config import CharmConfig
 from core.state import ApplicationState, UnitWorkloadState
@@ -74,12 +75,6 @@ class CassandraEvents(Object):
     def _on_start(self, event: StartEvent) -> None:
         self._update_network_address()
 
-        if not self.charm.unit.is_leader() and not self.state.cluster.is_active:
-            self.state.unit.workload_state = UnitWorkloadState.WAITING_FOR_START
-            logger.debug("Deferring on_start for unit due to cluster isn't initialized yet")
-            event.defer()
-            return
-
         if not self.setup_internal_certificates(
             self.tls_manager.build_sans(
                 sans_ip=[self.state.unit.ip],
@@ -89,34 +84,67 @@ class CassandraEvents(Object):
             event.defer()
             return
 
-        if self.state.unit.workload_state == UnitWorkloadState.CHANGING_PASSWORD:
-            self._finalize_password_change(event)
-            return
-
         try:
             self.config_manager.render_env(
                 cassandra_limit_memory_mb=1024 if self.charm.config.profile == "testing" else None,
             )
-            if self.charm.unit.is_leader():
-                self.state.cluster.cluster_name = self.charm.config.cluster_name
-                self.state.cluster.seeds = [self.state.unit.peer_url]
-                self.state.cluster.cassandra_password_secret = self._acquire_cassandra_password()
-                self._start_password_change(event)
-                return
         except ValidationError as e:
             logger.debug(f"Config haven't passed validation: {e}")
             event.defer()
             return
 
+        if self.charm.unit.is_leader():
+            self._start_leader()
+        else:
+            self._start_subordinate(event)
+
+    def _start_leader(self) -> None:
+        self.state.cluster.seeds = [self.state.unit.peer_url]
+        self.state.cluster.cluster_name = self.charm.config.cluster_name
+        self.state.cluster.cassandra_password_secret = self._acquire_cassandra_password()
+
         self.config_manager.render_cassandra_config(
             cluster_name=self.state.cluster.cluster_name,
+            listen_address="127.0.0.1",
+            seeds=["127.0.0.1:7000"],
+        )
+        self.workload.start()
+
+        for _ in Retrying(wait=wait_exponential(), stop=stop_after_delay(1800)):
+            if not self.cluster_manager.is_healthy:
+                continue
+
+            DatabaseManager(
+                hosts=["127.0.0.1"], user="cassandra", password="cassandra"
+            ).update_system_user_password(self.state.cluster.cassandra_password_secret)
+            self.config_manager.render_cassandra_config(
+                cluster_name=self.state.cluster.cluster_name,
+                listen_address=self.state.unit.ip,
+                seeds=self.state.cluster.seeds,
+                enable_peer_tls=self.state.unit.peer_tls.ready,
+                enable_client_tls=self.state.unit.client_tls.ready,
+                keystore_password=self.state.unit.keystore_password,
+                truststore_password=self.state.unit.truststore_password,
+            )
+            self.cluster_manager.prepare_shutdown()
+            self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
+            return
+
+        raise Exception("bootstrap timeout exceeded")
+
+    def _start_subordinate(self, event: StartEvent) -> None:
+        if not self.state.cluster.is_active:
+            self.state.unit.workload_state = UnitWorkloadState.WAITING_FOR_START
+            logger.debug("Deferring on_start for unit due to cluster isn't initialized yet")
+            event.defer()
+            return
+
+        self.config_manager.render_cassandra_config(
             listen_address=self.state.unit.ip,
-            seeds=self.state.cluster.seeds,
             enable_peer_tls=self.state.unit.peer_tls.ready,
             enable_client_tls=self.state.unit.client_tls.ready,
             keystore_password=self.state.unit.keystore_password,
             truststore_password=self.state.unit.truststore_password,
-            authentication=True,
         )
         self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
 
@@ -137,35 +165,6 @@ class CassandraEvents(Object):
         if self.state.cluster.cassandra_password_secret:
             return self.state.cluster.cassandra_password_secret
         return self.workload.generate_password()
-
-    def _start_password_change(self, event: StartEvent) -> None:
-        self.config_manager.render_cassandra_config(
-            cluster_name=self.state.cluster.cluster_name,
-            listen_address="127.0.0.1",
-            seeds=["127.0.0.1:7000"],
-        )
-        self.workload.start()
-        self.state.unit.workload_state = UnitWorkloadState.CHANGING_PASSWORD
-        event.defer()
-
-    def _finalize_password_change(self, event: StartEvent) -> None:
-        if not self.cluster_manager.is_healthy:
-            event.defer()
-            return
-        self.database_manager.update_system_user_password(
-            self.state.cluster.cassandra_password_secret
-        )
-        self.config_manager.render_cassandra_config(
-            cluster_name=self.state.cluster.cluster_name,
-            listen_address=self.state.unit.ip,
-            seeds=self.state.cluster.seeds,
-            enable_peer_tls=self.state.unit.peer_tls.ready,
-            enable_client_tls=self.state.unit.client_tls.ready,
-            keystore_password=self.state.unit.keystore_password,
-            truststore_password=self.state.unit.truststore_password,
-        )
-        self.cluster_manager.prepare_shutdown()
-        self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
 
     def _on_config_changed(self, event: ConfigChangedEvent) -> None:
         if self.state.unit.workload_state == UnitWorkloadState.INSTALLING:
@@ -264,9 +263,6 @@ class CassandraEvents(Object):
             UnitWorkloadState.STARTING,
         ] and (self.charm.unit.is_leader() or self.state.cluster.is_active):
             event.add_status(Status.STARTING.value)
-
-        if self.state.unit.workload_state == UnitWorkloadState.CHANGING_PASSWORD:
-            event.add_status(Status.CHANGING_PASSWORD.value)
 
         event.add_status(Status.ACTIVE.value)
 

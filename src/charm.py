@@ -56,15 +56,9 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             authentication=True,
         )
         database_manager = DatabaseManager(
-            hosts=[
-                "127.0.0.1"
-                if self.state.unit.workload_state == UnitWorkloadState.CHANGING_PASSWORD
-                else self.state.unit.ip
-            ],
+            hosts=[self.state.unit.ip],
             user="cassandra",
-            password="cassandra"
-            if self.state.unit.workload_state == UnitWorkloadState.CHANGING_PASSWORD
-            else self.state.cluster.cassandra_password_secret,
+            password=self.state.cluster.cassandra_password_secret,
         )
         bootstrap_manager = RollingOpsManager(
             charm=self, relation="bootstrap", callback=self.bootstrap
