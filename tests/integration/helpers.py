@@ -39,18 +39,19 @@ def connect_cql(
         request_timeout=timeout or 10,
     )
     auth_provider = PlainTextAuthProvider(username=username, password=password)
-    cluster = Cluster(
-        auth_provider=auth_provider,
-        contact_points=hosts,
-        protocol_version=5,
-        execution_profiles={EXEC_PROFILE_DEFAULT: execution_profile},
-    )
     # TODO: get rid of retrying on connection.
+    cluster = None
     session = None
-    for attempt in Retrying(wait=wait_fixed(2), stop=stop_after_delay(120)):
+    for attempt in Retrying(wait=wait_fixed(2), stop=stop_after_delay(120), reraise=True):
         with attempt:
+            cluster = Cluster(
+                auth_provider=auth_provider,
+                contact_points=hosts,
+                protocol_version=5,
+                execution_profiles={EXEC_PROFILE_DEFAULT: execution_profile},
+            )
             session = cluster.connect()
-    assert session
+    assert cluster and session
     if keyspace:
         session.set_keyspace(keyspace)
     try:
