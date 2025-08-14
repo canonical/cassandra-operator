@@ -9,10 +9,10 @@ from contextlib import contextmanager
 from typing import Generator
 
 import jubilant
-from tenacity import Retrying, wait_fixed, stop_after_delay
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.cluster import EXEC_PROFILE_DEFAULT, Cluster, ExecutionProfile, Session
 from cassandra.policies import DCAwareRoundRobinPolicy, TokenAwarePolicy
+from tenacity import Retrying, stop_after_delay, wait_fixed
 
 logger = logging.getLogger(__name__)
 
