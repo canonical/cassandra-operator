@@ -9,6 +9,7 @@ from contextlib import contextmanager
 from typing import Generator
 
 import jubilant
+from tenacity import Retrying, wait_fixed, stop_after_delay
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.cluster import EXEC_PROFILE_DEFAULT, Cluster, ExecutionProfile, Session
 from cassandra.policies import DCAwareRoundRobinPolicy, TokenAwarePolicy
@@ -44,7 +45,12 @@ def connect_cql(
         protocol_version=5,
         execution_profiles={EXEC_PROFILE_DEFAULT: execution_profile},
     )
-    session = cluster.connect()
+    # TODO: get rid of retrying on connection.
+    session = None
+    for attempt in Retrying(wait=wait_fixed(2), stop=stop_after_delay(120)):
+        with attempt:
+            session = cluster.connect()
+    assert session
     if keyspace:
         session.set_keyspace(keyspace)
     try:
