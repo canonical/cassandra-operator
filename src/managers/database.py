@@ -52,4 +52,5 @@ class DatabaseManager:
         try:
             yield session
         finally:
+            session.shutdown()
             cluster.shutdown()

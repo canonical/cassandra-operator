@@ -21,7 +21,7 @@ from ops import (
     UpdateStatusEvent,
 )
 from pydantic import ValidationError
-from tenacity import Retrying, stop_after_delay, wait_exponential
+from tenacity import Retrying, stop_after_delay, wait_exponential, wait_fixed
 
 from core.config import CharmConfig
 from core.state import ApplicationState, UnitWorkloadState
@@ -114,27 +114,34 @@ class CassandraEvents(Object):
         )
         self.workload.start()
 
-        for _ in Retrying(wait=wait_exponential(), stop=stop_after_delay(1800)):
-            if not self.cluster_manager.is_healthy:
-                continue
+        for attempt in Retrying(
+            wait=wait_exponential(), stop=stop_after_delay(1800), reraise=True
+        ):
+            with attempt:
+                if not self.cluster_manager.is_healthy:
+                    raise Exception("bootstrap timeout exceeded")
 
-            DatabaseManager(
-                hosts=["127.0.0.1"], user="cassandra", password="cassandra"
-            ).update_system_user_password(self.state.cluster.cassandra_password_secret)
-            self.config_manager.render_cassandra_config(
-                cluster_name=self.state.cluster.cluster_name,
-                listen_address=self.state.unit.ip,
-                seeds=self.state.cluster.seeds,
-                enable_peer_tls=self.state.unit.peer_tls.ready,
-                enable_client_tls=self.state.unit.client_tls.ready,
-                keystore_password=self.state.unit.keystore_password,
-                truststore_password=self.state.unit.truststore_password,
-            )
-            self.cluster_manager.prepare_shutdown()
-            self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
-            return
+        database_manager = DatabaseManager(
+            hosts=["127.0.0.1"], user="cassandra", password="cassandra"
+        )
 
-        raise Exception("bootstrap timeout exceeded")
+        for attempt in Retrying(wait=wait_fixed(10), stop=stop_after_delay(120), reraise=True):
+            with attempt:
+                database_manager.update_system_user_password(
+                    self.state.cluster.cassandra_password_secret
+                )
+
+        self.config_manager.render_cassandra_config(
+            cluster_name=self.state.cluster.cluster_name,
+            listen_address=self.state.unit.ip,
+            seeds=self.state.cluster.seeds,
+            enable_peer_tls=self.state.unit.peer_tls.ready,
+            enable_client_tls=self.state.unit.client_tls.ready,
+            keystore_password=self.state.unit.keystore_password,
+            truststore_password=self.state.unit.truststore_password,
+        )
+        self.cluster_manager.prepare_shutdown()
+        self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
 
     def _start_subordinate(self, event: StartEvent) -> None:
         if not self.state.cluster.is_active:
@@ -288,7 +295,7 @@ class CassandraEvents(Object):
         old_hostname = self.state.unit.hostname
         self.state.unit.ip, self.state.unit.hostname = self.cluster_manager.network_address()
         return (
-            old_ip is not None
-            and old_hostname is not None
+            bool(old_ip)
+            and bool(old_hostname)
             and (old_ip != self.state.unit.ip or old_hostname != self.state.unit.hostname)
         )

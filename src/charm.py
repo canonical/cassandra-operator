@@ -103,18 +103,20 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
 
         self.workload.restart()
 
-        for _ in Retrying(wait=wait_exponential(), stop=stop_after_delay(1800)):
-            if self.cluster_manager.is_healthy:
-                if self.state.unit.peer_tls.rotation:
-                    self.state.unit.peer_tls.rotation = False
-                if self.state.unit.client_tls.rotation:
-                    self.state.unit.client_tls.rotation = False
-                self.state.unit.workload_state = UnitWorkloadState.ACTIVE
-                if self.unit.is_leader():
-                    self.state.cluster.state = ClusterState.ACTIVE
-                return
+        for attempt in Retrying(
+            wait=wait_exponential(), stop=stop_after_delay(1800), reraise=True
+        ):
+            with attempt:
+                if not self.cluster_manager.is_healthy:
+                    raise Exception("bootstrap timeout exceeded")
 
-        raise Exception("bootstrap timeout exceeded")
+        if self.state.unit.peer_tls.rotation:
+            self.state.unit.peer_tls.rotation = False
+        if self.state.unit.client_tls.rotation:
+            self.state.unit.client_tls.rotation = False
+        self.state.unit.workload_state = UnitWorkloadState.ACTIVE
+        if self.unit.is_leader():
+            self.state.cluster.state = ClusterState.ACTIVE
 
     def setup_internal_certificates(self, sans: Sans) -> bool:
         """Configure internal TLS certificates for the current unit using an internally managed CA.
