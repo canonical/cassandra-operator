@@ -50,59 +50,81 @@ class ConfigManager:
         keystore_password: str | None = None,
         truststore_password: str | None = None,
         authentication: bool | None = None,
-    ) -> None:
-        """Generate and write cassandra config."""
-        self.workload.cassandra_paths.config.write_text(
-            yaml.dump(
-                self._merge_dicts(
-                    [
-                        self._cassandra_default_config(),
-                        self._cassandra_directories_config(),
-                        self._cassandra_connectivity_config(
-                            cluster_name=cluster_name or self.cluster_name,
-                            listen_address=listen_address or self.listen_address,
-                            seeds=seeds or self.seeds,
-                        ),
-                        self._cassandra_authentication_config(
-                            authentication if authentication is not None else self.authentication
-                        ),
-                        self._cassandra_peer_tls_config(
-                            enabled=enable_peer_tls
-                            if enable_peer_tls is not None
-                            else self.enable_peer_tls,
-                            keystore_password=keystore_password or self.keystore_password,
-                            truststore_password=truststore_password or self.truststore_password,
-                        ),
-                        self._cassandra_client_tls_config(
-                            enabled=enable_client_tls
-                            if enable_client_tls is not None
-                            else self.enable_client_tls,
-                            keystore_password=keystore_password or self.keystore_password,
-                            truststore_password=truststore_password or self.truststore_password,
-                        ),
-                    ]
-                ),
-                allow_unicode=True,
-                default_flow_style=False,
+    ) -> bool:
+        """Generate and write cassandra config.
+
+        Returns:
+            whether config was changed.
+        """
+        content = yaml.dump(
+            self._merge_dicts(
+                [
+                    self._cassandra_default_config(),
+                    self._cassandra_directories_config(),
+                    self._cassandra_connectivity_config(
+                        cluster_name=cluster_name or self.cluster_name,
+                        listen_address=listen_address or self.listen_address,
+                        seeds=seeds or self.seeds,
+                    ),
+                    self._cassandra_authentication_config(
+                        authentication if authentication is not None else self.authentication
+                    ),
+                    self._cassandra_peer_tls_config(
+                        enabled=enable_peer_tls
+                        if enable_peer_tls is not None
+                        else self.enable_peer_tls,
+                        keystore_password=keystore_password or self.keystore_password,
+                        truststore_password=truststore_password or self.truststore_password,
+                    ),
+                    self._cassandra_client_tls_config(
+                        enabled=enable_client_tls
+                        if enable_client_tls is not None
+                        else self.enable_client_tls,
+                        keystore_password=keystore_password or self.keystore_password,
+                        truststore_password=truststore_password or self.truststore_password,
+                    ),
+                ]
+            ),
+            allow_unicode=True,
+            default_flow_style=False,
+        )
+
+        if (
+            self.workload.cassandra_paths.config.exists()
+            and self.workload.cassandra_paths.config.read_text() == content
+        ):
+            return False
+
+        self.workload.cassandra_paths.config.write_text(content)
+        return True
+
+    def render_env(self, cassandra_limit_memory_mb: int | None) -> bool:
+        """Update environment config.
+
+        Returns:
+            whether config was changed.
+        """
+        content = self._render_env(
+            self._merge_dicts(
+                [
+                    self._map_env(self.workload.cassandra_paths.env.read_text().split("\n")),
+                    self._env_heap_config(cassandra_limit_memory_mb=cassandra_limit_memory_mb),
+                    self._env_jmx_exporter_config(
+                        self.workload.cassandra_paths.jmx_exporter.as_posix(),
+                        self.workload.cassandra_paths.jmx_exporter_config.as_posix(),
+                    ),
+                ]
             )
         )
 
-    def render_env(self, cassandra_limit_memory_mb: int | None) -> None:
-        """Update environment config."""
-        self.workload.cassandra_paths.env.write_text(
-            self._render_env(
-                self._merge_dicts(
-                    [
-                        self._map_env(self.workload.cassandra_paths.env.read_text().split("\n")),
-                        self._env_heap_config(cassandra_limit_memory_mb=cassandra_limit_memory_mb),
-                        self._env_jmx_exporter_config(
-                            self.workload.cassandra_paths.jmx_exporter.as_posix(),
-                            self.workload.cassandra_paths.jmx_exporter_config.as_posix(),
-                        ),
-                    ]
-                )
-            )
-        )
+        if (
+            self.workload.cassandra_paths.env.exists()
+            and self.workload.cassandra_paths.env.read_text() == content
+        ):
+            return False
+
+        self.workload.cassandra_paths.env.write_text(content)
+        return True
 
     @staticmethod
     def _map_env(env: Iterable[str]) -> dict[str, str]:

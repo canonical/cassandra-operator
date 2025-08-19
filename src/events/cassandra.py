@@ -190,16 +190,19 @@ class CassandraEvents(Object):
                 self.database_manager.update_system_user_password(password)
                 self.state.cluster.cassandra_password_secret = password
             # TODO: cluster_name change
-            self.config_manager.render_env(
-                cassandra_limit_memory_mb=1024 if self.charm.config.profile == "testing" else None
-            )
-            self.config_manager.render_cassandra_config()
+            if (
+                self.config_manager.render_env(
+                    cassandra_limit_memory_mb=1024
+                    if self.charm.config.profile == "testing"
+                    else None
+                )
+                or self.config_manager.render_cassandra_config()
+            ):
+                self.cluster_manager.prepare_shutdown()
+                self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
         except ValidationError as e:
             logger.debug(f"Config haven't passed validation: {e}")
             return
-
-        self.cluster_manager.prepare_shutdown()
-        self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
 
     def _on_secret_changed(self, event: SecretChangedEvent) -> None:
         if not self.charm.unit.is_leader():
