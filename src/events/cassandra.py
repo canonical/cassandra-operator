@@ -24,7 +24,7 @@ from tenacity import Retrying, stop_after_delay, wait_exponential, wait_fixed
 from common.exceptions import BadSecretError
 from core.config import CharmConfig
 from core.literals import CASSANDRA_ADMIN_USERNAME
-from core.state import ApplicationState, UnitWorkloadState
+from core.state import ApplicationState, ClusterState, UnitWorkloadState
 from core.statuses import Status
 from core.workload import WorkloadBase
 from managers.cluster import ClusterManager
@@ -101,33 +101,72 @@ class CassandraEvents(Object):
             self._start_subordinate(event)
 
     def _start_leader(self, event: StartEvent) -> None:
-        self.state.cluster.seeds = [self.state.unit.peer_url]
-        try:
-            self.state.cluster.operator_password_secret = self._acquire_operator_password()
-        except BadSecretError:
+        if self.state.cluster.is_active:
+            self.state.cluster.state = ClusterState.RECOVERING
+            self.state.unit.workload_state = UnitWorkloadState.WAITING_FOR_START
             event.defer()
             return
 
-        self.config_manager.render_cassandra_config(
-            listen_address="127.0.0.1",
-            seeds=["127.0.0.1:7000"],
-            enable_peer_tls=self.state.unit.peer_tls.ready,
-            enable_client_tls=self.state.unit.client_tls.ready,
-            keystore_password=self.state.unit.keystore_password,
-            truststore_password=self.state.unit.truststore_password,
-        )
-        self.workload.start()
+        if self.state.cluster.state == ClusterState.RECOVERING:
+            if any(
+                unit.workload_state != UnitWorkloadState.WAITING_FOR_START
+                for unit in self.state.other_units
+            ):
+                event.defer()
+                return
+            else:
+                self.state.cluster.state = ClusterState.UNKNOWN
 
-        for attempt in Retrying(
-            wait=wait_exponential(), stop=stop_after_delay(1800), reraise=True
+        logger.warning(f"AAA: seeds prior = {','.join(self.state.cluster.seeds)}")
+
+        if not self.state.cluster.seeds or all(
+            self.state.cluster.seeds[0] != unit.peer_url for unit in self.state.units
         ):
-            with attempt:
-                if not self.cluster_manager.is_healthy:
-                    raise Exception("bootstrap timeout exceeded")
+            self.state.cluster.seeds = [self.state.unit.peer_url]
 
-        for attempt in Retrying(wait=wait_fixed(10), stop=stop_after_delay(120), reraise=True):
-            with attempt:
-                self.database_manager.init_admin(self.state.cluster.operator_password_secret)
+        logger.warning(f"AAA: seed = {self.state.cluster.seeds[0]}")
+        logger.warning(f"AAA: me = {self.state.unit.peer_url}")
+
+        if self.state.cluster.seeds[0] != self.state.unit.peer_url and any(
+            unit.workload_state != UnitWorkloadState.ACTIVE
+            for unit in self.state.other_units
+            if unit.peer_url in self.state.cluster.seeds
+        ):
+            logger.warning("AAA: deferring until seed node is active")
+            event.defer()
+            return
+
+        if not self.state.cluster.operator_password_secret:
+            try:
+                password = self._acquire_operator_password()
+
+                self.config_manager.render_cassandra_config(
+                    listen_address="127.0.0.1",
+                    seeds=["127.0.0.1:7000"],
+                    enable_peer_tls=self.state.unit.peer_tls.ready,
+                    enable_client_tls=self.state.unit.client_tls.ready,
+                    keystore_password=self.state.unit.keystore_password,
+                    truststore_password=self.state.unit.truststore_password,
+                )
+                self.workload.start()
+                for attempt in Retrying(
+                    wait=wait_exponential(), stop=stop_after_delay(1800), reraise=True
+                ):
+                    with attempt:
+                        if not self.cluster_manager.is_healthy:
+                            raise Exception("bootstrap timeout exceeded")
+
+                for attempt in Retrying(
+                    wait=wait_fixed(10), stop=stop_after_delay(120), reraise=True
+                ):
+                    with attempt:
+                        self.database_manager.init_admin(password)
+                self.state.cluster.operator_password_secret = password
+
+                self.cluster_manager.prepare_shutdown()
+            except BadSecretError:
+                event.defer()
+                return
 
         self.config_manager.render_cassandra_config(
             listen_address=self.state.unit.ip,
@@ -137,11 +176,26 @@ class CassandraEvents(Object):
             keystore_password=self.state.unit.keystore_password,
             truststore_password=self.state.unit.truststore_password,
         )
-        self.cluster_manager.prepare_shutdown()
         self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
 
     def _start_subordinate(self, event: StartEvent) -> None:
-        if not self.state.cluster.is_active:
+        if (
+            self.state.cluster.is_active
+            and self.state.unit.workload_state == UnitWorkloadState.ACTIVE
+        ):
+            event.defer()
+            return
+
+        if self.state.cluster.state == ClusterState.RECOVERING:
+            if self.state.unit.workload_state != UnitWorkloadState.WAITING_FOR_START:
+                self.state.unit.workload_state = UnitWorkloadState.WAITING_FOR_START
+            event.defer()
+            return
+
+        if (
+            not self.state.cluster.is_active
+            and self.state.unit.peer_url not in self.state.cluster.seeds
+        ):
             self.state.unit.workload_state = UnitWorkloadState.WAITING_FOR_START
             logger.debug("Deferring subordinate on_start due to cluster isn't initialized yet")
             event.defer()
