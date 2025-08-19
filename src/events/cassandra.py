@@ -100,11 +100,9 @@ class CassandraEvents(Object):
 
     def _start_leader(self) -> None:
         self.state.cluster.seeds = [self.state.unit.peer_url]
-        self.state.cluster.cluster_name = self.charm.config.cluster_name
         self.state.cluster.cassandra_password_secret = self._acquire_cassandra_password()
 
         self.config_manager.render_cassandra_config(
-            cluster_name=self.state.cluster.cluster_name,
             listen_address="127.0.0.1",
             seeds=["127.0.0.1:7000"],
             enable_peer_tls=self.state.unit.peer_tls.ready,
@@ -132,7 +130,6 @@ class CassandraEvents(Object):
                 )
 
         self.config_manager.render_cassandra_config(
-            cluster_name=self.state.cluster.cluster_name,
             listen_address=self.state.unit.ip,
             seeds=self.state.cluster.seeds,
             enable_peer_tls=self.state.unit.peer_tls.ready,
@@ -189,7 +186,6 @@ class CassandraEvents(Object):
             ):
                 self.database_manager.update_system_user_password(password)
                 self.state.cluster.cassandra_password_secret = password
-            # TODO: cluster_name change
             env_changed = self.config_manager.render_env(
                 cassandra_limit_memory_mb=1024 if self.charm.config.profile == "testing" else None
             )

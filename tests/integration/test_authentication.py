@@ -20,7 +20,7 @@ def test_deploy_bad_custom_secret(
     juju.deploy(
         cassandra_charm,
         app=app_name,
-        config={"profile": "testing", "system_users": custom_secret},
+        config={"profile": "testing", "system-users": custom_secret},
     )
 
     juju.cli("grant-secret", "custom_secret", app_name)
@@ -63,7 +63,7 @@ def test_change_custom_secret(juju: jubilant.Juju, app_name: str) -> None:
     )
     juju.cli("grant-secret", "custom_secret_second", app_name)
 
-    juju.config(app=app_name, values={"profile": "testing", "system_users": custom_secret_second})
+    juju.config(app=app_name, values={"profile": "testing", "system-users": custom_secret_second})
     juju.wait(
         ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
         delay=10,
@@ -79,7 +79,7 @@ def test_change_custom_secret(juju: jubilant.Juju, app_name: str) -> None:
 
 
 def test_remove_custom_secret(juju: jubilant.Juju, app_name: str) -> None:
-    juju.config(app=app_name, values={"profile": "testing", "system_users": ""})
+    juju.config(app=app_name, values={"profile": "testing", "system-users": ""})
     juju.wait(
         ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
         delay=10,

@@ -26,7 +26,7 @@ def test_start_custom_secret(bad_secret: bool):
     state = testing.State(
         leader=True,
         relations={peer_relation, bootstrap_relation},
-        config={"system_users": password_secret.id},
+        config={"system-users": password_secret.id},
         secrets={password_secret},
     )
 
@@ -69,7 +69,7 @@ def test_update_custom_secret():
     state = testing.State(
         leader=True,
         relations={peer_relation, bootstrap_relation},
-        config={"system_users": password_secret.id},
+        config={"system-users": password_secret.id},
         secrets={password_secret},
     )
 

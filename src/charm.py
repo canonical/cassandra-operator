@@ -46,7 +46,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
 
         config_manager = ConfigManager(
             workload=self.workload,
-            cluster_name=self.state.cluster.cluster_name,
+            cluster_name=self.app.name,
             listen_address=self.state.unit.ip,
             seeds=self.state.cluster.seeds,
             enable_peer_tls=self.state.unit.peer_tls.ready,
