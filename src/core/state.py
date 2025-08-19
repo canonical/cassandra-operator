@@ -72,6 +72,7 @@ class ClusterState(StrEnum):
 
     UNKNOWN = ""
     """Cassandra cluster isn't yet initialized by the leader unit."""
+    RECOVERING = "recovering"
     ACTIVE = "active"
     """Cassandra cluster is initialized by the leader unit and active."""
 
