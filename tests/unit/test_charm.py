@@ -6,8 +6,8 @@
 from unittest.mock import PropertyMock, patch
 
 import ops
-from ops import testing
 import pytest
+from ops import testing
 
 from charm import CassandraCharm
 from core.state import PEER_RELATION
