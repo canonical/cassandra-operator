@@ -7,6 +7,7 @@ from unittest.mock import PropertyMock, patch
 
 import ops
 from ops import testing
+import pytest
 
 from charm import CassandraCharm
 from core.state import PEER_RELATION
@@ -118,15 +119,20 @@ def test_config_changed_invalid_config():
         assert state.unit_status == ops.BlockedStatus("invalid config")
 
 
-def test_config_changed():
+@pytest.mark.parametrize("env_changed", [True, False])
+@pytest.mark.parametrize("cassandra_config_changed", [True, False])
+def test_config_changed(env_changed: bool, cassandra_config_changed: bool):
     """Charm should restart workload only if it's active when config is changed."""
     ctx = testing.Context(CassandraCharm)
     relation = testing.PeerRelation(id=1, endpoint=PEER_RELATION)
     bootstrap_relation = testing.PeerRelation(id=2, endpoint=BOOTSTRAP_RELATION)
     state = testing.State(leader=True, relations={relation, bootstrap_relation})
     with (
-        patch("managers.config.ConfigManager.render_env") as render_env,
-        patch("managers.config.ConfigManager.render_cassandra_config") as render_cassandra_config,
+        patch("managers.config.ConfigManager.render_env", return_value=env_changed) as render_env,
+        patch(
+            "managers.config.ConfigManager.render_cassandra_config",
+            return_value=cassandra_config_changed,
+        ) as render_cassandra_config,
         patch("managers.database.DatabaseManager.update_system_user_password"),
         patch("charm.CassandraWorkload") as workload,
         patch("charm.CassandraCharm.setup_internal_certificates", return_value=True),
@@ -151,4 +157,8 @@ def test_config_changed():
         state = ctx.run(ctx.on.config_changed(), state)
         render_env.assert_called()
         render_cassandra_config.assert_called()
-        workload.return_value.restart.assert_called_once()
+
+        if env_changed or cassandra_config_changed:
+            workload.return_value.restart.assert_called_once()
+        else:
+            workload.return_value.restart.assert_not_called()

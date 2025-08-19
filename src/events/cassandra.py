@@ -190,14 +190,11 @@ class CassandraEvents(Object):
                 self.database_manager.update_system_user_password(password)
                 self.state.cluster.cassandra_password_secret = password
             # TODO: cluster_name change
-            if (
-                self.config_manager.render_env(
-                    cassandra_limit_memory_mb=1024
-                    if self.charm.config.profile == "testing"
-                    else None
-                )
-                or self.config_manager.render_cassandra_config()
-            ):
+            env_changed = self.config_manager.render_env(
+                cassandra_limit_memory_mb=1024 if self.charm.config.profile == "testing" else None
+            )
+            cassandra_config_changed = self.config_manager.render_cassandra_config()
+            if env_changed or cassandra_config_changed:
                 self.cluster_manager.prepare_shutdown()
                 self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
         except ValidationError as e:
