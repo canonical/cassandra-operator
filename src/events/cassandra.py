@@ -256,11 +256,9 @@ class CassandraEvents(Object):
     def _on_collect_unit_status(self, event: CollectStatusEvent) -> None:
         try:
             self.charm.config
+            self._acquire_cassandra_password()
         except ValidationError:
             event.add_status(Status.INVALID_CONFIG.value)
-
-        try:
-            self._acquire_cassandra_password()
         except BadSecretError:
             event.add_status(Status.INVALID_SYSTEM_USERS_SECRET.value)
 
@@ -297,11 +295,9 @@ class CassandraEvents(Object):
     def _on_collect_app_status(self, event: CollectStatusEvent) -> None:
         try:
             self.charm.config
+            self._acquire_cassandra_password()
         except ValidationError:
             event.add_status(Status.INVALID_CONFIG.value)
-
-        try:
-            self._acquire_cassandra_password()
         except BadSecretError:
             event.add_status(Status.INVALID_SYSTEM_USERS_SECRET.value)
 

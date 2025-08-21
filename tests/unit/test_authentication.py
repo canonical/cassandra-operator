@@ -21,7 +21,7 @@ def test_start_custom_secret(bad_secret: bool):
     peer_relation = testing.PeerRelation(id=1, endpoint=PEER_RELATION)
     bootstrap_relation = testing.PeerRelation(id=2, endpoint=BOOTSTRAP_RELATION)
     password_secret = testing.Secret(
-        tracked_content={"foo": "bar"} if bad_secret else {"cassandra-password": "custom_password"}
+        tracked_content={"foo": "bar"} if bad_secret else {"cassandra": "custom_password"}
     )
     state = testing.State(
         leader=True,
@@ -47,13 +47,15 @@ def test_start_custom_secret(bad_secret: bool):
 
         state = ctx.run(ctx.on.start(), state)
 
-        targeted_password = "password" if bad_secret else "custom_password"
-        peer_secret = state.get_secret(label="cassandra-peers.cassandra.app")
-        assert (
-            peer_secret.latest_content
-            and peer_secret.latest_content.get("cassandra-password") == targeted_password
-        )
-        update_system_user_password.assert_called_once_with(targeted_password)
+        if bad_secret:
+            assert state.app_status.name == "blocked"
+        else:
+            peer_secret = state.get_secret(label="cassandra-peers.cassandra.app")
+            assert (
+                peer_secret.latest_content
+                and peer_secret.latest_content.get("cassandra-password") == "custom_password"
+            )
+            update_system_user_password.assert_called_once_with("custom_password")
 
 
 def test_update_custom_secret():
@@ -63,8 +65,8 @@ def test_update_custom_secret():
     )
     bootstrap_relation = testing.PeerRelation(id=2, endpoint=BOOTSTRAP_RELATION)
     password_secret = testing.Secret(
-        tracked_content={"cassandra-password": "custom_password"},
-        latest_content={"cassandra-password": "updated_password"},
+        tracked_content={"cassandra": "custom_password"},
+        latest_content={"cassandra": "updated_password"},
     )
     state = testing.State(
         leader=True,
