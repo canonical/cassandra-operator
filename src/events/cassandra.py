@@ -207,7 +207,7 @@ class CassandraEvents(Object):
         except ValidationError as e:
             logger.debug(f"Config haven't passed validation: {e}")
             return
-        except BadSecretError as e:
+        except BadSecretError:
             event.defer()
             return
 
