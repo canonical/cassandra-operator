@@ -14,3 +14,9 @@ class ExecError(Exception):
 
     stdout: str
     stderr: str
+
+
+class BadSecretError(Exception):
+    """TODO."""
+
+    pass

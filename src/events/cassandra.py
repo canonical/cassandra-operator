@@ -23,6 +23,7 @@ from ops import (
 from pydantic import ValidationError
 from tenacity import Retrying, stop_after_delay, wait_exponential, wait_fixed
 
+from common.exceptions import BadSecretError
 from core.config import CharmConfig
 from core.state import ApplicationState, UnitWorkloadState
 from core.statuses import Status
@@ -94,13 +95,17 @@ class CassandraEvents(Object):
             return
 
         if self.charm.unit.is_leader():
-            self._start_leader()
+            self._start_leader(event)
         else:
             self._start_subordinate(event)
 
-    def _start_leader(self) -> None:
+    def _start_leader(self, event: StartEvent) -> None:
         self.state.cluster.seeds = [self.state.unit.peer_url]
-        self.state.cluster.cassandra_password_secret = self._acquire_cassandra_password()
+        try:
+            self.state.cluster.cassandra_password_secret = self._acquire_cassandra_password()
+        except BadSecretError:
+            event.defer()
+            return
 
         self.config_manager.render_cassandra_config(
             listen_address="127.0.0.1",
@@ -143,7 +148,7 @@ class CassandraEvents(Object):
     def _start_subordinate(self, event: StartEvent) -> None:
         if not self.state.cluster.is_active:
             self.state.unit.workload_state = UnitWorkloadState.WAITING_FOR_START
-            logger.debug("Deferring on_start for unit due to cluster isn't initialized yet")
+            logger.debug("Deferring subordinate on_start due to cluster isn't initialized yet")
             event.defer()
             return
 
@@ -162,14 +167,20 @@ class CassandraEvents(Object):
                 if (
                     password := self.model.get_secret(id=self.charm.config.system_users)
                     .get_content(refresh=True)
-                    .get("cassandra-password")
+                    .get("cassandra")
                 ):
                     return password
+                else:
+                    logger.error(
+                        "User-defined system users secret doesn't contain `cassandra` data"
+                    )
+                    raise BadSecretError()
             except SecretNotFoundError:
-                # TODO: logging.
-                pass
-            except ModelError:
-                pass
+                logger.error("Cannot find user-defined system users secret")
+                raise BadSecretError()
+            except ModelError as e:
+                logger.error(f"Error accessing user-defined system users secret: {e}")
+                raise BadSecretError()
         if self.state.cluster.cassandra_password_secret:
             return self.state.cluster.cassandra_password_secret
         return self.workload.generate_password()
@@ -196,6 +207,9 @@ class CassandraEvents(Object):
         except ValidationError as e:
             logger.debug(f"Config haven't passed validation: {e}")
             return
+        except BadSecretError as e:
+            event.defer()
+            return
 
     def _on_secret_changed(self, event: SecretChangedEvent) -> None:
         if not self.charm.unit.is_leader():
@@ -218,6 +232,8 @@ class CassandraEvents(Object):
                 self.database_manager.update_system_user_password(password)
                 self.state.cluster.cassandra_password_secret = password
         except ValidationError:
+            return
+        except BadSecretError:
             return
 
     def _on_update_status(self, _: UpdateStatusEvent) -> None:
@@ -242,6 +258,11 @@ class CassandraEvents(Object):
             self.charm.config
         except ValidationError:
             event.add_status(Status.INVALID_CONFIG.value)
+
+        try:
+            self._acquire_cassandra_password()
+        except BadSecretError:
+            event.add_status(Status.INVALID_SYSTEM_USERS_SECRET.value)
 
         if self.state.unit.workload_state == UnitWorkloadState.INSTALLING:
             event.add_status(Status.INSTALLING.value)
@@ -278,6 +299,11 @@ class CassandraEvents(Object):
             self.charm.config
         except ValidationError:
             event.add_status(Status.INVALID_CONFIG.value)
+
+        try:
+            self._acquire_cassandra_password()
+        except BadSecretError:
+            event.add_status(Status.INVALID_SYSTEM_USERS_SECRET.value)
 
         event.add_status(Status.ACTIVE.value)
 
