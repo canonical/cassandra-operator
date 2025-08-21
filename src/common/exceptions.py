@@ -9,6 +9,7 @@ class ExecError(Exception):
     """Error during executing command in workload."""
 
     def __init__(self, stdout: str, stderr: str) -> None:
+        super().__init__("Error during command execution")
         self.stdout = stdout
         self.stderr = stderr
 
@@ -17,6 +18,7 @@ class ExecError(Exception):
 
 
 class BadSecretError(Exception):
-    """TODO."""
+    """Error during user-defined secret validation."""
 
-    pass
+    def __init__(self) -> None:
+        super().__init__("User-defined secret validation error")
