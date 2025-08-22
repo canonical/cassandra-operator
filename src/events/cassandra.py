@@ -13,10 +13,8 @@ from ops import (
     CollectStatusEvent,
     ConfigChangedEvent,
     InstallEvent,
-    ModelError,
     Object,
     SecretChangedEvent,
-    SecretNotFoundError,
     StartEvent,
     UpdateStatusEvent,
 )
@@ -25,6 +23,7 @@ from tenacity import Retrying, stop_after_delay, wait_exponential, wait_fixed
 
 from common.exceptions import BadSecretError
 from core.config import CharmConfig
+from core.literals import CASSANDRA_ADMIN_USERNAME
 from core.state import ApplicationState, UnitWorkloadState
 from core.statuses import Status
 from core.workload import WorkloadBase
@@ -50,6 +49,7 @@ class CassandraEvents(Object):
         tls_manager: TLSManager,
         setup_internal_certificates: Callable[[Sans], bool],
         database_manager: DatabaseManager,
+        read_auth_secret: Callable[[str], str],
     ):
         super().__init__(charm, key="cassandra_events")
         self.charm = charm
@@ -61,6 +61,7 @@ class CassandraEvents(Object):
         self.tls_manager = tls_manager
         self.setup_internal_certificates = setup_internal_certificates
         self.database_manager = database_manager
+        self.read_auth_secret = read_auth_secret
 
         self.framework.observe(self.charm.on.start, self._on_start)
         self.framework.observe(self.charm.on.install, self._on_install)
@@ -126,7 +127,7 @@ class CassandraEvents(Object):
 
         for attempt in Retrying(wait=wait_fixed(10), stop=stop_after_delay(120), reraise=True):
             with attempt:
-                self.database_manager.init_operator(self.state.cluster.operator_password_secret)
+                self.database_manager.init_admin(self.state.cluster.operator_password_secret)
 
         self.config_manager.render_cassandra_config(
             listen_address=self.state.unit.ip,
@@ -157,24 +158,7 @@ class CassandraEvents(Object):
 
     def _acquire_operator_password(self) -> str:
         if self.charm.config.system_users:
-            try:
-                if (
-                    password := self.model.get_secret(id=self.charm.config.system_users)
-                    .get_content(refresh=True)
-                    .get("operator")
-                ):
-                    return password
-                else:
-                    logger.error(
-                        "User-defined system users secret doesn't contain `operator` data"
-                    )
-                    raise BadSecretError()
-            except SecretNotFoundError:
-                logger.error("Cannot find user-defined system users secret")
-                raise BadSecretError()
-            except ModelError as e:
-                logger.error(f"Error accessing user-defined system users secret: {e}")
-                raise BadSecretError()
+            return self.read_auth_secret(self.charm.config.system_users)
         if self.state.cluster.operator_password_secret:
             return self.state.cluster.operator_password_secret
         return self.workload.generate_password()
@@ -189,7 +173,7 @@ class CassandraEvents(Object):
             if self.charm.unit.is_leader() and self.state.cluster.operator_password_secret != (
                 password := self._acquire_operator_password()
             ):
-                self.database_manager.update_role_password("operator", password)
+                self.database_manager.update_role_password(CASSANDRA_ADMIN_USERNAME, password)
                 self.state.cluster.operator_password_secret = password
             env_changed = self.config_manager.render_env(
                 cassandra_limit_memory_mb=1024 if self.charm.config.profile == "testing" else None
@@ -223,7 +207,7 @@ class CassandraEvents(Object):
             if self.state.cluster.operator_password_secret != (
                 password := self._acquire_operator_password()
             ):
-                self.database_manager.update_role_password("operator", password)
+                self.database_manager.update_role_password(CASSANDRA_ADMIN_USERNAME, password)
                 self.state.cluster.operator_password_secret = password
         except ValidationError:
             return

@@ -12,7 +12,11 @@ from cassandra.auth import PlainTextAuthProvider
 from cassandra.cluster import EXEC_PROFILE_DEFAULT, Cluster, ExecutionProfile, Session
 from cassandra.policies import DCAwareRoundRobinPolicy, TokenAwarePolicy
 
+from core.literals import CASSANDRA_ADMIN_USERNAME
+
 logger = logging.getLogger(__name__)
+
+_CASSANDRA_DEFAULT_CREDENTIALS = "cassandra"
 
 
 class DatabaseManager:
@@ -29,24 +33,28 @@ class DatabaseManager:
 
         return
 
-    def init_operator(self, password: str) -> None:
+    def init_admin(self, password: str) -> None:
         """Create operator role with the specified password and remove default cassandra role.
 
         Grant operator role SUPERUSER and LOGIN. Use local connection.
         """
         with self._session(
             hosts=["127.0.0.1"],
-            auth_provider=PlainTextAuthProvider(username="cassandra", password="cassandra"),
+            auth_provider=PlainTextAuthProvider(
+                username=_CASSANDRA_DEFAULT_CREDENTIALS, password=_CASSANDRA_DEFAULT_CREDENTIALS
+            ),
         ) as session:
             session.execute(
-                "CREATE ROLE operator WITH LOGIN = true and SUPERUSER = true and PASSWORD = %s",
-                [password],
+                "CREATE ROLE %s WITH LOGIN = true and SUPERUSER = true and PASSWORD = %s",
+                [CASSANDRA_ADMIN_USERNAME, password],
             )
         with self._session(
             hosts=["127.0.0.1"],
-            auth_provider=PlainTextAuthProvider(username="operator", password=password),
+            auth_provider=PlainTextAuthProvider(
+                username=CASSANDRA_ADMIN_USERNAME, password=password
+            ),
         ) as session:
-            session.execute("DROP ROLE cassandra")
+            session.execute("DROP ROLE %s", [_CASSANDRA_DEFAULT_CREDENTIALS])
 
     def update_role_password(self, user: str, password: str) -> None:
         """Change password of the specified role."""

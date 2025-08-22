@@ -9,10 +9,12 @@ import logging
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from charms.grafana_agent.v0.cos_agent import COSAgentProvider
 from charms.rolling_ops.v0.rollingops import RollingOpsManager, RunWithLock
-from ops import main
+from ops import ModelError, SecretNotFoundError, main
 from tenacity import Retrying, stop_after_delay, wait_exponential
 
+from common.exceptions import BadSecretError
 from core.config import CharmConfig
+from core.literals import CASSANDRA_ADMIN_USERNAME
 from core.state import (
     JMX_EXPORTER_PORT,
     METRICS_RULES_DIR,
@@ -57,7 +59,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         )
         database_manager = DatabaseManager(
             hosts=[self.state.unit.ip],
-            user="operator",
+            user=CASSANDRA_ADMIN_USERNAME,
             password=self.state.cluster.operator_password_secret,
         )
         bootstrap_manager = RollingOpsManager(
@@ -74,6 +76,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             bootstrap_manager=bootstrap_manager,
             tls_manager=self.tls_manager,
             setup_internal_certificates=self.setup_internal_certificates,
+            read_auth_secret=self.read_auth_secret,
         )
 
         self.tls_events = TLSEvents(
@@ -165,6 +168,32 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         )
 
         return True
+
+    def read_auth_secret(self, secret_id: str) -> str:
+        """Read and validate user-defined authentication secret.
+
+        Returns:
+            operator password.
+        """
+        try:
+            if (
+                password := self.model.get_secret(id=secret_id)
+                .get_content(refresh=True)
+                .get(CASSANDRA_ADMIN_USERNAME)
+            ):
+                return password
+            else:
+                logger.error(
+                    "User-defined system users secret doesn't contain"
+                    f" `{CASSANDRA_ADMIN_USERNAME}` field"
+                )
+                raise BadSecretError()
+        except SecretNotFoundError:
+            logger.error("Cannot find user-defined system users secret")
+            raise BadSecretError()
+        except ModelError as e:
+            logger.error(f"Error accessing user-defined system users secret: {e}")
+            raise BadSecretError()
 
 
 if __name__ == "__main__":  # pragma: nocover
