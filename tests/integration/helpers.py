@@ -28,11 +28,11 @@ def connect_cql(
     timeout: float | None = None,
 ) -> Generator[Session, None, None]:
     if username is None:
-        username = "cassandra"
+        username = "operator"
     if password is None:
         secrets = get_secrets_by_label(juju, f"cassandra-peers.{app_name}.app", app_name)
         assert len(secrets) == 1
-        password = secrets[0]["cassandra-password"]
+        password = secrets[0]["operator-password"]
 
     execution_profile = ExecutionProfile(
         load_balancing_policy=TokenAwarePolicy(DCAwareRoundRobinPolicy()),

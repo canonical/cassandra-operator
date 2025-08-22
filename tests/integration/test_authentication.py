@@ -29,7 +29,7 @@ def test_deploy_bad_custom_secret(
 
 
 def test_update_custom_secret(juju: jubilant.Juju, app_name: str) -> None:
-    juju.cli("update-secret", "custom_secret", "cassandra=custom_password")
+    juju.cli("update-secret", "custom_secret", "operator=custom_password")
 
     juju.wait(
         ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
@@ -38,7 +38,7 @@ def test_update_custom_secret(juju: jubilant.Juju, app_name: str) -> None:
     )
 
     secrets = get_secrets_by_label(juju, f"cassandra-peers.{app_name}.app", app_name)
-    assert len(secrets) == 1 and secrets[0].get("cassandra-password") == "custom_password"
+    assert len(secrets) == 1 and secrets[0].get("operator-password") == "custom_password"
     with connect_cql(
         juju=juju, app_name=app_name, hosts=[get_address(juju, app_name, 0)]
     ) as session:
@@ -52,7 +52,7 @@ def test_update_custom_secret(juju: jubilant.Juju, app_name: str) -> None:
 
 def test_change_custom_secret(juju: jubilant.Juju, app_name: str) -> None:
     custom_secret_second = juju.add_secret(
-        "custom_secret_second", {"cassandra": "custom_password_second"}
+        "custom_secret_second", {"operator": "custom_password_second"}
     )
     juju.cli("grant-secret", "custom_secret_second", app_name)
 
@@ -64,7 +64,7 @@ def test_change_custom_secret(juju: jubilant.Juju, app_name: str) -> None:
     )
 
     secrets = get_secrets_by_label(juju, f"cassandra-peers.{app_name}.app", app_name)
-    assert len(secrets) == 1 and secrets[0].get("cassandra-password") == "custom_password_second"
+    assert len(secrets) == 1 and secrets[0].get("operator-password") == "custom_password_second"
     with connect_cql(
         juju=juju, app_name=app_name, hosts=[get_address(juju, app_name, 0)], keyspace="test"
     ) as session:
@@ -79,7 +79,7 @@ def test_remove_custom_secret(juju: jubilant.Juju, app_name: str) -> None:
         timeout=300,
     )
 
-    juju.cli("update-secret", "custom_secret_second", "cassandra=custom_password_third")
+    juju.cli("update-secret", "custom_secret_second", "operator=custom_password_third")
     juju.wait(
         ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
         delay=10,
@@ -87,7 +87,7 @@ def test_remove_custom_secret(juju: jubilant.Juju, app_name: str) -> None:
     )
 
     secrets = get_secrets_by_label(juju, f"cassandra-peers.{app_name}.app", app_name)
-    assert len(secrets) == 1 and secrets[0].get("cassandra-password") == "custom_password_second"
+    assert len(secrets) == 1 and secrets[0].get("operator-password") == "custom_password_second"
     with connect_cql(
         juju=juju, app_name=app_name, hosts=[get_address(juju, app_name, 0)], keyspace="test"
     ) as session:
