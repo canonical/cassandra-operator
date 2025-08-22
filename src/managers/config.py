@@ -57,33 +57,27 @@ class ConfigManager:
             whether config was changed.
         """
         content = yaml.dump(
-            self._merge_dicts(
-                [
-                    self._cassandra_default_config(),
-                    self._cassandra_directories_config(),
-                    self._cassandra_connectivity_config(
-                        cluster_name=cluster_name or self.cluster_name,
-                        listen_address=listen_address or self.listen_address,
-                        seeds=seeds or self.seeds,
-                    ),
-                    self._cassandra_authentication_config(
-                        authentication if authentication is not None else self.authentication
-                    ),
-                    self._cassandra_peer_tls_config(
-                        enabled=enable_peer_tls
-                        if enable_peer_tls is not None
-                        else self.enable_peer_tls,
-                        keystore_password=keystore_password or self.keystore_password,
-                        truststore_password=truststore_password or self.truststore_password,
-                    ),
-                    self._cassandra_client_tls_config(
-                        enabled=enable_client_tls
-                        if enable_client_tls is not None
-                        else self.enable_client_tls,
-                        keystore_password=keystore_password or self.keystore_password,
-                        truststore_password=truststore_password or self.truststore_password,
-                    ),
-                ]
+            self._cassandra_default_config()
+            | self._cassandra_directories_config()
+            | self._cassandra_connectivity_config(
+                cluster_name=cluster_name or self.cluster_name,
+                listen_address=listen_address or self.listen_address,
+                seeds=seeds or self.seeds,
+            )
+            | self._cassandra_authentication_config(
+                authentication if authentication is not None else self.authentication
+            )
+            | self._cassandra_peer_tls_config(
+                enabled=enable_peer_tls if enable_peer_tls is not None else self.enable_peer_tls,
+                keystore_password=keystore_password or self.keystore_password,
+                truststore_password=truststore_password or self.truststore_password,
+            )
+            | self._cassandra_client_tls_config(
+                enabled=enable_client_tls
+                if enable_client_tls is not None
+                else self.enable_client_tls,
+                keystore_password=keystore_password or self.keystore_password,
+                truststore_password=truststore_password or self.truststore_password,
             ),
             allow_unicode=True,
             default_flow_style=False,
@@ -105,15 +99,11 @@ class ConfigManager:
             whether config was changed.
         """
         content = self._render_env(
-            self._merge_dicts(
-                [
-                    self._map_env(self.workload.cassandra_paths.env.read_text().split("\n")),
-                    self._env_heap_config(cassandra_limit_memory_mb=cassandra_limit_memory_mb),
-                    self._env_jmx_exporter_config(
-                        self.workload.cassandra_paths.jmx_exporter.as_posix(),
-                        self.workload.cassandra_paths.jmx_exporter_config.as_posix(),
-                    ),
-                ]
+            self._map_env(self.workload.cassandra_paths.env.read_text().split("\n"))
+            | self._env_heap_config(cassandra_limit_memory_mb=cassandra_limit_memory_mb)
+            | self._env_jmx_exporter_config(
+                self.workload.cassandra_paths.jmx_exporter.as_posix(),
+                self.workload.cassandra_paths.jmx_exporter_config.as_posix(),
             )
         )
 
@@ -141,13 +131,6 @@ class ConfigManager:
     @staticmethod
     def _render_env(env: dict[str, str]) -> str:
         return "\n".join([f"{key}={value}" for key, value in env.items()])
-
-    @staticmethod
-    def _merge_dicts(values: Iterable[dict[Any, Any]]) -> dict[Any, Any]:
-        res = {}
-        for value in values:
-            res.update(value)
-        return res
 
     @staticmethod
     def _env_heap_config(cassandra_limit_memory_mb: int | None) -> dict[str, str]:
