@@ -372,7 +372,7 @@ def test_tls_default_certificates_files_setup(ctx):
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
         patch("managers.tls.TLSManager.configure"),
-        patch("managers.database.DatabaseManager.update_system_user_password"),
+        patch("managers.database.DatabaseManager.init_admin"),
         patch(
             "managers.cluster.ClusterManager.is_healthy",
             new_callable=PropertyMock(return_value=True),
@@ -422,7 +422,7 @@ def test_tls_default_certificates_files_setup(ctx):
             "core.state.ClusterContext.internal_ca_key",
             new_callable=PropertyMock(return_value=default_tls_context.default_provider_pk),
         ),
-        patch("managers.database.DatabaseManager.update_system_user_password"),
+        patch("managers.database.DatabaseManager.init_admin"),
         patch(
             "managers.cluster.ClusterManager.is_healthy",
             new_callable=PropertyMock(return_value=True),

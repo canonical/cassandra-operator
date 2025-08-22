@@ -21,7 +21,7 @@ def test_start_custom_secret(bad_secret: bool):
     peer_relation = testing.PeerRelation(id=1, endpoint=PEER_RELATION)
     bootstrap_relation = testing.PeerRelation(id=2, endpoint=BOOTSTRAP_RELATION)
     password_secret = testing.Secret(
-        tracked_content={"foo": "bar"} if bad_secret else {"cassandra": "custom_password"}
+        tracked_content={"foo": "bar"} if bad_secret else {"operator": "custom_password"}
     )
     state = testing.State(
         leader=True,
@@ -33,9 +33,7 @@ def test_start_custom_secret(bad_secret: bool):
     with (
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
-        patch(
-            "managers.database.DatabaseManager.update_system_user_password"
-        ) as update_system_user_password,
+        patch("managers.database.DatabaseManager.init_admin") as init_admin,
         patch("charm.CassandraWorkload") as workload,
         patch("managers.tls.TLSManager.configure"),
         patch(
@@ -53,9 +51,9 @@ def test_start_custom_secret(bad_secret: bool):
             peer_secret = state.get_secret(label="cassandra-peers.cassandra.app")
             assert (
                 peer_secret.latest_content
-                and peer_secret.latest_content.get("cassandra-password") == "custom_password"
+                and peer_secret.latest_content.get("operator-password") == "custom_password"
             )
-            update_system_user_password.assert_called_once_with("custom_password")
+            init_admin.assert_called_once_with("custom_password")
 
 
 def test_update_custom_secret():
@@ -65,8 +63,8 @@ def test_update_custom_secret():
     )
     bootstrap_relation = testing.PeerRelation(id=2, endpoint=BOOTSTRAP_RELATION)
     password_secret = testing.Secret(
-        tracked_content={"cassandra": "custom_password"},
-        latest_content={"cassandra": "updated_password"},
+        tracked_content={"operator": "custom_password"},
+        latest_content={"operator": "updated_password"},
     )
     state = testing.State(
         leader=True,
@@ -76,9 +74,7 @@ def test_update_custom_secret():
     )
 
     with (
-        patch(
-            "managers.database.DatabaseManager.update_system_user_password"
-        ) as update_system_user_password,
+        patch("managers.database.DatabaseManager.update_role_password") as update_role_password,
         patch("charm.CassandraWorkload") as workload,
     ):
         workload.return_value.generate_password.return_value = "password"
@@ -88,6 +84,6 @@ def test_update_custom_secret():
         peer_secret = state.get_secret(label="cassandra-peers.cassandra.app")
         assert (
             peer_secret.latest_content
-            and peer_secret.latest_content.get("cassandra-password") == "updated_password"
+            and peer_secret.latest_content.get("operator-password") == "updated_password"
         )
-        update_system_user_password.assert_called_once_with("updated_password")
+        update_role_password.assert_called_once_with("operator", "updated_password")

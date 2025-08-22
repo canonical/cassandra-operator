@@ -26,9 +26,7 @@ def test_start_change_password():
     with (
         patch("managers.config.ConfigManager.render_env") as render_env,
         patch("managers.config.ConfigManager.render_cassandra_config") as render_cassandra_config,
-        patch(
-            "managers.database.DatabaseManager.update_system_user_password"
-        ) as update_system_user_password,
+        patch("managers.database.DatabaseManager.init_admin") as init_admin,
         patch("charm.CassandraWorkload") as workload,
         patch("managers.tls.TLSManager.configure"),
         patch(
@@ -42,7 +40,7 @@ def test_start_change_password():
         render_env.assert_called()
         render_cassandra_config.assert_called()
         workload.return_value.start.assert_called()
-        update_system_user_password.assert_called_once_with("password")
+        init_admin.assert_called_once_with("password")
         workload.return_value.restart.assert_called()
 
 
@@ -133,7 +131,7 @@ def test_config_changed(env_changed: bool, cassandra_config_changed: bool):
             "managers.config.ConfigManager.render_cassandra_config",
             return_value=cassandra_config_changed,
         ) as render_cassandra_config,
-        patch("managers.database.DatabaseManager.update_system_user_password"),
+        patch("managers.database.DatabaseManager.update_role_password"),
         patch("charm.CassandraWorkload") as workload,
         patch("charm.CassandraCharm.setup_internal_certificates", return_value=True),
         patch(
