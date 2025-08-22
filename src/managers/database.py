@@ -29,20 +29,44 @@ class DatabaseManager:
 
         return
 
-    def update_system_user_password(self, password: str) -> None:
-        """Change password of cassandra system user."""
+    def init_operator(self, password: str) -> None:
+        """Create operator role with the specified password and remove default cassandra role.
+
+        Grant operator role SUPERUSER and LOGIN. Use local connection.
+        """
+        with self._session(
+            hosts=["127.0.0.1"],
+            auth_provider=PlainTextAuthProvider(username="cassandra", password="cassandra"),
+        ) as session:
+            session.execute(
+                "CREATE ROLE operator WITH LOGIN = true and SUPERUSER = true and PASSWORD = %s",
+                [password],
+            )
+        with self._session(
+            hosts=["127.0.0.1"],
+            auth_provider=PlainTextAuthProvider(username="operator", password=password),
+        ) as session:
+            session.execute("DROP ROLE cassandra")
+
+    def update_role_password(self, user: str, password: str) -> None:
+        """Change password of the specified role."""
         with self._session() as session:
             # TODO: increase replication factor of system_auth.
             session.execute(
-                "ALTER USER cassandra WITH PASSWORD %s",
-                [password],
+                "ALTER ROLE %s WITH PASSWORD = %s",
+                [user, password],
             )
 
     @contextmanager
-    def _session(self, keyspace: str | None = None) -> Generator[Session, None, None]:
+    def _session(
+        self,
+        hosts: list[str] | None = None,
+        auth_provider: PlainTextAuthProvider | None = None,
+        keyspace: str | None = None,
+    ) -> Generator[Session, None, None]:
         cluster = Cluster(
-            auth_provider=self.auth_provider,
-            contact_points=self.hosts,
+            auth_provider=auth_provider or self.auth_provider,
+            contact_points=hosts or self.hosts,
             protocol_version=5,
             execution_profiles={EXEC_PROFILE_DEFAULT: self.execution_profile},
         )

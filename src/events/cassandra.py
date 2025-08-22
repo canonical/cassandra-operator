@@ -102,7 +102,7 @@ class CassandraEvents(Object):
     def _start_leader(self, event: StartEvent) -> None:
         self.state.cluster.seeds = [self.state.unit.peer_url]
         try:
-            self.state.cluster.cassandra_password_secret = self._acquire_cassandra_password()
+            self.state.cluster.operator_password_secret = self._acquire_operator_password()
         except BadSecretError:
             event.defer()
             return
@@ -124,15 +124,9 @@ class CassandraEvents(Object):
                 if not self.cluster_manager.is_healthy:
                     raise Exception("bootstrap timeout exceeded")
 
-        database_manager = DatabaseManager(
-            hosts=["127.0.0.1"], user="cassandra", password="cassandra"
-        )
-
         for attempt in Retrying(wait=wait_fixed(10), stop=stop_after_delay(120), reraise=True):
             with attempt:
-                database_manager.update_system_user_password(
-                    self.state.cluster.cassandra_password_secret
-                )
+                self.database_manager.init_operator(self.state.cluster.operator_password_secret)
 
         self.config_manager.render_cassandra_config(
             listen_address=self.state.unit.ip,
@@ -161,18 +155,18 @@ class CassandraEvents(Object):
         )
         self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
 
-    def _acquire_cassandra_password(self) -> str:
+    def _acquire_operator_password(self) -> str:
         if self.charm.config.system_users:
             try:
                 if (
                     password := self.model.get_secret(id=self.charm.config.system_users)
                     .get_content(refresh=True)
-                    .get("cassandra")
+                    .get("operator")
                 ):
                     return password
                 else:
                     logger.error(
-                        "User-defined system users secret doesn't contain `cassandra` data"
+                        "User-defined system users secret doesn't contain `operator` data"
                     )
                     raise BadSecretError()
             except SecretNotFoundError:
@@ -181,8 +175,8 @@ class CassandraEvents(Object):
             except ModelError as e:
                 logger.error(f"Error accessing user-defined system users secret: {e}")
                 raise BadSecretError()
-        if self.state.cluster.cassandra_password_secret:
-            return self.state.cluster.cassandra_password_secret
+        if self.state.cluster.operator_password_secret:
+            return self.state.cluster.operator_password_secret
         return self.workload.generate_password()
 
     def _on_config_changed(self, event: ConfigChangedEvent) -> None:
@@ -192,11 +186,11 @@ class CassandraEvents(Object):
             event.defer()
             return
         try:
-            if self.charm.unit.is_leader() and self.state.cluster.cassandra_password_secret != (
-                password := self._acquire_cassandra_password()
+            if self.charm.unit.is_leader() and self.state.cluster.operator_password_secret != (
+                password := self._acquire_operator_password()
             ):
-                self.database_manager.update_system_user_password(password)
-                self.state.cluster.cassandra_password_secret = password
+                self.database_manager.update_role_password("operator", password)
+                self.state.cluster.operator_password_secret = password
             env_changed = self.config_manager.render_env(
                 cassandra_limit_memory_mb=1024 if self.charm.config.profile == "testing" else None
             )
@@ -226,11 +220,11 @@ class CassandraEvents(Object):
                 event.defer()
                 return
 
-            if self.state.cluster.cassandra_password_secret != (
-                password := self._acquire_cassandra_password()
+            if self.state.cluster.operator_password_secret != (
+                password := self._acquire_operator_password()
             ):
-                self.database_manager.update_system_user_password(password)
-                self.state.cluster.cassandra_password_secret = password
+                self.database_manager.update_role_password("operator", password)
+                self.state.cluster.operator_password_secret = password
         except ValidationError:
             return
         except BadSecretError:
@@ -256,7 +250,7 @@ class CassandraEvents(Object):
     def _on_collect_unit_status(self, event: CollectStatusEvent) -> None:
         try:
             self.charm.config
-            self._acquire_cassandra_password()
+            self._acquire_operator_password()
         except ValidationError:
             event.add_status(Status.INVALID_CONFIG.value)
         except BadSecretError:
@@ -295,7 +289,7 @@ class CassandraEvents(Object):
     def _on_collect_app_status(self, event: CollectStatusEvent) -> None:
         try:
             self.charm.config
-            self._acquire_cassandra_password()
+            self._acquire_operator_password()
         except ValidationError:
             event.add_status(Status.INVALID_CONFIG.value)
         except BadSecretError:

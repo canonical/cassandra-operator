@@ -46,7 +46,7 @@ SECRETS_UNIT = [
     "peer-private-key-secret",
 ]
 
-SECRETS_APP = ["internal-ca-secret", "internal-ca-key-secret", "cassandra-password"]
+SECRETS_APP = ["internal-ca-secret", "internal-ca-key-secret", "operator-password"]
 
 
 logger = logging.getLogger(__name__)
@@ -466,13 +466,13 @@ class ClusterContext(RelationState):
         self._field_setter_wrapper("internal-ca-key-secret", str(value))
 
     @property
-    def cassandra_password_secret(self) -> str:
+    def operator_password_secret(self) -> str:
         """Password of `cassandra` system user."""
-        return self.relation_data.get("cassandra-password", "")
+        return self.relation_data.get("operator-password", "")
 
-    @cassandra_password_secret.setter
-    def cassandra_password_secret(self, value: str) -> None:
-        self._field_setter_wrapper("cassandra-password", value)
+    @operator_password_secret.setter
+    def operator_password_secret(self, value: str) -> None:
+        self._field_setter_wrapper("operator-password", value)
 
 
 class ApplicationState(Object):

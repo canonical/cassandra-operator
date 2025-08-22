@@ -57,8 +57,8 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         )
         database_manager = DatabaseManager(
             hosts=[self.state.unit.ip],
-            user="cassandra",
-            password=self.state.cluster.cassandra_password_secret,
+            user="operator",
+            password=self.state.cluster.operator_password_secret,
         )
         bootstrap_manager = RollingOpsManager(
             charm=self, relation="bootstrap", callback=self.bootstrap
