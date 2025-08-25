@@ -20,14 +20,13 @@
   "fiscalYearStartMonth": 0,
   "gnetId": 5408,
   "graphTooltip": 1,
-  "id": 7,
   "links": [],
   "liveNow": false,
   "panels": [
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -80,7 +79,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "up{juju_unit=~\"cassandra.*\"}",
+          "expr": "up{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"cassandra.*\"}",
           "legendFormat": "{{juju_unit}}",
           "range": true,
           "refId": "A"
@@ -92,7 +91,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -162,7 +161,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "cassandra_clientrequest_latency_mean{juju_unit=\"$juju_unit\",type=~\"Read\"} > 0",
+          "expr": "cassandra_clientrequest_latency_mean{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\",type=~\"Read\"} > 0",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -174,7 +173,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -244,7 +243,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "rate(cassandra_connection_totaltimeouts_count{juju_unit=\"$juju_unit\"}[$interval])",
+          "expr": "rate(cassandra_connection_totaltimeouts_count{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"}[$interval])",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -256,7 +255,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -326,7 +325,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "sum(rate(cassandra_clientrequest_timeouts_count{juju_unit=\"$juju_unit\"}[$interval]))",
+          "expr": "sum(rate(cassandra_clientrequest_timeouts_count{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"}[$interval]))",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -338,7 +337,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -408,7 +407,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "(jvm_memory_used_bytes{area=\"heap\",juju_unit=\"$juju_unit\"} / jvm_memory_max_bytes{area=\"heap\", juju_unit=\"$juju_unit\"}) * 100",
+          "expr": "(jvm_memory_used_bytes{area=\"heap\",juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"} / jvm_memory_max_bytes{area=\"heap\",juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"}) * 100",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -420,7 +419,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -490,7 +489,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "cassandra_compaction_pendingtasks{juju_unit=\"$juju_unit\"}",
+          "expr": "cassandra_compaction_pendingtasks{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"}",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -502,7 +501,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -572,7 +571,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "sum(cassandra_threadpools_pendingtasks{juju_unit=\"$juju_unit\"})",
+          "expr": "sum(cassandra_threadpools_pendingtasks{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"})",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -584,7 +583,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -654,7 +653,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "rate(jvm_gc_collection_seconds_sum{juju_unit=\"$juju_unit\", gc=\"G1 Young Generation\"}[$interval]) / clamp_min(rate(jvm_gc_collection_seconds_count{juju_unit=\"$juju_unit\", gc=\"G1 Young Generation\"}[$interval]), 1)",
+          "expr": "rate(jvm_gc_collection_seconds_sum{gc=\"G1 Young Generation\",juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"}[$interval]) / clamp_min(rate(jvm_gc_collection_seconds_count{gc=\"G1 Young Generation\",juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"}[$interval]), 1)",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -666,7 +665,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -736,7 +735,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "rate(jvm_gc_collection_seconds_sum{juju_unit=\"$juju_unit\", gc=\"G1 Old Generation\"}[$interval])/clamp_min(rate(jvm_gc_collection_seconds_count{juju_unit=\"$juju_unit\", gc=\"G1 Old Generation\"}[$interval]), 1)",
+          "expr": "rate(jvm_gc_collection_seconds_sum{gc=\"G1 Old Generation\",juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"}[$interval]) / clamp_min(rate(jvm_gc_collection_seconds_count{gc=\"G1 Old Generation\",juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"}[$interval]), 1)",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -748,7 +747,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -818,7 +817,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "sum(rate(cassandra_clientrequest_unavailables_count{juju_unit=\"$juju_unit\"}[$interval]))",
+          "expr": "sum(rate(cassandra_clientrequest_unavailables_count{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"}[$interval]))",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -830,7 +829,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -900,7 +899,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "cassandra_clientrequest_latency_mean{juju_unit=\"$juju_unit\",type=~\"Write\"} > 0",
+          "expr": "cassandra_clientrequest_latency_mean{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\",type=~\"Write\"} > 0",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -938,7 +937,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1020,7 +1019,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "rate(cassandra_clientrequest_latency_count{juju_unit=\"$juju_unit\",type=~\"Write.*\"}[$interval]) > 0",
+          "expr": "rate(cassandra_clientrequest_latency_count{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\",type=~\"Write.*\"}[$interval]) > 0",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{type}}",
@@ -1035,7 +1034,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1117,7 +1116,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "rate(cassandra_clientrequest_latency_count{juju_unit=\"$juju_unit\",type=~\"Read.*\"}[$interval]) > 0",
+          "expr": "rate(cassandra_clientrequest_latency_count{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\",type=~\"Read.*\"}[$interval]) > 0",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{type}}",
@@ -1132,7 +1131,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1214,7 +1213,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "cassandra_clientrequest_latency_mean{juju_unit=\"$juju_unit\",type=~\"Write.*\"} > 0",
+          "expr": "cassandra_clientrequest_latency_mean{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\",type=~\"Write.*\"} > 0",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{type}}",
@@ -1229,7 +1228,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1311,7 +1310,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "cassandra_clientrequest_latency_mean{juju_unit=\"$juju_unit\",type=~\"Read.*\"} > 0",
+          "expr": "cassandra_clientrequest_latency_mean{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\",type=~\"Read.*\"} > 0",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{type}}",
@@ -1326,7 +1325,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1410,7 +1409,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "cassandra_clientrequest_latency_95thpercentile{instance=\"$instance\",juju_unit=\"$juju_unit\"} > 0",
+          "expr": "cassandra_clientrequest_latency_95thpercentile{instance=\"$instance\",juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"} > 0",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{type}}",
@@ -1425,7 +1424,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1507,7 +1506,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "cassandra_clientrequest_latency_95thpercentile{juju_unit=\"$juju_unit\",type=~\"Read.*\"} > 0",
+          "expr": "cassandra_clientrequest_latency_95thpercentile{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\",type=~\"Read.*\"} > 0",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{type}}",
@@ -1548,7 +1547,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1631,7 +1630,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "jvm_gc_collection_seconds_count{juju_unit=\"$juju_unit\"}",
+          "expr": "jvm_gc_collection_seconds_count{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"}",
           "legendFormat": "{{gc}}",
           "range": true,
           "refId": "A"
@@ -1647,7 +1646,7 @@
       "dashes": false,
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "editable": true,
       "error": false,
@@ -1694,7 +1693,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "jvm_gc_collection_seconds_sum{juju_unit=\"$juju_unit\"}",
+          "expr": "jvm_gc_collection_seconds_sum{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"}",
           "legendFormat": "{{gc}}",
           "range": true,
           "refId": "A"
@@ -1735,7 +1734,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1818,7 +1817,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "(\n  jvm_memory_used_bytes{area=\"heap\", juju_unit=\"$juju_unit\"}\n)",
+          "expr": "(jvm_memory_used_bytes{area=\"heap\",juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"})",
           "legendFormat": "{{juju_unit}}",
           "range": true,
           "refId": "A"
@@ -1830,7 +1829,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -1914,7 +1913,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "\n  jvm_memory_used_bytes{area=\"nonheap\", juju_unit=\"$juju_unit\"}",
+          "expr": "jvm_memory_used_bytes{area=\"nonheap\",juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"}",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -1926,7 +1925,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -2009,7 +2008,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "jvm_memory_pool_used_bytes{juju_unit=\"$juju_unit\"}",
+          "expr": "jvm_memory_pool_used_bytes{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"}",
           "legendFormat": "{{pool}}",
           "range": true,
           "refId": "A"
@@ -2021,7 +2020,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -2105,7 +2104,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "jvm_threads_current{juju_unit=\"$juju_unit\"}",
+          "expr": "jvm_threads_current{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"}",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -2117,7 +2116,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -2187,7 +2186,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "(process_open_fds{juju_unit=\"$juju_unit\"} / process_max_fds{juju_unit=\"$juju_unit\"}) * 100",
+          "expr": "(process_open_fds{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"} / process_max_fds{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"}) * 100",
           "format": "time_series",
           "intervalFactor": 1,
           "range": true,
@@ -2226,7 +2225,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -2280,7 +2279,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "topk(10, cassandra_table_live_disk_space_used_bytes_count{juju_unit=\"$juju_unit\"})",
+          "expr": "topk(10, cassandra_table_live_disk_space_used_bytes_count{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"})",
           "format": "heatmap",
           "instant": false,
           "legendFormat": "{{table}}",
@@ -2317,7 +2316,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -2400,7 +2399,7 @@
             "uid": "PFD5872C80F8E0B73"
           },
           "editorMode": "code",
-          "expr": "cassandra_columnfamily_totaldiskspaceused{juju_unit=\"$juju_unit\", keyspace=\"\"}",
+          "expr": "cassandra_columnfamily_totaldiskspaceused{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\",keyspace=\"\"}",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -2438,7 +2437,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -2520,7 +2519,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "topk(10,cassandra_columnfamily_livesstablecount{juju_unit=\"$juju_unit\", keyspace=\"\"})",
+          "expr": "topk(10, cassandra_columnfamily_livesstablecount{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\",keyspace=\"\"})",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -2532,7 +2531,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -2614,7 +2613,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "sum(cassandra_compaction_pendingtasks{juju_unit=\"$juju_unit\"})",
+          "expr": "sum(cassandra_compaction_pendingtasks{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"})",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -2626,7 +2625,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -2708,7 +2707,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "sum(cassandra_compaction_completedtasks{juju_unit=\"$juju_unit\"})",
+          "expr": "sum(cassandra_compaction_completedtasks{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"})",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -2720,7 +2719,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -2803,7 +2802,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "rate(cassandra_compaction_bytescompacted{juju_unit=\"$juju_unit\"}[$interval])",
+          "expr": "rate(cassandra_compaction_bytescompacted{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"}[$interval])",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -2815,7 +2814,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -2898,7 +2897,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "rate(cassandra_compaction_totalcompactionscompleted{juju_unit=\"$juju_unit\"}[$interval])",
+          "expr": "rate(cassandra_compaction_totalcompactionscompleted{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"}[$interval])",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -2910,7 +2909,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -2992,7 +2991,7 @@
             "uid": "PFD5872C80F8E0B73"
           },
           "editorMode": "code",
-          "expr": "cassandra_columnfamily_sstablesperreadhistogram{juju_unit=\"$juju_unit\", keyspace=\"\"}",
+          "expr": "cassandra_columnfamily_sstablesperreadhistogram{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\",keyspace=\"\"}",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -3030,7 +3029,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -3082,7 +3081,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "changes(cassandra_client_connectednativeclients{juju_unit=\"$juju_unit\"}[$__range])",
+          "expr": "changes(cassandra_client_connectednativeclients{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"}[$__range])",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -3120,7 +3119,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -3203,7 +3202,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "cassandra_storage_totalhints{juju_unit=\"$juju_unit\"}",
+          "expr": "cassandra_storage_totalhints{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"}",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -3215,7 +3214,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -3298,7 +3297,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "cassandra_storage_totalhintsinprogress{juju_unit=\"$juju_unit\"}",
+          "expr": "cassandra_storage_totalhintsinprogress{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"}",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -3336,7 +3335,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -3418,7 +3417,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "cassandra_columnfamily_bloomfilterfalsepositives{juju_unit=\"$juju_unit\", keyspace=\"\"}",
+          "expr": "cassandra_columnfamily_bloomfilterfalsepositives{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\",keyspace=\"\"}",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -3430,7 +3429,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -3512,7 +3511,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "cassandra_columnfamily_bloomfilterfalseratio{juju_unit=\"$juju_unit\", keyspace=\"\"}",
+          "expr": "cassandra_columnfamily_bloomfilterfalseratio{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\",keyspace=\"\"}",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -3524,7 +3523,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -3606,7 +3605,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "cassandra_columnfamily_bloomfilterdiskspaceused{juju_unit=\"$juju_unit\", keyspace=\"\"}",
+          "expr": "cassandra_columnfamily_bloomfilterdiskspaceused{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\",keyspace=\"\"}",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -3618,7 +3617,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -3700,7 +3699,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "cassandra_columnfamily_bloomfilteroffheapmemoryused{juju_unit=\"$juju_unit\", keyspace=\"\"}",
+          "expr": "cassandra_columnfamily_bloomfilteroffheapmemoryused{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\",keyspace=\"\"}",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -3738,7 +3737,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -3792,7 +3791,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "cassandra_threadpools_completedtasks{juju_unit=\"$juju_unit\"} > 0",
+          "expr": "cassandra_threadpools_completedtasks{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"} > 0",
           "instant": false,
           "legendFormat": "{{path}}-{{threadpools}}",
           "range": true,
@@ -3829,7 +3828,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -3911,7 +3910,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "cassandra_threadpools_pendingtasks{juju_unit=\"$juju_unit\"}",
+          "expr": "cassandra_threadpools_pendingtasks{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"}",
           "legendFormat": "{{path}}-{{threadpools}}",
           "range": true,
           "refId": "A"
@@ -3923,7 +3922,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -4005,7 +4004,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "sum(cassandra_droppedmessage_dropped{juju_unit=\"$juju_unit\"})",
+          "expr": "sum(cassandra_droppedmessage_dropped{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"})",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -4017,7 +4016,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -4099,7 +4098,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "sum(cassandra_threadpools_activetasks{juju_unit=\"$juju_unit\"})",
+          "expr": "sum(cassandra_threadpools_activetasks{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"})",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -4111,7 +4110,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -4193,7 +4192,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "sum(cassandra_threadpools_totalblockedtasks{juju_unit=\"$juju_unit\"})",
+          "expr": "sum(cassandra_threadpools_totalblockedtasks{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"})",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -4205,7 +4204,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -4287,7 +4286,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "sum(cassandra_threadpools_currentlyblockedtasks{juju_unit=\"$juju_unit\"})",
+          "expr": "sum(cassandra_threadpools_currentlyblockedtasks{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"})",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -4319,13 +4318,13 @@
           "refId": "A"
         }
       ],
-      "title": "Memtables",
+      "title": "Memtables (TODO)",
       "type": "row"
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -4378,13 +4377,13 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "cassandra_keyspace_memtablelivedatasize{juju_unit=\"$juju_unit\"}>0",
+          "expr": "cassandra_keyspace_memtablelivedatasize{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"} > 0",
           "legendFormat": "{{keyspace}}",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Top10 memtables by table size $juju_unit",
+      "title": "Top10 memtables by table size $instance",
       "transformations": [
         {
           "id": "reduce",
@@ -4412,7 +4411,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -4494,13 +4493,13 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "cassandra_columnfamily_memtablecolumnscount{juju_unit=\"$juju_unit\", keyspace=\"\"}",
+          "expr": "cassandra_columnfamily_memtablecolumnscount{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\",keyspace=\"\"}",
           "legendFormat": "{{keyspace}}",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Memtables columns count $juju_unit",
+      "title": "Memtables columns count $instance",
       "type": "timeseries"
     },
     {
@@ -4532,7 +4531,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -4615,7 +4614,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "rate(cassandra_cql_regularstatementsexecuted{juju_unit=\"$juju_unit\"}[$interval])",
+          "expr": "rate(cassandra_cql_regularstatementsexecuted{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"}[$interval])",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -4627,7 +4626,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -4710,7 +4709,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "cassandra_cql_preparedstatementsexecuted{juju_unit=\"$juju_unit\"}",
+          "expr": "cassandra_cql_preparedstatementsexecuted{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\"}",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -4748,7 +4747,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "${data_source}"
+        "uid": "${prometheusds}"
       },
       "fieldConfig": {
         "defaults": {
@@ -4831,7 +4830,7 @@
             "uid": "${data_source}"
           },
           "editorMode": "code",
-          "expr": "cassandra_columnfamily_snapshotssize{juju_unit=\"$juju_unit\", keyspace=\"\"}",
+          "expr": "cassandra_columnfamily_snapshotssize{juju_application=~\"$juju_application\",juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\",juju_unit=~\"$juju_unit\",keyspace=\"\"}",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
@@ -4845,19 +4844,171 @@
   "schemaVersion": 38,
   "style": "dark",
   "tags": [
-    "cassandra"
+    "cassandra",
+    "charm: cassandra"
   ],
   "templating": {
     "list": [
       {
         "current": {
-          "selected": false,
+          "selected": true,
+          "text": [
+            "juju_cos-test_b91ddca0-eaab-4d03-866e-b93322b3c36a_loki_0"
+          ],
+          "value": [
+            "juju_cos-test_b91ddca0-eaab-4d03-866e-b93322b3c36a_loki_0"
+          ]
+        },
+        "hide": 0,
+        "includeAll": true,
+        "label": "Loki datasource",
+        "multi": true,
+        "name": "lokids",
+        "options": [],
+        "query": "loki",
+        "queryValue": "",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": [
+            "juju_cos-test_b91ddca0-eaab-4d03-866e-b93322b3c36a_prometheus_0"
+          ],
+          "value": [
+            "juju_cos-test_b91ddca0-eaab-4d03-866e-b93322b3c36a_prometheus_0"
+          ]
+        },
+        "hide": 0,
+        "includeAll": true,
+        "label": "Prometheus datasource",
+        "multi": true,
+        "name": "prometheusds",
+        "options": [],
+        "query": "prometheus",
+        "queryValue": "",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "cassandra"
+          ],
+          "value": [
+            "cassandra"
+          ]
+        },
+        "datasource": {
+          "uid": "${prometheusds}"
+        },
+        "definition": "label_values(up{juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\"},juju_application)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Juju application",
+        "multi": true,
+        "name": "juju_application",
+        "options": [],
+        "query": {
+          "query": "label_values(up{juju_model=~\"$juju_model\",juju_model_uuid=~\"$juju_model_uuid\"},juju_application)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "86e8bc75-3c29-42a0-8be5-5b8f0657c269"
+          ],
+          "value": [
+            "86e8bc75-3c29-42a0-8be5-5b8f0657c269"
+          ]
+        },
+        "datasource": {
+          "uid": "${prometheusds}"
+        },
+        "definition": "label_values(up{juju_model=~\"$juju_model\"},juju_model_uuid)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Juju model uuid",
+        "multi": true,
+        "name": "juju_model_uuid",
+        "options": [],
+        "query": {
+          "query": "label_values(up{juju_model=~\"$juju_model\"},juju_model_uuid)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": [
+            "cas-test"
+          ],
+          "value": [
+            "cas-test"
+          ]
+        },
+        "datasource": {
+          "uid": "${prometheusds}"
+        },
+        "definition": "label_values(up,juju_model)",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Juju model",
+        "multi": true,
+        "name": "juju_model",
+        "options": [],
+        "query": {
+          "query": "label_values(up,juju_model)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "current": {
+          "selected": true,
           "text": "cassandra/1",
           "value": "cassandra/1"
         },
         "datasource": {
           "type": "prometheus",
-          "uid": "${data_source}"
+          "uid": "${prometheusds}"
         },
         "definition": "label_values(up{job=~\"cassandra_.*\"},juju_unit)",
         "hide": 0,
@@ -4884,9 +5035,9 @@
         "auto_count": 30,
         "auto_min": "30s",
         "current": {
-          "selected": true,
-          "text": "6h",
-          "value": "6h"
+          "selected": false,
+          "text": "1h",
+          "value": "1h"
         },
         "hide": 0,
         "label": "interval",
@@ -4913,12 +5064,12 @@
             "value": "5m"
           },
           {
-            "selected": false,
+            "selected": true,
             "text": "1h",
             "value": "1h"
           },
           {
-            "selected": true,
+            "selected": false,
             "text": "6h",
             "value": "6h"
           },
@@ -4933,24 +5084,6 @@
         "refresh": 2,
         "skipUrlSync": false,
         "type": "interval"
-      },
-      {
-        "current": {
-          "selected": false,
-          "text": "juju_cos-test_c25ae7ad-c26a-4480-84eb-bcc73e8a8499_prometheus_0",
-          "value": "juju_cos-test_c25ae7ad-c26a-4480-84eb-bcc73e8a8499_prometheus_0"
-        },
-        "hide": 0,
-        "includeAll": false,
-        "multi": false,
-        "name": "data_source",
-        "options": [],
-        "query": "prometheus",
-        "queryValue": "",
-        "refresh": 1,
-        "regex": "",
-        "skipUrlSync": false,
-        "type": "datasource"
       }
     ]
   },
@@ -4985,8 +5118,8 @@
     ]
   },
   "timezone": "utc",
-  "title": "Cassandra Overview #2",
-  "uid": "00000123",
+  "title": "Cassandra Overview",
+  "uid": "54a13fc110077ed2a9536aa3f4149c061fc6a382",
   "version": 1,
   "weekStart": ""
 }
