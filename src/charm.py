@@ -9,10 +9,12 @@ import logging
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from charms.grafana_agent.v0.cos_agent import COSAgentProvider
 from charms.rolling_ops.v0.rollingops import RollingOpsManager, RunWithLock
-from ops import main
+from ops import ModelError, SecretNotFoundError, main
 from tenacity import Retrying, stop_after_delay, wait_exponential
 
+from common.exceptions import BadSecretError
 from core.config import CharmConfig
+from core.literals import CASSANDRA_ADMIN_USERNAME
 from core.state import (
     JMX_EXPORTER_PORT,
     METRICS_RULES_DIR,
@@ -24,6 +26,7 @@ from events.cassandra import CassandraEvents
 from events.tls import TLSEvents
 from managers.cluster import ClusterManager
 from managers.config import ConfigManager
+from managers.database import DatabaseManager
 from managers.tls import Sans, TLSManager
 from workload import SNAP_NAME, CassandraWorkload
 
@@ -45,13 +48,19 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
 
         config_manager = ConfigManager(
             workload=self.workload,
-            cluster_name=self.state.cluster.cluster_name,
+            cluster_name=self.app.name,
             listen_address=self.state.unit.ip,
             seeds=self.state.cluster.seeds,
-            enable_peer_tls=False,
-            enable_client_tls=False,
+            enable_peer_tls=self.state.unit.peer_tls.ready,
+            enable_client_tls=self.state.unit.client_tls.ready,
             keystore_password=self.state.unit.keystore_password,
             truststore_password=self.state.unit.truststore_password,
+            authentication=True,
+        )
+        database_manager = DatabaseManager(
+            hosts=[self.state.unit.ip],
+            user=CASSANDRA_ADMIN_USERNAME,
+            password=self.state.cluster.operator_password_secret,
         )
         bootstrap_manager = RollingOpsManager(
             charm=self, relation="bootstrap", callback=self.bootstrap
@@ -63,9 +72,11 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             workload=self.workload,
             cluster_manager=self.cluster_manager,
             config_manager=config_manager,
+            database_manager=database_manager,
             bootstrap_manager=bootstrap_manager,
             tls_manager=self.tls_manager,
-            configure_certificates=self.configure_internal_certificates,
+            setup_internal_certificates=self.setup_internal_certificates,
+            read_auth_secret=self.read_auth_secret,
         )
 
         self.tls_events = TLSEvents(
@@ -73,8 +84,10 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             state=self.state,
             workload=self.workload,
             cluster_manager=self.cluster_manager,
+            config_manager=config_manager,
+            bootstrap_manager=bootstrap_manager,
             tls_manager=self.tls_manager,
-            configure_certificates=self.configure_internal_certificates,
+            setup_internal_certificates=self.setup_internal_certificates,
         )
 
         self._grafana_agent = COSAgentProvider(
@@ -93,16 +106,22 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
 
         self.workload.restart()
 
-        for _ in Retrying(wait=wait_exponential(), stop=stop_after_delay(1800)):
-            if self.cluster_manager.is_healthy:
-                self.state.unit.workload_state = UnitWorkloadState.ACTIVE
-                if self.unit.is_leader():
-                    self.state.cluster.state = ClusterState.ACTIVE
-                return
+        for attempt in Retrying(
+            wait=wait_exponential(), stop=stop_after_delay(1800), reraise=True
+        ):
+            with attempt:
+                if not self.cluster_manager.is_healthy:
+                    raise Exception("bootstrap timeout exceeded")
 
-        raise Exception("bootstrap timeout exceeded")
+        if self.state.unit.peer_tls.rotation:
+            self.state.unit.peer_tls.rotation = False
+        if self.state.unit.client_tls.rotation:
+            self.state.unit.client_tls.rotation = False
+        self.state.unit.workload_state = UnitWorkloadState.ACTIVE
+        if self.unit.is_leader():
+            self.state.cluster.state = ClusterState.ACTIVE
 
-    def configure_internal_certificates(self, sans: Sans) -> bool:
+    def setup_internal_certificates(self, sans: Sans) -> bool:
         """Configure internal TLS certificates for the current unit using an internally managed CA.
 
         Args:
@@ -149,6 +168,32 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         )
 
         return True
+
+    def read_auth_secret(self, secret_id: str) -> str:
+        """Read and validate user-defined authentication secret.
+
+        Returns:
+            operator password.
+        """
+        try:
+            if (
+                password := self.model.get_secret(id=secret_id)
+                .get_content(refresh=True)
+                .get(CASSANDRA_ADMIN_USERNAME)
+            ):
+                return password
+            else:
+                logger.error(
+                    "User-defined system users secret doesn't contain"
+                    f" `{CASSANDRA_ADMIN_USERNAME}` field"
+                )
+                raise BadSecretError()
+        except SecretNotFoundError:
+            logger.error("Cannot find user-defined system users secret")
+            raise BadSecretError()
+        except ModelError as e:
+            logger.error(f"Error accessing user-defined system users secret: {e}")
+            raise BadSecretError()
 
 
 if __name__ == "__main__":  # pragma: nocover

@@ -46,7 +46,7 @@ SECRETS_UNIT = [
     "peer-private-key-secret",
 ]
 
-SECRETS_APP = ["internal-ca-secret", "internal-ca-key-secret"]
+SECRETS_APP = ["internal-ca-secret", "internal-ca-key-secret", "operator-password"]
 
 
 logger = logging.getLogger(__name__)
@@ -405,15 +405,6 @@ class ClusterContext(RelationState):
         self.app = component
 
     @property
-    def cluster_name(self) -> str:
-        """Established Cassandra cluster name."""
-        return self.relation_data.get("cluster_name", "")
-
-    @cluster_name.setter
-    def cluster_name(self, value: str) -> None:
-        self._field_setter_wrapper("cluster_name", value)
-
-    @property
     def seeds(self) -> list[str]:
         """List of peer urls of Cassandra seed nodes."""
         seeds = self.relation_data.get("seeds", "")
@@ -473,6 +464,15 @@ class ClusterContext(RelationState):
     @internal_ca_key.setter
     def internal_ca_key(self, value: PrivateKey) -> None:
         self._field_setter_wrapper("internal-ca-key-secret", str(value))
+
+    @property
+    def operator_password_secret(self) -> str:
+        """Password of `cassandra` system user."""
+        return self.relation_data.get("operator-password", "")
+
+    @operator_password_secret.setter
+    def operator_password_secret(self, value: str) -> None:
+        self._field_setter_wrapper("operator-password", value)
 
 
 class ApplicationState(Object):
