@@ -143,32 +143,7 @@ class CassandraEvents(Object):
 
         if not self.state.cluster.operator_password_secret:
             try:
-                password = self._acquire_operator_password()
-
-                self.config_manager.render_cassandra_config(
-                    listen_address="127.0.0.1",
-                    seeds=["127.0.0.1:7000"],
-                    enable_peer_tls=self.state.unit.peer_tls.ready,
-                    enable_client_tls=self.state.unit.client_tls.ready,
-                    keystore_password=self.state.unit.keystore_password,
-                    truststore_password=self.state.unit.truststore_password,
-                )
-                self.workload.start()
-                for attempt in Retrying(
-                    wait=wait_exponential(), stop=stop_after_delay(1800), reraise=True
-                ):
-                    with attempt:
-                        if not self.cluster_manager.is_healthy:
-                            raise Exception("bootstrap timeout exceeded")
-
-                for attempt in Retrying(
-                    wait=wait_fixed(10), stop=stop_after_delay(120), reraise=True
-                ):
-                    with attempt:
-                        self.database_manager.init_admin(password)
-                self.state.cluster.operator_password_secret = password
-
-                self.cluster_manager.prepare_shutdown()
+                self._start_leader_setup_auth()
             except BadSecretError:
                 event.defer()
                 return
@@ -182,6 +157,32 @@ class CassandraEvents(Object):
             truststore_password=self.state.unit.truststore_password,
         )
         self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
+
+    def _start_leader_setup_auth(self) -> None:
+        password = self._acquire_operator_password()
+
+        self.config_manager.render_cassandra_config(
+            listen_address="127.0.0.1",
+            seeds=["127.0.0.1:7000"],
+            enable_peer_tls=self.state.unit.peer_tls.ready,
+            enable_client_tls=self.state.unit.client_tls.ready,
+            keystore_password=self.state.unit.keystore_password,
+            truststore_password=self.state.unit.truststore_password,
+        )
+        self.workload.start()
+        for attempt in Retrying(
+            wait=wait_exponential(), stop=stop_after_delay(1800), reraise=True
+        ):
+            with attempt:
+                if not self.cluster_manager.is_healthy:
+                    raise Exception("bootstrap timeout exceeded")
+
+        for attempt in Retrying(wait=wait_fixed(10), stop=stop_after_delay(120), reraise=True):
+            with attempt:
+                self.database_manager.init_admin(password)
+        self.state.cluster.operator_password_secret = password
+
+        self.cluster_manager.prepare_shutdown()
 
     def _start_subordinate(self, event: StartEvent) -> None:
         if (
