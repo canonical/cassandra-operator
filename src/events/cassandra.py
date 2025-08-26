@@ -300,6 +300,13 @@ class CassandraEvents(Object):
 
     def _on_update_status(self, _: UpdateStatusEvent) -> None:
         if (
+            self.state.unit.workload_state == UnitWorkloadState.ACTIVE
+            and not self.workload.is_alive()
+        ):
+            logger.error("Cassandra service is not alive, but should be. Restarting it")
+            self.workload.restart()
+
+        if (
             self._update_network_address()
             and self.state.unit.workload_state == UnitWorkloadState.ACTIVE
         ):
