@@ -299,7 +299,6 @@ class CassandraEvents(Object):
         self._recover_seeds(event)
 
     def _on_update_status(self, _: UpdateStatusEvent) -> None:
-        # TODO: add peer relation change hook for subordinates to update leader address too
         if (
             self._update_network_address()
             and self.state.unit.workload_state == UnitWorkloadState.ACTIVE
