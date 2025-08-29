@@ -12,8 +12,12 @@ from charms.rolling_ops.v0.rollingops import RollingOpsManager
 from ops import (
     CollectStatusEvent,
     ConfigChangedEvent,
+    EventBase,
     InstallEvent,
+    LeaderElectedEvent,
     Object,
+    RelationChangedEvent,
+    RelationDepartedEvent,
     SecretChangedEvent,
     StartEvent,
     UpdateStatusEvent,
@@ -24,7 +28,7 @@ from tenacity import Retrying, stop_after_delay, wait_exponential, wait_fixed
 from common.exceptions import BadSecretError
 from core.config import CharmConfig
 from core.literals import CASSANDRA_ADMIN_USERNAME
-from core.state import ApplicationState, UnitWorkloadState
+from core.state import PEER_RELATION, ApplicationState, ClusterState, UnitWorkloadState
 from core.statuses import Status
 from core.workload import WorkloadBase
 from managers.cluster import ClusterManager
@@ -67,6 +71,13 @@ class CassandraEvents(Object):
         self.framework.observe(self.charm.on.install, self._on_install)
         self.framework.observe(self.charm.on.config_changed, self._on_config_changed)
         self.framework.observe(self.charm.on.secret_changed, self._on_secret_changed)
+        self.framework.observe(
+            self.charm.on[PEER_RELATION].relation_changed, self._on_peer_relation_changed
+        )
+        self.framework.observe(
+            self.charm.on[PEER_RELATION].relation_departed, self._on_peer_relation_departed
+        )
+        self.framework.observe(self.charm.on.leader_elected, self._on_leader_elected)
         self.framework.observe(self.charm.on.update_status, self._on_update_status)
         self.framework.observe(self.charm.on.collect_unit_status, self._on_collect_unit_status)
         self.framework.observe(self.charm.on.collect_app_status, self._on_collect_app_status)
@@ -101,12 +112,54 @@ class CassandraEvents(Object):
             self._start_subordinate(event)
 
     def _start_leader(self, event: StartEvent) -> None:
-        self.state.cluster.seeds = [self.state.unit.peer_url]
-        try:
-            self.state.cluster.operator_password_secret = self._acquire_operator_password()
-        except BadSecretError:
+        if self.state.cluster.is_active:
+            self.state.cluster.state = ClusterState.RECOVERING
+            self.state.unit.workload_state = UnitWorkloadState.WAITING_FOR_START
             event.defer()
             return
+
+        if self.state.cluster.state == ClusterState.RECOVERING:
+            if any(
+                unit.workload_state != UnitWorkloadState.WAITING_FOR_START
+                for unit in self.state.other_units
+            ):
+                event.defer()
+                return
+            else:
+                self.state.cluster.state = ClusterState.UNKNOWN
+
+        if not self.state.cluster.seeds or all(
+            self.state.cluster.seeds[0] != unit.peer_url for unit in self.state.units
+        ):
+            self.state.cluster.seeds = [self.state.unit.peer_url]
+
+        if self.state.cluster.seeds[0] != self.state.unit.peer_url and any(
+            unit.workload_state != UnitWorkloadState.ACTIVE
+            for unit in self.state.other_units
+            if unit.peer_url in self.state.cluster.seeds
+        ):
+            event.defer()
+            return
+
+        if not self.state.cluster.operator_password_secret:
+            try:
+                self._start_leader_setup_auth()
+            except BadSecretError:
+                event.defer()
+                return
+
+        self.config_manager.render_cassandra_config(
+            listen_address=self.state.unit.ip,
+            seeds=self.state.cluster.seeds,
+            enable_peer_tls=self.state.unit.peer_tls.ready,
+            enable_client_tls=self.state.unit.client_tls.ready,
+            keystore_password=self.state.unit.keystore_password,
+            truststore_password=self.state.unit.truststore_password,
+        )
+        self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
+
+    def _start_leader_setup_auth(self) -> None:
+        password = self._acquire_operator_password()
 
         self.config_manager.render_cassandra_config(
             listen_address="127.0.0.1",
@@ -117,7 +170,6 @@ class CassandraEvents(Object):
             truststore_password=self.state.unit.truststore_password,
         )
         self.workload.start()
-
         for attempt in Retrying(
             wait=wait_exponential(), stop=stop_after_delay(1800), reraise=True
         ):
@@ -127,21 +179,29 @@ class CassandraEvents(Object):
 
         for attempt in Retrying(wait=wait_fixed(10), stop=stop_after_delay(120), reraise=True):
             with attempt:
-                self.database_manager.init_admin(self.state.cluster.operator_password_secret)
+                self.database_manager.init_admin(password)
+        self.state.cluster.operator_password_secret = password
 
-        self.config_manager.render_cassandra_config(
-            listen_address=self.state.unit.ip,
-            seeds=self.state.cluster.seeds,
-            enable_peer_tls=self.state.unit.peer_tls.ready,
-            enable_client_tls=self.state.unit.client_tls.ready,
-            keystore_password=self.state.unit.keystore_password,
-            truststore_password=self.state.unit.truststore_password,
-        )
         self.cluster_manager.prepare_shutdown()
-        self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
 
     def _start_subordinate(self, event: StartEvent) -> None:
-        if not self.state.cluster.is_active:
+        if (
+            self.state.cluster.is_active
+            and self.state.unit.workload_state == UnitWorkloadState.ACTIVE
+        ):
+            event.defer()
+            return
+
+        if self.state.cluster.state == ClusterState.RECOVERING:
+            if self.state.unit.workload_state != UnitWorkloadState.WAITING_FOR_START:
+                self.state.unit.workload_state = UnitWorkloadState.WAITING_FOR_START
+            event.defer()
+            return
+
+        if (
+            not self.state.cluster.is_active
+            and self.state.unit.peer_url not in self.state.cluster.seeds
+        ):
             self.state.unit.workload_state = UnitWorkloadState.WAITING_FOR_START
             logger.debug("Deferring subordinate on_start due to cluster isn't initialized yet")
             event.defer()
@@ -214,8 +274,38 @@ class CassandraEvents(Object):
         except BadSecretError:
             return
 
+    def _on_peer_relation_changed(self, event: RelationChangedEvent) -> None:
+        if self.state.unit.workload_state == UnitWorkloadState.INSTALLING:
+            return
+        if self.state.unit.workload_state != UnitWorkloadState.ACTIVE:
+            event.defer()
+            return
+        if self.config_manager.render_cassandra_config():
+            self.cluster_manager.prepare_shutdown()
+            self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
+
+    def _on_peer_relation_departed(self, event: RelationDepartedEvent) -> None:
+        if event.departing_unit == self.charm.unit:
+            if self.state.unit.workload_state == UnitWorkloadState.INSTALLING:
+                return
+            if self.state.unit.workload_state != UnitWorkloadState.ACTIVE:
+                event.defer()
+                return
+            self.cluster_manager.decommission()
+        elif self.charm.unit.is_leader():
+            self._recover_seeds(event)
+
+    def _on_leader_elected(self, event: LeaderElectedEvent) -> None:
+        self._recover_seeds(event)
+
     def _on_update_status(self, _: UpdateStatusEvent) -> None:
-        # TODO: add peer relation change hook for subordinates to update leader address too
+        if (
+            self.state.unit.workload_state == UnitWorkloadState.ACTIVE
+            and not self.workload.is_alive()
+        ):
+            logger.error("Cassandra service is not alive, but should be. Restarting it")
+            self.workload.restart()
+
         if (
             self._update_network_address()
             and self.state.unit.workload_state == UnitWorkloadState.ACTIVE
@@ -280,6 +370,20 @@ class CassandraEvents(Object):
             event.add_status(Status.INVALID_SYSTEM_USERS_SECRET.value)
 
         event.add_status(Status.ACTIVE.value)
+
+    def _recover_seeds(self, event: EventBase) -> None:
+        if self.state.unit.workload_state == UnitWorkloadState.INSTALLING:
+            return
+        if self.state.unit.workload_state != UnitWorkloadState.ACTIVE:
+            event.defer()
+            return
+        if not self.state.cluster.seeds or all(
+            self.state.cluster.seeds[0] != unit.peer_url for unit in self.state.units
+        ):
+            self.state.cluster.seeds = [self.state.unit.peer_url]
+            self.config_manager.render_cassandra_config(seeds=self.state.cluster.seeds)
+            self.cluster_manager.prepare_shutdown()
+            self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
 
     def _update_network_address(self) -> bool:
         """Update hostname & ip in this unit context.
