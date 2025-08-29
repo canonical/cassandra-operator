@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope="module")
-def juju_local(request: pytest.FixtureRequest) -> Generator[jubilant.Juju, None, None]:
+def juju(request: pytest.FixtureRequest) -> Generator[jubilant.Juju, None, None]:
     keep_models = bool(request.config.getoption("--keep-models"))
 
     with using_vm():
