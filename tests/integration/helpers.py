@@ -4,20 +4,20 @@
 
 import json
 import logging
+import os
 import subprocess
-import requests
 from contextlib import contextmanager
 from typing import Generator
 
-from typing import Any
 import jubilant
-import os
+import requests
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.cluster import EXEC_PROFILE_DEFAULT, Cluster, ExecutionProfile, Session
 from cassandra.policies import DCAwareRoundRobinPolicy, TokenAwarePolicy
 
 logger = logging.getLogger(__name__)
 COS_METRICS_PORT = 7071
+
 
 @contextmanager
 def connect_cql(
@@ -130,31 +130,33 @@ def check_node_is_up(juju: jubilant.Juju, app_name: str, unit_num: int, unit_add
 
     return False
 
+
 def run_script(script: str) -> None:
-    """Runs a script on Linux OS.
-    
-     Args:
-        script (str): Bash script
-    
-     Raises:
-        OSError: If the script run fails.
+    """Run a script on Linux OS.
+
+    Args:
+       script (str): Bash script
+
+    Raises:
+       OSError: If the script run fails.
     """
     for line in script.split("\n"):
         command = line.strip()
-        
+
         if not command or command.startswith("#"):
-               continue
-           
+            continue
+
         logger.info(command)
         ret_code = os.system(command)
-        
+
         if ret_code:
             raise OSError(f'command "{command}" failed with error code {ret_code}')
 
+
 @contextmanager
-def juju_controller_env(controller: str):
+def using_vm():
     old = os.environ.get("JUJU_CONTROLLER")
-    os.environ["JUJU_CONTROLLER"] = controller
+    os.environ["JUJU_CONTROLLER"] = get_vm_controller(jubilant.Juju())
     try:
         yield
     finally:
@@ -162,6 +164,20 @@ def juju_controller_env(controller: str):
             os.environ["JUJU_CONTROLLER"] = old
         else:
             os.environ.pop("JUJU_CONTROLLER", None)
+
+
+@contextmanager
+def using_k8s():
+    old = os.environ.get("JUJU_CONTROLLER")
+    os.environ["JUJU_CONTROLLER"] = get_microk8s_controller(jubilant.Juju())
+    try:
+        yield
+    finally:
+        if old is not None:
+            os.environ["JUJU_CONTROLLER"] = old
+        else:
+            os.environ.pop("JUJU_CONTROLLER", None)
+
 
 def _get_microk8s_controller_name(juju: jubilant.Juju) -> str:
     controllers_raw = json.loads(
@@ -174,23 +190,37 @@ def _get_microk8s_controller_name(juju: jubilant.Juju) -> str:
 
     return ""
 
+
+def get_vm_controller(juju: jubilant.Juju) -> str:
+    """Return the localhost controller name, boots up a new one if not existent."""
+    controllers_raw = json.loads(juju.cli("controllers", "--format", "json", include_model=False))
+
+    for name, data in controllers_raw.get("controllers", {}).items():
+        if data.get("cloud") == "localhost":
+            logger.info(f"Localhost controller '{name}' exists, skipping setup...")
+            return name
+
+    jubilant.Juju().cli("bootstrap", "localhost", include_model=False)
+
+    return _get_microk8s_controller_name(juju)
+
+
 def get_microk8s_controller(juju: jubilant.Juju) -> str:
-    """Returns the microk8s controller name, boots up a new one if not existent."""
-    
-    controllers_raw = json.loads(
-        juju.cli("controllers", "--format", "json", include_model=False)
-    )
+    """Return the microk8s controller name, boots up a new one if not existent."""
+    controllers_raw = json.loads(juju.cli("controllers", "--format", "json", include_model=False))
 
     for name, data in controllers_raw.get("controllers", {}).items():
         if data.get("cloud") == "microk8s":
             logger.info(f"Microk8s controller '{name}' exists, skipping setup...")
             return name
 
-
     jubilant.Juju().cli("bootstrap", "microk8s", include_model=False)
 
+    configure_microk8s()
+
     return _get_microk8s_controller_name(juju)
-        
+
+
 def configure_microk8s() -> None:
     user_env_var = os.environ.get("USER", "root")
     os.system("sudo apt install -y jq")
@@ -199,34 +229,35 @@ def configure_microk8s() -> None:
         shell=True,
         text=True,
         timeout=5,
-        universal_newlines=True,        
+        universal_newlines=True,
     ).strip()
 
     run_script(
-            f"""
-            # install microk8s
-            sudo snap install microk8s --classic --channel=1.32
+        f"""
+         # install microk8s
+         sudo snap install microk8s --classic --channel=1.32
 
-            # configure microk8s
-            sudo usermod -a -G microk8s {user_env_var}
-            mkdir -p ~/.kube
-            chmod 0700 ~/.kube
+         # configure microk8s
+         sudo usermod -a -G microk8s {user_env_var}
+         mkdir -p ~/.kube
+         chmod 0700 ~/.kube
 
-            # ensure microk8s is up
-            sudo microk8s status --wait-ready
+         # ensure microk8s is up
+         sudo microk8s status --wait-ready
 
-            # enable required addons
-            sudo microk8s enable dns
-            sudo microk8s enable hostpath-storage
-            sudo microk8s enable metallb:{ip_addr}-{ip_addr}
+         # enable required addons
+         sudo microk8s enable dns
+         sudo microk8s enable hostpath-storage
+         sudo microk8s enable metallb:{ip_addr}-{ip_addr}
 
-            # configure & bootstrap microk8s controller
-            sudo mkdir -p /var/snap/juju/current/microk8s/credentials
-            sudo microk8s config | sudo tee /var/snap/juju/current/microk8s/credentials/client.config
-            sudo chown -R {user_env_var}:{user_env_var} /var/snap/juju/current/microk8s/credentials
-            sleep 90
+         # configure & bootstrap microk8s controller
+         sudo mkdir -p /var/snap/juju/current/microk8s/credentials
+         sudo microk8s config | sudo tee /var/snap/juju/current/microk8s/credentials/client.config
+         sudo chown -R {user_env_var}:{user_env_var} /var/snap/juju/current/microk8s/credentials
+         sleep 90
         """
     )
+
 
 def prometheus_exporter_data(host: str) -> str | None:
     """Check if a given host has metric service available and it is publishing."""
@@ -237,11 +268,12 @@ def prometheus_exporter_data(host: str) -> str | None:
     except requests.exceptions.RequestException as e:
         logger.info(f"prometheus_exporter_data exception: {e}")
         return None
-    
+
     if response.status_code == 200:
         return response.text
 
     return None
+
 
 def all_prometheus_exporters_data(juju: jubilant.Juju, check_field: str, app_name: str) -> bool:
     """Check if a all units has metric service available and publishing."""
