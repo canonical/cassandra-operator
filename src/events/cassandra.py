@@ -14,18 +14,22 @@ from ops import (
     ConfigChangedEvent,
     InstallEvent,
     Object,
+    SecretChangedEvent,
     StartEvent,
     UpdateStatusEvent,
 )
 from pydantic import ValidationError
+from tenacity import Retrying, stop_after_delay, wait_exponential, wait_fixed
 
-from common.cassandra_client import CassandraClient
+from common.exceptions import BadSecretError
 from core.config import CharmConfig
+from core.literals import CASSANDRA_ADMIN_USERNAME
 from core.state import ApplicationState, UnitWorkloadState
 from core.statuses import Status
 from core.workload import WorkloadBase
 from managers.cluster import ClusterManager
 from managers.config import ConfigManager
+from managers.database import DatabaseManager
 from managers.tls import Sans, TLSManager
 
 logger = logging.getLogger(__name__)
@@ -43,7 +47,9 @@ class CassandraEvents(Object):
         config_manager: ConfigManager,
         bootstrap_manager: RollingOpsManager,
         tls_manager: TLSManager,
-        configure_certificates: Callable[[Sans], bool],
+        setup_internal_certificates: Callable[[Sans], bool],
+        database_manager: DatabaseManager,
+        read_auth_secret: Callable[[str], str],
     ):
         super().__init__(charm, key="cassandra_events")
         self.charm = charm
@@ -53,11 +59,14 @@ class CassandraEvents(Object):
         self.config_manager = config_manager
         self.bootstrap_manager = bootstrap_manager
         self.tls_manager = tls_manager
-        self.configure_certificates = configure_certificates
+        self.setup_internal_certificates = setup_internal_certificates
+        self.database_manager = database_manager
+        self.read_auth_secret = read_auth_secret
 
         self.framework.observe(self.charm.on.start, self._on_start)
         self.framework.observe(self.charm.on.install, self._on_install)
         self.framework.observe(self.charm.on.config_changed, self._on_config_changed)
+        self.framework.observe(self.charm.on.secret_changed, self._on_secret_changed)
         self.framework.observe(self.charm.on.update_status, self._on_update_status)
         self.framework.observe(self.charm.on.collect_unit_status, self._on_collect_unit_status)
         self.framework.observe(self.charm.on.collect_app_status, self._on_collect_app_status)
@@ -68,26 +77,16 @@ class CassandraEvents(Object):
     def _on_start(self, event: StartEvent) -> None:
         self._update_network_address()
 
-        if not self.charm.unit.is_leader() and not self.state.cluster.is_active:
-            self.state.unit.workload_state = UnitWorkloadState.WAITING_FOR_START
-            logger.debug("Deferring on_start for unit due to cluster isn't initialized yet")
-            event.defer()
-            return
-
-        host_mapping = self.cluster_manager.network_address()
-        sans = self.tls_manager.build_sans(
-            sans_ip=[host_mapping[0]],
-            sans_dns=[host_mapping[1], self.charm.unit.name],
-        )
-
-        if not self.configure_certificates(sans):
+        if not self.setup_internal_certificates(
+            self.tls_manager.build_sans(
+                sans_ip=[self.state.unit.ip],
+                sans_dns=[self.state.unit.hostname, self.charm.unit.name],
+            )
+        ):
             event.defer()
             return
 
         try:
-            if self.charm.unit.is_leader():
-                self.state.cluster.cluster_name = self.charm.config.cluster_name
-                self.state.cluster.seeds = [self.state.unit.peer_url]
             self.config_manager.render_env(
                 cassandra_limit_memory_mb=1024 if self.charm.config.profile == "testing" else None,
             )
@@ -96,8 +95,41 @@ class CassandraEvents(Object):
             event.defer()
             return
 
+        if self.charm.unit.is_leader():
+            self._start_leader(event)
+        else:
+            self._start_subordinate(event)
+
+    def _start_leader(self, event: StartEvent) -> None:
+        self.state.cluster.seeds = [self.state.unit.peer_url]
+        try:
+            self.state.cluster.operator_password_secret = self._acquire_operator_password()
+        except BadSecretError:
+            event.defer()
+            return
+
         self.config_manager.render_cassandra_config(
-            cluster_name=self.state.cluster.cluster_name,
+            listen_address="127.0.0.1",
+            seeds=["127.0.0.1:7000"],
+            enable_peer_tls=self.state.unit.peer_tls.ready,
+            enable_client_tls=self.state.unit.client_tls.ready,
+            keystore_password=self.state.unit.keystore_password,
+            truststore_password=self.state.unit.truststore_password,
+        )
+        self.workload.start()
+
+        for attempt in Retrying(
+            wait=wait_exponential(), stop=stop_after_delay(1800), reraise=True
+        ):
+            with attempt:
+                if not self.cluster_manager.is_healthy:
+                    raise Exception("bootstrap timeout exceeded")
+
+        for attempt in Retrying(wait=wait_fixed(10), stop=stop_after_delay(120), reraise=True):
+            with attempt:
+                self.database_manager.init_admin(self.state.cluster.operator_password_secret)
+
+        self.config_manager.render_cassandra_config(
             listen_address=self.state.unit.ip,
             seeds=self.state.cluster.seeds,
             enable_peer_tls=self.state.unit.peer_tls.ready,
@@ -105,32 +137,82 @@ class CassandraEvents(Object):
             keystore_password=self.state.unit.keystore_password,
             truststore_password=self.state.unit.truststore_password,
         )
-
+        self.cluster_manager.prepare_shutdown()
         self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
 
-    def _on_config_changed(self, _: ConfigChangedEvent) -> None:
-        # TODO: add peer relation change hook for subordinates to update leader address too
+    def _start_subordinate(self, event: StartEvent) -> None:
+        if not self.state.cluster.is_active:
+            self.state.unit.workload_state = UnitWorkloadState.WAITING_FOR_START
+            logger.debug("Deferring subordinate on_start due to cluster isn't initialized yet")
+            event.defer()
+            return
+
+        self.config_manager.render_cassandra_config(
+            listen_address=self.state.unit.ip,
+            enable_peer_tls=self.state.unit.peer_tls.ready,
+            enable_client_tls=self.state.unit.client_tls.ready,
+            keystore_password=self.state.unit.keystore_password,
+            truststore_password=self.state.unit.truststore_password,
+        )
+        self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
+
+    def _acquire_operator_password(self) -> str:
+        if self.charm.config.system_users:
+            return self.read_auth_secret(self.charm.config.system_users)
+        if self.state.cluster.operator_password_secret:
+            return self.state.cluster.operator_password_secret
+        return self.workload.generate_password()
+
+    def _on_config_changed(self, event: ConfigChangedEvent) -> None:
+        if self.state.unit.workload_state == UnitWorkloadState.INSTALLING:
+            return
+        if self.state.unit.workload_state != UnitWorkloadState.ACTIVE:
+            event.defer()
+            return
         try:
-            # TODO: cluster_name change
-            self.config_manager.render_env(
+            if self.charm.unit.is_leader() and self.state.cluster.operator_password_secret != (
+                password := self._acquire_operator_password()
+            ):
+                self.database_manager.update_role_password(CASSANDRA_ADMIN_USERNAME, password)
+                self.state.cluster.operator_password_secret = password
+            env_changed = self.config_manager.render_env(
                 cassandra_limit_memory_mb=1024 if self.charm.config.profile == "testing" else None
             )
-            self.config_manager.render_cassandra_config(
-                enable_peer_tls=self.state.unit.peer_tls.ready,
-                enable_client_tls=self.state.unit.client_tls.ready,
-                keystore_password=self.state.unit.keystore_password,
-                truststore_password=self.state.unit.truststore_password,
-            )
+            cassandra_config_changed = self.config_manager.render_cassandra_config()
+            if env_changed or cassandra_config_changed:
+                self.cluster_manager.prepare_shutdown()
+                self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
         except ValidationError as e:
             logger.debug(f"Config haven't passed validation: {e}")
             return
+        except BadSecretError:
+            event.defer()
+            return
 
-        if self.state.unit.peer_tls.rotation or self.state.unit.client_tls.rotation:
-            self.state.unit.peer_tls.rotation = False
-            self.state.unit.client_tls.rotation = False
+    def _on_secret_changed(self, event: SecretChangedEvent) -> None:
+        if not self.charm.unit.is_leader():
+            return
 
-        if self.state.unit.workload_state == UnitWorkloadState.ACTIVE:
-            self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
+        if self.state.unit.workload_state == UnitWorkloadState.INSTALLING:
+            return
+
+        try:
+            if event.secret.id != self.charm.config.system_users:
+                return
+
+            if self.state.unit.workload_state != UnitWorkloadState.ACTIVE:
+                event.defer()
+                return
+
+            if self.state.cluster.operator_password_secret != (
+                password := self._acquire_operator_password()
+            ):
+                self.database_manager.update_role_password(CASSANDRA_ADMIN_USERNAME, password)
+                self.state.cluster.operator_password_secret = password
+        except ValidationError:
+            return
+        except BadSecretError:
+            return
 
     def _on_update_status(self, _: UpdateStatusEvent) -> None:
         # TODO: add peer relation change hook for subordinates to update leader address too
@@ -144,17 +226,19 @@ class CassandraEvents(Object):
             self.config_manager.render_cassandra_config(
                 listen_address=self.state.unit.ip,
                 seeds=self.state.cluster.seeds,
-                keystore_password=self.state.unit.keystore_password,
-                truststore_password=self.state.unit.truststore_password,
             )
 
+            self.cluster_manager.prepare_shutdown()
             self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
 
     def _on_collect_unit_status(self, event: CollectStatusEvent) -> None:
         try:
             self.charm.config
+            self._acquire_operator_password()
         except ValidationError:
             event.add_status(Status.INVALID_CONFIG.value)
+        except BadSecretError:
+            event.add_status(Status.INVALID_SYSTEM_USERS_SECRET.value)
 
         if self.state.unit.workload_state == UnitWorkloadState.INSTALLING:
             event.add_status(Status.INSTALLING.value)
@@ -189,8 +273,11 @@ class CassandraEvents(Object):
     def _on_collect_app_status(self, event: CollectStatusEvent) -> None:
         try:
             self.charm.config
+            self._acquire_operator_password()
         except ValidationError:
             event.add_status(Status.INVALID_CONFIG.value)
+        except BadSecretError:
+            event.add_status(Status.INVALID_SYSTEM_USERS_SECRET.value)
 
         event.add_status(Status.ACTIVE.value)
 
@@ -204,11 +291,7 @@ class CassandraEvents(Object):
         old_hostname = self.state.unit.hostname
         self.state.unit.ip, self.state.unit.hostname = self.cluster_manager.network_address()
         return (
-            old_ip is not None
-            and old_hostname is not None
+            bool(old_ip)
+            and bool(old_hostname)
             and (old_ip != self.state.unit.ip or old_hostname != self.state.unit.hostname)
         )
-
-    @property
-    def _cassandra(self) -> CassandraClient:
-        return CassandraClient([self.state.unit.ip])

@@ -23,6 +23,7 @@ def test_render_env_preserves_existing_vars():
         enable_client_tls=False,
         keystore_password="",
         truststore_password="",
+        authentication=False,
     )
 
     workload.cassandra_paths.env.read_text.return_value = (
@@ -32,8 +33,8 @@ def test_render_env_preserves_existing_vars():
     config_manager.render_env(cassandra_limit_memory_mb=1024)
 
     workload.cassandra_paths.env.read_text.assert_called()
-    workload.cassandra_paths.env.write_text.assert_called()
-    result = workload.cassandra_paths.env.write_text.call_args[0][0]
+    workload.cassandra_paths.env.write_text.assert_called_once()
+    result = workload.cassandra_paths.env.write_text.call_args.args[0]
     assert "EXTRA_VAR=extra_value" in result
     assert "PATH=/custom/path" in result
     assert "MAX_HEAP_SIZE=1024M" in result
