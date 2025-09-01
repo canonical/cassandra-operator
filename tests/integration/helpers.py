@@ -225,7 +225,7 @@ def get_microk8s_controller(juju: jubilant.Juju) -> str:
         if data.get("cloud") == "microk8s":
             logger.info(f"Microk8s controller '{name}' exists, skipping setup...")
             return name
-        
+
     configure_microk8s()
 
     jubilant.Juju().cli("bootstrap", "microk8s", include_model=False)
