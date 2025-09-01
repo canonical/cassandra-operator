@@ -2,8 +2,10 @@
 # Copyright 2025 Canonical Ltd.
 # See LICENSE file for licensing details.
 
+import contextlib
 import logging
 import os
+import secrets
 from pathlib import Path
 from typing import Generator
 
@@ -16,13 +18,33 @@ from helpers import get_microk8s_controller, using_k8s, using_vm
 logger = logging.getLogger(__name__)
 
 
+@contextlib.contextmanager
+def temp_model_named(
+    model: str, keep: bool = False, controller: str | None = None
+) -> Generator[jubilant.Juju]:
+    """Context manager to create a temporary model for running tests in."""
+    juju = jubilant.Juju()
+
+    if not model:
+        model = "jubilant-" + secrets.token_hex(4)  # 4 bytes (8 hex digits) should be plenty
+    juju.add_model(model, controller=controller)
+    try:
+        yield juju
+    finally:
+        if not keep:
+            juju.destroy_model(model, destroy_storage=True, force=True)
+
+
 @pytest.fixture(scope="module")
 def juju(request: pytest.FixtureRequest) -> Generator[jubilant.Juju, None, None]:
     keep_models = bool(request.config.getoption("--keep-models"))
+    test_model_name = str(request.config.getoption("--model-name"))
 
     with using_vm():
-        with jubilant.temp_model(
-            keep=keep_models, controller=os.environ["JUJU_CONTROLLER"]
+        with temp_model_named(
+            test_model_name,
+            keep=keep_models,
+            controller=os.environ["JUJU_CONTROLLER"],
         ) as juju_local:
             juju_local.wait_timeout = 10 * 60
 
@@ -41,9 +63,13 @@ def juju_k8s(request: pytest.FixtureRequest) -> Generator[jubilant.Juju, None, N
         raise ValueError("microk8s controller is not ready")
 
     keep_models = bool(request.config.getoption("--keep-models"))
+    test_model_name = str(request.config.getoption("--model-name"))
+
     with using_k8s():
-        with jubilant.temp_model(
-            keep=keep_models, controller=os.environ["JUJU_CONTROLLER"]
+        with temp_model_named(
+            test_model_name,
+            keep=keep_models,
+            controller=os.environ["JUJU_CONTROLLER"],
         ) as juju_k8s:
             juju_k8s.wait_timeout = 10 * 60
 

@@ -5,6 +5,17 @@ providers:
   lxd:
     enable: true
     bootstrap: true
+  microk8s:
+    enable: true
+    bootstrap: true
+    channel: 1.32-strict
+    addons:
+      - rbac
+      - hostpath-storage
+      - dns
+      - minio
+      - metallb:10.64.140.43-10.64.140.49
+    
 host:
   snaps:
     jhack:

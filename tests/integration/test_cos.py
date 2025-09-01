@@ -100,7 +100,6 @@ def test_cos_monitoring_setup(juju: jubilant.Juju, juju_k8s: jubilant.Juju, app_
 def test_grafana(juju_k8s: jubilant.Juju):
     """Checks Grafana dashboard is created with desired attributes."""
     with using_k8s():
-        logger.info(f"COS_STATUS: {juju_k8s.status().apps}")
         grafana_unit = next(iter(juju_k8s.status().apps[COS.GRAFANA].units.keys()))
 
         res = juju_k8s.run(grafana_unit, "get-admin-password")

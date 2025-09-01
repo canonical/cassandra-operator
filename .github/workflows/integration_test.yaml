@@ -62,7 +62,7 @@ jobs:
               file.write(output)
       - name: Generate Allure default test results
         if: ${{ github.event_name == 'schedule' && github.run_attempt == '1' }}
-        run: tox run -e integration -- tests/integration --allure-default-dir=allure-default-results
+        run: tox run -e integration -- tests/integration --allure-default-dir=allure-default-results --model-name testing --keep-models true
       - name: Upload Allure default results
         # Default test results in case the integration tests time out or runner set up fails
         # (So that Allure report will show "unknown"/"failed" test result, instead of omitting the test)
@@ -133,27 +133,50 @@ jobs:
       - timeout-minutes: 1
         if: ${{ success() || (failure() && steps.spread.outcome == 'failure') }}
         run: snap list
-      - name: Select model
+      - name: Select lxd model
         timeout-minutes: 1
         # `!contains(matrix.job.spread_job, 'juju29')` workaround for juju 2 error:
         # "ERROR cannot acquire lock file to read controller concierge-microk8s: unable to open
         # /tmp/juju-store-lock-3635383939333230: permission denied"
         # Unable to workaround error with `sudo rm /tmp/juju-*`
         if: ${{ !contains(matrix.job.spread_job, 'juju29') && (success() || (failure() && steps.spread.outcome == 'failure')) }}
-        id: juju-switch
+        id: juju-switch-lxd
         run: |
           # sudo needed since spread runs scripts as root
           # "testing" is default model created by concierge
-          sudo juju switch testing
+          sudo juju switch localhost-lxd:testing
           mkdir ~/logs/
-      - name: juju status
+      - name: juju status lxd
         timeout-minutes: 1
         if: ${{ !contains(matrix.job.spread_job, 'juju29') && (success() || (failure() && steps.spread.outcome == 'failure')) }}
-        run: sudo juju status --color --relations | tee ~/logs/juju-status.txt
-      - name: juju debug-log
+        run: sudo juju status --color --relations | tee ~/logs/juju-status-localhost.txt
+      - name: juju debug-log lxd
         timeout-minutes: 3
         if: ${{ !contains(matrix.job.spread_job, 'juju29') && (success() || (failure() && steps.spread.outcome == 'failure')) }}
-        run: sudo juju debug-log --color --replay --no-tail | tee ~/logs/juju-debug-log.txt
+        run: sudo juju debug-log --color --replay --no-tail | tee ~/logs/juju-debug-log-localhosst.txt
+
+      - name: Select k8s model
+        timeout-minutes: 1
+        # `!contains(matrix.job.spread_job, 'juju29')` workaround for juju 2 error:
+        # "ERROR cannot acquire lock file to read controller concierge-microk8s: unable to open
+        # /tmp/juju-store-lock-3635383939333230: permission denied"
+        # Unable to workaround error with `sudo rm /tmp/juju-*`
+        if: ${{ !contains(matrix.job.spread_job, 'juju29') && (success() || (failure() && steps.spread.outcome == 'failure')) }}
+        id: juju-switch-k8s
+        run: |
+          # sudo needed since spread runs scripts as root
+          # "testing" is default model created by concierge
+          sudo juju switch microk8s-localhost:testing
+          mkdir ~/logs/
+      - name: juju status k8s
+        timeout-minutes: 1
+        if: ${{ !contains(matrix.job.spread_job, 'juju29') && (success() || (failure() && steps.spread.outcome == 'failure')) }}
+        run: sudo juju status --color --relations | tee ~/logs/juju-status-k8s.txt
+      - name: juju debug-log k8s
+        timeout-minutes: 3
+        if: ${{ !contains(matrix.job.spread_job, 'juju29') && (success() || (failure() && steps.spread.outcome == 'failure')) }}
+        run: sudo juju debug-log --color --replay --no-tail | tee ~/logs/juju-debug-log-k8s.txt
+	
       - name: jhack tail
         timeout-minutes: 3
         if: ${{ !contains(matrix.job.spread_job, 'juju29') && (success() || (failure() && steps.spread.outcome == 'failure')) }}
