@@ -225,10 +225,10 @@ def get_microk8s_controller(juju: jubilant.Juju) -> str:
         if data.get("cloud") == "microk8s":
             logger.info(f"Microk8s controller '{name}' exists, skipping setup...")
             return name
+        
+    configure_microk8s()
 
     jubilant.Juju().cli("bootstrap", "microk8s", include_model=False)
-
-    configure_microk8s()
 
     return _get_microk8s_controller_name(juju)
 
@@ -247,7 +247,7 @@ def configure_microk8s() -> None:
     run_script(
         f"""
          # install microk8s
-         sudo snap install microk8s --classic --channel=1.32
+         sudo snap install microk8s --strict --channel=1.32
 
          # configure microk8s
          sudo usermod -a -G microk8s {user_env_var}
