@@ -250,6 +250,7 @@ def configure_microk8s() -> None:
          sudo snap install microk8s --channel=1.32-strict
 
          # configure microk8s
+         sudo groupadd --non-unique --gid "$(getent group adm | cut -f3 -d:)" microk8s
          sudo usermod -a -G microk8s {user_env_var}
          mkdir -p ~/.kube
          chmod 0700 ~/.kube
