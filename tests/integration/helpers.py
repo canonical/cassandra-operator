@@ -247,7 +247,7 @@ def configure_microk8s() -> None:
     run_script(
         f"""
          # install microk8s
-         sudo snap install microk8s --strict --channel=1.32
+         sudo snap install microk8s --channel=1.32-strict
 
          # configure microk8s
          sudo usermod -a -G microk8s {user_env_var}
