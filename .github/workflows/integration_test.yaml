@@ -176,7 +176,7 @@ jobs:
         timeout-minutes: 3
         if: ${{ !contains(matrix.job.spread_job, 'juju29') && (success() || (failure() && steps.spread.outcome == 'failure')) }}
         run: sudo juju debug-log --color --replay --no-tail | tee ~/logs/juju-debug-log-k8s.txt
-	
+
       - name: jhack tail
         timeout-minutes: 3
         if: ${{ !contains(matrix.job.spread_job, 'juju29') && (success() || (failure() && steps.spread.outcome == 'failure')) }}
