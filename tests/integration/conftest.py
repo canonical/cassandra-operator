@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 @contextlib.contextmanager
 def temp_model_named(
     model: str, keep: bool = False, controller: str | None = None
-) -> Generator[jubilant.Juju]:
+) -> Generator[jubilant.Juju, None, None]:
     """Context manager to create a temporary model for running tests in."""
     juju = jubilant.Juju()
 
