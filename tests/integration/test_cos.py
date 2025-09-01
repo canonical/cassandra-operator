@@ -50,9 +50,7 @@ def test_deploy(juju: jubilant.Juju, cassandra_charm: Path, app_name: str) -> No
         juju.wait(jubilant.all_active, timeout=1000)
 
 
-def test_cos_monitoring_setup(
-    juju: jubilant.Juju, juju_k8s: jubilant.Juju, app_name: str
-) -> None:
+def test_cos_monitoring_setup(juju: jubilant.Juju, juju_k8s: jubilant.Juju, app_name: str) -> None:
     with using_k8s():
         cos_model = juju_k8s.model
         cos_controller = juju_k8s.status().model.controller
@@ -78,15 +76,11 @@ def test_cos_monitoring_setup(
         juju.deploy(COS_AGENT_APP_NAME, num_units=1, base="ubuntu@24.04")
         juju.integrate(f"{app_name}:cos-agent", COS_AGENT_APP_NAME)
 
-        juju.wait(
-            lambda s: jubilant.all_blocked(s, COS_AGENT_APP_NAME), delay=5, timeout=1000
-        )
+        juju.wait(lambda s: jubilant.all_blocked(s, COS_AGENT_APP_NAME), delay=5, timeout=1000)
 
         juju.cli("consume", f"{cos_controller}:admin/{cos_model}.grafana-dashboards")
         juju.cli("consume", f"{cos_controller}:admin/{cos_model}.loki-logging")
-        juju.cli(
-            "consume", f"{cos_controller}:admin/{cos_model}.prometheus-receive-remote-write"
-        )
+        juju.cli("consume", f"{cos_controller}:admin/{cos_model}.prometheus-receive-remote-write")
 
         juju.integrate(COS_AGENT_APP_NAME, "grafana-dashboards")
         juju.integrate(COS_AGENT_APP_NAME, "loki-logging")
