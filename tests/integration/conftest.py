@@ -6,6 +6,7 @@ import logging
 from pathlib import Path
 from typing import Generator
 
+import os
 import jubilant
 import pytest
 import yaml
@@ -20,7 +21,7 @@ def juju(request: pytest.FixtureRequest) -> Generator[jubilant.Juju, None, None]
     keep_models = bool(request.config.getoption("--keep-models"))
 
     with using_vm():
-        with jubilant.temp_model(keep=keep_models, controller="localhost-localhost") as juju_local:
+        with jubilant.temp_model(keep=keep_models, controller=os.environ["JUJU_CONTROLLER"]) as juju_local:
             juju_local.wait_timeout = 10 * 60
 
             yield juju_local  # run the test
@@ -39,7 +40,7 @@ def juju_k8s(request: pytest.FixtureRequest) -> Generator[jubilant.Juju, None, N
 
     keep_models = bool(request.config.getoption("--keep-models"))
     with using_k8s():
-        with jubilant.temp_model(keep=keep_models, controller=microk8s) as juju_k8s:
+        with jubilant.temp_model(keep=keep_models, controller=os.environ["JUJU_CONTROLLER"]) as juju_k8s:
             juju_k8s.wait_timeout = 10 * 60
 
             yield juju_k8s  # run the test
