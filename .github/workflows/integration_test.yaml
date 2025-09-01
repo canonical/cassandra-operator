@@ -144,7 +144,7 @@ jobs:
         run: |
           # sudo needed since spread runs scripts as root
           # "testing" is default model created by concierge
-          sudo juju switch localhost-lxd:testing
+          sudo juju switch concierge-lxd:testing
           mkdir ~/logs/
       - name: juju status lxd
         timeout-minutes: 1
@@ -166,7 +166,7 @@ jobs:
         run: |
           # sudo needed since spread runs scripts as root
           # "testing" is default model created by concierge
-          sudo juju switch microk8s-localhost:testing
+          sudo juju switch concierge-microk8s:testing
           mkdir ~/logs/
       - name: juju status k8s
         timeout-minutes: 1
