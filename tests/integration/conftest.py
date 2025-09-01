@@ -38,7 +38,7 @@ def temp_model_named(
 @pytest.fixture(scope="module")
 def juju(request: pytest.FixtureRequest) -> Generator[jubilant.Juju, None, None]:
     keep_models = bool(request.config.getoption("--keep-models"))
-    test_model_name = str(request.config.getoption("--model-name"))
+    test_model_name = request.config.getoption("--model-name") or ""
 
     with using_vm():
         with temp_model_named(
@@ -63,7 +63,7 @@ def juju_k8s(request: pytest.FixtureRequest) -> Generator[jubilant.Juju, None, N
         raise ValueError("microk8s controller is not ready")
 
     keep_models = bool(request.config.getoption("--keep-models"))
-    test_model_name = str(request.config.getoption("--model-name"))
+    test_model_name = request.config.getoption("--model-name") or ""
 
     with using_k8s():
         with temp_model_named(
@@ -90,7 +90,7 @@ def pytest_addoption(parser) -> None:
 
     parser.addoption(
         "--model-name",
-        action="store_true",
+        action="store",
         default="",
         help="name for testing models",
     )
