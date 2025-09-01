@@ -62,7 +62,7 @@ jobs:
               file.write(output)
       - name: Generate Allure default test results
         if: ${{ github.event_name == 'schedule' && github.run_attempt == '1' }}
-        run: tox run -e integration -- tests/integration --allure-default-dir=allure-default-results --model-name testing --keep-models true
+        run: tox run -e integration -- tests/integration --allure-default-dir=allure-default-results --model-name=testing --keep-models=true
       - name: Upload Allure default results
         # Default test results in case the integration tests time out or runner set up fails
         # (So that Allure report will show "unknown"/"failed" test result, instead of omitting the test)
@@ -145,7 +145,7 @@ jobs:
           # sudo needed since spread runs scripts as root
           # "testing" is default model created by concierge
           sudo juju switch concierge-lxd:testing
-          mkdir ~/logs/
+          mkdir -p ~/logs/ 
       - name: juju status lxd
         timeout-minutes: 1
         if: ${{ !contains(matrix.job.spread_job, 'juju29') && (success() || (failure() && steps.spread.outcome == 'failure')) }}
@@ -167,7 +167,7 @@ jobs:
           # sudo needed since spread runs scripts as root
           # "testing" is default model created by concierge
           sudo juju switch concierge-microk8s:testing
-          mkdir ~/logs/
+          mkdir -p ~/logs/
       - name: juju status k8s
         timeout-minutes: 1
         if: ${{ !contains(matrix.job.spread_job, 'juju29') && (success() || (failure() && steps.spread.outcome == 'failure')) }}
