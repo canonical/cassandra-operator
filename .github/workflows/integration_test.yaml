@@ -189,6 +189,17 @@ jobs:
           name: logs-integration-test-${{ matrix.job.name_in_artifact }}
           path: ~/logs/
           if-no-files-found: error
+
+      - name: Clean juju lxd
+        timeout-minutes: 1
+        if: ${{ success() || (failure() && steps.spread.outcome == 'failure') }}
+        run: sudo juju switch concierge-lxd:testing && sudo juju destroy-model testing --destroy-storage --force --no-prompt
+
+      - name: Clean juju k8s
+        timeout-minutes: 1
+        if: ${{ success() || (failure() && steps.spread.outcome == 'failure') }}
+        run: sudo juju switch concierge-microk8s:testing && sudo juju destroy-model testing --destroy-storage --force --no-prompt
+
       - name: Disk usage
         timeout-minutes: 1
         if: ${{ success() || (failure() && steps.spread.outcome == 'failure') }}

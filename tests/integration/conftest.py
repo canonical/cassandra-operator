@@ -88,6 +88,13 @@ def pytest_addoption(parser) -> None:
         help="keep temporarily-created models",
     )
 
+    parser.addoption(
+        "--model-name",
+        action="store_true",
+        default="",
+        help="name for testing models",
+    )
+
 
 @pytest.fixture(scope="module")
 def charm_versions() -> IntegrationTestsCharms:
