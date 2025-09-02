@@ -62,7 +62,7 @@ jobs:
               file.write(output)
       - name: Generate Allure default test results
         if: ${{ github.event_name == 'schedule' && github.run_attempt == '1' }}
-        run: tox run -e integration -- tests/integration --allure-default-dir=allure-default-results --model-name=testing --keep-models
+        run: tox run -e integration -- tests/integration --allure-default-dir=allure-default-results --model-name=test-cas --keep-models
       - name: Upload Allure default results
         # Default test results in case the integration tests time out or runner set up fails
         # (So that Allure report will show "unknown"/"failed" test result, instead of omitting the test)
@@ -147,7 +147,7 @@ jobs:
         run: |
           # sudo needed since spread runs scripts as root
           # "testing" is default model created by concierge
-          sudo juju switch concierge-lxd:admin/testing
+          sudo juju switch concierge-lxd:admin/test-cas
           mkdir -p ~/logs/ 
       - name: juju status lxd
         timeout-minutes: 1
@@ -169,7 +169,7 @@ jobs:
         run: |
           # sudo needed since spread runs scripts as root
           # "testing" is default model created by concierge
-          sudo juju switch concierge-microk8s:admin/testing
+          sudo juju switch concierge-microk8s:admin/test-cas
           mkdir -p ~/logs/
       - name: juju status k8s
         timeout-minutes: 1
@@ -196,12 +196,12 @@ jobs:
       - name: Clean juju lxd
         timeout-minutes: 10
         if: ${{ success() || (failure() && steps.spread.outcome == 'failure') }}
-        run: sudo juju switch concierge-lxd:admin/testing && sudo juju destroy-model testing --destroy-storage --force --no-prompt
+        run: sudo juju switch concierge-lxd:admin/test-cas && sudo juju destroy-model test-cas --destroy-storage --force --no-prompt
 
       - name: Clean juju k8s
         timeout-minutes: 10
         if: ${{ success() || (failure() && steps.spread.outcome == 'failure') }}
-        run: sudo juju switch concierge-microk8s:admin/testing && sudo juju destroy-model testing --destroy-storage --force --no-prompt
+        run: sudo juju switch concierge-microk8s:admin/test-cas && sudo juju destroy-model test-cas --destroy-storage --force --no-prompt
 
       - name: Disk usage
         timeout-minutes: 1
