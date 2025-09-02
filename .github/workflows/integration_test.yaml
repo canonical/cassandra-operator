@@ -137,8 +137,6 @@ jobs:
         if: ${{ success() || (failure() && steps.spread.outcome == 'failure') }}
         run: sudo juju controllers
 
-# start of lxd
-# skip if `sudo juju models -c concierge-lxd` does not contains `test-cas` model
       - name: Check if lxd test-cas model exists
         id: check-lxd-model
         run: |
@@ -147,7 +145,6 @@ jobs:
           else
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
-
 
       - name: Select lxd model
         timeout-minutes: 1
@@ -178,10 +175,6 @@ jobs:
         if: ${{ steps.check-lxd-model.outputs.exists == 'true' && (success() || (failure() && steps.spread.outcome == 'failure')) }}
         run: sudo juju switch concierge-lxd:admin/test-cas && sudo juju destroy-model test-cas --destroy-storage --force --no-prompt
 
-# end of lxd
-
-# start of k8s
-# skip if `sudo juju models -c concierge-microk8s` does not contains `test-cas` model
       - name: Check if k8s test-cas model exists
         id: check-k8s-model
         run: |
