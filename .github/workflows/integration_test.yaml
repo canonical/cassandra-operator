@@ -133,7 +133,10 @@ jobs:
       - timeout-minutes: 1
         if: ${{ success() || (failure() && steps.spread.outcome == 'failure') }}
         run: snap list
-      - name: Select lxd model
+      - timeout-minutes: 1
+        if: ${{ success() || (failure() && steps.spread.outcome == 'failure') }}
+        run: sudo juju controllers
+      - name: Extract juju info
         timeout-minutes: 1
         # `!contains(matrix.job.spread_job, 'juju29')` workaround for juju 2 error:
         # "ERROR cannot acquire lock file to read controller concierge-microk8s: unable to open
@@ -144,7 +147,7 @@ jobs:
         run: |
           # sudo needed since spread runs scripts as root
           # "testing" is default model created by concierge
-          sudo juju switch concierge-lxd:testing
+          sudo juju switch concierge-lxd:admin/testing
           mkdir -p ~/logs/ 
       - name: juju status lxd
         timeout-minutes: 1
@@ -166,7 +169,7 @@ jobs:
         run: |
           # sudo needed since spread runs scripts as root
           # "testing" is default model created by concierge
-          sudo juju switch concierge-microk8s:testing
+          sudo juju switch concierge-microk8s:admin/testing
           mkdir -p ~/logs/
       - name: juju status k8s
         timeout-minutes: 1
@@ -193,12 +196,12 @@ jobs:
       - name: Clean juju lxd
         timeout-minutes: 10
         if: ${{ success() || (failure() && steps.spread.outcome == 'failure') }}
-        run: sudo juju switch concierge-lxd:testing && sudo juju destroy-model testing --destroy-storage --force --no-prompt
+        run: sudo juju switch concierge-lxd:admin/testing && sudo juju destroy-model testing --destroy-storage --force --no-prompt
 
       - name: Clean juju k8s
         timeout-minutes: 10
         if: ${{ success() || (failure() && steps.spread.outcome == 'failure') }}
-        run: sudo juju switch concierge-microk8s:testing && sudo juju destroy-model testing --destroy-storage --force --no-prompt
+        run: sudo juju switch concierge-microk8s:admin/testing && sudo juju destroy-model testing --destroy-storage --force --no-prompt
 
       - name: Disk usage
         timeout-minutes: 1
