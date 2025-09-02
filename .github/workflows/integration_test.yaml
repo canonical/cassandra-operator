@@ -141,9 +141,9 @@ jobs:
         id: check-lxd-model
         run: |
           if sudo juju models -c concierge-lxd | grep -q test-cas; then
-            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "exists=true" >> "$GITHUB_OUTPUT"
           else
-            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Select lxd model
@@ -179,9 +179,9 @@ jobs:
         id: check-k8s-model
         run: |
           if sudo juju models -c concierge-microk8s | grep -q test-cas; then
-            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "exists=true" >> "$GITHUB_OUTPUT"
           else
-            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
     
       - name: Select k8s model
