@@ -18,7 +18,7 @@ from tenacity import Retrying, stop_after_delay, wait_fixed
 
 logger = logging.getLogger(__name__)
 COS_METRICS_PORT = 7071
-
+DEFAULT_MICROK8S_CHANNEL = "1.32-strict"
 
 @contextmanager
 def connect_cql(
@@ -233,9 +233,15 @@ def get_microk8s_controller(juju: jubilant.Juju) -> str:
     return _get_microk8s_controller_name(juju)
 
 
-def configure_microk8s() -> None:
+def configure_microk8s(channel: str = DEFAULT_MICROK8S_CHANNEL) -> None:
+    """Install and configure MicroK8s with the given channel.
+
+    Args:
+        channel: The snap channel to install MicroK8s from (e.g., '1.32-strict').
+    """
     user_env_var = os.environ.get("USER", "root")
     os.system("sudo apt install -y jq")
+
     ip_addr = subprocess.check_output(
         "ip -4 -j route get 2.2.2.2 | jq -r '.[] | .prefsrc'",
         shell=True,
@@ -247,7 +253,7 @@ def configure_microk8s() -> None:
     run_script(
         f"""
          # install microk8s
-         sudo snap install microk8s --channel=1.32-strict
+         sudo snap install microk8s --channel={channel}
 
          # configure microk8s
          sudo groupadd --non-unique --gid "$(getent group adm | cut -f3 -d:)" microk8s
@@ -271,7 +277,7 @@ def configure_microk8s() -> None:
         """
     )
 
-
+    
 def prometheus_exporter_data(host: str) -> str | None:
     """Check if a given host has metric service available and it is publishing."""
     url = f"http://{host}:{COS_METRICS_PORT}/metrics"
