@@ -72,9 +72,6 @@ class ClusterState(StrEnum):
 
     UNKNOWN = ""
     """Cassandra cluster isn't yet initialized by the leader unit."""
-    RECOVERING = "recovering"
-    """Leader detected unintended restart of cassandra cluster
-    and waits for all the other units to reset their workload_state."""
     ACTIVE = "active"
     """Cassandra cluster is initialized by the leader unit and active."""
 

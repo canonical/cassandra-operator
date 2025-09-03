@@ -28,7 +28,7 @@ from tenacity import Retrying, stop_after_delay, wait_exponential, wait_fixed
 from common.exceptions import BadSecretError
 from core.config import CharmConfig
 from core.literals import CASSANDRA_ADMIN_USERNAME
-from core.state import PEER_RELATION, ApplicationState, ClusterState, UnitWorkloadState
+from core.state import PEER_RELATION, ApplicationState, UnitWorkloadState
 from core.statuses import Status
 from core.workload import WorkloadBase
 from managers.cluster import ClusterManager
@@ -88,6 +88,9 @@ class CassandraEvents(Object):
     def _on_start(self, event: StartEvent) -> None:
         self._update_network_address()
 
+        if self.state.unit.workload_state == UnitWorkloadState.ACTIVE:
+            self.state.unit.workload_state = UnitWorkloadState.WAITING_FOR_START
+
         if not self.setup_internal_certificates(
             self.tls_manager.build_sans(
                 sans_ip=[self.state.unit.ip],
@@ -112,32 +115,12 @@ class CassandraEvents(Object):
             self._start_subordinate(event)
 
     def _start_leader(self, event: StartEvent) -> None:
-        if self.state.cluster.is_active:
-            self.state.cluster.state = ClusterState.RECOVERING
-            self.state.unit.workload_state = UnitWorkloadState.WAITING_FOR_START
-            event.defer()
-            return
-
-        if self.state.cluster.state == ClusterState.RECOVERING:
-            if any(
-                unit.workload_state != UnitWorkloadState.WAITING_FOR_START
-                for unit in self.state.other_units
-            ):
-                event.defer()
-                return
-            else:
-                self.state.cluster.state = ClusterState.UNKNOWN
-
         if not self.state.cluster.seeds or all(
             self.state.cluster.seeds[0] != unit.peer_url for unit in self.state.units
         ):
             self.state.cluster.seeds = [self.state.unit.peer_url]
 
-        if self.state.cluster.seeds[0] != self.state.unit.peer_url and any(
-            unit.workload_state != UnitWorkloadState.ACTIVE
-            for unit in self.state.other_units
-            if unit.peer_url in self.state.cluster.seeds
-        ):
+        if not self._check_seeds():
             event.defer()
             return
 
@@ -185,25 +168,13 @@ class CassandraEvents(Object):
         self.cluster_manager.prepare_shutdown()
 
     def _start_subordinate(self, event: StartEvent) -> None:
-        if (
-            self.state.cluster.is_active
-            and self.state.unit.workload_state == UnitWorkloadState.ACTIVE
-        ):
-            event.defer()
-            return
-
-        if self.state.cluster.state == ClusterState.RECOVERING:
-            if self.state.unit.workload_state != UnitWorkloadState.WAITING_FOR_START:
-                self.state.unit.workload_state = UnitWorkloadState.WAITING_FOR_START
-            event.defer()
-            return
-
-        if (
-            not self.state.cluster.is_active
-            and self.state.unit.peer_url not in self.state.cluster.seeds
-        ):
+        if not self.state.cluster.is_active:
             self.state.unit.workload_state = UnitWorkloadState.WAITING_FOR_START
             logger.debug("Deferring subordinate on_start due to cluster isn't initialized yet")
+            event.defer()
+            return
+
+        if not self._check_seeds():
             event.defer()
             return
 
@@ -370,6 +341,25 @@ class CassandraEvents(Object):
             event.add_status(Status.INVALID_SYSTEM_USERS_SECRET.value)
 
         event.add_status(Status.ACTIVE.value)
+
+    def _is_seed_active(self, host: str) -> bool:
+        return DatabaseManager(
+            hosts=[host],
+            user=CASSANDRA_ADMIN_USERNAME,
+            password=self.state.cluster.operator_password_secret,
+        ).check()
+
+    def _check_seeds(self) -> bool:
+        return self.state.unit.peer_url in self.state.cluster.seeds or any(
+            unit.workload_state == UnitWorkloadState.ACTIVE
+            and DatabaseManager(
+                hosts=[unit.ip],
+                user=CASSANDRA_ADMIN_USERNAME,
+                password=self.state.cluster.operator_password_secret,
+            ).check()
+            for unit in self.state.other_units
+            if unit.peer_url in self.state.cluster.seeds
+        )
 
     def _recover_seeds(self, event: EventBase) -> None:
         if self.state.unit.workload_state == UnitWorkloadState.INSTALLING:

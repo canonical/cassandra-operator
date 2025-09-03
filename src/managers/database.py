@@ -8,6 +8,7 @@ import logging
 from contextlib import contextmanager
 from typing import Generator
 
+from cassandra import AuthenticationFailed
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.cluster import EXEC_PROFILE_DEFAULT, Cluster, ExecutionProfile, Session
 from cassandra.policies import DCAwareRoundRobinPolicy, TokenAwarePolicy
@@ -32,6 +33,16 @@ class DatabaseManager:
         self.hosts = hosts
 
         return
+
+    def check(self) -> bool:
+        try:
+            with self._session() as session:
+                session.execute("SELECT release_version FROM system.local")
+                return True
+        except AuthenticationFailed:
+            return True
+        except Exception:
+            return False
 
     def init_admin(self, password: str) -> None:
         """Create operator role with the specified password and remove default cassandra role.
@@ -63,6 +74,14 @@ class DatabaseManager:
             session.execute(
                 "ALTER ROLE %s WITH PASSWORD = %s",
                 [user, password],
+            )
+
+    def update_auth_replication(self, replication_factor: int) -> None:
+        with self._session() as session:
+            session.execute(
+                "ALTER KEYSPACE system_auth"
+                " WITH replication = {'class': 'SimpleStrategy', 'replication_factor': %s}",
+                [replication_factor],
             )
 
     @contextmanager
