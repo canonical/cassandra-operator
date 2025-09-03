@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 COS_METRICS_PORT = 7071
 DEFAULT_MICROK8S_CHANNEL = "1.32-strict"
 
+
 @contextmanager
 def connect_cql(
     juju: jubilant.Juju,
@@ -277,7 +278,7 @@ def configure_microk8s(channel: str = DEFAULT_MICROK8S_CHANNEL) -> None:
         """
     )
 
-    
+
 def prometheus_exporter_data(host: str) -> str | None:
     """Check if a given host has metric service available and it is publishing."""
     url = f"http://{host}:{COS_METRICS_PORT}/metrics"
