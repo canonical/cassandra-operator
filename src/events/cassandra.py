@@ -175,7 +175,10 @@ class CassandraEvents(Object):
         self.cluster_manager.prepare_shutdown()
 
     def _start_subordinate(self, event: StartEvent) -> None:
-        if not self.state.cluster.is_active:
+        if (
+            not self.state.cluster.is_active
+            and self.state.unit.peer_url not in self.state.cluster.seeds
+        ):
             self.state.unit.workload_state = UnitWorkloadState.WAITING_FOR_START
             logger.debug("Deferring subordinate on_start due to cluster not being active yet")
             event.defer()

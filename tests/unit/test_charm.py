@@ -3,6 +3,7 @@
 #
 # Learn more about testing at: https://juju.is/docs/sdk/testing
 
+from threading import local
 from unittest.mock import PropertyMock, patch
 
 import ops
@@ -11,6 +12,7 @@ from ops import testing
 
 from charm import CassandraCharm
 from core.state import PEER_RELATION
+from managers.cluster import ClusterManager
 
 BOOTSTRAP_RELATION = "bootstrap"
 PEER_SECRET = "cassandra-peers.cassandra.app"
@@ -53,6 +55,9 @@ def test_start_subordinate_only_after_leader_active():
     with (
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
+        patch(
+            "managers.cluster.ClusterManager.network_address", return_value=("1.1.1.1", "hostname")
+        ),
         patch("charm.CassandraCharm.setup_internal_certificates", return_value=True),
         patch("charm.CassandraWorkload") as workload,
         patch(
@@ -65,7 +70,10 @@ def test_start_subordinate_only_after_leader_active():
         bootstrap.assert_not_called()
 
         relation = testing.PeerRelation(
-            id=1, endpoint=PEER_RELATION, local_app_data={"cluster_state": "active"}
+            id=1,
+            endpoint=PEER_RELATION,
+            local_app_data={"cluster_state": "active", "seeds": "1.1.1.1:7000"},
+            local_unit_data={"ip": "1.1.1.1"},
         )
         state = testing.State(relations={relation})
 
