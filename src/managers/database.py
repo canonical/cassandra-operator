@@ -41,6 +41,13 @@ class DatabaseManager:
         return
 
     def check(self) -> bool:
+        """Check connectivity to the Cassandra.
+
+        Returns positive even when cluster cannot achieve consistency level for the authentication.
+
+        Returns:
+            whether Cassandra service on this node is ready to accept connections.
+        """
         try:
             with self._session() as session:
                 session.execute("SELECT release_version FROM system.local")
@@ -84,14 +91,6 @@ class DatabaseManager:
             session.execute(
                 "ALTER ROLE %s WITH PASSWORD = %s",
                 [user, password],
-            )
-
-    def update_auth_replication(self, replication_factor: int) -> None:
-        with self._session() as session:
-            session.execute(
-                "ALTER KEYSPACE system_auth"
-                " WITH replication = {'class': 'SimpleStrategy', 'replication_factor': %s}",
-                [replication_factor],
             )
 
     @contextmanager
