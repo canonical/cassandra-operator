@@ -10,7 +10,13 @@ from typing import Generator
 
 from cassandra import AuthenticationFailed
 from cassandra.auth import PlainTextAuthProvider
-from cassandra.cluster import EXEC_PROFILE_DEFAULT, Cluster, ExecutionProfile, Session
+from cassandra.cluster import (
+    EXEC_PROFILE_DEFAULT,
+    Cluster,
+    ExecutionProfile,
+    NoHostAvailable,
+    Session,
+)
 from cassandra.policies import DCAwareRoundRobinPolicy, TokenAwarePolicy
 
 from core.literals import CASSANDRA_ADMIN_USERNAME
@@ -39,8 +45,12 @@ class DatabaseManager:
             with self._session() as session:
                 session.execute("SELECT release_version FROM system.local")
                 return True
-        except AuthenticationFailed:
-            return True
+        except NoHostAvailable as e:
+            if e.errors:
+                for host_error in e.errors.values():
+                    if isinstance(host_error, AuthenticationFailed):
+                        return True
+            return False
         except Exception:
             return False
 
