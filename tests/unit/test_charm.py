@@ -3,7 +3,6 @@
 #
 # Learn more about testing at: https://juju.is/docs/sdk/testing
 
-from threading import local
 from unittest.mock import PropertyMock, patch
 
 import ops
@@ -12,7 +11,6 @@ from ops import testing
 
 from charm import CassandraCharm
 from core.state import PEER_RELATION
-from managers.cluster import ClusterManager
 
 BOOTSTRAP_RELATION = "bootstrap"
 PEER_SECRET = "cassandra-peers.cassandra.app"
