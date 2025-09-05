@@ -72,7 +72,7 @@ To retrieve the password for the default `operator` user:
 ```shell
 juju show-secret --reveal "cassandra-peers.<application name>.app" --format json \
   | jq -r '.[].content.Data."operator-password"'
-```
+  ```
 
 Once you have the password, connect to the cluster using `cqlsh`:
 
@@ -80,8 +80,22 @@ Once you have the password, connect to the cluster using `cqlsh`:
 cqlsh <unit-ip> -u operator -p "<password>"
 ```
 
-> **Warning**: Supplying a password directly in the command line can be insecure.
-> It is recommended to use a credentials file to provide the password securely.
+Now you can read/write data to Cassandra:
+
+```shell
+Connected to cassandra at 10.166.144.207:9042
+[cqlsh 6.2.0 | Cassandra 5.0.5 | CQL spec 3.4.7 | Native protocol v5]
+Use HELP for help.
+operator@cqlsh> CREATE KEYSPACE hello
+   ... WITH replication = {
+   ...   'class': 'SimpleStrategy',
+   ...   'replication_factor': 1
+   ... };
+operator@cqlsh> DESCRIBE KEYSPACE hello;
+
+CREATE KEYSPACE hello WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '1'}  AND durable_writes = true;
+};
+```
 
 ## Password rotation
 
