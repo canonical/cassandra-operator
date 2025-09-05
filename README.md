@@ -77,7 +77,7 @@ Supported [integrations](https://juju.is/docs/olm/relations):
 
 See the [encryption tutorial](docs/how-to/encryption.md) for detailed instructions on adding the `tls-certificates` relation and managing encryption.
 
-#### `metrics` interface:
+#### `metrics` interface
 
 TODO
 
