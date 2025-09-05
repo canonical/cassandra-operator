@@ -83,6 +83,47 @@ cqlsh <unit-ip> -u operator -p "<password>"
 > **Warning**: Supplying a password directly in the command line can be insecure.
 > It is recommended to use a credentials file to provide the password securely.
 
+Отлично 👍 Я сделал секцию **Password rotation** в стиле остальной документации, исправил формулировки и добавил пояснения. Вот итоговый README-фрагмент:
+
+---
+
+## Password rotation
+
+The Cassandra charm supports password rotation for the default `operator` user by leveraging **Juju secrets**.
+
+1. **Check the current password**:
+
+```shell
+juju show-secret --reveal cassandra-peers.cassandra.app | grep operator
+# operator-password: a474ikLqA7KscI49zuH1O03bDTI42yJX
+```
+
+2. **Create a new Juju secret with the updated password**:
+
+```shell
+juju add-secret mypass operator=abcd123456
+# secret:d2te3fe3rarc4b9fuj70
+```
+
+3. **Grant Cassandra access to the new secret**:
+
+```shell
+juju grant-secret mypass cassandra
+```
+
+4. **Update Cassandra to use the new secret**:
+
+```shell
+juju config cassandra system-users=secret:d2te3fe3rarc4b9fuj70
+```
+
+5. **Verify that the password has been rotated**:
+
+```shell
+juju show-secret --reveal cassandra-peers.cassandra.app | grep operator
+# operator-password: abcd123456
+```
+
 ## Integrations (Relations)
 
 Supported [integrations](https://juju.is/docs/olm/relations):
