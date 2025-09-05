@@ -1,5 +1,6 @@
-This repository contains a charmed operator for deploying [Apache Cassandra](https://cassandra.apache.org/_/cassandra-basics.html) on virtual machines via the [Juju orchestration engine](https://juju.is/).
+# Apache Cassandra Juju Operator
 
+This repository contains a charmed operator for deploying [Apache Cassandra](https://cassandra.apache.org/_/cassandra-basics.html) on virtual machines via the [Juju orchestration engine](https://juju.is/).
 
 ## Overview
 
@@ -18,24 +19,24 @@ Built as a Juju charm, the operator manages Cassandra on Ubuntu and provides out
 ### Deployment
 
 Build a Cassandra charm:
+
 ```shell
 charmcraft pack
 ```
 
-Bootstrap a [lxd controller](https://juju.is/docs/olm/lxd#heading--create-a-controller) and create a new Juju model:
+Bootstrap a [LXD controller](https://juju.is/docs/olm/lxd#heading--create-a-controller) and create a new Juju model:
 
 ```shell
 juju add-model sample-model
 ```
 
-
-To deploy a single unit of Cassandra, run the following command:
+To deploy a single unit of Cassandra:
 
 ```shell
-juju deploy cassandra_ubuntu@24.04-amd64.charm cassandra 
+juju deploy cassandra_ubuntu@24.04-amd64.charm cassandra
 ```
 
-Config option `--config profile=testing` can be used for testing purpuses. This will restrict Cassandra node to use minimum memory.
+The config option `--config profile=testing` can be used for testing purposes. This restricts a Cassandra node to minimum memory usage.
 
 Apache Cassandra is typically deployed as a cluster to provide horizontal scalability and fault tolerance. In Juju, each Cassandra node is represented by a unit.
 
@@ -45,24 +46,23 @@ To start a Cassandra cluster with multiple nodes, set the desired number of unit
 juju deploy cassandra_ubuntu@24.04-amd64.charm cassandra -n <number_of_units>
 ```
 
-The seed-node is always will be the leader unit in the cluster.
-
+The seed node will always be the leader unit in the cluster.
 
 ### Node management
 
-#### Add node
+#### Adding nodes
 
-To add more nodes one can use the `juju add-unit` functionality i.e.
+To add more nodes, use the `juju add-unit` command:
 
 ```shell
 juju add-unit cassandra -n <number_of_units_to_add>
 ```
 
-The implementation of `add-unit` allows the operator to add more than one unit, at a time. But unit initialization will happen only at one in a time.
+The implementation of `add-unit` allows adding multiple units at once, but unit initialization will occur one at a time.
 
-#### Remove node
+#### Removing nodes
 
-Nodes removal is in progress.
+Node removal support is in progress.
 
 ### Connecting
 
@@ -120,24 +120,25 @@ juju show-secret --reveal cassandra-peers.cassandra.app | grep operator
 # operator-password: abcd123456
 ```
 
+> **Note**: Once rotated, all clients must use the new password to connect.
+
 ## Integrations (Relations)
 
 Supported [integrations](https://juju.is/docs/olm/relations):
 
-#### `tls-certificates` interface
+### `tls-certificates` interface
 
 See the [encryption tutorial](docs/how-to/encryption.md) for detailed instructions on adding the `tls-certificates` relation and managing encryption.
 
-#### `metrics` interface
+### `metrics` interface
 
 See the [monitoring tutorial](docs/how-to/monitoring.md) for detailed instructions on adding the `metrics` relation and integrating with the `cos` charm.
 
-
 ## Contributing
 
-Please see the [Juju SDK docs](https://juju.is/docs/sdk) for guidelines on enhancements to this charm following best practice guidelines, and [CONTRIBUTING.md](https://github.com/canonical/cassandra-operator/blob/main/CONTRIBUTING.md) for developer guidance. 
+Please see the [Juju SDK docs](https://juju.is/docs/sdk) for guidelines on enhancements to this charm following best practice guidelines, and [CONTRIBUTING.md](https://github.com/canonical/cassandra-operator/blob/main/CONTRIBUTING.md) for developer guidance.
 
-Also, if you truly enjoy working on open-source projects like this one, check out the [career options](https://canonical.com/careers/all) we have at [Canonical](https://canonical.com/). 
+Also, if you truly enjoy working on open-source projects like this one, check out the [career options](https://canonical.com/careers/all) we have at [Canonical](https://canonical.com/).
 
 ## License
 
