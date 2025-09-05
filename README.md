@@ -83,10 +83,6 @@ cqlsh <unit-ip> -u operator -p "<password>"
 > **Warning**: Supplying a password directly in the command line can be insecure.
 > It is recommended to use a credentials file to provide the password securely.
 
-Отлично 👍 Я сделал секцию **Password rotation** в стиле остальной документации, исправил формулировки и добавил пояснения. Вот итоговый README-фрагмент:
-
----
-
 ## Password rotation
 
 The Cassandra charm supports password rotation for the default `operator` user by leveraging **Juju secrets**.
