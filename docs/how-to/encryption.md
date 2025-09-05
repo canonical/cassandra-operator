@@ -25,8 +25,6 @@ juju config self-signed-certificates ca-common-name="Test CA"
 
 For an overview of available TLS certificate Provider charms and guidance on choosing the right one for your use case, see [this guide](https://charmhub.io/topics/security-with-x-509-certificates).
 
----
-
 ## Relate the Charms
 
 To enable **peer-to-peer TLS encryption**, relate Cassandra to the `:peer-certificates` endpoint:
@@ -43,8 +41,6 @@ juju relate <tls-certificates>:certificates cassandra:client-certificates
 
 where `<tls-certificates>` is the name of the deployed TLS certificates Provider charm.
 
----
-
 ## Connect to the Cluster
 
 Authentication is enabled by default.
@@ -54,8 +50,6 @@ To retrieve the password for the default `operator` user:
 juju show-secret --reveal "cassandra-peers.<application name>.app" --format json \
   | jq -r '.[].content.Data."operator-password"'
 ```
-
----
 
 ### Verifying Client TLS
 
@@ -84,8 +78,6 @@ io.netty.handler.ssl.NotSslRecordException: not an SSL/TLS record
 
 This confirms that Cassandra requires a secure TLS connection.
 
----
-
 ### Retrieving Client Certificates
 
 Fetch the client private key and signed certificate from a unit:
@@ -94,8 +86,6 @@ Fetch the client private key and signed certificate from a unit:
 juju ssh <unit-name> "cat /var/snap/charmed-cassandra/current/etc/cassandra/tls/client-private.key" > ./client.key
 juju ssh <unit-name> "cat /var/snap/charmed-cassandra/current/etc/cassandra/tls/client-unit.pem" > ./client.pem
 ```
-
----
 
 ### Configuring `cqlsh`
 
@@ -122,8 +112,6 @@ Connect to Cassandra with:
 ```shell
 cqlsh --ssl --cqlshrc=./cqlshrc
 ```
-
----
 
 ## Disabling TLS
 
