@@ -79,6 +79,47 @@ def test_start_subordinate_only_after_leader_active():
         bootstrap.assert_called_once()
 
 
+@pytest.mark.parametrize("workload_active", [True, False])
+@pytest.mark.parametrize("seed_active", [True, False])
+def test_start_subordinate_only_after_seed_active(workload_active: bool, seed_active: bool):
+    """Subordinate should start only after seed is actually running."""
+    ctx = testing.Context(CassandraCharm)
+    relation = testing.PeerRelation(
+        id=1,
+        endpoint=PEER_RELATION,
+        local_app_data={"cluster_state": "active", "seeds": "2.2.2.2:7000"},
+        local_unit_data={"ip": "1.1.1.1"},
+        peers_data={
+            2: {
+                "ip": "2.2.2.2",
+                "workload_state": "active" if workload_active else "",
+            }
+        },
+    )
+    state = testing.State(relations={relation})
+
+    with (
+        patch("managers.config.ConfigManager.render_env"),
+        patch("managers.config.ConfigManager.render_cassandra_config"),
+        patch(
+            "managers.cluster.ClusterManager.network_address", return_value=("1.1.1.1", "hostname")
+        ),
+        patch("managers.database.DatabaseManager.check", return_value=seed_active),
+        patch("charm.CassandraCharm.setup_internal_certificates", return_value=True),
+        patch("charm.CassandraWorkload") as workload,
+        patch(
+            "charms.rolling_ops.v0.rollingops.RollingOpsManager._on_acquire_lock", autospec=True
+        ) as bootstrap,
+    ):
+        workload.return_value.generate_password.return_value = "password"
+
+        state = ctx.run(ctx.on.start(), state)
+        if workload_active and seed_active:
+            bootstrap.assert_called()
+        else:
+            bootstrap.assert_not_called()
+
+
 def test_start_invalid_config():
     """Both leader and subordinate should wait for config to be fixed prior starting workload."""
     ctx = testing.Context(CassandraCharm)
