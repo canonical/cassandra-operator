@@ -64,11 +64,6 @@ The implementation of `add-unit` allows the operator to add more than one unit, 
 
 Nodes removal is in progress.
 
-
-### Password rotation
-
-TODO
-
 ## Integrations (Relations)
 
 Supported [integrations](https://juju.is/docs/olm/relations):
