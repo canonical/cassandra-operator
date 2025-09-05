@@ -74,7 +74,8 @@ See the [encryption tutorial](docs/how-to/encryption.md) for detailed instructio
 
 #### `metrics` interface
 
-TODO
+See the [monitoring tutorial](docs/how-to/monitoring.md) for detailed instructions on adding the `metrics` relation and integrating with the `cos` charm.
+
 
 ## Contributing
 
