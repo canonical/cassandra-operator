@@ -135,7 +135,3 @@ juju remove-relation <tls-certificates>:certificates cassandra:client-certificat
 ```
 
 where `<tls-certificates>` is the name of the TLS certificates Provider charm deployed.
-
----
-
-Would you like me to also make this more **concise and step-oriented** (like an official operator how-to), or keep the explanatory style?
