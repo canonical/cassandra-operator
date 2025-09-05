@@ -64,6 +64,25 @@ The implementation of `add-unit` allows the operator to add more than one unit, 
 
 Nodes removal is in progress.
 
+### Connecting
+
+Authentication is enabled by default.
+To retrieve the password for the default `operator` user:
+
+```shell
+juju show-secret --reveal "cassandra-peers.<application name>.app" --format json \
+  | jq -r '.[].content.Data."operator-password"'
+```
+
+Once you have the password, connect to the cluster using `cqlsh`:
+
+```shell
+cqlsh <unit-ip> -u operator -p "<password>"
+```
+
+> **Warning**: Supplying a password directly in the command line can be insecure.
+> It is recommended to use a credentials file to provide the password securely.
+
 ## Integrations (Relations)
 
 Supported [integrations](https://juju.is/docs/olm/relations):
