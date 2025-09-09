@@ -122,7 +122,7 @@ class CassandraEvents(Object):
         ):
             self.state.cluster.seeds = [self.state.unit.peer_url]
 
-        if not self._check_seeds():
+        if not self._are_seeds_reachable:
             logger.debug("Deferring leader on_start due to seeds not being ready")
             event.defer()
             return
@@ -184,7 +184,7 @@ class CassandraEvents(Object):
             event.defer()
             return
 
-        if not self._check_seeds():
+        if not self._are_seeds_reachable:
             logger.debug("Deferring subordinate on_start due to seeds not being ready")
             event.defer()
             return
@@ -368,7 +368,8 @@ class CassandraEvents(Object):
 
         event.add_status(Status.ACTIVE.value)
 
-    def _check_seeds(self) -> bool:
+    @property
+    def _are_seeds_reachable(self) -> bool:
         return self.state.unit.peer_url in self.state.cluster.seeds or any(
             unit.workload_state == UnitWorkloadState.ACTIVE
             and DatabaseManager(
