@@ -162,7 +162,7 @@ class TLSEvents(Object):
         tls_state.chain = event.chain
 
         if self.charm.unit.is_leader():
-            self.state.cluster.seeds = [self.state.unit.peer_url]
+            self.state.seed_units = self.state.unit
 
         if self.state.unit.workload_state == UnitWorkloadState.ACTIVE:
             self.cluster_manager.prepare_shutdown()
@@ -213,7 +213,7 @@ class TLSEvents(Object):
             state.rotation = True
 
         if self.charm.unit.is_leader():
-            self.state.cluster.seeds = [self.state.unit.peer_url]
+            self.state.seed_units = self.state.unit
 
         if self.state.unit.workload_state == UnitWorkloadState.ACTIVE:
             self.cluster_manager.prepare_shutdown()

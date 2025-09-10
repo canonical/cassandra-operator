@@ -51,14 +51,19 @@ class DatabaseManager:
         try:
             with self._session() as session:
                 session.execute("SELECT release_version FROM system.local")
+                logger.debug(f"Reachability check success: {','.join(self.hosts)}")
                 return True
         except NoHostAvailable as e:
             if e.errors:
-                for host_error in e.errors.values():
+                for host, host_error in e.errors.items():
                     if isinstance(host_error, AuthenticationFailed):
+                        logger.debug(f"Reachability check success: {host} - {host_error}")
                         return True
+                    else:
+                        logger.debug(f"Reachability check failure: {host} - {host_error}")
             return False
-        except Exception:
+        except Exception as e:
+            logger.debug(f"Reachability check failure: {','.join(self.hosts)} - {e}")
             return False
 
     def init_admin(self, password: str) -> None:

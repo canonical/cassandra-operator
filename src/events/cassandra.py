@@ -117,10 +117,8 @@ class CassandraEvents(Object):
             self._start_subordinate(event)
 
     def _start_leader(self, event: StartEvent) -> None:
-        if not self.state.cluster.seeds or all(
-            self.state.cluster.seeds[0] != unit.peer_url for unit in self.state.units
-        ):
-            self.state.cluster.seeds = [self.state.unit.peer_url]
+        if not self.state.seed_units:
+            self.state.seed_units = self.state.unit
 
         if not self._are_seeds_reachable:
             logger.debug("Deferring leader on_start due to seeds not being ready")
@@ -152,7 +150,7 @@ class CassandraEvents(Object):
 
         self.config_manager.render_cassandra_config(
             listen_address="127.0.0.1",
-            seeds=["127.0.0.1:7000"],
+            seeds={"127.0.0.1:7000"},
             enable_peer_tls=self.state.unit.peer_tls.ready,
             enable_client_tls=self.state.unit.client_tls.ready,
             keystore_password=self.state.unit.keystore_password,
@@ -175,10 +173,7 @@ class CassandraEvents(Object):
         self.cluster_manager.prepare_shutdown()
 
     def _start_subordinate(self, event: StartEvent) -> None:
-        if (
-            not self.state.cluster.is_active
-            and self.state.unit.peer_url not in self.state.cluster.seeds
-        ):
+        if not self.state.cluster.is_active and not self.state.unit.is_seed:
             self.state.unit.workload_state = UnitWorkloadState.WAITING_FOR_START
             logger.debug("Deferring subordinate on_start due to cluster not being active yet")
             event.defer()
@@ -308,7 +303,7 @@ class CassandraEvents(Object):
             and self.state.unit.workload_state == UnitWorkloadState.ACTIVE
         ):
             if self.charm.unit.is_leader():
-                self.state.cluster.seeds = [self.state.unit.peer_url]
+                self.state.seed_units = self.state.unit
 
             self.config_manager.render_cassandra_config(
                 listen_address=self.state.unit.ip,
@@ -370,15 +365,14 @@ class CassandraEvents(Object):
 
     @property
     def _are_seeds_reachable(self) -> bool:
-        return self.state.unit.peer_url in self.state.cluster.seeds or any(
+        return self.state.unit.is_seed or any(
             unit.workload_state == UnitWorkloadState.ACTIVE
             and DatabaseManager(
                 hosts=[unit.ip],
                 user=CASSANDRA_ADMIN_USERNAME,
                 password=self.state.cluster.operator_password_secret,
             ).check()
-            for unit in self.state.other_units
-            if unit.peer_url in self.state.cluster.seeds
+            for unit in self.state.other_seed_units
         )
 
     def _recover_seeds(self, event: EventBase) -> None:
@@ -389,10 +383,8 @@ class CassandraEvents(Object):
             logger.debug("Deferring recover_seeds due to inactive unit workload state")
             event.defer()
             return
-        if not self.state.cluster.seeds or all(
-            self.state.cluster.seeds[0] != unit.peer_url for unit in self.state.units
-        ):
-            self.state.cluster.seeds = [self.state.unit.peer_url]
+        if not self.state.seed_units:
+            self.state.seed_units = self.state.unit
             self.config_manager.render_cassandra_config(seeds=self.state.cluster.seeds)
             self.cluster_manager.prepare_shutdown()
             self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
