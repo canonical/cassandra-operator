@@ -23,7 +23,7 @@ class ConfigManager:
         workload: WorkloadBase,
         cluster_name: str,
         listen_address: str,
-        seeds: list[str],
+        seeds: set[str],
         enable_peer_tls: bool,
         enable_client_tls: bool,
         keystore_password: str | None,
@@ -44,7 +44,7 @@ class ConfigManager:
         self,
         cluster_name: str | None = None,
         listen_address: str | None = None,
-        seeds: list[str] | None = None,
+        seeds: set[str] | None = None,
         enable_peer_tls: bool | None = None,
         enable_client_tls: bool | None = None,
         keystore_password: str | None = None,
@@ -218,7 +218,7 @@ class ConfigManager:
 
     @staticmethod
     def _cassandra_connectivity_config(
-        cluster_name: str, listen_address: str, seeds: Iterable[str]
+        cluster_name: str, listen_address: str, seeds: set[str]
     ) -> dict[str, Any]:
         return {
             "cluster_name": cluster_name,

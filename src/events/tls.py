@@ -59,12 +59,13 @@ class TLSEvents(Object):
         self.charm = charm
         self.state = state
         self.workload = workload
+        self.cluster_manager = cluster_manager
         self.config_manager = config_manager
         self.bootstrap_manager = bootstrap_manager
         self.tls_manager = tls_manager
         self.setup_internal_certificates = setup_internal_certificates
 
-        ip, hostname = cluster_manager.network_address()
+        ip, hostname = self.cluster_manager.network_address()
         self.sans = self.tls_manager.build_sans(
             sans_ip=[ip],
             sans_dns=[hostname, self.charm.unit.name],
@@ -160,6 +161,12 @@ class TLSEvents(Object):
         tls_state.ca = event.ca
         tls_state.chain = event.chain
 
+        if self.charm.unit.is_leader():
+            self.state.seed_units = self.state.unit
+
+        if self.state.unit.workload_state == UnitWorkloadState.ACTIVE:
+            self.cluster_manager.prepare_shutdown()
+
         self.tls_manager.remove_stores(scope=tls_state.scope)
         self.tls_manager.configure(
             tls_state.resolved,
@@ -167,6 +174,7 @@ class TLSEvents(Object):
             trust_password=self.state.unit.truststore_password,
         )
         self.config_manager.render_cassandra_config(
+            seeds=self.state.cluster.seeds,
             enable_peer_tls=self.state.unit.peer_tls.ready,
             enable_client_tls=self.state.unit.client_tls.ready,
             keystore_password=self.state.unit.keystore_password,
@@ -204,7 +212,14 @@ class TLSEvents(Object):
                 return
             state.rotation = True
 
+        if self.charm.unit.is_leader():
+            self.state.seed_units = self.state.unit
+
+        if self.state.unit.workload_state == UnitWorkloadState.ACTIVE:
+            self.cluster_manager.prepare_shutdown()
+
         self.config_manager.render_cassandra_config(
+            seeds=self.state.cluster.seeds,
             enable_peer_tls=self.state.unit.peer_tls.ready,
             enable_client_tls=self.state.unit.client_tls.ready,
             keystore_password=self.state.unit.keystore_password,

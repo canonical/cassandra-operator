@@ -38,3 +38,7 @@ class ClusterManager:
     def prepare_shutdown(self) -> None:
         """Prepare Cassandra unit for safe shutdown."""
         self._workload.exec([_NODETOOL, "drain"])
+
+    def decommission(self) -> None:
+        """Disconnect node from the cluster."""
+        self._workload.exec([_NODETOOL, "decommission", "-f"])

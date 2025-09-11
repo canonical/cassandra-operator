@@ -8,8 +8,15 @@ import logging
 from contextlib import contextmanager
 from typing import Generator
 
+from cassandra import AuthenticationFailed
 from cassandra.auth import PlainTextAuthProvider
-from cassandra.cluster import EXEC_PROFILE_DEFAULT, Cluster, ExecutionProfile, Session
+from cassandra.cluster import (
+    EXEC_PROFILE_DEFAULT,
+    Cluster,
+    ExecutionProfile,
+    NoHostAvailable,
+    Session,
+)
 from cassandra.policies import DCAwareRoundRobinPolicy, TokenAwarePolicy
 
 from core.literals import CASSANDRA_ADMIN_USERNAME
@@ -32,6 +39,32 @@ class DatabaseManager:
         self.hosts = hosts
 
         return
+
+    def check(self) -> bool:
+        """Check connectivity to the Cassandra.
+
+        Returns positive even when cluster cannot achieve consistency level for the authentication.
+
+        Returns:
+            whether Cassandra service on this node is ready to accept connections.
+        """
+        try:
+            with self._session() as session:
+                session.execute("SELECT release_version FROM system.local")
+                logger.debug(f"Reachability check success: {','.join(self.hosts)}")
+                return True
+        except NoHostAvailable as e:
+            if e.errors:
+                for host, host_error in e.errors.items():
+                    if isinstance(host_error, AuthenticationFailed):
+                        logger.debug(f"Reachability check success: {host} - {host_error}")
+                        return True
+                    else:
+                        logger.debug(f"Reachability check failure: {host} - {host_error}")
+            return False
+        except Exception as e:
+            logger.debug(f"Reachability check failure: {','.join(self.hosts)} - {e}")
+            return False
 
     def init_admin(self, password: str) -> None:
         """Create operator role with the specified password and remove default cassandra role.

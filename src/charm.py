@@ -101,7 +101,6 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
 
     def bootstrap(self, event: RunWithLock) -> None:
         """Start workload and join this unit to the cluster."""
-        # TODO: add leader elected hook
         self.state.unit.workload_state = UnitWorkloadState.STARTING
 
         self.workload.restart()

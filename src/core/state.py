@@ -286,9 +286,11 @@ class UnitContext(RelationState):
         relation: Relation | None,
         data_interface: DataPeerUnitData,
         component: Unit,
+        seeds: set[str],
     ):
         super().__init__(relation, data_interface, component)
         self.unit = component
+        self.seeds = seeds
 
     @property
     def unit_id(self) -> int:
@@ -388,6 +390,11 @@ class UnitContext(RelationState):
         """
         self._field_setter_wrapper("truststore-password-secret", value)
 
+    @property
+    def is_seed(self) -> bool:
+        """Whether this unit's `peer_url` present in `ClusterContext.seeds`."""
+        return self.peer_url in self.seeds
+
 
 class ClusterContext(RelationState):
     """Cluster context of the application state.
@@ -405,13 +412,16 @@ class ClusterContext(RelationState):
         self.app = component
 
     @property
-    def seeds(self) -> list[str]:
-        """List of peer urls of Cassandra seed nodes."""
+    def seeds(self) -> set[str]:
+        """Set of peer urls of Cassandra seed nodes.
+
+        When achievable, it's recommended to use `ApplicationState.seed_units` over this raw value.
+        """
         seeds = self.relation_data.get("seeds", "")
-        return seeds.split(",") if seeds else []
+        return set(seeds.split(",")) if seeds else set()
 
     @seeds.setter
-    def seeds(self, value: list[str]) -> None:
+    def seeds(self, value: set[str]) -> None:
         self._field_setter_wrapper("seeds", ",".join(value))
 
     @property
@@ -523,6 +533,7 @@ class ApplicationState(Object):
             relation=self.peer_relation,
             data_interface=self.peer_unit_interface,
             component=self.model.unit,
+            seeds=self.cluster.seeds,
         )
 
     @property
@@ -538,6 +549,31 @@ class ApplicationState(Object):
                 relation=self.peer_relation,
                 data_interface=data_interface,
                 component=unit,
+                seeds=self.cluster.seeds,
             )
             for unit, data_interface in self.peer_relation_units.items()
         }
+
+    @property
+    def seed_units(self) -> set[UnitContext]:
+        """Contexts of all the units, that are configured as seed nodes.
+
+        See `ApplicationState.units` for more info.
+        """
+        return {unit for unit in self.units if unit.is_seed}
+
+    @seed_units.setter
+    def seed_units(self, value: set[UnitContext] | UnitContext):
+        self.cluster.seeds = (
+            {value.peer_url}
+            if isinstance(value, UnitContext)
+            else {unit.peer_url for unit in value}
+        )
+
+    @property
+    def other_seed_units(self) -> set[UnitContext]:
+        """Contexts of other units, that are configured as seed nodes.
+
+        See `ApplicationState.other_units` for more info.
+        """
+        return {unit for unit in self.other_units if unit.is_seed}
