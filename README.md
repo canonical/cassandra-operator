@@ -14,8 +14,6 @@ Built as a Juju charm, the operator manages Cassandra on Ubuntu and provides out
 * **Secure communications**: built-in TLS support for encrypted traffic between nodes.
 * **Authentication**: automatic generation of initial system credentials and secure password rotation with Juju secrets.
 
-## Basic usage
-
 ### Deployment
 
 Charmed Apache Cassandra is still actively developed and not yet published on Charmhub.io.
