@@ -1,4 +1,5 @@
 # Charmed Apache Cassandra
+[![Tests](https://github.com/canonical/cassandra-operator/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/canonical/cassandra-operator/actions/workflows/ci.yaml/badge.svg?query=branch%3Amain)
 
 This repository contains a charmed operator for deploying [Apache Cassandra](https://cassandra.apache.org/_/cassandra-basics.html) on virtual machines via the [Juju orchestration engine](https://juju.is/).
 
