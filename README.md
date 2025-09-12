@@ -38,7 +38,7 @@ To deploy a single unit of Cassandra:
 juju deploy cassandra_ubuntu@24.04-amd64.charm cassandra
 ```
 
-The config option `--config profile=testing` can be used for testing purposes. This restricts a Cassandra node to minimum memory usage.
+Use the `--config profile=testing` option to run a Cassandra node with minimal memory for testing purposes.
 
 Apache Cassandra is typically deployed as a cluster to provide horizontal scalability and fault tolerance. In Juju, each Cassandra node is represented by a unit.
 
