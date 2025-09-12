@@ -154,3 +154,5 @@ Also, if you truly enjoy working on open-source projects like this one, check ou
 ## License
 
 Charmed Apache Cassandra is free software, distributed under the Apache Software License, version 2.0. See [LICENSE](https://github.com/canonical/cassandra-operator/blob/main/LICENSE) for more information.
+
+Apache®, Apache Cassandra®, and the Apache Cassandra logo are either registered trademarks or trademarks of the Apache Software Foundation in the United States and/or other countries.
