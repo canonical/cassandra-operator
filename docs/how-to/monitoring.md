@@ -64,9 +64,9 @@ juju relate cassandra:cos-agent grafana-agent
 Finally, relate `grafana-agent` with consumed COS offers:
 
 ```shell
-juju relate grafana-agent grafana-dashboards
-juju relate grafana-agent loki-logging
-juju relate grafana-agent prometheus-receive-remote-write
+juju integrate grafana-agent grafana-dashboards
+juju integrate grafana-agent loki-logging
+juju integrate grafana-agent prometheus-receive-remote-write
 ```
 
 Wait for all components to settle down on a `active/idle` state on both models, e.g. `<cassandra_model_name>` and `<cos_model_name>`.
