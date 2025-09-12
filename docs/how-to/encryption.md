@@ -24,7 +24,7 @@ Configure the CA common name:
 juju config self-signed-certificates ca-common-name="Test CA"
 ```
 
-For an overview of available TLS certificate Provider charms and guidance on choosing the right one for your use case, see the [Security with X.509 certificates](https://charmhub.io/topics/security-with-x-509-certificates) page.
+For an overview of available TLS certificate Provider charms and guidance on choosing the right one for your use case, see [this guide](https://charmhub.io/topics/security-with-x-509-certificates).
 
 ## Relate the charms
 
