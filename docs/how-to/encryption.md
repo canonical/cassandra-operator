@@ -3,7 +3,7 @@
 The Apache Cassandra charm has encryption enabled by default.
 All units within a cluster share the same CA certificate file, but each unit has a distinct private key.
 
-This charm implements the **Requirer** side of the [`tls-certificates/v1`](https://github.com/canonical/charm-relation-interfaces/blob/main/interfaces/tls_certificates/v1/README.md) relation. Therefore, any charm implementing the **Provider** side can be used.
+This charm implements the **Requirer** side of the [tls-certificates](https://charmhub.io/integrations/tls-certificates) relation. Therefore, any charm implementing the **Provider** side can be used.
 To enable TLS encryption, you must first deploy a TLS certificates Provider charm.
 
 ---
