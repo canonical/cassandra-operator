@@ -18,6 +18,8 @@ Built as a Juju charm, the operator manages Cassandra on Ubuntu and provides out
 
 ### Deployment
 
+Charmed Apache Cassandra is still actively developed and not yet published on Charmhub.io.
+The best way to deploy it is to build a charm from source code in this repository.
 Build a Cassandra charm:
 
 ```shell
