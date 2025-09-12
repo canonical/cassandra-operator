@@ -15,10 +15,12 @@ However, this setup is **not recommended** for production clusters.
 Deploy the `self-signed-certificates` charm with:
 
 ```shell
-# Deploy the TLS charm
 juju deploy self-signed-certificates --channel=edge
+```
 
-# Configure the CA common name
+Configure the CA common name:
+
+```shell
 juju config self-signed-certificates ca-common-name="Test CA"
 ```
 
