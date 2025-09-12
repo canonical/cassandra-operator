@@ -31,13 +31,13 @@ For an overview of available TLS certificate Provider charms and guidance on cho
 To enable **peer-to-peer TLS encryption**, relate Cassandra to the `:peer-certificates` endpoint:
 
 ```shell
-juju relate <tls-certificates>:certificates cassandra:peer-certificates
+juju integrate <tls-certificates>:certificates cassandra:peer-certificates
 ```
 
 To enable **client-to-node TLS encryption**, relate Cassandra to the `:client-certificates` endpoint:
 
 ```shell
-juju relate <tls-certificates>:certificates cassandra:client-certificates
+juju integrate <tls-certificates>:certificates cassandra:client-certificates
 ```
 
 where `<tls-certificates>` is the name of the deployed TLS certificates Provider charm.
@@ -52,7 +52,7 @@ juju show-secret --reveal "cassandra-peers.<application name>.app" --format json
   | jq -r '.[].content.Data."operator-password"'
 ```
 
-### Verifying client tls
+### Verify client tls
 
 First, attempt to connect **without specifying TLS certificates**:
 
