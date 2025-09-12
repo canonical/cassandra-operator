@@ -7,7 +7,7 @@ This charm implements the **Requirer** side of the [tls-certificates](https://ch
 To enable TLS encryption, you must first deploy a TLS certificates Provider charm.
 
 
-## Deploy a TLS Provider Charm
+## Deploy a tls provider charm
 
 For testing purposes, you can use the `self-signed-certificates` charm.
 However, this setup is **not recommended** for production clusters.
@@ -24,7 +24,7 @@ juju config self-signed-certificates ca-common-name="Test CA"
 
 For an overview of available TLS certificate Provider charms and guidance on choosing the right one for your use case, see [this guide](https://charmhub.io/topics/security-with-x-509-certificates).
 
-## Relate the Charms
+## Relate the charms
 
 To enable **peer-to-peer TLS encryption**, relate Cassandra to the `:peer-certificates` endpoint:
 
@@ -40,7 +40,7 @@ juju relate <tls-certificates>:certificates cassandra:client-certificates
 
 where `<tls-certificates>` is the name of the deployed TLS certificates Provider charm.
 
-## Connect to the Cluster
+## Connect to the cluster
 
 Authentication is enabled by default.
 To retrieve the password for the default `operator` user:
@@ -50,7 +50,7 @@ juju show-secret --reveal "cassandra-peers.<application name>.app" --format json
   | jq -r '.[].content.Data."operator-password"'
 ```
 
-### Verifying Client TLS
+### Verifying client tls
 
 First, attempt to connect **without specifying TLS certificates**:
 
@@ -77,7 +77,7 @@ io.netty.handler.ssl.NotSslRecordException: not an SSL/TLS record
 
 This confirms that Cassandra requires a secure TLS connection.
 
-### Retrieving Client Certificates
+### Retrieving client certificates
 
 Fetch the client private key and signed certificate from a unit:
 
@@ -112,7 +112,7 @@ Connect to Cassandra with:
 cqlsh --ssl --cqlshrc=./cqlshrc
 ```
 
-## Disabling TLS
+## Disabling tls
 
 To disable TLS, remove the relations:
 
