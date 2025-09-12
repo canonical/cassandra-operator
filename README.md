@@ -1,4 +1,4 @@
-# Apache Cassandra Juju Operator
+# Charmed Apache Cassandra
 
 This repository contains a charmed operator for deploying [Apache Cassandra](https://cassandra.apache.org/_/cassandra-basics.html) on virtual machines via the [Juju orchestration engine](https://juju.is/).
 
