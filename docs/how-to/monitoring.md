@@ -58,7 +58,7 @@ Now, deploy `grafana-agent` (subordinate charm) and relate it with Charmed Apach
 
 ```shell
 juju deploy grafana-agent
-juju relate cassandra:cos-agent grafana-agent
+juju integrate cassandra:cos-agent grafana-agent
 ```
 
 Finally, relate `grafana-agent` with consumed COS offers:
