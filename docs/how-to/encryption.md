@@ -1,4 +1,4 @@
-# Managing Encryption
+# Managing encryption
 
 The Apache Cassandra charm has encryption enabled by default.
 All units within a cluster share the same CA certificate file, but each unit has a distinct private key.
