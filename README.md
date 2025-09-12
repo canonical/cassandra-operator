@@ -3,7 +3,6 @@
 
 This repository contains a charmed operator for deploying [Apache Cassandra](https://cassandra.apache.org/_/cassandra-basics.html) on virtual machines via the [Juju orchestration engine](https://juju.is/).
 
-## Overview
 
 This operator provides an [Apache Cassandra](https://cassandra.apache.org/) database with support for both single-node and multi-node deployments. It automates the deployment and lifecycle management of Cassandra clusters, ensuring smooth operation from single-node setups to multi-node.
 
