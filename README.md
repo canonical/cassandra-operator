@@ -142,13 +142,8 @@ juju show-secret --reveal cassandra-peers.cassandra.app | grep operator
 
 Supported [integrations](https://juju.is/docs/olm/relations):
 
-### `tls-certificates` interface
-
-See the [encryption tutorial](docs/how-to/encryption.md) for detailed instructions on adding the `tls-certificates` relation and managing encryption.
-
-### `metrics` interface
-
-See the [monitoring tutorial](docs/how-to/monitoring.md) for detailed instructions on adding the `metrics` relation and integrating with the `cos` charm.
+* `tls-certificates` interface -- See the [encryption tutorial](docs/how-to/encryption.md) for detailed instructions on adding the `tls-certificates` relation and managing encryption.
+* `metrics` interface -- See the [monitoring tutorial](docs/how-to/monitoring.md) for detailed instructions on adding the `metrics` relation and integrating with the `cos` charm.
 
 ## Contributing
 
