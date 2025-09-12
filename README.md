@@ -14,6 +14,21 @@ Built as a Juju charm, the operator manages Cassandra on Ubuntu and provides out
 * **Secure communications**: built-in TLS support for encrypted traffic between nodes.
 * **Authentication**: automatic generation of initial system credentials and secure password rotation with Juju secrets.
 
+### Prerequisites
+
+Before deploying Cassandra, make sure your environment is ready:
+
+* **Juju** is installed – [installation guide](https://juju.is/docs/olm/get-started-with-juju).
+* **LXD** is installed and initialized – [LXD setup guide](https://juju.is/docs/olm/lxd).
+* **Charmcraft** is installed for building the charm – [installation guide](https://juju.is/docs/sdk/install-charmcraft).
+* A Juju controller is bootstrapped. 
+
+To create a local controller with LXD:
+
+```shell
+juju bootstrap localhost
+```
+
 ### Deployment
 
 Charmed Apache Cassandra is still actively developed and not yet published on Charmhub.io.
@@ -24,7 +39,7 @@ Build a Cassandra charm:
 charmcraft pack
 ```
 
-Bootstrap a [LXD controller](https://juju.is/docs/olm/lxd#heading--create-a-controller) and create a new Juju model:
+Create a new Juju model:
 
 ```shell
 juju add-model sample-model
