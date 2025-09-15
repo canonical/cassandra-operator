@@ -8,11 +8,10 @@ import logging
 
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from charms.grafana_agent.v0.cos_agent import COSAgentProvider
-from charms.rolling_ops.v0.rollingops import RollingOpsManager, RunWithLock
-from ops import ModelError, SecretNotFoundError, main
-from tenacity import Retrying, stop_after_delay, wait_exponential
+from ops import EventBase, ModelError, SecretNotFoundError, main
 
-from common.exceptions import BadSecretError
+from common.exceptions import BadSecretError, ExecError
+from common.lock_manager import LockManager
 from core.config import CharmConfig
 from core.literals import CASSANDRA_ADMIN_USERNAME
 from core.state import (
@@ -41,6 +40,9 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
     def __init__(self, *args):
         super().__init__(*args)
 
+        self.on.define_event("bootstrap", EventBase)
+        self.framework.observe(self.on.bootstrap, self._on_bootstrap)
+
         self.state = ApplicationState(self)
         self.workload = CassandraWorkload()
         self.cluster_manager = ClusterManager(workload=self.workload)
@@ -62,9 +64,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             user=CASSANDRA_ADMIN_USERNAME,
             password=self.state.cluster.operator_password_secret,
         )
-        bootstrap_manager = RollingOpsManager(
-            charm=self, relation="bootstrap", callback=self.bootstrap
-        )
+        self.bootstrap_manager = LockManager(self, "bootstrap")
 
         self.cassandra_events = CassandraEvents(
             self,
@@ -73,10 +73,10 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             cluster_manager=self.cluster_manager,
             config_manager=config_manager,
             database_manager=database_manager,
-            bootstrap_manager=bootstrap_manager,
             tls_manager=self.tls_manager,
             setup_internal_certificates=self.setup_internal_certificates,
             read_auth_secret=self.read_auth_secret,
+            restart=self.restart,
         )
 
         self.tls_events = TLSEvents(
@@ -85,9 +85,9 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             workload=self.workload,
             cluster_manager=self.cluster_manager,
             config_manager=config_manager,
-            bootstrap_manager=bootstrap_manager,
             tls_manager=self.tls_manager,
             setup_internal_certificates=self.setup_internal_certificates,
+            restart=self.restart,
         )
 
         self._grafana_agent = COSAgentProvider(
@@ -99,18 +99,24 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             log_slots=[f"{SNAP_NAME}:logs"],
         )
 
-    def bootstrap(self, event: RunWithLock) -> None:
-        """Start workload and join this unit to the cluster."""
-        self.state.unit.workload_state = UnitWorkloadState.STARTING
+    def _on_bootstrap(self, event: EventBase) -> None:
+        if self.state.unit.workload_state != UnitWorkloadState.STARTING:
+            if self.bootstrap_manager.try_lock():
+                if self.workload.is_alive():
+                    try:
+                        self.cluster_manager.prepare_shutdown()
+                    except ExecError as e:
+                        logger.error(f"Failed to prepare unit for shutdown during restart: {e}")
+                self.workload.restart()
+                self.state.unit.workload_state = UnitWorkloadState.STARTING
+            event.defer()
+            return
 
-        self.workload.restart()
+        if not self.cluster_manager.is_healthy:
+            event.defer()
+            return
 
-        for attempt in Retrying(
-            wait=wait_exponential(), stop=stop_after_delay(1800), reraise=True
-        ):
-            with attempt:
-                if not self.cluster_manager.is_healthy:
-                    raise Exception("bootstrap timeout exceeded")
+        self.bootstrap_manager.release()
 
         if self.state.unit.peer_tls.rotation:
             self.state.unit.peer_tls.rotation = False
@@ -119,6 +125,10 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         self.state.unit.workload_state = UnitWorkloadState.ACTIVE
         if self.unit.is_leader():
             self.state.cluster.state = ClusterState.ACTIVE
+
+    def restart(self) -> None:
+        if not self.bootstrap_manager.is_pending:
+            self.on.bootstrap.emit()
 
     def setup_internal_certificates(self, sans: Sans) -> bool:
         """Configure internal TLS certificates for the current unit using an internally managed CA.

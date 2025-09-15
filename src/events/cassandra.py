@@ -49,11 +49,11 @@ class CassandraEvents(Object):
         workload: WorkloadBase,
         cluster_manager: ClusterManager,
         config_manager: ConfigManager,
-        bootstrap_manager: RollingOpsManager,
         tls_manager: TLSManager,
         setup_internal_certificates: Callable[[Sans], bool],
         database_manager: DatabaseManager,
         read_auth_secret: Callable[[str], str],
+        restart: Callable[[], None],
     ):
         super().__init__(charm, key="cassandra_events")
         self.charm = charm
@@ -61,11 +61,11 @@ class CassandraEvents(Object):
         self.workload = workload
         self.cluster_manager = cluster_manager
         self.config_manager = config_manager
-        self.bootstrap_manager = bootstrap_manager
         self.tls_manager = tls_manager
         self.setup_internal_certificates = setup_internal_certificates
         self.database_manager = database_manager
         self.read_auth_secret = read_auth_secret
+        self.restart = restart
 
         self.framework.observe(self.charm.on.start, self._on_start)
         self.framework.observe(self.charm.on.install, self._on_install)
@@ -143,7 +143,7 @@ class CassandraEvents(Object):
             keystore_password=self.state.unit.keystore_password,
             truststore_password=self.state.unit.truststore_password,
         )
-        self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
+        self.restart()
 
     def _start_leader_setup_auth(self) -> None:
         password = self._acquire_operator_password()
@@ -191,7 +191,7 @@ class CassandraEvents(Object):
             keystore_password=self.state.unit.keystore_password,
             truststore_password=self.state.unit.truststore_password,
         )
-        self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
+        self.restart()
 
     def _acquire_operator_password(self) -> str:
         if self.charm.config.system_users:
@@ -219,8 +219,7 @@ class CassandraEvents(Object):
             )
             cassandra_config_changed = self.config_manager.render_cassandra_config()
             if env_changed or cassandra_config_changed:
-                self.cluster_manager.prepare_shutdown()
-                self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
+                self.restart()
         except ValidationError as e:
             logger.error(f"Config haven't passed validation: {e}")
             return
@@ -269,8 +268,7 @@ class CassandraEvents(Object):
             event.defer()
             return
         if self.config_manager.render_cassandra_config():
-            self.cluster_manager.prepare_shutdown()
-            self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
+            self.restart()
 
     def _on_peer_relation_departed(self, event: RelationDepartedEvent) -> None:
         if event.departing_unit == self.charm.unit:
@@ -310,8 +308,7 @@ class CassandraEvents(Object):
                 seeds=self.state.cluster.seeds,
             )
 
-            self.cluster_manager.prepare_shutdown()
-            self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
+            self.restart()
 
     def _on_collect_unit_status(self, event: CollectStatusEvent) -> None:
         try:
@@ -386,8 +383,7 @@ class CassandraEvents(Object):
         if not self.state.seed_units:
             self.state.seed_units = self.state.unit
             self.config_manager.render_cassandra_config(seeds=self.state.cluster.seeds)
-            self.cluster_manager.prepare_shutdown()
-            self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
+            self.restart()
 
     def _update_network_address(self) -> bool:
         """Update hostname & ip in this unit context.
