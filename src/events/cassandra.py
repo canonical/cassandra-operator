@@ -8,11 +8,9 @@ import logging
 from typing import Callable
 
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
-from charms.rolling_ops.v0.rollingops import RollingOpsManager
 from ops import (
     CollectStatusEvent,
     ConfigChangedEvent,
-    EventBase,
     InstallEvent,
     LeaderElectedEvent,
     Object,
@@ -201,19 +199,23 @@ class CassandraEvents(Object):
         return self.workload.generate_password()
 
     def _on_config_changed(self, event: ConfigChangedEvent) -> None:
-        if self.state.unit.workload_state == UnitWorkloadState.INSTALLING:
-            logger.debug("Exiting on_config_changed due to installation phase")
+        if not self.state.unit.is_ready:
+            logger.debug("Exiting on_config_changed due to unit not being ready")
             return
-        if self.state.unit.workload_state != UnitWorkloadState.ACTIVE:
-            logger.debug("Deferring on_config_changed due to inactive unit workload state")
+        if not self.state.unit.is_config_change_eligible:
+            logger.debug("Deferring on_config_changed due to unit not being ready change config")
             event.defer()
             return
         try:
             if self.charm.unit.is_leader() and self.state.cluster.operator_password_secret != (
                 password := self._acquire_operator_password()
             ):
-                self.database_manager.update_role_password(CASSANDRA_ADMIN_USERNAME, password)
-                self.state.cluster.operator_password_secret = password
+                if self.state.unit.is_operational:
+                    self.database_manager.update_role_password(CASSANDRA_ADMIN_USERNAME, password)
+                    self.state.cluster.operator_password_secret = password
+                else:
+                    logger.debug("Deferring on_config_changed due to unit not being operational")
+                    event.defer()
             env_changed = self.config_manager.render_env(
                 cassandra_limit_memory_mb=1024 if self.charm.config.profile == "testing" else None
             )
@@ -234,16 +236,16 @@ class CassandraEvents(Object):
         if not self.charm.unit.is_leader():
             return
 
-        if self.state.unit.workload_state == UnitWorkloadState.INSTALLING:
-            logger.debug("Exiting on_secret_changed due to installation phase")
+        if not self.state.unit.is_ready:
+            logger.debug("Exiting on_secret_changed due to unit not being ready")
             return
 
         try:
             if event.secret.id != self.charm.config.system_users:
                 return
 
-            if self.state.unit.workload_state != UnitWorkloadState.ACTIVE:
-                logger.debug("Deferring on_secret_changed due to inactive unit workload state")
+            if not self.state.unit.is_operational:
+                logger.debug("Deferring on_secret_changed due to unit not being operational")
                 event.defer()
                 return
 
@@ -260,42 +262,55 @@ class CassandraEvents(Object):
             return
 
     def _on_peer_relation_changed(self, event: RelationChangedEvent) -> None:
-        if self.state.unit.workload_state == UnitWorkloadState.INSTALLING:
-            logger.debug("Exiting on_peer_relation_changed due to installation phase")
+        if not self.state.unit.is_ready:
+            logger.debug("Exiting on_peer_relation_changed due to unit not being ready")
             return
-        if self.state.unit.workload_state != UnitWorkloadState.ACTIVE:
-            logger.debug("Deferring on_peer_relation_changed due to inactive unit workload state")
+        if not self.state.unit.is_config_change_eligible:
+            logger.debug(
+                "Deferring on_peer_relation_changed due to unit not being ready change config"
+            )
             event.defer()
             return
         if self.config_manager.render_cassandra_config():
             self.restart()
 
     def _on_peer_relation_departed(self, event: RelationDepartedEvent) -> None:
+        if not self.state.unit.is_ready:
+            logger.debug("Exiting on_peer_relation_departed due to unit not being ready")
+            return
         if event.departing_unit == self.charm.unit:
-            if self.state.unit.workload_state == UnitWorkloadState.INSTALLING:
-                logger.debug("Exiting on_peer_relation_departed due to installation phase")
-                return
-            if self.state.unit.workload_state != UnitWorkloadState.ACTIVE:
+            if not self.state.unit.is_operational:
                 logger.debug(
-                    "Deferring on_peer_relation_departed due to inactive unit workload state"
+                    "Deferring on_peer_relation_departed due to unit not being operational"
                 )
                 event.defer()
                 return
             self.cluster_manager.decommission()
         elif self.charm.unit.is_leader():
-            self._recover_seeds(event)
+            if not self.state.unit.is_config_change_eligible:
+                logger.debug(
+                    "Deferring on_peer_relation_departed due to unit not being ready change config"
+                )
+                event.defer()
+                return
+            self._recover_seeds()
 
     def _on_leader_elected(self, event: LeaderElectedEvent) -> None:
-        self._recover_seeds(event)
+        if not self.state.unit.is_ready:
+            logger.debug("Exiting on_leader_elected due to unit not being ready")
+            return
+        if not self.state.unit.is_config_change_eligible:
+            logger.debug("Deferring on_leader_elected due to unit not being ready change config")
+            event.defer()
+            return
+        self._recover_seeds()
 
     def _on_update_status(self, _: UpdateStatusEvent) -> None:
-        if (
-            self.state.unit.workload_state == UnitWorkloadState.ACTIVE
-            and not self.workload.is_alive()
-        ):
+        if self.state.unit.is_operational and not self.workload.is_alive():
             logger.error("Restarting Cassandra service due to unexpected shutdown")
             self.workload.restart()
 
+        # TODO: check
         if (
             self._update_network_address()
             and self.state.unit.workload_state == UnitWorkloadState.ACTIVE
@@ -363,7 +378,7 @@ class CassandraEvents(Object):
     @property
     def _are_seeds_reachable(self) -> bool:
         return self.state.unit.is_seed or any(
-            unit.workload_state == UnitWorkloadState.ACTIVE
+            unit.is_operational
             and DatabaseManager(
                 hosts=[unit.ip],
                 user=CASSANDRA_ADMIN_USERNAME,
@@ -372,14 +387,7 @@ class CassandraEvents(Object):
             for unit in self.state.other_seed_units
         )
 
-    def _recover_seeds(self, event: EventBase) -> None:
-        if self.state.unit.workload_state == UnitWorkloadState.INSTALLING:
-            logger.debug("Exiting recover_seeds due to installation phase")
-            return
-        if self.state.unit.workload_state != UnitWorkloadState.ACTIVE:
-            logger.debug("Deferring recover_seeds due to inactive unit workload state")
-            event.defer()
-            return
+    def _recover_seeds(self) -> None:
         if not self.state.seed_units:
             self.state.seed_units = self.state.unit
             self.config_manager.render_cassandra_config(seeds=self.state.cluster.seeds)

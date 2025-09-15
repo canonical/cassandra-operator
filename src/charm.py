@@ -112,6 +112,11 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             event.defer()
             return
 
+        if not self.workload.is_alive():
+            self.state.unit.workload_state = UnitWorkloadState.CANT_START
+            self.bootstrap_manager.release()
+            return
+
         if not self.cluster_manager.is_healthy:
             event.defer()
             return

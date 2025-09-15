@@ -85,6 +85,8 @@ class UnitWorkloadState(StrEnum):
     """Subordinate unit is waiting for leader to initialize cluster before it starts workload."""
     STARTING = "starting"
     """Cassandra is starting."""
+    CANT_START = "cant_start"
+    """TODO."""
     ACTIVE = "active"
     """Cassandra is active and ready."""
 
@@ -394,6 +396,22 @@ class UnitContext(RelationState):
     def is_seed(self) -> bool:
         """Whether this unit's `peer_url` present in `ClusterContext.seeds`."""
         return self.peer_url in self.seeds
+
+    @property
+    def is_ready(self) -> bool:
+        return self.workload_state != UnitWorkloadState.INSTALLING
+
+    @property
+    def is_config_change_eligible(self) -> bool:
+        return self.workload_state in [
+            UnitWorkloadState.WAITING_FOR_START,
+            UnitWorkloadState.CANT_START,
+            UnitWorkloadState.ACTIVE,
+        ]
+
+    @property
+    def is_operational(self) -> bool:
+        return self.workload_state == UnitWorkloadState.ACTIVE
 
 
 class ClusterContext(RelationState):
