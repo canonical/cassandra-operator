@@ -14,7 +14,7 @@ Built as a Juju charm, the operator manages Cassandra on Ubuntu and provides out
 * **Secure communications**: built-in TLS support for encrypted traffic between nodes.
 * **Authentication**: automatic generation of initial system credentials and secure password rotation with Juju secrets.
 
-### Prerequisites
+## Prerequisites
 
 Before deploying Cassandra, make sure your environment is ready:
 
@@ -29,7 +29,7 @@ To create a local controller with LXD:
 juju bootstrap localhost
 ```
 
-### Deployment
+## Deployment
 
 Charmed Apache Cassandra is still actively developed and not yet published on Charmhub.io.
 The best way to deploy it is to build a charm from source code in this repository.
@@ -63,9 +63,11 @@ juju deploy cassandra_ubuntu@24.04-amd64.charm cassandra -n <number_of_units>
 
 The seed node will always be the leader unit in the cluster.
 
-### Node management
+## Node management
 
-#### Adding nodes
+The charm automates most of the node management operations, ensuring that the cluster topology remains consistent and data is replicated correctly.
+
+### Adding nodes
 
 To add more nodes, use the `juju add-unit` command:
 
@@ -75,7 +77,7 @@ juju add-unit cassandra -n <number_of_units_to_add>
 
 The implementation of `add-unit` allows adding multiple units at once, but unit initialization will occur one at a time.
 
-#### Removing nodes
+### Removing nodes
 
 Node removal support is in progress.
 
@@ -156,7 +158,7 @@ juju show-secret --reveal cassandra-peers.cassandra.app | grep operator
 Supported [integrations](https://juju.is/docs/olm/relations):
 
 * `tls-certificates` interface -- See the [encryption tutorial](docs/how-to/encryption.md) for detailed instructions on adding the `tls-certificates` relation and managing encryption.
-* `metrics` interface -- See the [monitoring tutorial](docs/how-to/monitoring.md) for detailed instructions on adding the `metrics` relation and integrating with the `cos` charm.
+* `metrics` interface -- See the [monitoring tutorial](docs/how-to/monitoring.md) for detailed instructions on adding the `metrics` relation and integrating with the `COS` charm.
 
 ## Contributing
 

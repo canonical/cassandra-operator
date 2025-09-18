@@ -14,7 +14,7 @@ Since the Charmed Apache Cassandra is deployed directly on a cloud infrastructur
 The [offers-overlay](https://github.com/canonical/cos-lite-bundle/blob/main/overlays/offers-overlay.yaml)
 can be used, and this step is shown in the COS tutorial.
 
-### Offer interfaces via the cos controller
+### Offer interfaces via the COS controller
 
 Switch to COS K8s environment and offer COS interfaces to be cross-model related with Charmed Apache Kafka VM model:
 
@@ -36,7 +36,7 @@ juju switch <machine_controller_name>:<cassandra_model_name>
 juju find-offers <k8s_controller>:
 ```
 
-A similar output should appear, if `k8s` is the K8s controller name and `cos` the model where `cos-lite` has been deployed:
+A similar output should appear, if `k8s` is the K8s controller name and `COS` the model where `cos-lite` has been deployed:
 
 ```shell
 Store      URL                                        Access  Interfaces
@@ -73,7 +73,7 @@ Wait for all components to settle down on a `active/idle` state on both models, 
 
 After this is complete, the monitoring COS stack should be up and running and ready to be used.
 
-### Connect grafana web interface
+### Connect Grafana web interface
 
 To connect to the Grafana web interface, follow the [Browse dashboards](https://charmhub.io/topics/canonical-observability-stack/tutorials/install-microk8s?_ga=2.201254254.1948444620.1704703837-757109492.1701777558#heading--browse-dashboards) section of the MicroK8s "Getting started" guide.
 
@@ -103,7 +103,7 @@ If you want a primer to rule writing, refer to the [Prometheus documentation](ht
 
 Then, push your changes to the remote repository.
 
-### Deploy the cos configuration charm
+### Deploy the COS configuration charm
 
 Deploy the [COS configuration](https://charmhub.io/cos-configuration-k8s) charm in the `<cos-model>` model:
 
