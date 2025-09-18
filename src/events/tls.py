@@ -8,7 +8,6 @@ import logging
 from typing import Callable
 
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
-from charms.rolling_ops.v0.rollingops import RollingOpsManager
 from charms.tls_certificates_interface.v4.tls_certificates import (
     CertificateAvailableEvent,
     CertificateRequestAttributes,
@@ -25,7 +24,6 @@ from core.state import (
     TLSContext,
     TLSScope,
     TLSState,
-    UnitWorkloadState,
 )
 from core.workload import WorkloadBase
 from managers.cluster import ClusterManager
@@ -153,6 +151,10 @@ class TLSEvents(Object):
             event.defer()
             return
 
+        if not self.state.unit.is_ready:
+            event.defer()
+            return
+
         tls_changed = (
             tls_state.certificate and event.certificate.raw != tls_state.certificate.raw
         ) or (tls_state.ca and event.ca.raw != tls_state.ca.raw)
@@ -161,15 +163,27 @@ class TLSEvents(Object):
         tls_state.ca = event.ca
         tls_state.chain = event.chain
 
-        if self.charm.unit.is_leader():
-            self.state.seed_units = self.state.unit
-
         self.tls_manager.remove_stores(scope=tls_state.scope)
         self.tls_manager.configure(
             tls_state.resolved,
             keystore_password=self.state.unit.keystore_password,
             trust_password=self.state.unit.truststore_password,
         )
+
+        if tls_changed:
+            tls_state.rotation = True
+
+        if not tls_state.rotation:
+            return
+
+        # TODO: logging
+        if not self.state.unit.is_config_change_eligible:
+            event.defer()
+            return
+
+        if self.charm.unit.is_leader():
+            self.state.seed_units = self.state.unit
+
         self.config_manager.render_cassandra_config(
             seeds=self.state.cluster.seeds,
             enable_peer_tls=self.state.unit.peer_tls.ready,
@@ -178,14 +192,14 @@ class TLSEvents(Object):
             truststore_password=self.state.unit.truststore_password,
         )
 
-        if tls_changed:
-            tls_state.rotation = True
-
-        if self.state.unit.workload_state == UnitWorkloadState.ACTIVE:
-            self.restart()
+        self.restart()
 
     def _tls_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Handle `certificates_relation_broken` event."""
+        if not self.state.unit.is_ready:
+            event.defer()
+            return
+
         state = (
             self.state.unit.peer_tls
             if event.relation.name == PEER_TLS_RELATION
@@ -209,6 +223,13 @@ class TLSEvents(Object):
                 return
             state.rotation = True
 
+        if not state.rotation:
+            return
+
+        if not self.state.unit.is_config_change_eligible:
+            event.defer()
+            return
+
         if self.charm.unit.is_leader():
             self.state.seed_units = self.state.unit
 
@@ -220,8 +241,7 @@ class TLSEvents(Object):
             truststore_password=self.state.unit.truststore_password,
         )
 
-        if self.state.unit.workload_state == UnitWorkloadState.ACTIVE:
-            self.restart()
+        self.restart()
 
     def requirer_state(self, requirer: TLSCertificatesRequiresV4) -> TLSContext:
         """Return the appropriate TLSState based on the scope."""

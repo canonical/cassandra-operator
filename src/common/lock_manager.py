@@ -185,7 +185,7 @@ class LockManager(Object):
 
     @property
     def is_pending(self) -> bool:
-        return self._lock.is_pending() or self._lock.is_held()
+        return self._lock.is_pending() or self._lock.is_held() or self._lock.release_requested()
 
     def release(self) -> None:
         self._lock.release()

@@ -21,12 +21,32 @@ class ClusterManager:
     def __init__(self, workload: WorkloadBase):
         self._workload = workload
 
-    @property
-    def is_healthy(self) -> bool:
+    def is_healthy(self, ip: str) -> bool:
         """Whether Cassandra healthy and ready in this unit."""
+        if not ip:
+            return False
+        try:
+            stdout, _ = self._workload.exec([_NODETOOL, "status"], suppress_error_log=True)
+            return f"UN  {ip}" in stdout
+        except ExecError:
+            return False
+
+    @property
+    def is_bootstrap_pending(self) -> bool:
         try:
             stdout, _ = self._workload.exec([_NODETOOL, "info"], suppress_error_log=True)
-            return "Native Transport active: true" in stdout
+            return "Bootstrap state        : NEEDS_BOOTSTRAP" in stdout
+        except ExecError:
+            return False
+
+    @property
+    def is_bootstrap_failed(self) -> bool:
+        try:
+            stdout, _ = self._workload.exec([_NODETOOL, "info"], suppress_error_log=True)
+            return (
+                "Bootstrap state        : IN_PROGRESS" not in stdout
+                and "Bootstrap state        : COMPLETED" not in stdout
+            )
         except ExecError:
             return False
 
@@ -34,6 +54,13 @@ class ClusterManager:
         """Get hostname and IP of this unit."""
         hostname = socket.gethostname()
         return socket.gethostbyname(hostname), hostname
+
+    def resume_bootstrap(self) -> bool:
+        try:
+            self._workload.exec([_NODETOOL, "bootstrap", "resume"])
+            return True
+        except ExecError:
+            return False
 
     def prepare_shutdown(self) -> None:
         """Prepare Cassandra unit for safe shutdown."""

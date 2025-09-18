@@ -100,6 +100,8 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         )
 
     def _on_bootstrap(self, event: EventBase) -> None:
+        # TODO: logging
+
         if self.state.unit.workload_state != UnitWorkloadState.STARTING:
             if self.bootstrap_manager.try_lock():
                 if self.workload.is_alive():
@@ -117,7 +119,21 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             self.bootstrap_manager.release()
             return
 
-        if not self.cluster_manager.is_healthy:
+        if (
+            self.cluster_manager.is_bootstrap_pending
+            and not self.cluster_manager.resume_bootstrap()
+        ):
+            # TODO: clean restart
+            self.state.unit.workload_state = UnitWorkloadState.CANT_START
+            self.bootstrap_manager.release()
+            return
+
+        if self.cluster_manager.is_bootstrap_failed:
+            self.state.unit.workload_state = UnitWorkloadState.CANT_START
+            self.bootstrap_manager.release()
+            return
+
+        if not self.cluster_manager.is_healthy(ip=self.state.unit.ip):
             event.defer()
             return
 

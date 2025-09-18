@@ -18,6 +18,7 @@ from ops import (
     RelationDepartedEvent,
     SecretChangedEvent,
     StartEvent,
+    Unit,
     UpdateStatusEvent,
 )
 from pydantic import ValidationError
@@ -159,7 +160,7 @@ class CassandraEvents(Object):
             wait=wait_exponential(), stop=stop_after_delay(1800), reraise=True
         ):
             with attempt:
-                if not self.cluster_manager.is_healthy:
+                if not self.cluster_manager.is_healthy(ip="127.0.0.1"):
                     # TODO: either remove or move exception definition to common.
                     raise Exception("bootstrap timeout exceeded")
 
@@ -308,7 +309,13 @@ class CassandraEvents(Object):
     def _on_update_status(self, _: UpdateStatusEvent) -> None:
         if self.state.unit.is_operational and not self.workload.is_alive():
             logger.error("Restarting Cassandra service due to unexpected shutdown")
-            self.workload.restart()
+            self.restart()
+            return
+
+        if self.state.unit.workload_state == UnitWorkloadState.CANT_START:
+            logger.error("Restarting Cassandra service again")
+            self.restart()
+            return
 
         # TODO: check
         if (
@@ -361,6 +368,9 @@ class CassandraEvents(Object):
             UnitWorkloadState.STARTING,
         ] and (self.charm.unit.is_leader() or self.state.cluster.is_active):
             event.add_status(Status.STARTING.value)
+
+        if self.state.unit.workload_state == UnitWorkloadState.CANT_START:
+            event.add_status(Status.CANT_START.value)
 
         event.add_status(Status.ACTIVE.value)
 
