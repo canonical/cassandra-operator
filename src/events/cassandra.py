@@ -4,6 +4,7 @@
 
 """Handler for main Cassandra charm events."""
 
+from datetime import timedelta
 import logging
 from typing import Callable
 
@@ -20,12 +21,13 @@ from ops import (
     RelationDepartedEvent,
     SecretChangedEvent,
     StartEvent,
+    StorageDetachingEvent,
     UpdateStatusEvent,
 )
 from pydantic import ValidationError
-from tenacity import Retrying, stop_after_delay, wait_exponential, wait_fixed
+from tenacity import Retrying, stop_after_attempt, stop_after_delay, wait_exponential, wait_fixed, stop_never, before_log, after_log, before_sleep_log
 
-from common.exceptions import BadSecretError
+from common.exceptions import BadSecretError, ExecError
 from core.config import CharmConfig
 from core.literals import CASSANDRA_ADMIN_USERNAME
 from core.state import PEER_RELATION, ApplicationState, UnitWorkloadState
@@ -81,6 +83,7 @@ class CassandraEvents(Object):
         self.framework.observe(self.charm.on.update_status, self._on_update_status)
         self.framework.observe(self.charm.on.collect_unit_status, self._on_collect_unit_status)
         self.framework.observe(self.charm.on.collect_app_status, self._on_collect_app_status)
+        self.framework.observe(self.charm.on.cassandra_storage_detaching, self._on_storage_detaching)
 
     def _on_install(self, _: InstallEvent) -> None:
         self.workload.install()
@@ -170,6 +173,18 @@ class CassandraEvents(Object):
                 self.database_manager.init_admin(password)
         self.state.cluster.operator_password_secret = password
 
+        for attempt in Retrying(wait=wait_fixed(10), stop=stop_after_delay(120), reraise=True):
+            with attempt:
+                self.database_manager.init_decommission_lock(self.state.cluster.operator_password_secret)                
+
+        self.config_manager.render_cassandra_config(
+            listen_address=self.state.unit.ip,
+            seeds=self.state.cluster.seeds,
+            enable_peer_tls=self.state.unit.peer_tls.ready,
+            enable_client_tls=self.state.unit.client_tls.ready,
+            keystore_password=self.state.unit.keystore_password,
+            truststore_password=self.state.unit.truststore_password,
+        )
         self.cluster_manager.prepare_shutdown()
 
     def _start_subordinate(self, event: StartEvent) -> None:
@@ -403,3 +418,74 @@ class CassandraEvents(Object):
             and bool(old_hostname)
             and (old_ip != self.state.unit.ip or old_hostname != self.state.unit.hostname)
         )
+
+    def _on_storage_detaching(self, _: StorageDetachingEvent) -> None:
+        logger.info("---------- STOP ----------")
+
+        if self.charm.unit.is_leader():
+            logger.info("_on_stop is not implemented yet for the leader unit")
+            raise NotImplementedError
+    
+        if not self.cluster_manager.cluster_healthy():
+            raise Exception("Cluster is not healthy, cannot remove unit")
+        
+        decommission_requested = False
+        for attempt in Retrying(
+            stop=stop_after_attempt(20),
+            wait=wait_fixed(10),
+            reraise=True,
+            before=before_log(logger, logging.INFO),
+            after=after_log(logger, logging.INFO),
+            before_sleep=before_sleep_log(logger, logging.WARNING),
+        ):
+            with attempt:
+                if not self.database_manager.add_decommission_lock_request(self.state.unit.unit_name, self.state.cluster.operator_password_secret):
+                    raise Exception("Failed to request decommission lock")
+                decommission_requested = True
+                    
+        decommission_locked = False
+        try:
+            for attempt in Retrying(
+                stop=stop_never,
+                wait=wait_fixed(50),
+                reraise=True,
+            ):
+                with attempt:
+                    applied = self.database_manager.hold_decommission_lock(
+                        self.state.cluster.operator_password_secret
+                    )
+                    if not applied:
+                        logger.debug("Decommission lock is held by another unit, retrying...")
+                        raise Exception("Not ready. Waiting for other nodes to decommission")
+                    decommission_locked = True
+                    logger.info("Acquired decommission lock")
+    
+            logger.info("Preparing unit for removal")
+            try:
+                self.cluster_manager.prepare_remove()
+            except ExecError as e:
+                logger.error(f"Failed to prepare unit for removal: {e}")
+    
+            logger.info("FORCE: Preparing unit for removal")
+            try:
+                self.cluster_manager.prepare_remove(force=True)
+            except ExecError as e:
+                logger.error(f"Failed to prepare unit for removal with force: {e}")
+                raise e
+    
+        finally:
+            if decommission_locked:
+                self.database_manager.release_decommission_lock(
+                    self.state.cluster.operator_password_secret
+                )
+
+            if decommission_requested:
+                self.database_manager.pop_decommission_lock_request(self.state.unit.unit_name, self.state.cluster.operator_password_secret)
+
+            # Wait for all planned units to be dead
+            for attempt in Retrying(stop=stop_never,wait=wait_fixed(10),reraise=True):
+                with attempt:
+                    if self.database_manager.has_active_decommission_lock_requests(self.state.cluster.operator_password_secret):
+                        raise Exception("Waitning for all decommission lock requests to finish")
+            
+            logger.info("Storage deatached")

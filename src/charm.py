@@ -57,8 +57,9 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             truststore_password=self.state.unit.truststore_password,
             authentication=True,
         )
+        
         database_manager = DatabaseManager(
-            hosts=[self.state.unit.ip],
+            hosts=[u.ip for u in self.state.units],
             user=CASSANDRA_ADMIN_USERNAME,
             password=self.state.cluster.operator_password_secret,
         )
