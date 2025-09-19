@@ -23,13 +23,11 @@ class ClusterManager:
 
     def is_healthy(self, ip: str) -> bool:
         """Whether Cassandra healthy and ready in this unit."""
-        if not ip:
+        if not self._is_in_cluster(ip):
             return False
-        try:
-            stdout, _ = self._workload.exec([_NODETOOL, "status"], suppress_error_log=True)
-            return f"UN  {ip}" in stdout
-        except ExecError:
+        if not self._is_gossip_active:
             return False
+        return True
 
     @property
     def is_bootstrap_pending(self) -> bool:
@@ -69,3 +67,20 @@ class ClusterManager:
     def decommission(self) -> None:
         """Disconnect node from the cluster."""
         self._workload.exec([_NODETOOL, "decommission", "-f"])
+
+    def _is_in_cluster(self, ip: str) -> bool:
+        if not ip:
+            return False
+        try:
+            stdout, _ = self._workload.exec([_NODETOOL, "status"], suppress_error_log=True)
+            return f"UN  {ip}" in stdout
+        except ExecError:
+            return False
+
+    @property
+    def _is_gossip_active(self) -> bool:
+        try:
+            stdout, _ = self._workload.exec([_NODETOOL, "info"], suppress_error_log=True)
+            return "Gossip active          : true" in stdout
+        except ExecError:
+            return False
