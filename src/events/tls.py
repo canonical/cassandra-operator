@@ -206,6 +206,8 @@ class TLSEvents(Object):
             else self.state.unit.client_tls
         )
 
+        tls_changed = state.certificate or state.ca
+
         # clear TLS state
         state.csr = None
         state.certificate = None
@@ -221,6 +223,8 @@ class TLSEvents(Object):
             if not self.setup_internal_certificates(self.sans):
                 event.defer()
                 return
+
+        if tls_changed:
             state.rotation = True
 
         if not state.rotation:
