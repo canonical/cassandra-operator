@@ -52,7 +52,7 @@ juju show-secret --reveal "cassandra-peers.<application name>.app" --format json
   | jq -r '.[].content.Data."operator-password"'
 ```
 
-### Verify client tls
+### Verify client TLS
 
 First, attempt to connect **without specifying TLS certificates**:
 
