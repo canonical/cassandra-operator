@@ -26,7 +26,7 @@ from core.state import (
     TLSState,
 )
 from core.workload import WorkloadBase
-from managers.cluster import ClusterManager
+from managers.node import NodeManager
 from managers.config import ConfigManager
 from managers.tls import Sans, TLSManager
 
@@ -47,7 +47,7 @@ class TLSEvents(Object):
         charm: TypedCharmBase[CharmConfig],
         state: ApplicationState,
         workload: WorkloadBase,
-        cluster_manager: ClusterManager,
+        cluster_manager: NodeManager,
         config_manager: ConfigManager,
         tls_manager: TLSManager,
         setup_internal_certificates: Callable[[Sans], bool],

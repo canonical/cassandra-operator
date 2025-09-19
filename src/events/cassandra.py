@@ -18,7 +18,6 @@ from ops import (
     RelationDepartedEvent,
     SecretChangedEvent,
     StartEvent,
-    Unit,
     UpdateStatusEvent,
 )
 from pydantic import ValidationError
@@ -30,7 +29,7 @@ from core.literals import CASSANDRA_ADMIN_USERNAME
 from core.state import PEER_RELATION, ApplicationState, UnitWorkloadState
 from core.statuses import Status
 from core.workload import WorkloadBase
-from managers.cluster import ClusterManager
+from managers.node import NodeManager
 from managers.config import ConfigManager
 from managers.database import DatabaseManager
 from managers.tls import Sans, TLSManager
@@ -46,7 +45,7 @@ class CassandraEvents(Object):
         charm: TypedCharmBase[CharmConfig],
         state: ApplicationState,
         workload: WorkloadBase,
-        cluster_manager: ClusterManager,
+        cluster_manager: NodeManager,
         config_manager: ConfigManager,
         tls_manager: TLSManager,
         setup_internal_certificates: Callable[[Sans], bool],

@@ -374,7 +374,7 @@ def test_tls_default_certificates_files_setup(ctx):
         patch("managers.tls.TLSManager.configure"),
         patch("managers.database.DatabaseManager.init_admin"),
         patch(
-            "managers.cluster.ClusterManager.is_healthy",
+            "managers.node.NodeManager.is_healthy",
             new_callable=PropertyMock(return_value=True),
         ),
     ):
@@ -424,7 +424,7 @@ def test_tls_default_certificates_files_setup(ctx):
         ),
         patch("managers.database.DatabaseManager.init_admin"),
         patch(
-            "managers.cluster.ClusterManager.is_healthy",
+            "managers.node.NodeManager.is_healthy",
             new_callable=PropertyMock(return_value=True),
         ),
         patch(

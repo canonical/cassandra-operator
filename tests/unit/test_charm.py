@@ -30,7 +30,7 @@ def test_start_change_password():
         patch("charm.CassandraWorkload") as workload,
         patch("managers.tls.TLSManager.configure"),
         patch(
-            "managers.cluster.ClusterManager.is_healthy",
+            "managers.node.NodeManager.is_healthy",
             new_callable=PropertyMock(return_value=True),
         ),
     ):
@@ -54,7 +54,7 @@ def test_start_subordinate_only_after_leader_active():
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
         patch(
-            "managers.cluster.ClusterManager.network_address", return_value=("1.1.1.1", "hostname")
+            "managers.node.NodeManager.network_address", return_value=("1.1.1.1", "hostname")
         ),
         patch("charm.CassandraCharm.setup_internal_certificates", return_value=True),
         patch("charm.CassandraWorkload") as workload,
@@ -102,7 +102,7 @@ def test_start_subordinate_only_after_seed_active(workload_active: bool, seed_ac
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
         patch(
-            "managers.cluster.ClusterManager.network_address", return_value=("1.1.1.1", "hostname")
+            "managers.node.NodeManager.network_address", return_value=("1.1.1.1", "hostname")
         ),
         patch("managers.database.DatabaseManager.check", return_value=seed_active),
         patch("charm.CassandraCharm.setup_internal_certificates", return_value=True),
@@ -182,7 +182,7 @@ def test_config_changed(env_changed: bool, cassandra_config_changed: bool):
         patch("charm.CassandraWorkload") as workload,
         patch("charm.CassandraCharm.setup_internal_certificates", return_value=True),
         patch(
-            "managers.cluster.ClusterManager.is_healthy",
+            "managers.node.NodeManager.is_healthy",
             new_callable=PropertyMock(return_value=True),
         ),
     ):

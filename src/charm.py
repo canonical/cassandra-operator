@@ -23,7 +23,7 @@ from core.state import (
 )
 from events.cassandra import CassandraEvents
 from events.tls import TLSEvents
-from managers.cluster import ClusterManager
+from managers.node import NodeManager
 from managers.config import ConfigManager
 from managers.database import DatabaseManager
 from managers.tls import Sans, TLSManager
@@ -45,7 +45,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
 
         self.state = ApplicationState(self)
         self.workload = CassandraWorkload()
-        self.cluster_manager = ClusterManager(workload=self.workload)
+        self.cluster_manager = NodeManager(workload=self.workload)
         self.tls_manager = TLSManager(workload=self.workload)
 
         config_manager = ConfigManager(

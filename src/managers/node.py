@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 _NODETOOL = "charmed-cassandra.nodetool"
 
 
-class ClusterManager:
+class NodeManager:
     """Manager of Cassandra cluster, including this unit."""
 
     def __init__(self, workload: WorkloadBase):
