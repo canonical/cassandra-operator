@@ -7,7 +7,7 @@ This charm implements the **Requirer** side of the [tls-certificates](https://ch
 To enable TLS encryption, you must first deploy a TLS certificates Provider charm.
 
 
-## Deploy a tls provider charm
+## Deploy a TLS provider charm
 
 For testing purposes, you can use the `self-signed-certificates` charm.
 However, this setup is **not recommended** for production clusters.
