@@ -114,7 +114,7 @@ Connect to Cassandra with:
 cqlsh --ssl --cqlshrc=./cqlshrc
 ```
 
-## Disabling tls
+## Disabling TLS
 
 To disable TLS, remove the relations:
 
