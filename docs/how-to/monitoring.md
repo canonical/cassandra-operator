@@ -36,7 +36,7 @@ juju switch <machine_controller_name>:<cassandra_model_name>
 juju find-offers <k8s_controller>:
 ```
 
-A similar output should appear, if `k8s` is the K8s controller name and `cos` the model where `cos-lite` has been deployed:
+A similar output should appear, if `k8s` is the K8s controller name and `COS` the model where `cos-lite` has been deployed:
 
 ```shell
 Store      URL                                        Access  Interfaces
@@ -58,15 +58,15 @@ Now, deploy `grafana-agent` (subordinate charm) and relate it with Charmed Apach
 
 ```shell
 juju deploy grafana-agent
-juju relate cassandra:cos-agent grafana-agent
+juju integrate cassandra:cos-agent grafana-agent
 ```
 
 Finally, relate `grafana-agent` with consumed COS offers:
 
 ```shell
-juju relate grafana-agent grafana-dashboards
-juju relate grafana-agent loki-logging
-juju relate grafana-agent prometheus-receive-remote-write
+juju integrate grafana-agent grafana-dashboards
+juju integrate grafana-agent loki-logging
+juju integrate grafana-agent prometheus-receive-remote-write
 ```
 
 Wait for all components to settle down on a `active/idle` state on both models, e.g. `<cassandra_model_name>` and `<cos_model_name>`.
