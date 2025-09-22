@@ -23,9 +23,9 @@ from core.state import (
 )
 from events.cassandra import CassandraEvents
 from events.tls import TLSEvents
-from managers.node import NodeManager
 from managers.config import ConfigManager
 from managers.database import DatabaseManager
+from managers.node import NodeManager
 from managers.tls import Sans, TLSManager
 from workload import SNAP_NAME, CassandraWorkload
 

@@ -26,8 +26,8 @@ from core.state import (
     TLSState,
 )
 from core.workload import WorkloadBase
-from managers.node import NodeManager
 from managers.config import ConfigManager
+from managers.node import NodeManager
 from managers.tls import Sans, TLSManager
 
 logger = logging.getLogger(__name__)

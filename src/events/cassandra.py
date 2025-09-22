@@ -29,9 +29,9 @@ from core.literals import CASSANDRA_ADMIN_USERNAME
 from core.state import PEER_RELATION, ApplicationState, UnitWorkloadState
 from core.statuses import Status
 from core.workload import WorkloadBase
-from managers.node import NodeManager
 from managers.config import ConfigManager
 from managers.database import DatabaseManager
+from managers.node import NodeManager
 from managers.tls import Sans, TLSManager
 
 logger = logging.getLogger(__name__)

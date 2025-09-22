@@ -61,11 +61,11 @@ class NodeManager:
             return False
 
     def prepare_shutdown(self) -> None:
-        """Prepare Cassandra unit for safe shutdown."""
+        """Prepare Cassandra unit for safe shutdown using nodetool drain command."""
         self._workload.exec([_NODETOOL, "drain"])
 
     def decommission(self) -> None:
-        """Disconnect node from the cluster."""
+        """Disconnect node from the cluster using nodetool decommission command."""
         self._workload.exec([_NODETOOL, "decommission", "-f"])
 
     def _is_in_cluster(self, ip: str) -> bool:
