@@ -160,7 +160,6 @@ class CassandraEvents(Object):
         ):
             with attempt:
                 if not self.node_manager.is_healthy(ip="127.0.0.1"):
-                    # TODO: either remove or move exception definition to common.
                     raise Exception("bootstrap timeout exceeded")
 
         for attempt in Retrying(wait=wait_fixed(10), stop=stop_after_delay(120), reraise=True):
@@ -316,11 +315,7 @@ class CassandraEvents(Object):
             self.restart()
             return
 
-        # TODO: check
-        if (
-            self._update_network_address()
-            and self.state.unit.workload_state == UnitWorkloadState.ACTIVE
-        ):
+        if self.state.unit.is_operational and self._update_network_address():
             if self.charm.unit.is_leader():
                 self.state.seed_units = self.state.unit
 

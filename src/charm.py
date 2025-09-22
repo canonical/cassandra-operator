@@ -100,31 +100,35 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         )
 
     def _on_bootstrap(self, event: EventBase) -> None:
-        # TODO: logging
-
         if self.state.unit.workload_state != UnitWorkloadState.STARTING:
             if self.bootstrap_manager.try_lock():
+                logger.debug("Bootstrap lock is acquired")
                 if self.workload.is_alive():
+                    logger.debug("Gracefully shutting down an active workload")
                     try:
                         self.node_manager.prepare_shutdown()
                     except ExecError as e:
-                        logger.error(f"Failed to prepare unit for shutdown during restart: {e}")
+                        logger.error(f"Failed to prepare workload shutdown during restart: {e}")
                 self.workload.restart()
                 self.state.unit.workload_state = UnitWorkloadState.STARTING
             event.defer()
             return
 
         if not self._on_bootstrap_pending_check():
-            # TODO: clean restart
-            logger.error("Releasing the bootstrap exclusive lock and ")
+            # TODO: determine whether we need removing var/lib/cassandra/* and in which cases.
+            logger.error(
+                "Releasing the bootstrap exclusive lock and migrating to CANT_START workload state"
+            )
             self.state.unit.workload_state = UnitWorkloadState.CANT_START
             self.bootstrap_manager.release()
             return
 
         if not self.node_manager.is_healthy(ip=self.state.unit.ip):
+            logger.debug("Deferring on_bootstrap due to workload not being healthy yet")
             event.defer()
             return
 
+        logger.debug("Releasing the exclusive lock after successful bootstrap")
         self.bootstrap_manager.release()
 
         if self.state.unit.peer_tls.rotation:
@@ -159,6 +163,8 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         """Restart Cassandra service."""
         if not self.bootstrap_manager.is_active:
             self.on.bootstrap.emit()
+        else:
+            logger.debug("Restart request was skipped as unit already bootstrapping")
 
     def setup_internal_certificates(self, sans: Sans) -> bool:
         """Configure internal TLS certificates for the current unit using an internally managed CA.
