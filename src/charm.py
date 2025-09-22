@@ -45,7 +45,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
 
         self.state = ApplicationState(self)
         self.workload = CassandraWorkload()
-        self.cluster_manager = NodeManager(workload=self.workload)
+        self.node_manager = NodeManager(workload=self.workload)
         self.tls_manager = TLSManager(workload=self.workload)
 
         config_manager = ConfigManager(
@@ -70,7 +70,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             self,
             state=self.state,
             workload=self.workload,
-            cluster_manager=self.cluster_manager,
+            node_manager=self.node_manager,
             config_manager=config_manager,
             database_manager=database_manager,
             tls_manager=self.tls_manager,
@@ -83,7 +83,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             self,
             state=self.state,
             workload=self.workload,
-            cluster_manager=self.cluster_manager,
+            node_manager=self.node_manager,
             config_manager=config_manager,
             tls_manager=self.tls_manager,
             setup_internal_certificates=self.setup_internal_certificates,
@@ -106,7 +106,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             if self.bootstrap_manager.try_lock():
                 if self.workload.is_alive():
                     try:
-                        self.cluster_manager.prepare_shutdown()
+                        self.node_manager.prepare_shutdown()
                     except ExecError as e:
                         logger.error(f"Failed to prepare unit for shutdown during restart: {e}")
                 self.workload.restart()
@@ -114,26 +114,14 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             event.defer()
             return
 
-        if not self.workload.is_alive():
-            self.state.unit.workload_state = UnitWorkloadState.CANT_START
-            self.bootstrap_manager.release()
-            return
-
-        if (
-            self.cluster_manager.is_bootstrap_pending
-            and not self.cluster_manager.resume_bootstrap()
-        ):
+        if not self._on_bootstrap_pending_check():
             # TODO: clean restart
+            logger.error("Releasing the bootstrap exclusive lock and ")
             self.state.unit.workload_state = UnitWorkloadState.CANT_START
             self.bootstrap_manager.release()
             return
 
-        if self.cluster_manager.is_bootstrap_failed:
-            self.state.unit.workload_state = UnitWorkloadState.CANT_START
-            self.bootstrap_manager.release()
-            return
-
-        if not self.cluster_manager.is_healthy(ip=self.state.unit.ip):
+        if not self.node_manager.is_healthy(ip=self.state.unit.ip):
             event.defer()
             return
 
@@ -147,8 +135,29 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         if self.unit.is_leader():
             self.state.cluster.state = ClusterState.ACTIVE
 
+    def _on_bootstrap_pending_check(self) -> bool:
+        if not self.workload.is_alive():
+            logger.error("Cassandra service abruptly stopped during bootstrap")
+            return False
+
+        if self.node_manager.is_bootstrap_pending:
+            logger.warning("Pending Cassandra bootstrap is detected, trying to resume")
+            if self.node_manager.resume_bootstrap():
+                logger.info("Cassandra bootstrap resuming successful")
+                return True
+            else:
+                logger.error("Cassandra bootstrap resuming failed")
+                return False
+
+        if self.node_manager.is_bootstrap_in_unknown_state:
+            logger.error("Cassandra bootstrap is in unknown state, failed bootstrap assumed")
+            return False
+
+        return True
+
     def restart(self) -> None:
-        if not self.bootstrap_manager.is_pending:
+        """Restart Cassandra service."""
+        if not self.bootstrap_manager.is_active:
             self.on.bootstrap.emit()
 
     def setup_internal_certificates(self, sans: Sans) -> bool:

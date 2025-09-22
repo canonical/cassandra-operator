@@ -47,7 +47,7 @@ class TLSEvents(Object):
         charm: TypedCharmBase[CharmConfig],
         state: ApplicationState,
         workload: WorkloadBase,
-        cluster_manager: NodeManager,
+        node_manager: NodeManager,
         config_manager: ConfigManager,
         tls_manager: TLSManager,
         setup_internal_certificates: Callable[[Sans], bool],
@@ -57,13 +57,13 @@ class TLSEvents(Object):
         self.charm = charm
         self.state = state
         self.workload = workload
-        self.cluster_manager = cluster_manager
+        self.node_manager = node_manager
         self.config_manager = config_manager
         self.tls_manager = tls_manager
         self.setup_internal_certificates = setup_internal_certificates
         self.restart = restart
 
-        ip, hostname = self.cluster_manager.network_address()
+        ip, hostname = self.node_manager.network_address()
         self.sans = self.tls_manager.build_sans(
             sans_ip=[ip],
             sans_dns=[hostname, self.charm.unit.name],

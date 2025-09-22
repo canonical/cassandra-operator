@@ -2,7 +2,7 @@
 # Copyright 2025 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""Lock manager."""
+"""Lock manager. Based on the rolling_ops.rollingops library."""
 
 import logging
 from enum import StrEnum
@@ -27,6 +27,42 @@ class LockState(StrEnum):
 
 
 class Lock:
+    """A class that keeps track of a single asynchronous lock.
+
+    Warning: a Lock has permission to update relation data, which means that there are
+    side effects to invoking the .acquire, .release and .grant methods. Running any one of
+    them will trigger a RelationChanged event, once per transition from one internal
+    status to another.
+
+    This class tracks state across the cloud by implementing a peer relation
+    interface. There are two parts to the interface:
+
+    1) The data on a unit's peer relation (defined in metadata.yaml.) Each unit can update
+       this data. The only meaningful values are "acquire", and "release", which represent
+       a request to acquire the lock, and a request to release the lock, respectively.
+
+    2) The application data in the relation. This tracks whether the lock has been
+       "granted", Or has been released (and reverted to idle). There are two valid states:
+       "granted" or None.  If a lock is in the "granted" state, a unit should emit a
+       RunWithLocks event and then release the lock.
+
+       If a lock is in "None", this means that a unit has not yet requested the lock, or
+       that the request has been completed.
+
+    In more detail, here is the relation structure:
+
+    relation.data:
+        <unit n>:
+            status: 'acquire|release'
+        <application>:
+           <unit n>: 'granted|None'
+
+    Note that this class makes no attempts to timestamp the locks and thus handle multiple
+    requests in a row. If a unit re-requests a lock before being granted the lock, the
+    lock will simply stay in the "acquire" state. If a unit wishes to clear its lock, it
+    simply needs to call lock.release().
+    """
+
     def __init__(self, relation: Relation, app: Application, unit: Unit):
         self.relation = relation
         self.app = app
@@ -100,11 +136,11 @@ class Lock:
         logger.debug("Lock granted.")
 
     def is_held(self):
-        """This unit holds the lock."""
+        """Whether this unit holds the lock."""
         return self._state == LockState.GRANTED
 
     def release_requested(self):
-        """A unit has reported that they are finished with the lock."""
+        """Whether this unit has reported that it finished with the lock."""
         return self._state == LockState.RELEASE
 
     def is_pending(self):
@@ -122,12 +158,14 @@ class Locks:
         self.units = [*relation.units, unit]
 
     def __iter__(self):
-        """Yields a lock for each unit we can find on the relation."""
+        """Yield a lock for each unit we can find on the relation."""
         for unit in self.units:
             yield Lock(relation=self.relation, app=self.app, unit=unit)
 
 
 class LockManager(Object):
+    """Manager for utilizing cross-unit exclusive locks."""
+
     def __init__(self, charm: CharmBase, relation: str) -> None:
         super().__init__(charm, key=f"{relation}_lock_manager")
         self.app = charm.app
@@ -175,6 +213,13 @@ class LockManager(Object):
         return Lock(self.relation, self.app, self.unit)
 
     def try_lock(self) -> bool:
+        """Try acquire exclusive lock for this unit.
+
+        May be called multiple times.
+
+        Returns:
+            whether lock is successfully acquired.
+        """
         if self._lock.is_pending():
             return False
         if self._lock.is_held():
@@ -184,9 +229,11 @@ class LockManager(Object):
         return self._lock.is_held()
 
     @property
-    def is_pending(self) -> bool:
-        return self._lock.is_pending() or self._lock.is_held() or self._lock.release_requested()
+    def is_active(self) -> bool:
+        """Whether lock for this unit is pending or acquired."""
+        return self._lock.is_pending() or self._lock.is_held()
 
     def release(self) -> None:
+        """Release lock from this unit."""
         self._lock.release()
         self._process_locks()

@@ -82,11 +82,11 @@ class UnitWorkloadState(StrEnum):
     INSTALLING = ""
     """Cassandra is installing."""
     WAITING_FOR_START = "waiting_for_start"
-    """Subordinate unit is waiting for leader to initialize cluster before it starts workload."""
+    """Unit is waiting prior startup sequence."""
     STARTING = "starting"
     """Cassandra is starting."""
     CANT_START = "cant_start"
-    """TODO."""
+    """Cassandra service can't start currently. Another attempt will be taken soon."""
     ACTIVE = "active"
     """Cassandra is active and ready."""
 
@@ -399,10 +399,20 @@ class UnitContext(RelationState):
 
     @property
     def is_ready(self) -> bool:
+        """Whether this unit already proceeded with startup phase.
+
+        This can help to determine whether the event can be skipped
+        if it will be reconciled during startup anyway.
+        """
         return self.workload_state != UnitWorkloadState.INSTALLING
 
     @property
     def is_config_change_eligible(self) -> bool:
+        """Whether it's safe to modify Cassandra service configuration.
+
+        WAITING_FOR_START, CANT_START and ACTIVE workload states are considered safe.
+        See UnitWorkloadState documentation for more information.
+        """
         return self.workload_state in [
             UnitWorkloadState.WAITING_FOR_START,
             UnitWorkloadState.CANT_START,
@@ -411,6 +421,7 @@ class UnitContext(RelationState):
 
     @property
     def is_operational(self) -> bool:
+        """Whether this unit's workload is active."""
         return self.workload_state == UnitWorkloadState.ACTIVE
 
 

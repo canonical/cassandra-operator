@@ -45,7 +45,7 @@ class CassandraEvents(Object):
         charm: TypedCharmBase[CharmConfig],
         state: ApplicationState,
         workload: WorkloadBase,
-        cluster_manager: NodeManager,
+        node_manager: NodeManager,
         config_manager: ConfigManager,
         tls_manager: TLSManager,
         setup_internal_certificates: Callable[[Sans], bool],
@@ -57,7 +57,7 @@ class CassandraEvents(Object):
         self.charm = charm
         self.state = state
         self.workload = workload
-        self.cluster_manager = cluster_manager
+        self.node_manager = node_manager
         self.config_manager = config_manager
         self.tls_manager = tls_manager
         self.setup_internal_certificates = setup_internal_certificates
@@ -159,7 +159,7 @@ class CassandraEvents(Object):
             wait=wait_exponential(), stop=stop_after_delay(1800), reraise=True
         ):
             with attempt:
-                if not self.cluster_manager.is_healthy(ip="127.0.0.1"):
+                if not self.node_manager.is_healthy(ip="127.0.0.1"):
                     # TODO: either remove or move exception definition to common.
                     raise Exception("bootstrap timeout exceeded")
 
@@ -168,7 +168,7 @@ class CassandraEvents(Object):
                 self.database_manager.init_admin(password)
         self.state.cluster.operator_password_secret = password
 
-        self.cluster_manager.prepare_shutdown()
+        self.node_manager.prepare_shutdown()
 
     def _start_subordinate(self, event: StartEvent) -> None:
         if not self.state.cluster.is_active and not self.state.unit.is_seed:
@@ -285,7 +285,7 @@ class CassandraEvents(Object):
                 )
                 event.defer()
                 return
-            self.cluster_manager.decommission()
+            self.node_manager.decommission()
         elif self.charm.unit.is_leader():
             if not self.state.unit.is_config_change_eligible:
                 logger.debug(
@@ -343,17 +343,7 @@ class CassandraEvents(Object):
         if self.state.unit.workload_state == UnitWorkloadState.INSTALLING:
             event.add_status(Status.INSTALLING.value)
 
-        if self.state.unit.peer_tls.ready and self.state.unit.peer_tls.rotation:
-            event.add_status(Status.ROTATING_PEER_TLS.value)
-
-        if self.state.unit.client_tls.ready and self.state.unit.client_tls.rotation:
-            event.add_status(Status.ROTATING_CLIENT_TLS.value)
-
-        if not self.state.cluster.internal_ca:
-            event.add_status(Status.WAITING_FOR_INTERNAL_TLS.value)
-
-        if self.state.cluster.tls_state and not self.tls_manager.client_tls_ready:
-            event.add_status(Status.WAITING_FOR_TLS.value)
+        self._collect_unit_tls_status(event)
 
         if (
             self.state.unit.workload_state == UnitWorkloadState.WAITING_FOR_START
@@ -372,6 +362,19 @@ class CassandraEvents(Object):
             event.add_status(Status.CANT_START.value)
 
         event.add_status(Status.ACTIVE.value)
+
+    def _collect_unit_tls_status(self, event: CollectStatusEvent) -> None:
+        if self.state.unit.peer_tls.ready and self.state.unit.peer_tls.rotation:
+            event.add_status(Status.ROTATING_PEER_TLS.value)
+
+        if self.state.unit.client_tls.ready and self.state.unit.client_tls.rotation:
+            event.add_status(Status.ROTATING_CLIENT_TLS.value)
+
+        if not self.state.cluster.internal_ca:
+            event.add_status(Status.WAITING_FOR_INTERNAL_TLS.value)
+
+        if self.state.cluster.tls_state and not self.tls_manager.client_tls_ready:
+            event.add_status(Status.WAITING_FOR_TLS.value)
 
     def _on_collect_app_status(self, event: CollectStatusEvent) -> None:
         try:
@@ -410,7 +413,7 @@ class CassandraEvents(Object):
         """
         old_ip = self.state.unit.ip
         old_hostname = self.state.unit.hostname
-        self.state.unit.ip, self.state.unit.hostname = self.cluster_manager.network_address()
+        self.state.unit.ip, self.state.unit.hostname = self.node_manager.network_address()
         return (
             bool(old_ip)
             and bool(old_hostname)

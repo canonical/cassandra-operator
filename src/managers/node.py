@@ -31,6 +31,7 @@ class NodeManager:
 
     @property
     def is_bootstrap_pending(self) -> bool:
+        """Whether `nodetool info` bootstrap state is NEEDS_BOOTSTRAP."""
         try:
             stdout, _ = self._workload.exec([_NODETOOL, "info"], suppress_error_log=True)
             return "Bootstrap state        : NEEDS_BOOTSTRAP" in stdout
@@ -38,7 +39,8 @@ class NodeManager:
             return False
 
     @property
-    def is_bootstrap_failed(self) -> bool:
+    def is_bootstrap_in_unknown_state(self) -> bool:
+        """Whether `nodetool info` bootstrap state is not IN_PROGRESS or COMPLETED."""
         try:
             stdout, _ = self._workload.exec([_NODETOOL, "info"], suppress_error_log=True)
             return (
@@ -54,6 +56,11 @@ class NodeManager:
         return socket.gethostbyname(hostname), hostname
 
     def resume_bootstrap(self) -> bool:
+        """Resume Cassandra bootstrap.
+
+        Returns:
+            whether operation was successful.
+        """
         try:
             self._workload.exec([_NODETOOL, "bootstrap", "resume"])
             return True
