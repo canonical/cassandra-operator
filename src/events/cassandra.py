@@ -4,6 +4,7 @@
 
 """Handler for main Cassandra charm events."""
 
+from datetime import timedelta
 import logging
 from typing import Callable
 
@@ -20,12 +21,13 @@ from ops import (
     RelationDepartedEvent,
     SecretChangedEvent,
     StartEvent,
+    StorageDetachingEvent,
     UpdateStatusEvent,
 )
 from pydantic import ValidationError
-from tenacity import Retrying, stop_after_delay, wait_exponential, wait_fixed
+from tenacity import Retrying, stop_after_attempt, stop_after_delay, wait_exponential, wait_fixed, stop_never, before_log, after_log, before_sleep_log
 
-from common.exceptions import BadSecretError
+from common.exceptions import BadSecretError, ExecError
 from core.config import CharmConfig
 from core.literals import CASSANDRA_ADMIN_USERNAME
 from core.state import PEER_RELATION, ApplicationState, UnitWorkloadState
@@ -81,6 +83,7 @@ class CassandraEvents(Object):
         self.framework.observe(self.charm.on.update_status, self._on_update_status)
         self.framework.observe(self.charm.on.collect_unit_status, self._on_collect_unit_status)
         self.framework.observe(self.charm.on.collect_app_status, self._on_collect_app_status)
+        self.framework.observe(self.charm.on.cassandra_storage_detaching, self._on_storage_detaching)
 
     def _on_install(self, _: InstallEvent) -> None:
         self.workload.install()
@@ -169,7 +172,6 @@ class CassandraEvents(Object):
             with attempt:
                 self.database_manager.init_admin(password)
         self.state.cluster.operator_password_secret = password
-
         self.cluster_manager.prepare_shutdown()
 
     def _start_subordinate(self, event: StartEvent) -> None:
@@ -283,8 +285,7 @@ class CassandraEvents(Object):
                 )
                 event.defer()
                 return
-            self.cluster_manager.decommission()
-        elif self.charm.unit.is_leader():
+        if self.charm.unit.is_leader():
             self._recover_seeds(event)
 
     def _on_leader_elected(self, event: LeaderElectedEvent) -> None:
@@ -403,3 +404,19 @@ class CassandraEvents(Object):
             and bool(old_hostname)
             and (old_ip != self.state.unit.ip or old_hostname != self.state.unit.hostname)
         )
+
+    def _on_storage_detaching(self, _: StorageDetachingEvent) -> None:
+        if not self.cluster_manager.cluster_healthy():
+            raise Exception("Cluster is not healthy, cannot remove unit")
+
+        if self.charm.app.planned_units() < len(self.state.units) - 1:
+            logger.warning(f"More than one unit removing at a time is not supported. The charm may be in a broken, unrecoverable state")
+        
+        logger.info(f"Starting unit {self.state.unit.unit_name} node decommissioning")
+        try:
+            self.cluster_manager.decommission()
+        except ExecError as e:
+            logger.error(f"Failed to decommission unit: {e}")
+            raise e
+        
+        logger.info("Storage deatached")
