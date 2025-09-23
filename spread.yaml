@@ -118,10 +118,6 @@ prepare-each: |
   # level=ERROR msg="concierge failed" error="failed to install MicroK8s: failed to install snap: command failed: exit status 10"
   while snap changes | grep Doing; do sleep 1; done
 
-  # Disable extension to ensure dns is set to 8.8.8.8 (via concierge.yaml) to avoid error:
-  # ERROR resolving with preferred channel: Post "https://api.charmhub.io/v2/charms/refresh": dial tcp: lookup api.charmhub.io on 10.152.183.10:53: read udp 10.1.242.78:36045->10.152.183.10:53: i/o timeout
-  sudo microk8s disable dns
-
   # `concierge prepare` needs to be run for each spread job in case Juju version changed
   concierge prepare --trace
 
