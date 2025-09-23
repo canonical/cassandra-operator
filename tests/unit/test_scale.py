@@ -89,6 +89,7 @@ def test_storage_detaching_decommission_fails(caplog):
     state = make_state(storage)
 
     with (
+        patch("charms.operator_libs_linux.v2.snap.Snap", return_value=MagicMock()),
         patch("managers.cluster.ClusterManager.cluster_healthy", return_value=True),
         patch("ops.model.Application.planned_units", return_value=1),
         patch("core.state.ApplicationState.units", new_callable=PropertyMock) as units,
@@ -98,7 +99,7 @@ def test_storage_detaching_decommission_fails(caplog):
         ),
     ):
         units.return_value = [MagicMock()]
-        with pytest.raises(scenario.errors.UncaughtSnapError) as e:
+        with pytest.raises(scenario.errors.UncaughtCharmError) as e:
             ctx.run(ctx.on.storage_detaching(storage), state)
 
         assert isinstance(e.value.__cause__, ExecError)
