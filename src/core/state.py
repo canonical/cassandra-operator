@@ -75,6 +75,7 @@ class ClusterState(StrEnum):
     ACTIVE = "active"
     """Cassandra cluster is initialized by the leader unit and active."""
 
+
 class UnitWorkloadState(StrEnum):
     """Current state of the Cassandra workload."""
 
@@ -86,8 +87,7 @@ class UnitWorkloadState(StrEnum):
     """Cassandra is starting."""
     ACTIVE = "active"
     """Cassandra is active and ready."""
-    DECOMMISSIONING = "decomissioning"
-    """Cassandra is in decommission process."""
+
 
 class RelationState:
     """Basic class for relation bag mapping classes."""

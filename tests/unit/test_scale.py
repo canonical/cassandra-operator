@@ -4,19 +4,18 @@
 # Learn more about testing at: https://juju.is/docs/sdk/testing
 
 import logging
-from unittest.mock import patch, MagicMock, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
+
 import pytest
-import ops
-from ops import testing
-import subprocess
 import scenario
+from ops import testing
 
 from charm import CassandraCharm
-from core.state import PEER_RELATION
 from common.exceptions import ExecError
+from core.state import PEER_RELATION
 
 
-def make_state(storage: testing.Storage,leader: bool = True):
+def make_state(storage: testing.Storage, leader: bool = True):
     relation = testing.PeerRelation(id=1, endpoint=PEER_RELATION)
     return testing.State(leader=leader, relations={relation}, storages=frozenset([storage]))
 
@@ -46,7 +45,10 @@ def test_storage_detaching_multiple_units_removal_logs_warning(caplog):
         patch("managers.cluster.ClusterManager.cluster_healthy", return_value=True),
         patch("managers.cluster.ClusterManager.decommission") as decommission,
         patch("ops.model.Application.planned_units", return_value=1),
-        patch("core.state.ApplicationState.units", new_callable=PropertyMock(return_value=[MagicMock(), MagicMock(), MagicMock()])) as units,
+        patch(
+            "core.state.ApplicationState.units",
+            new_callable=PropertyMock(return_value=[MagicMock(), MagicMock(), MagicMock()]),
+        ),
     ):
         decommission.return_value = None
 
@@ -90,9 +92,10 @@ def test_storage_detaching_decommission_fails(caplog):
         patch("managers.cluster.ClusterManager.cluster_healthy", return_value=True),
         patch("ops.model.Application.planned_units", return_value=1),
         patch("core.state.ApplicationState.units", new_callable=PropertyMock) as units,
-        patch("managers.cluster.ClusterManager.decommission", side_effect=ExecError(
-            stdout="", stderr="error"
-        )),
+        patch(
+            "managers.cluster.ClusterManager.decommission",
+            side_effect=ExecError(stdout="", stderr="error"),
+        ),
     ):
         units.return_value = [MagicMock()]  # один юнит
         # Проверяем, что ctx.run вызывает UncaughtCharmError

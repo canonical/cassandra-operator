@@ -6,20 +6,24 @@
 
 import logging
 import socket
+from dataclasses import dataclass
 
 from common.exceptions import ExecError
 from core.workload import WorkloadBase
-from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
 _NODETOOL = "charmed-cassandra.nodetool"
 
+
 @dataclass
 class GossipNode:
+    """Node gossip info."""
+
     ip: str
     rpc_ready: str | None = None
     status_with_port: str | None = None
+
 
 class ClusterManager:
     """Manager of Cassandra cluster, including this unit."""
@@ -36,7 +40,7 @@ class ClusterManager:
 
         if not gossip_info or "NORMAL" not in str(gossip_info.status_with_port):
             return False
-        
+
         try:
             stdout, _ = self._workload.exec([_NODETOOL, "info"], suppress_error_log=True)
             return "Native Transport active: true" in stdout
@@ -55,8 +59,9 @@ class ClusterManager:
     def decommission(self) -> None:
         """Disconnect node from the cluster."""
         self._workload.exec([_NODETOOL, "decommission", "-f"])
-        
+
     def cluster_healthy(self) -> bool:
+        """Check if all nodes in cluster are Up and Normal."""
         gossip = self.get_gossipinfo()
         if not gossip:
             return False
@@ -68,17 +73,16 @@ class ClusterManager:
         return True
 
     def get_gossipinfo(self) -> dict[str, GossipNode]:
-        """
-        Get `nodetool gossipinfo` command result in to the dict:
+        """Get `nodetool gossipinfo` command.
+
+        Result in to the dict:
         { <IP>: GossipNode, ... }
         """
-
         try:
             text, _ = self._workload.exec([_NODETOOL, "gossipinfo"], suppress_error_log=True)
         except ExecError:
             return {}
-        
-        
+
         result = {}
         blocks = text.strip().split("\n/")
         for block in blocks:
@@ -99,7 +103,7 @@ class ClusterManager:
                 else:
                     value = ":".join(rest)
                 node_data[key.strip().upper()] = value.strip()
-            
+
             node = GossipNode(
                 ip=ip,
                 rpc_ready=node_data.get("RPC_READY"),
@@ -107,4 +111,3 @@ class ClusterManager:
             )
             result[ip] = node
         return result
-    

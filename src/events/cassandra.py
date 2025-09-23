@@ -4,7 +4,6 @@
 
 """Handler for main Cassandra charm events."""
 
-from datetime import timedelta
 import logging
 from typing import Callable
 
@@ -25,7 +24,12 @@ from ops import (
     UpdateStatusEvent,
 )
 from pydantic import ValidationError
-from tenacity import Retrying, stop_after_attempt, stop_after_delay, wait_exponential, wait_fixed, stop_never, before_log, after_log, before_sleep_log
+from tenacity import (
+    Retrying,
+    stop_after_delay,
+    wait_exponential,
+    wait_fixed,
+)
 
 from common.exceptions import BadSecretError, ExecError
 from core.config import CharmConfig
@@ -83,7 +87,9 @@ class CassandraEvents(Object):
         self.framework.observe(self.charm.on.update_status, self._on_update_status)
         self.framework.observe(self.charm.on.collect_unit_status, self._on_collect_unit_status)
         self.framework.observe(self.charm.on.collect_app_status, self._on_collect_app_status)
-        self.framework.observe(self.charm.on.cassandra_storage_detaching, self._on_storage_detaching)
+        self.framework.observe(
+            self.charm.on.cassandra_storage_detaching, self._on_storage_detaching
+        )
 
     def _on_install(self, _: InstallEvent) -> None:
         self.workload.install()
@@ -410,13 +416,16 @@ class CassandraEvents(Object):
             raise Exception("Cluster is not healthy, cannot remove unit")
 
         if self.charm.app.planned_units() < len(self.state.units) - 1:
-            logger.warning(f"More than one unit removing at a time is not supported. The charm may be in a broken, unrecoverable state")
-        
+            logger.warning(
+                """More than one unit removing at a time is not supported.
+                   The charm may be in a broken, unrecoverable state"""
+            )
+
         logger.info(f"Starting unit {self.state.unit.unit_name} node decommissioning")
         try:
             self.cluster_manager.decommission()
         except ExecError as e:
             logger.error(f"Failed to decommission unit: {e}")
             raise e
-        
+
         logger.info("Storage deatached")

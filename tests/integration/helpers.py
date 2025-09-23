@@ -12,9 +12,8 @@ from typing import Generator
 import jubilant
 import requests
 from cassandra.auth import PlainTextAuthProvider
-from cassandra.cluster import EXEC_PROFILE_DEFAULT, Cluster, ExecutionProfile, Session
+from cassandra.cluster import EXEC_PROFILE_DEFAULT, Cluster, ExecutionProfile, ResultSet, Session
 from cassandra.policies import DCAwareRoundRobinPolicy, TokenAwarePolicy
-from cassandra.cluster import ResultSet
 from tenacity import Retrying, stop_after_delay, wait_fixed
 
 logger = logging.getLogger(__name__)
@@ -305,7 +304,9 @@ def all_prometheus_exporters_data(juju: jubilant.Juju, check_field: str, app_nam
     return result
 
 
-def prepare_keyspace_and_table(juju: jubilant.Juju, app_name: str, ks="test", table="kv", unit_name: str = "") -> tuple[str, str]:
+def prepare_keyspace_and_table(
+    juju: jubilant.Juju, app_name: str, ks="test", table="kv", unit_name: str = ""
+) -> tuple[str, str]:
     """Create test keyspace and table."""
     units = juju.status().apps[app_name].units
     if unit_name:
@@ -316,7 +317,7 @@ def prepare_keyspace_and_table(juju: jubilant.Juju, app_name: str, ks="test", ta
         ]
     else:
         hosts = [u.public_address for u in units.values()]
-    
+
     hosts = [u.public_address for u in juju.status().apps[app_name].units.values()]
     with connect_cql(juju=juju, app_name=app_name, hosts=hosts, timeout=300) as session:
         session.execute(
@@ -328,7 +329,9 @@ def prepare_keyspace_and_table(juju: jubilant.Juju, app_name: str, ks="test", ta
     return ks, table
 
 
-def write_n_rows(juju: jubilant.Juju, app_name: str, ks: str, table: str, n: int = 100, unit_name: str = "") -> dict:
+def write_n_rows(
+    juju: jubilant.Juju, app_name: str, ks: str, table: str, n: int = 100, unit_name: str = ""
+) -> dict:
     """Write n rows to the table."""
     units = juju.status().apps[app_name].units
     if unit_name:
@@ -339,8 +342,10 @@ def write_n_rows(juju: jubilant.Juju, app_name: str, ks: str, table: str, n: int
         ]
     else:
         hosts = [u.public_address for u in units.values()]
-        
-    with connect_cql(juju=juju, app_name=app_name, hosts=hosts, timeout=300, keyspace=ks) as session:
+
+    with connect_cql(
+        juju=juju, app_name=app_name, hosts=hosts, timeout=300, keyspace=ks
+    ) as session:
         for i in range(n):
             session.execute(
                 f"INSERT INTO {table} (id, value) VALUES (%s, %s)",
@@ -350,8 +355,10 @@ def write_n_rows(juju: jubilant.Juju, app_name: str, ks: str, table: str, n: int
     return {i: f"msg-{i}" for i in range(n)}
 
 
-def read_n_rows(juju: jubilant.Juju, app_name: str, ks: str, table: str, n: int = 100, unit_name: str = "") -> dict:
-    """Check that table have exacly n rows."""
+def read_n_rows(
+    juju: jubilant.Juju, app_name: str, ks: str, table: str, n: int = 100, unit_name: str = ""
+) -> dict:
+    """Check that table have exactly n rows."""
     units = juju.status().apps[app_name].units
     if unit_name:
         if unit_name not in units:
@@ -361,20 +368,23 @@ def read_n_rows(juju: jubilant.Juju, app_name: str, ks: str, table: str, n: int 
         ]
     else:
         hosts = [u.public_address for u in units.values()]
-        
+
     got = {}
-    with connect_cql(juju=juju, app_name=app_name, hosts=hosts, timeout=300, keyspace=ks) as session:
+    with connect_cql(
+        juju=juju, app_name=app_name, hosts=hosts, timeout=300, keyspace=ks
+    ) as session:
         res = session.execute(f"SELECT id, value FROM {table}")
         assert isinstance(res, ResultSet)
         rows = res.all()
         if len(rows) != n:
             return got
-        
+
         got = {row.id: row.value for row in rows}
 
     return got
 
+
 def assert_rows(wrote: dict, got: dict) -> None:
     """Assert rows are equal."""
     assert len(got) == len(wrote), f"Expected {len(wrote)} rows, got {len(got)}"
-    assert got == wrote, "Row data mismatch"    
+    assert got == wrote, "Row data mismatch"
