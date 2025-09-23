@@ -86,14 +86,29 @@ jobs:
     runs-on: ${{ matrix.job.runner }}
     timeout-minutes: 217  # Sum of steps `timeout-minutes` + 5
     steps:
-      - name: Free up disk space
-        timeout-minutes: 3
+      - name: Disk usage
+        shell: bash
         run: |
-          printf '\nDisk usage before cleanup\n'
-          df --human-readable
-          # Based on https://github.com/actions/runner-images/issues/2840#issuecomment-790492173
-          rm -r /opt/hostedtoolcache/
-          printf '\nDisk usage after cleanup\n'
+          sudo rm -rf \
+            /opt/google \
+            /opt/hostedtoolcache \
+            /opt/microsoft/powershell \
+            /opt/microsoft/msedge \
+            "$AGENT_TOOLSDIRECTORY" \
+            /usr/lib/firefox \
+            /usr/lib/mono \
+            /usr/local/julia* \
+            /usr/local/lib/android \
+            /usr/local/share/chromium \
+            /usr/local/share/powershell \
+            /usr/share/dotnet \
+            /usr/share/gradle* \
+            /usr/share/miniconda \
+            /usr/share/sbt \
+            /usr/share/swift \
+            /home/linuxbrew
+          pipx uninstall-all
+          printf '\nDisk usage\n'
           df --human-readable
       - name: Checkout
         timeout-minutes: 3
