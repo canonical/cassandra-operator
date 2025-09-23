@@ -4,7 +4,6 @@
 
 import logging
 from pathlib import Path
-from socket import timeout
 
 import jubilant
 from cassandra.cluster import ResultSet
