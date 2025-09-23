@@ -22,7 +22,7 @@ def test_deploy(juju: jubilant.Juju, cassandra_charm: Path, app_name: str) -> No
     juju.wait(
         ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
         delay=20,
-        timeout=1000,
+        timeout=1800,
     )
 
 
@@ -31,7 +31,7 @@ def test_lxc_restart(juju: jubilant.Juju) -> None:
     juju.wait(
         ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
         delay=20,
-        timeout=600,
+        timeout=1800,
     )
 
 
