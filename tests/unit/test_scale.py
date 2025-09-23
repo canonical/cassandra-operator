@@ -97,11 +97,9 @@ def test_storage_detaching_decommission_fails(caplog):
             side_effect=ExecError(stdout="", stderr="error"),
         ),
     ):
-        units.return_value = [MagicMock()]  # один юнит
-        # Проверяем, что ctx.run вызывает UncaughtCharmError
+        units.return_value = [MagicMock()]
         with pytest.raises(scenario.errors.UncaughtCharmError) as e:
             ctx.run(ctx.on.storage_detaching(storage), state)
 
-        # Внутри e.value.__cause__ хранится оригинальный ExecError
         assert isinstance(e.value.__cause__, ExecError)
         assert "Failed to decommission unit" in caplog.text
