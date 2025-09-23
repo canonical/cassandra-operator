@@ -98,7 +98,7 @@ def test_storage_detaching_decommission_fails(caplog):
         ),
     ):
         units.return_value = [MagicMock()]
-        with pytest.raises(scenario.errors.UncaughtCharmError) as e:
+        with pytest.raises(scenario.errors.UncaughtSnapError) as e:
             ctx.run(ctx.on.storage_detaching(storage), state)
 
         assert isinstance(e.value.__cause__, ExecError)
