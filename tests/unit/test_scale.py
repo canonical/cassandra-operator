@@ -12,7 +12,7 @@ from ops import testing
 
 from charm import CassandraCharm
 from common.exceptions import ExecError
-from core.state import PEER_RELATION
+from core.state import PEER_RELATION, DATA_STORAGE
 
 
 def make_state(storage: testing.Storage, leader: bool = True):
@@ -23,7 +23,7 @@ def make_state(storage: testing.Storage, leader: bool = True):
 def test_storage_detaching_cluster_unhealthy(caplog):
     """Charm should fail decommission if cluster is unhealthy."""
     ctx = testing.Context(CassandraCharm)
-    storage = testing.Storage(name="cassandra", index=0)
+    storage = testing.Storage(name=DATA_STORAGE, index=0)
     state = make_state(storage)
 
     with (
@@ -38,7 +38,7 @@ def test_storage_detaching_cluster_unhealthy(caplog):
 def test_storage_detaching_multiple_units_removal_logs_warning(caplog):
     """Charm should log a warning if more than one unit planned for removal."""
     ctx = testing.Context(CassandraCharm)
-    storage = testing.Storage(name="cassandra", index=0)
+    storage = testing.Storage(name=DATA_STORAGE, index=0)
     state = make_state(storage)
 
     with (
@@ -62,7 +62,7 @@ def test_storage_detaching_multiple_units_removal_logs_warning(caplog):
 def test_storage_detaching_success(caplog):
     """Charm should call decommission and log success message."""
     ctx = testing.Context(CassandraCharm)
-    storage = testing.Storage(name="cassandra", index=0)
+    storage = testing.Storage(name=DATA_STORAGE, index=0)
     state = make_state(storage)
 
     with (
@@ -85,7 +85,7 @@ def test_storage_detaching_success(caplog):
 def test_storage_detaching_decommission_fails(caplog):
     """Charm should log failure if decommission fails with ExecError."""
     ctx = testing.Context(CassandraCharm)
-    storage = testing.Storage(name="cassandra", index=0)
+    storage = testing.Storage(name=DATA_STORAGE, index=0)
     state = make_state(storage)
 
     with (

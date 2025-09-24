@@ -34,7 +34,7 @@ from tenacity import (
 from common.exceptions import BadSecretError, ExecError
 from core.config import CharmConfig
 from core.literals import CASSANDRA_ADMIN_USERNAME
-from core.state import PEER_RELATION, ApplicationState, UnitWorkloadState
+from core.state import PEER_RELATION, ApplicationState, UnitWorkloadState, DATA_STORAGE
 from core.statuses import Status
 from core.workload import WorkloadBase
 from managers.cluster import ClusterManager
@@ -88,7 +88,7 @@ class CassandraEvents(Object):
         self.framework.observe(self.charm.on.collect_unit_status, self._on_collect_unit_status)
         self.framework.observe(self.charm.on.collect_app_status, self._on_collect_app_status)
         self.framework.observe(
-            self.charm.on.cassandra_storage_detaching, self._on_storage_detaching
+            self.charm.on[DATA_STORAGE].storage_detaching, self._on_storage_detaching
         )
 
     def _on_install(self, _: InstallEvent) -> None:

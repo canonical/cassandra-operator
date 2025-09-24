@@ -66,9 +66,11 @@ requires:
     optional: true
 
 storage:
-  cassandra:
+  data:
     type: filesystem
-    location: /var/snap/charmed-cassandra/common
+    location: /var/snap/charmed-cassandra/common/var/lib/cassandra
+    minimum-size: 1G
+    description: storage for cassandra data    
 
 parts:
   # "poetry-deps" part name is a magic constant
