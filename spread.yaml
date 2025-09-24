@@ -116,7 +116,7 @@ prepare-each: |
 
   # Wait for all snap changes to gone to avoid error:
   # level=ERROR msg="concierge failed" error="failed to install MicroK8s: failed to install snap: command failed: exit status 10"
-  while snap changes | grep Doing; do sleep 1; done
+  (while snap changes | grep Doing; do sleep 1; done)
 
   # `concierge prepare` needs to be run for each spread job in case Juju version changed
   concierge prepare --trace
