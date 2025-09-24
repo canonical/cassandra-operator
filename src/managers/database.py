@@ -6,6 +6,7 @@
 
 import logging
 from contextlib import contextmanager
+from ssl import CERT_REQUIRED, PROTOCOL_TLS, SSLContext
 from typing import Generator
 
 from cassandra import AuthenticationFailed
@@ -20,6 +21,8 @@ from cassandra.cluster import (
 from cassandra.policies import DCAwareRoundRobinPolicy, TokenAwarePolicy
 
 from core.literals import CASSANDRA_ADMIN_USERNAME
+from core.state import TLSScope
+from core.workload import WorkloadBase
 
 logger = logging.getLogger(__name__)
 
@@ -29,18 +32,37 @@ _CASSANDRA_DEFAULT_CREDENTIALS = "cassandra"
 class DatabaseManager:
     """Manager of Cassandra database."""
 
-    def __init__(self, hosts: list[str], user: str, password: str):
+    def __init__(
+        self,
+        workload: WorkloadBase,
+        hosts: list[str],
+        user: str,
+        password: str,
+        enable_ssl: bool = False,
+    ):
         self.execution_profile = ExecutionProfile(
             load_balancing_policy=TokenAwarePolicy(DCAwareRoundRobinPolicy())
         )
         self.auth_provider = (
             PlainTextAuthProvider(username=user, password=password) if user and password else None
         )
+        if enable_ssl:
+            self.ssl_context = SSLContext(PROTOCOL_TLS)
+            self.ssl_context.load_cert_chain(
+                certfile=workload.cassandra_paths.get_certificate(TLSScope.CLIENT).as_posix(),
+                keyfile=workload.cassandra_paths.get_private_key(TLSScope.CLIENT).as_posix(),
+            )
+            self.ssl_context.verify_mode = CERT_REQUIRED
+            self.ssl_context.load_verify_locations(
+                cafile=workload.cassandra_paths.get_ca(TLSScope.CLIENT).as_posix()
+            )
+        else:
+            self.ssl_context = None
         self.hosts = hosts
 
         return
 
-    def check(self) -> bool:
+    def check(self, hosts: list[str] | None = None) -> bool:
         """Check connectivity to the Cassandra.
 
         Returns positive even when cluster cannot achieve consistency level for the authentication.
@@ -49,7 +71,7 @@ class DatabaseManager:
             whether Cassandra service on this node is ready to accept connections.
         """
         try:
-            with self._session() as session:
+            with self._session(hosts=hosts) as session:
                 session.execute("SELECT release_version FROM system.local")
                 logger.debug(f"Reachability check success: {','.join(self.hosts)}")
                 return True
@@ -110,6 +132,7 @@ class DatabaseManager:
             contact_points=hosts or self.hosts,
             protocol_version=5,
             execution_profiles={EXEC_PROFILE_DEFAULT: self.execution_profile},
+            ssl_context=self.ssl_context,
         )
         session = cluster.connect()
         if keyspace:

@@ -367,11 +367,7 @@ class CassandraEvents(Object):
     def _are_seeds_reachable(self) -> bool:
         return self.state.unit.is_seed or any(
             unit.workload_state == UnitWorkloadState.ACTIVE
-            and DatabaseManager(
-                hosts=[unit.ip],
-                user=CASSANDRA_ADMIN_USERNAME,
-                password=self.state.cluster.operator_password_secret,
-            ).check()
+            and self.database_manager.check(hosts=[unit.ip])
             for unit in self.state.other_seed_units
         )
 

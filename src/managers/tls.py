@@ -52,14 +52,6 @@ class TLSManager:
     def __init__(self, workload: WorkloadBase):
         self.workload = workload
 
-    def get_truststore_path(self, scope: TLSScope) -> str:
-        """Return the truststore path for the given scope."""
-        return self.workload.cassandra_paths.get_truststore(scope).as_posix()
-
-    def get_keystore_path(self, scope: TLSScope) -> str:
-        """Return the keystore path for the given scope."""
-        return self.workload.cassandra_paths.get_keystore(scope).as_posix()
-
     @property
     def client_tls_ready(self) -> bool:
         """Return the readiness of client TLS configuration files."""
@@ -168,11 +160,11 @@ class TLSManager:
 
     def set_ca(self, ca: Certificate, scope: TLSScope) -> None:
         """Write the CA certificate to the appropriate file for each scope."""
-        (self.workload.cassandra_paths.tls_dir / f"{scope.value}-ca.pem").write_text(str(ca))
+        self.workload.cassandra_paths.get_ca(scope).write_text(str(ca))
 
     def set_certificate(self, crt: Certificate, scope: TLSScope) -> None:
         """Write the unit certificate to the appropriate file for each scope."""
-        (self.workload.cassandra_paths.tls_dir / f"{scope.value}-unit.pem").write_text(str(crt))
+        self.workload.cassandra_paths.get_certificate(scope).write_text(str(crt))
 
     def set_bundle(self, ca_list: list[Certificate], scope: TLSScope) -> None:
         """Write the bundle of certificates to a PEM file for each scope."""
@@ -183,7 +175,7 @@ class TLSManager:
 
     def set_private_key(self, pk: PrivateKey, scope: TLSScope) -> None:
         """Write the private key to the appropriate file for each scope."""
-        (self.workload.cassandra_paths.tls_dir / f"{scope.value}-private.key").write_text(str(pk))
+        self.workload.cassandra_paths.get_private_key(scope).write_text(str(pk))
 
     def set_chain(self, ca_list: list[Certificate], scope: TLSScope) -> None:
         """Write each certificate in the chain to a separate PEM file for each scope."""
@@ -195,9 +187,7 @@ class TLSManager:
     def get_ca(self, scope: TLSScope) -> Certificate | None:
         """Read and return the CA certificate for the given scope, or None if not found."""
         try:
-            return Certificate.from_string(
-                (self.workload.cassandra_paths.tls_dir / f"{scope.value}-ca.pem").read_text()
-            )
+            return Certificate.from_string(self.workload.cassandra_paths.get_ca(scope).read_text())
         except Exception as e:
             logger.error(f"can not read CA certificate: {e}")
             return None
@@ -206,7 +196,7 @@ class TLSManager:
         """Read and return the unit certificate for the given scope, or None if not found."""
         try:
             return Certificate.from_string(
-                (self.workload.cassandra_paths.tls_dir / f"{scope.value}-unit.pem").read_text()
+                self.workload.cassandra_paths.get_certificate(scope).read_text()
             )
         except Exception as e:
             logger.error(f"can not read certificate {e}")
@@ -219,7 +209,7 @@ class TLSManager:
         """
         try:
             return PrivateKey.from_string(
-                (self.workload.cassandra_paths.tls_dir / f"{scope.value}-private.key").read_text()
+                self.workload.cassandra_paths.get_private_key(scope).read_text()
             )
         except Exception as e:
             logger.error(f"can not read private key: {e}")
@@ -296,9 +286,19 @@ class TLSManager:
                     cwd=self.workload.cassandra_paths.tls_dir.as_posix(),
                 )
                 self.workload.exec(
-                    f"chown {USER_NAME}:{GROUP} {self.get_truststore_path(scope)}".split()
+                    [
+                        "chown",
+                        f"{USER_NAME}:{GROUP}",
+                        self.workload.cassandra_paths.get_truststore(scope).as_posix(),
+                    ]
                 )
-                self.workload.exec(f"chmod 770 {self.get_truststore_path(scope)}".split())
+                self.workload.exec(
+                    [
+                        "chmod",
+                        "770",
+                        self.workload.cassandra_paths.get_truststore(scope).as_posix(),
+                    ]
+                )
 
             except (subprocess.CalledProcessError, ExecError) as e:
                 if e.stdout and "already exists" in e.stdout:
@@ -346,9 +346,19 @@ class TLSManager:
             )
 
             self.workload.exec(
-                f"chown {USER_NAME}:{GROUP} {self.get_keystore_path(scope)}".split()
+                [
+                    "chown",
+                    f"{USER_NAME}:{GROUP}",
+                    self.workload.cassandra_paths.get_keystore(scope).as_posix(),
+                ]
             )
-            self.workload.exec(f"chmod 770 {self.get_keystore_path(scope)}".split())
+            self.workload.exec(
+                [
+                    "chmod",
+                    "770",
+                    self.workload.cassandra_paths.get_keystore(scope).as_posix(),
+                ]
+            )
         except (subprocess.CalledProcessError, ExecError) as e:
             logger.error(e.stdout)
             raise e
