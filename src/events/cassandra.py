@@ -428,4 +428,4 @@ class CassandraEvents(Object):
             logger.error(f"Failed to decommission unit: {e}")
             raise e
 
-        logger.info("Storage deatached")
+        logger.info("Hook for storage-detaching event completed")
