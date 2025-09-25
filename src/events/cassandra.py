@@ -34,7 +34,7 @@ from tenacity import (
 from common.exceptions import BadSecretError, ExecError
 from core.config import CharmConfig
 from core.literals import CASSANDRA_ADMIN_USERNAME
-from core.state import PEER_RELATION, ApplicationState, UnitWorkloadState, DATA_STORAGE
+from core.state import DATA_STORAGE, PEER_RELATION, ApplicationState, UnitWorkloadState
 from core.statuses import Status
 from core.workload import WorkloadBase
 from managers.cluster import ClusterManager

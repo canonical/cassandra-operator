@@ -12,7 +12,7 @@ from ops import testing
 
 from charm import CassandraCharm
 from common.exceptions import ExecError
-from core.state import PEER_RELATION, DATA_STORAGE
+from core.state import DATA_STORAGE, PEER_RELATION
 
 
 def make_state(storage: testing.Storage, leader: bool = True):
