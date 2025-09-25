@@ -109,8 +109,10 @@ prepare: |
 
   snap install microk8s --channel 1.34-strict/stable
   microk8s status --wait-ready
-  microk8s disable dns
-  microk8s enable dns:$(resolvectl status | grep "Current DNS Server" | awk '{print $NF}')   # This sets the dns to your current nameserver
+  microk8s enable dns
+  microk8s enable rbac
+  microk8s enable hostpath-storage
+  microk8s enable metallb:10.64.140.43-10.64.140.49
   microk8s status --wait-ready
 
   # Install charmcraft & pipx (on lxd-vm backend)
