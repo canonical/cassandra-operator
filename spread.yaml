@@ -107,18 +107,25 @@ prepare: |
   cd "$SPREAD_PATH"
   snap install --classic concierge
 
-  snap install microk8s --channel 1.34-strict/stable
+  snap install lxd --channel 6/stable
+  cat <<EOF | lxd init --preseed
+  networks:
+  - name: lxdbr0
+    type: bridge
+    config:
+      ipv4.address: auto
+      ipv6.address: none
+  EOF
+
+  snap install microk8s --channel 1.32-strict/stable
   microk8s status --wait-ready
   microk8s enable dns
-  microk8s status --wait-ready
-  microk8s kubectl rollout status deployments/coredns -n kube-system -w
-  microk8s enable rbac
-  microk8s status --wait-ready
   microk8s enable hostpath-storage
-  microk8s status --wait-ready
-  microk8s kubectl rollout status deployments/hostpath-provisioner -n kube-system -w
+  microk8s enable rbac
   microk8s enable metallb:10.64.140.43-10.64.140.49
   microk8s status --wait-ready
+  microk8s kubectl rollout status deployments/coredns -n kube-system -w
+  microk8s kubectl rollout status deployments/hostpath-provisioner -n kube-system -w
   microk8s kubectl rollout status daemonset.apps/speaker -n metallb-system -w
 
   # Install charmcraft & pipx (on lxd-vm backend)
