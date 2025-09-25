@@ -110,11 +110,15 @@ prepare: |
   snap install microk8s --channel 1.34-strict/stable
   microk8s status --wait-ready
   microk8s enable dns
+  microk8s status --wait-ready
+  microk8s kubectl rollout status deployments/coredns -n kube-system -w
+  microk8s enable rbac
+  microk8s status --wait-ready
   microk8s enable hostpath-storage
-  microk8s enable metallb:10.64.140.43-10.64.140.49
   microk8s status --wait-ready
   microk8s kubectl rollout status deployments/hostpath-provisioner -n kube-system -w
-  microk8s kubectl rollout status deployments/coredns -n kube-system -w
+  microk8s enable metallb:10.64.140.43-10.64.140.49
+  microk8s status --wait-ready
   microk8s kubectl rollout status daemonset.apps/speaker -n metallb-system -w
 
   # Install charmcraft & pipx (on lxd-vm backend)
