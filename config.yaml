@@ -1,0 +1,19 @@
+# Copyright 2025 Canonical Ltd.
+# See LICENSE file for licensing details.
+
+options:
+  profile:
+    type: string
+    default: production
+    description: |
+      Profile represents the scope of deployment, and used to tune resource allocation.
+      Allowed values are: `production` and `testing`.
+      `production` will tune Cassandra for maximum performance and allocation of half of
+      available RAM on the host, while `testing` will tune for minimal resources footprint.
+  system-users:
+    type: secret
+    default: ""
+    description: |
+      Configure the internal system user password. The password will be auto-generated
+      if this option is not set. This needs to be a Juju Secret URI pointing to an
+      accessible secret that contains the following content: `operator: <password>`.
