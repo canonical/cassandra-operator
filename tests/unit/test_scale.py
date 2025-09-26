@@ -85,7 +85,7 @@ def test_storage_detaching_success(caplog):
 
         decommission.assert_called_once()
         assert "node decommissioning" in caplog.text
-        assert "Storage deatached" in caplog.text
+        assert "storage-detaching event completed" in caplog.text
 
 
 def test_storage_detaching_decommission_fails(caplog):
