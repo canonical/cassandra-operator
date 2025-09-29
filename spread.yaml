@@ -102,8 +102,6 @@ environment:
   CONCIERGE_JUJU_CHANNEL/juju36: 3.6/stable
   CONCIERGE_JUJU_CHANNEL/juju35: 3.5/stable
 prepare: |
-  systemctl stop apparmor
-
   snap refresh --hold
   chown -R root:root "$SPREAD_PATH"
   cd "$SPREAD_PATH"
