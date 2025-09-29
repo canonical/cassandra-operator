@@ -6,6 +6,7 @@ import logging
 import subprocess
 from pathlib import Path
 
+from cassandra.cluster import ResultSet
 import jubilant
 from helpers import connect_cql
 
@@ -26,15 +27,6 @@ def test_deploy(juju: jubilant.Juju, cassandra_charm: Path, app_name: str) -> No
     )
 
 
-def test_lxc_restart(juju: jubilant.Juju) -> None:
-    subprocess.check_call(["lxc", "restart", "--all"])
-    juju.wait(
-        ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
-        delay=20,
-        timeout=1800,
-    )
-
-
 def test_write(juju: jubilant.Juju, app_name: str) -> None:
     host = juju.status().apps[app_name].units[f"{app_name}/0"].public_address
     with connect_cql(juju=juju, app_name=app_name, hosts=[host], timeout=300) as session:
@@ -45,3 +37,23 @@ def test_write(juju: jubilant.Juju, app_name: str) -> None:
         session.set_keyspace("test")
         session.execute("CREATE TABLE test(message TEXT PRIMARY KEY)")
         session.execute("INSERT INTO test(message) VALUES ('hello')")
+
+
+def test_lxc_restart(juju: jubilant.Juju) -> None:
+    subprocess.check_call(["lxc", "restart", "--all"])
+    juju.wait(
+        ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
+        delay=20,
+        timeout=1800,
+    )
+
+
+def test_read(juju: jubilant.Juju, app_name: str) -> None:
+    host = juju.status().apps[app_name].units[f"{app_name}/0"].public_address
+    with connect_cql(juju=juju, app_name=app_name, hosts=[host], keyspace="test") as session:
+        res = session.execute("SELECT message FROM test")
+        assert (
+            isinstance(res, ResultSet)
+            and len(res_list := res.all()) == 1
+            and res_list[0].message == "hello"
+        ), "test data written prior aren't found"
