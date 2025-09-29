@@ -61,7 +61,7 @@ class CassandraPaths:
         return self.tls_dir / f"{scope.value}-keystore.p12"
 
     def get_ca(self, scope: TLSScope) -> pathops.PathProtocol:
-        """GET ca path for the TLS scope."""
+        """Get ca path for the TLS scope."""
         return self.tls_dir / f"{scope.value}-ca.pem"
 
     def get_certificate(self, scope: TLSScope) -> pathops.PathProtocol:
