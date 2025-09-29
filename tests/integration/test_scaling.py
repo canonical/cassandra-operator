@@ -3,6 +3,7 @@
 # See LICENSE file for licensing details.
 
 import logging
+from itertools import pairwise
 from pathlib import Path
 
 import jubilant
@@ -29,25 +30,32 @@ def test_scale_up(juju: jubilant.Juju, app_name: str) -> None:
     got1 = read_n_rows(juju, app_name, ks=ks, table=tb)
     assert_rows(wrote, got1)
 
+    old_units = set(juju.status().apps[app_name].units.keys())
+
     juju.add_unit(app_name, num_units=2)
     juju.wait(jubilant.all_active)
 
-    added_units = [u[0] for u in juju.status().apps[app_name].units.items() if not u[1].leader]
+    all_units = set(juju.status().apps[app_name].units.keys())
+    new_units = list(all_units - old_units)
+    assert new_units, "No new units detected after scale-up"
 
-    got2 = read_n_rows(juju, app_name, ks=ks, table=tb, unit_name=added_units[0])
+    got2 = read_n_rows(juju, app_name, ks=ks, table=tb, unit_name=new_units[0])
     assert_rows(wrote, got2)
 
 
 def test_read_write_multinode(juju: jubilant.Juju, app_name: str) -> None:
-    ks, tb = prepare_keyspace_and_table(juju, app_name=app_name, ks="multiks", table="multitbl")
+    units = juju.status().apps[app_name].units.items()
+    for unit_pair in pairwise(units):
+        unit1_name, unit2_name = unit_pair[0][0], unit_pair[1][0]
+        ks, tb = prepare_keyspace_and_table(
+            juju, app_name=app_name, ks="multiks", table=f"multitbl-{unit1_name}-{unit2_name}"
+        )
 
-    added_units = [u[0] for u in juju.status().apps[app_name].units.items() if not u[1].leader]
+        assert len(unit_pair) > 1
 
-    assert len(added_units) > 1
-
-    wrote = write_n_rows(juju, app_name, ks=ks, table=tb, unit_name=added_units[0])
-    got = read_n_rows(juju, app_name, ks=ks, table=tb, unit_name=added_units[1])
-    assert_rows(wrote, got)
+        wrote = write_n_rows(juju, app_name, ks=ks, table=tb, unit_name=unit1_name)
+        got = read_n_rows(juju, app_name, ks=ks, table=tb, unit_name=unit2_name)
+        assert_rows(wrote, got)
 
 
 def test_single_node_scale_down(juju: jubilant.Juju, app_name: str) -> None:

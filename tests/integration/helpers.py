@@ -304,21 +304,27 @@ def all_prometheus_exporters_data(juju: jubilant.Juju, check_field: str, app_nam
     return result
 
 
-def prepare_keyspace_and_table(
-    juju: jubilant.Juju, app_name: str, ks="test", table="kv", unit_name: str = ""
-) -> tuple[str, str]:
-    """Create test keyspace and table."""
+def get_hosts(juju: jubilant.Juju, app_name: str, unit_name: str = "") -> list[str]:
+    """Return list of host addresses for the given app.
+
+    Adding unit_name will prioritize a specific unit host address.
+    """
     units = juju.status().apps[app_name].units
     if unit_name:
         if unit_name not in units:
             raise ValueError(f"Unit {unit_name} not found in app {app_name}")
-        hosts = [units[unit_name].public_address] + [
+        return [units[unit_name].public_address] + [
             u.public_address for name, u in units.items() if name != unit_name
         ]
-    else:
-        hosts = [u.public_address for u in units.values()]
+    return [u.public_address for u in units.values()]
 
-    hosts = [u.public_address for u in juju.status().apps[app_name].units.values()]
+
+def prepare_keyspace_and_table(
+    juju: jubilant.Juju, app_name: str, ks: str = "test", table: str = "kv", unit_name: str = ""
+) -> tuple[str, str]:
+    """Create test keyspace and table."""
+    hosts = get_hosts(juju, app_name, unit_name)
+
     with connect_cql(juju=juju, app_name=app_name, hosts=hosts, timeout=300) as session:
         session.execute(
             f"CREATE KEYSPACE IF NOT EXISTS {ks} "
@@ -331,17 +337,9 @@ def prepare_keyspace_and_table(
 
 def write_n_rows(
     juju: jubilant.Juju, app_name: str, ks: str, table: str, n: int = 100, unit_name: str = ""
-) -> dict:
+) -> dict[int, str]:
     """Write n rows to the table."""
-    units = juju.status().apps[app_name].units
-    if unit_name:
-        if unit_name not in units:
-            raise ValueError(f"Unit {unit_name} not found in app {app_name}")
-        hosts = [units[unit_name].public_address] + [
-            u.public_address for name, u in units.items() if name != unit_name
-        ]
-    else:
-        hosts = [u.public_address for u in units.values()]
+    hosts = get_hosts(juju, app_name, unit_name)
 
     with connect_cql(
         juju=juju, app_name=app_name, hosts=hosts, timeout=300, keyspace=ks
@@ -357,17 +355,9 @@ def write_n_rows(
 
 def read_n_rows(
     juju: jubilant.Juju, app_name: str, ks: str, table: str, n: int = 100, unit_name: str = ""
-) -> dict:
+) -> dict[int, str]:
     """Check that table have exactly n rows."""
-    units = juju.status().apps[app_name].units
-    if unit_name:
-        if unit_name not in units:
-            raise ValueError(f"Unit {unit_name} not found in app {app_name}")
-        hosts = [units[unit_name].public_address] + [
-            u.public_address for name, u in units.items() if name != unit_name
-        ]
-    else:
-        hosts = [u.public_address for u in units.values()]
+    hosts = get_hosts(juju, app_name, unit_name)
 
     got = {}
     with connect_cql(
@@ -384,7 +374,7 @@ def read_n_rows(
     return got
 
 
-def assert_rows(wrote: dict, got: dict) -> None:
+def assert_rows(wrote: dict[int, str], got: dict[int, str]) -> None:
     """Assert rows are equal."""
     assert len(got) == len(wrote), f"Expected {len(wrote)} rows, got {len(got)}"
     assert got == wrote, "Row data mismatch"
