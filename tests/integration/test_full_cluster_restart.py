@@ -6,8 +6,8 @@ import logging
 import subprocess
 from pathlib import Path
 
-from cassandra.cluster import ResultSet
 import jubilant
+from cassandra.cluster import ResultSet
 from helpers import connect_cql
 
 logger = logging.getLogger(__name__)
