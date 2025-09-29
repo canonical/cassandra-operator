@@ -23,6 +23,7 @@ from core.state import (
     UnitWorkloadState,
 )
 from events.cassandra import CassandraEvents
+from events.provider import ExternalClientsEvents
 from events.tls import TLSEvents
 from managers.cluster import ClusterManager
 from managers.config import ConfigManager
@@ -76,7 +77,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             bootstrap_manager=bootstrap_manager,
             tls_manager=self.tls_manager,
             setup_internal_certificates=self.setup_internal_certificates,
-            read_auth_secret=self.read_auth_secret,
+            acquire_operator_password=self.acquire_operator_password,
         )
 
         self.tls_events = TLSEvents(
@@ -88,6 +89,15 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             bootstrap_manager=bootstrap_manager,
             tls_manager=self.tls_manager,
             setup_internal_certificates=self.setup_internal_certificates,
+        )
+
+        self.provider_events = ExternalClientsEvents(
+            self,
+            state=self.state,
+            workload=self.workload,
+            cluster_manager=self.cluster_manager,
+            database_manager=database_manager,
+            acquire_operator_password=self.acquire_operator_password,
         )
 
         self._grafana_agent = COSAgentProvider(
@@ -167,6 +177,13 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         )
 
         return True
+
+    def acquire_operator_password(self) -> str:
+        if self.config.system_users:
+            return self.read_auth_secret(self.config.system_users)
+        if self.state.cluster.operator_password_secret:
+            return self.state.cluster.operator_password_secret
+        return self.workload.generate_password()
 
     def read_auth_secret(self, secret_id: str) -> str:
         """Read and validate user-defined authentication secret.

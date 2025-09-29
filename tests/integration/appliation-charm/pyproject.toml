@@ -1,0 +1,88 @@
+# Copyright 2025 Canonical Ltd.
+# See LICENSE file for licensing details.
+
+[tool.poetry]
+package-mode = false
+requires-poetry = ">=2.0.0"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+ops = ">=2.19.0"
+requests = "^2.32.3"
+requests-unixsocket = "^0.4.1"
+pydantic = "^2.11.4"
+cassandra-driver = "^3.29.2"
+tenacity = "^9.1.2"
+charmlibs-pathops = "^1.0.1"
+cosl = ">= 0.0.50"
+
+[tool.poetry.group.format]
+optional = true
+
+[tool.poetry.group.charm-libs.dependencies]
+# data_platform_libs/v0/data_interfaces.py
+ops = ">=2.0.0"
+# tls_certificates_interface/v4/tls_certificates.py
+cryptography = "==44.0.2"
+pydantic = ">= 1.0"
+cosl = ">= 0.0.50"
+
+[tool.poetry.group.format.dependencies]
+ruff = "^0.11.8"
+
+[tool.poetry.group.lint]
+optional = true
+
+[tool.poetry.group.lint.dependencies]
+codespell = "^2.4.1"
+pyright = "^1.1.403"
+
+# Testing tools configuration
+[tool.coverage.run]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+log_cli_level = "INFO"
+
+# Linting tools configuration
+[tool.ruff]
+line-length = 99
+lint.select = ["E", "W", "F", "C", "N", "D", "I001"]
+lint.extend-ignore = [
+    "D105",
+    "D107",
+    "D203",
+    "D204",
+    "D213",
+    "D215",
+    "D400",
+    "D404",
+    "D406",
+    "D407",
+    "D408",
+    "D409",
+    "D413",
+]
+extend-exclude = ["__pycache__", "*.egg_info"]
+lint.per-file-ignores = {"tests/*" = ["D100","D101","D102","D103","D104"]}
+
+[tool.ruff.lint.flake8-copyright]
+# Check for properly formatted copyright header in each file
+author = "Canonical Ltd."
+notice-rgx = "Copyright\\s\\d{4}([-,]\\d{4})*\\s+"
+min-file-size = 1
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.codespell]
+skip = "build,lib,venv,icon.svg,.tox,.git,.mypy_cache,.ruff_cache,.coverage"
+
+[tool.pyright]
+include = ["src"]
+extraPaths = ["src","lib"]
+pythonVersion = "3.12"

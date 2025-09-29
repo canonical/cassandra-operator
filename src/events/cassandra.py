@@ -53,7 +53,7 @@ class CassandraEvents(Object):
         tls_manager: TLSManager,
         setup_internal_certificates: Callable[[Sans], bool],
         database_manager: DatabaseManager,
-        read_auth_secret: Callable[[str], str],
+        acquire_operator_password: Callable[[], str],
     ):
         super().__init__(charm, key="cassandra_events")
         self.charm = charm
@@ -65,7 +65,7 @@ class CassandraEvents(Object):
         self.tls_manager = tls_manager
         self.setup_internal_certificates = setup_internal_certificates
         self.database_manager = database_manager
-        self.read_auth_secret = read_auth_secret
+        self.acquire_operator_password = acquire_operator_password
 
         self.framework.observe(self.charm.on.start, self._on_start)
         self.framework.observe(self.charm.on.install, self._on_install)
@@ -146,7 +146,7 @@ class CassandraEvents(Object):
         self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
 
     def _start_leader_setup_auth(self) -> None:
-        password = self._acquire_operator_password()
+        password = self.acquire_operator_password()
 
         self.config_manager.render_cassandra_config(
             listen_address="127.0.0.1",
@@ -193,13 +193,6 @@ class CassandraEvents(Object):
         )
         self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
 
-    def _acquire_operator_password(self) -> str:
-        if self.charm.config.system_users:
-            return self.read_auth_secret(self.charm.config.system_users)
-        if self.state.cluster.operator_password_secret:
-            return self.state.cluster.operator_password_secret
-        return self.workload.generate_password()
-
     def _on_config_changed(self, event: ConfigChangedEvent) -> None:
         if self.state.unit.workload_state == UnitWorkloadState.INSTALLING:
             logger.debug("Exiting on_config_changed due to installation phase")
@@ -210,7 +203,7 @@ class CassandraEvents(Object):
             return
         try:
             if self.charm.unit.is_leader() and self.state.cluster.operator_password_secret != (
-                password := self._acquire_operator_password()
+                password := self.acquire_operator_password()
             ):
                 self.database_manager.update_role_password(CASSANDRA_ADMIN_USERNAME, password)
                 self.state.cluster.operator_password_secret = password
@@ -244,12 +237,12 @@ class CassandraEvents(Object):
                 return
 
             if self.state.unit.workload_state != UnitWorkloadState.ACTIVE:
-                logger.debug("Deferring on_secret_changed due to inactive unit workload state")
+                logger.debug("Deferring on_secret_changed due trelated to client charmso inactive unit workload state")
                 event.defer()
                 return
 
             if self.state.cluster.operator_password_secret != (
-                password := self._acquire_operator_password()
+                password := self.acquire_operator_password()
             ):
                 self.database_manager.update_role_password(CASSANDRA_ADMIN_USERNAME, password)
                 self.state.cluster.operator_password_secret = password
@@ -316,7 +309,7 @@ class CassandraEvents(Object):
     def _on_collect_unit_status(self, event: CollectStatusEvent) -> None:
         try:
             self.charm.config
-            self._acquire_operator_password()
+            self.acquire_operator_password()
         except ValidationError:
             event.add_status(Status.INVALID_CONFIG.value)
         except BadSecretError:
@@ -355,7 +348,7 @@ class CassandraEvents(Object):
     def _on_collect_app_status(self, event: CollectStatusEvent) -> None:
         try:
             self.charm.config
-            self._acquire_operator_password()
+            self.acquire_operator_password()
         except ValidationError:
             event.add_status(Status.INVALID_CONFIG.value)
         except BadSecretError:

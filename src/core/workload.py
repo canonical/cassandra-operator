@@ -135,3 +135,4 @@ class WorkloadBase(ABC):
             String of 32 randomized letter+digit characters
         """
         return "".join([secrets.choice(string.ascii_letters + string.digits) for _ in range(32)])
+

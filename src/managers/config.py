@@ -248,7 +248,7 @@ class ConfigManager:
     def _cassandra_default_config() -> dict[str, Any]:
         return {
             "allocate_tokens_for_local_replication_factor": 3,
-            "authorizer": "AllowAllAuthorizer",
+            "authorizer": "CassandraAuthorizer",
             "cas_contention_timeout": "1000ms",
             "cidr_authorizer": {"class_name": "AllowAllCIDRAuthorizer"},
             "commitlog_sync": "periodic",

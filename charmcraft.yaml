@@ -5,6 +5,74 @@ type: charm
 platforms:
   ubuntu@24.04:amd64:
 
+<<<<<<< Updated upstream
+=======
+name: cassandra
+summary: |
+  Charmed Apache Cassandra Operator
+description: |
+  Apache Cassandra is a free and open-source database management system designed to handle large volumes of data across multiple commodity servers. This charm deploys and operate Apache Cassandra on a VM machine environment.
+  Apache Cassandra is a free and open-source software project by the Apache Software Foundation.
+  Users can find out more at the [Apache Cassandra project page](https://cassandra.apache.org/_/index.html).
+
+charm-libs:
+  - lib: operator_libs_linux.snap
+    version: "2"
+  - lib: data_platform_libs.data_models
+    version: "1"
+  - lib: data_platform_libs.data_interfaces
+    version: "0"
+  - lib: rolling_ops.rollingops
+    version: "0"
+  - lib: tls_certificates_interface.tls_certificates
+    version: "4"
+  - lib: certificate-transfer-interface.certificate_transfer
+    version: "1"
+  - lib: grafana_agent.cos_agent
+    version: "0"
+
+config:
+  options:
+    profile:
+      type: string
+      default: production
+      description: |
+        Profile represents the scope of deployment, and used to tune resource allocation.
+        Allowed values are: `production` and `testing`.
+        `production` will tune Cassandra for maximum performance and allocation of half of
+        available RAM on the host, while `testing` will tune for minimal resources footprint.
+    system-users:
+      type: secret
+      default: ""
+      description: |
+        Configure the internal system user password. The password will be auto-generated
+        if this option is not set. This needs to be a Juju Secret URI pointing to an
+        accessible secret that contains the following content: `operator: <password>`.
+
+provides:
+  cassandra-client:
+    interface: cassandra_client
+  cos-agent:
+    interface: cos_agent
+    optional: true
+
+peers:
+  cassandra-peers:
+    interface: cassandra_peers
+  bootstrap:
+    interface: rolling_op
+
+requires:
+  client-certificates:
+    interface: tls-certificates
+    limit: 1
+    optional: true
+  peer-certificates:
+    interface: tls-certificates
+    limit: 1
+    optional: true
+
+>>>>>>> Stashed changes
 parts:
   # "poetry-deps" part name is a magic constant
   # https://github.com/canonical/craft-parts/pull/901

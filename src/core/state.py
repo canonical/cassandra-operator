@@ -15,6 +15,9 @@ from charms.data_platform_libs.v0.data_interfaces import (
     DataPeerOtherUnitData,
     DataPeerUnitData,
 )
+
+from charms.data_platform_libs.v1.data_interfaces import RequirerDataContractV1
+
 from charms.tls_certificates_interface.v4.tls_certificates import (
     Certificate,
     CertificateSigningRequest,
@@ -25,6 +28,7 @@ from ops import Application, CharmBase, Object, Relation, Unit
 CLIENT_TLS_RELATION = "client-certificates"
 PEER_TLS_RELATION = "peer-certificates"
 PEER_RELATION = "cassandra-peers"
+CLIENT_RELATION = "cassandra-client"
 CASSANDRA_PEER_PORT = 7000
 CASSANDRA_CLIENT_PORT = 9042
 JMX_EXPORTER_PORT = 7071
@@ -87,7 +91,6 @@ class UnitWorkloadState(StrEnum):
     """Cassandra is starting."""
     ACTIVE = "active"
     """Cassandra is active and ready."""
-
 
 class RelationState:
     """Basic class for relation bag mapping classes."""
@@ -273,7 +276,6 @@ class TLSContext(RelationState):
             bundle=self.bundle,
             scope=self.scope,
         )
-
 
 class UnitContext(RelationState):
     """Unit context of the application state.
@@ -577,3 +579,4 @@ class ApplicationState(Object):
         See `ApplicationState.other_units` for more info.
         """
         return {unit for unit in self.other_units if unit.is_seed}
+
