@@ -46,9 +46,14 @@ def test_scale_up(juju: jubilant.Juju, app_name: str) -> None:
 def test_read_write_multinode(juju: jubilant.Juju, app_name: str) -> None:
     units = juju.status().apps[app_name].units.items()
     for unit_pair in pairwise(units):
-        unit1_name, unit2_name = unit_pair[0][0], unit_pair[1][0]
+        unit1_name: str = unit_pair[0][0]
+        unit2_name: str = unit_pair[1][0]
+
         ks, tb = prepare_keyspace_and_table(
-            juju, app_name=app_name, ks="multiks", table=f"multitbl-{unit1_name}-{unit2_name}"
+            juju,
+            app_name=app_name,
+            ks="multiks",
+            table=f"""multitbl_{unit1_name.replace("/", "_")}_{unit2_name.replace("/", "_")}""",
         )
 
         assert len(unit_pair) > 1
