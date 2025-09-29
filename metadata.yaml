@@ -1,0 +1,51 @@
+# Copyright 2025 Canonical Ltd.
+# See LICENSE file for licensing details.
+name: cassandra
+summary: |
+  Charmed Apache Cassandra Operator
+description: |
+  Apache Cassandra is a free and open-source database management system designed to handle large volumes of data across multiple commodity servers. This charm deploys and operate Apache Cassandra on a VM machine environment.
+  Apache Cassandra is a free and open-source software project by the Apache Software Foundation.
+  Users can find out more at the [Apache Cassandra project page](https://cassandra.apache.org/_/index.html).
+
+charm-libs:
+  - lib: operator_libs_linux.snap
+    version: "2"
+  - lib: data_platform_libs.data_models
+    version: "1"
+  - lib: data_platform_libs.data_interfaces
+    version: "0"
+  - lib: rolling_ops.rollingops
+    version: "0"
+  - lib: tls_certificates_interface.tls_certificates
+    version: "4"
+  - lib: grafana_agent.cos_agent
+    version: "0"
+
+provides:
+  cos-agent:
+    interface: cos_agent
+    optional: true
+
+peers:
+  cassandra-peers:
+    interface: cassandra_peers
+  bootstrap:
+    interface: rolling_op
+
+requires:
+  client-certificates:
+    interface: tls-certificates
+    limit: 1
+    optional: true
+  peer-certificates:
+    interface: tls-certificates
+    limit: 1
+    optional: true
+
+storage:
+  data:
+    type: filesystem
+    location: /var/snap/charmed-cassandra/common/var/lib/cassandra
+    minimum-size: 1G
+    description: storage for cassandra data
