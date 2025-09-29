@@ -85,7 +85,7 @@ backends:
     # HACK: spread does not pass environment variables set on runner
     # Manually pass specific environment variables
     environment:
-      CI: '$(HOST: echo $CI)'
+      CI: "$(HOST: echo $CI)"
     systems:
       - ubuntu-24.04:
           username: runner
@@ -102,6 +102,8 @@ environment:
   CONCIERGE_JUJU_CHANNEL/juju36: 3.6/stable
   CONCIERGE_JUJU_CHANNEL/juju35: 3.5/stable
 prepare: |
+  systemctl stop apparmor
+
   snap refresh --hold
   chown -R root:root "$SPREAD_PATH"
   cd "$SPREAD_PATH"
@@ -145,4 +147,5 @@ prepare-each: |
   # Unable to set constraint on all models because of Juju bug:
   # https://bugs.launchpad.net/juju/+bug/2065050
   juju set-model-constraints arch="$(dpkg --print-architecture)"
+
 # Only restore on lxd backend—no need to restore on CI
