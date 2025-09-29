@@ -4,7 +4,7 @@ on:
       artifact-prefix:
         description: |
           Prefix for charm package GitHub artifact(s)
-          
+
           Use canonical/data-platform-workflows build_charm.yaml to build the charm(s)
         required: true
         type: string
@@ -84,7 +84,7 @@ jobs:
     needs:
       - collect-integration-tests
     runs-on: ${{ matrix.job.runner }}
-    timeout-minutes: 217  # Sum of steps `timeout-minutes` + 5
+    timeout-minutes: 217 # Sum of steps `timeout-minutes` + 5
     steps:
       - name: Disk usage
         shell: bash
@@ -136,7 +136,7 @@ jobs:
         run: ~/go/bin/spread -vv -artifacts=artifacts '${{ matrix.job.spread_job }}'
       - name: Debug spread failure
         uses: mxschmitt/action-tmate@v3
-        if: ${{ steps.spread.outcome == 'failure' }}
+        if: ${{ failure() || steps.spread.outcome == 'failure' }}
       - name: Upload Allure results
         timeout-minutes: 3
         # Only upload results from one spread system & one spread variant
@@ -177,7 +177,7 @@ jobs:
           # "testing" is default model created by concierge
           sudo juju switch concierge-lxd:admin/test-cas
           mkdir -p ~/logs/
-  
+
       - name: juju status lxd
         timeout-minutes: 1
         if: ${{ steps.check-lxd-model.outputs.exists == 'true' && !contains(matrix.job.spread_job, 'juju29') && (success() || (failure() && steps.spread.outcome == 'failure')) }}
@@ -201,7 +201,7 @@ jobs:
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
-    
+
       - name: Select k8s model
         timeout-minutes: 1
         # `!contains(matrix.job.spread_job, 'juju29')` workaround for juju 2 error:
@@ -215,7 +215,7 @@ jobs:
           # "testing" is default model created by concierge
           sudo juju switch concierge-microk8s:admin/test-cas
           mkdir -p ~/logs/
-  
+
       - name: juju status k8s
         timeout-minutes: 1
         if: ${{ steps.check-k8s-model.outputs.exists == 'true' && !contains(matrix.job.spread_job, 'juju29') && (success() || (failure() && steps.spread.outcome == 'failure')) }}
@@ -231,9 +231,9 @@ jobs:
         if: ${{ steps.check-k8s-model.outputs.exists == 'true' && success() || (failure() && steps.spread.outcome == 'failure') }}
         run: sudo juju switch concierge-microk8s:admin/test-cas && sudo juju destroy-model test-cas --destroy-storage --force --no-prompt
 
-# end of k8s
+      # end of k8s
 
-      - name: jhack tail 
+      - name: jhack tail
         timeout-minutes: 3
         if: ${{ !contains(matrix.job.spread_job, 'juju29') && (success() || (failure() && steps.spread.outcome == 'failure')) }}
         run: sudo jhack tail --printer raw --replay --no-watch | tee ~/logs/jhack-tail.txt
