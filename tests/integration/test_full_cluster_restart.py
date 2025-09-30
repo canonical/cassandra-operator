@@ -9,6 +9,7 @@ from pathlib import Path
 import jubilant
 from cassandra.cluster import ResultSet
 from helpers import connect_cql
+from tenacity import sleep
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +38,7 @@ def test_write(juju: jubilant.Juju, app_name: str) -> None:
         session.set_keyspace("test")
         session.execute("CREATE TABLE test(message TEXT PRIMARY KEY)")
         session.execute("INSERT INTO test(message) VALUES ('hello')")
+    sleep(60)
 
 
 def test_lxc_restart(juju: jubilant.Juju) -> None:
