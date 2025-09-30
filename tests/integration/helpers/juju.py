@@ -7,61 +7,12 @@ import logging
 import os
 import subprocess
 from contextlib import contextmanager
-from typing import Generator
 
 import jubilant
-import requests
-from cassandra.auth import PlainTextAuthProvider
-from cassandra.cluster import EXEC_PROFILE_DEFAULT, Cluster, ExecutionProfile, Session
-from cassandra.policies import DCAwareRoundRobinPolicy, TokenAwarePolicy
-from tenacity import Retrying, stop_after_delay, wait_fixed
 
 logger = logging.getLogger(__name__)
-COS_METRICS_PORT = 7071
+
 DEFAULT_MICROK8S_CHANNEL = "1.32-strict"
-
-
-@contextmanager
-def connect_cql(
-    juju: jubilant.Juju,
-    app_name: str,
-    hosts: list[str],
-    username: str | None = None,
-    password: str | None = None,
-    keyspace: str | None = None,
-    timeout: float | None = None,
-) -> Generator[Session, None, None]:
-    if username is None:
-        username = "operator"
-    if password is None:
-        secrets = get_secrets_by_label(juju, f"cassandra-peers.{app_name}.app", app_name)
-        assert len(secrets) == 1
-        password = secrets[0]["operator-password"]
-
-    execution_profile = ExecutionProfile(
-        load_balancing_policy=TokenAwarePolicy(DCAwareRoundRobinPolicy()),
-        request_timeout=timeout or 10,
-    )
-    auth_provider = PlainTextAuthProvider(username=username, password=password)
-    # TODO: get rid of retrying on connection.
-    cluster = None
-    session = None
-    for attempt in Retrying(wait=wait_fixed(2), stop=stop_after_delay(120), reraise=True):
-        with attempt:
-            cluster = Cluster(
-                auth_provider=auth_provider,
-                contact_points=hosts,
-                protocol_version=5,
-                execution_profiles={EXEC_PROFILE_DEFAULT: execution_profile},
-            )
-            session = cluster.connect()
-    assert cluster and session
-    if keyspace:
-        session.set_keyspace(keyspace)
-    try:
-        yield session
-    finally:
-        cluster.shutdown()
 
 
 def get_secrets_by_label(juju: jubilant.Juju, label: str, owner: str) -> list[dict[str, str]]:
@@ -97,27 +48,6 @@ def get_secrets_by_label(juju: jubilant.Juju, label: str, owner: str) -> list[di
         )
 
     return secret_data_list
-
-
-def check_tls(ip: str, port: int) -> bool:
-    try:
-        proc = subprocess.run(
-            f"echo | openssl s_client -connect {ip}:{port}",
-            shell=True,
-            capture_output=True,
-            text=True,
-            timeout=5,
-        )
-    except subprocess.TimeoutExpired:
-        logger.debug(f"OpenSSL timeout on {ip}:{port}")
-        return False
-
-    output = proc.stdout + proc.stderr
-
-    if proc.returncode != 0:
-        logger.debug(f"OpenSSL exited with code {proc.returncode} on {ip}:{port}")
-
-    return "TLSv1.2" in output or "TLSv1.3" in output
 
 
 def get_address(juju: jubilant.Juju, app_name: str, unit_num) -> str:
@@ -193,9 +123,7 @@ def using_k8s():
 
 
 def _get_microk8s_controller_name(juju: jubilant.Juju) -> str:
-    controllers_raw = json.loads(
-        jubilant.Juju().cli("controllers", "--format", "json", include_model=False)
-    )
+    controllers_raw = json.loads(juju.cli("controllers", "--format", "json", include_model=False))
 
     for name, data in controllers_raw.get("controllers", {}).items():
         if data.get("cloud") == "microk8s":
@@ -277,28 +205,3 @@ def configure_microk8s(channel: str = DEFAULT_MICROK8S_CHANNEL) -> None:
          sleep 90
         """
     )
-
-
-def prometheus_exporter_data(host: str) -> str | None:
-    """Check if a given host has metric service available and it is publishing."""
-    url = f"http://{host}:{COS_METRICS_PORT}/metrics"
-    logger.info(f"prometheus_exporter_data making request: {url}")
-    try:
-        response = requests.get(url)
-    except requests.exceptions.RequestException as e:
-        logger.info(f"prometheus_exporter_data exception: {e}")
-        return None
-
-    if response.status_code == 200:
-        return response.text
-
-    return None
-
-
-def all_prometheus_exporters_data(juju: jubilant.Juju, check_field: str, app_name: str) -> bool:
-    """Check if a all units has metric service available and publishing."""
-    result = True
-    status = juju.status()
-    for unit in status.apps[app_name].units.values():
-        result = result and check_field in (prometheus_exporter_data(unit.public_address) or "")
-    return result

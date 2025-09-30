@@ -12,8 +12,8 @@ from typing import Generator
 import jubilant
 import pytest
 import yaml
-from help_types import IntegrationTestsCharms, TestCharm
-from helpers import get_microk8s_controller, using_k8s, using_vm
+from helpers.juju import get_microk8s_controller, using_k8s, using_vm
+from helpers.types import IntegrationTestsCharms, TestCharm
 
 logger = logging.getLogger(__name__)
 
