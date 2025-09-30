@@ -5,6 +5,7 @@
 # Learn more at: https://juju.is/docs/sdk
 from dataclasses import dataclass
 import logging
+import json
 from contextlib import contextmanager
 
 from ops import RelationChangedEvent, InstallEvent, RelationCreatedEvent, StoredState
@@ -28,6 +29,7 @@ from cassandra.policies import DCAwareRoundRobinPolicy, TokenAwarePolicy
 from charms.data_platform_libs.v1.data_interfaces import (
     EntityPermissionModel,
     RequirerCommonModel,
+    RequirerDataContractV1,
     ResourceCreatedEvent,
     ResourceProviderModel,
     ResourceRequirerEventHandler,
@@ -120,7 +122,7 @@ class ApplicationCharm(CharmBase):
 
     def _on_keyspace_user_created(self, event: ResourceCreatedEvent) -> None:
         response: ResourceProviderModel = event.response
-        
+
         rolename: UserSecretStr = response.username
         password: UserSecretStr = response.password
 
@@ -146,6 +148,26 @@ class ApplicationCharm(CharmBase):
         )
         logger.debug(f"Table created: {tbl_name}")
 
+        logger.debug("Changing entity permissions")
+
+        new_permissions = EntityPermissionModel(
+            resource_name=event.response.resource,
+            resource_type="ks",
+            privileges=["SELECT", "MODIFY"],
+        )
+
+        self._set_keyspace_permissions(new_permissions)
+
+        model = self.cassandra_client.interface.build_model(
+            event.relation.id, model=RequirerDataContractV1[RequirerCommonModel]
+        )
+
+        for request in model.requests:
+            request.entity_permissions = self._data.keyspaces
+
+        logger.debug(f"Updating entity_permissions: {json.dumps(self._data.keyspaces)}")
+        self.cassandra_client.interface.write_model(event.relation.id, model)
+
     def _create_test_table(self, rolename: str, password: str, ks: str, tbl: str, hosts: list[str]) -> None:
 
         cql = f"""
@@ -162,6 +184,11 @@ class ApplicationCharm(CharmBase):
         ) as session:
             logger.debug(f"Query: {cql}")            
             session.execute(cql)
+
+    def _set_keyspace_permissions(self, perm: EntityPermissionModel) -> None:
+        for i, ks in enumerate(self._data.keyspaces):
+            if ks.resource_name == perm.resource_name:
+                self._data.keyspaces[i] = perm
 
     @contextmanager
     def _cqlsh_session(
