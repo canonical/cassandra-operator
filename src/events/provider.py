@@ -6,6 +6,8 @@
 
 import logging
 import hashlib
+from random import randrange
+from time import sleep
 from typing import Callable
 
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
@@ -18,6 +20,7 @@ from charms.data_platform_libs.v1.data_interfaces import (
     ResourceRequestedEvent,
     ResourceEntityRequestedEvent,
     SecretBool,
+    RelationCreatedEvent,
     )
 from charms.rolling_ops.v0.rollingops import RollingOpsManager
 from ops import (
@@ -70,9 +73,15 @@ class ExternalClientsEvents(Object):
         )
 
         self.framework.observe(self.cassandra_client.on.resource_requested, self._on_resource_requested)
-        self.framework.observe(self.cassandra_client.on.on_resource_entity_requested, self._on_resource_entity_requested)        
+        self.framework.observe(self.cassandra_client.on.resource_entity_requested, self._on_resource_entity_requested)        
         self.framework.observe(self.cassandra_client.on.resource_entity_permissions_changed, self._on_resource_entity_permissions_changed)
 
+        self.framework.observe(
+            self.charm.on.cassandra_client_relation_created, self._cassandra_client_relation_created
+        )        
+
+    def _cassandra_client_relation_created(self, _: RelationCreatedEvent) -> None:
+        logger.debug(f"---- _cassandra_client_relation_created ----")
         
     def _on_resource_requested(self, event: ResourceRequestedEvent) -> None:
         """Event triggered when a new keyspace is requested."""
@@ -95,13 +104,21 @@ class ExternalClientsEvents(Object):
 
         self.database_manager.create_keyspace(resource, len(self.state.units), self.acquire_operator_password())
 
+        sleep(randrange(5))
+
         response = ResourceProviderModel(
-            request_id=request.request_id,
             resource=resource,
+            salt=request.salt,
+            request_id=request.request_id,
+            username=SecretStr("a"),
+            password=SecretStr("a"),
             endpoints=",".join([f"{unit.ip}" for unit in self.state.units]),
             tls=SecretBool(self.state.unit.client_tls.ready),
-            tls_ca=SecretStr(self.state.unit.client_tls.ca.raw if self.state.unit.client_tls.ca else "")
+            tls_ca=SecretStr(self.state.unit.client_tls.ca.raw if self.state.unit.client_tls.ca else ""),
+            version="v1"
         )
+
+        logger.info(f"Sending response on resource requested: {response}")
 
         self.cassandra_client.set_response(relation_id, response)
 

@@ -3,7 +3,7 @@
 # See LICENSE file for licensing details.
 #
 # Learn more at: https://juju.is/docs/sdk
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import logging
 import json
 from contextlib import contextmanager
@@ -31,6 +31,7 @@ from charms.data_platform_libs.v1.data_interfaces import (
     RequirerCommonModel,
     RequirerDataContractV1,
     ResourceCreatedEvent,
+    ResourceEntityCreatedEvent,
     ResourceProviderModel,
     ResourceRequirerEventHandler,
     ResourceEndpointsChangedEvent,
@@ -43,20 +44,19 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class UnitData:
-    keyspaces: list[EntityPermissionModel] = []
+    keyspaces: list[EntityPermissionModel] = field(default_factory=list)
     rolename: str = ""
     password: str = ""
 
 class ApplicationCharm(CharmBase):
     """Application charm that connects to database charms."""
-    _stored = StoredState()        
 
     def __init__(self, *args):
         super().__init__(*args)
 
-        keyspace_name = f"{self.app.name.replace('-', '_')}_test"        
-
-        self._data = UnitData(keyspaces=[
+        keyspace_name = f"{self.app.name.replace('-', '_')}_test"
+        
+        self._storage_data = UnitData(keyspaces=[
             EntityPermissionModel(
                 resource_name=keyspace_name,
                 resource_type="ks",
@@ -72,7 +72,7 @@ class ApplicationCharm(CharmBase):
         self.cassandra_client = ResourceRequirerEventHandler(
             self,
             "cassandra-client",
-            requests=[RequirerCommonModel(resource=keyspace_name, entity_permissions=self._data.keyspaces)],
+            requests=[RequirerCommonModel(resource=keyspace_name)],
             response_model=ResourceProviderModel,
         )
 
@@ -88,9 +88,16 @@ class ApplicationCharm(CharmBase):
             self.cassandra_client.on.endpoints_changed, self._on_endpoints_changed,
         )
 
+        self.framework.observe(
+            self.cassandra_client.on.cassandra_client_relation_created, self._cassandra_client_relation_created
+        )
+
         self.execution_profile = ExecutionProfile(
             load_balancing_policy=TokenAwarePolicy(DCAwareRoundRobinPolicy())
         )
+
+    def _on_client_relation_joined(self, _):
+        pass
 
     def _on_install(self, _: InstallEvent) -> None:
         self._cqlsh_snap.ensure(snap.SnapState.Present)
@@ -99,10 +106,8 @@ class ApplicationCharm(CharmBase):
         """Only sets an Active status."""
         self.unit.status = ActiveStatus()
 
-    def _cassandra_client_relation_created(self, event: RelationCreatedEvent) -> None:
+    def _cassandra_client_relation_created(self, _: RelationCreatedEvent) -> None:
         logger.debug(f"---- _cassandra_client_relation_created ----")
-
-        self.cassandra_client._request_model()
         
     def _on_endpoints_changed(self, event: ResourceEndpointsChangedEvent) -> None:
         """Handle etcd client relation data changed event."""
@@ -112,15 +117,31 @@ class ApplicationCharm(CharmBase):
             return        
 
     def _on_keyspace_created(self, event: ResourceCreatedEvent) -> None:
-        ks = event.response.resource
-        self._data.keyspaces.append(EntityPermissionModel(
-            resource_name=ks,
-            resource_type="ks",
-            privileges=[],
-        ))
-        logger.info(f"Cassandra keyspace created: {ks}")
+        logger.info(f"RAW RELATION DATA #1: {event.relation.data[self.app]}")
 
-    def _on_keyspace_user_created(self, event: ResourceCreatedEvent) -> None:
+        response: ResourceProviderModel = event.response 
+        ks = response.resource
+
+        logger.info(f"Keyspace created: {ks}")
+
+        model = self.cassandra_client.interface.build_model(
+            event.relation.id,
+            model=RequirerDataContractV1[RequirerCommonModel],
+            component=event.relation.app # Will chage databag on app side and will triger _on_resource_entity_requested hook on provied charm
+        )
+
+        model.requests.append(RequirerCommonModel(
+            resource=response.resource,
+            entity_type="USER",
+            entity_permissions=self._storage_data.keyspaces,
+        ))
+
+        logger.info(f"Requesting entity: {self._storage_data.keyspaces}")
+        self.cassandra_client.interface.write_model(event.relation.id, model)
+
+        logger.info(f"RAW RELATION DATA #2: {event.relation.data[self.app]}")
+        
+    def _on_keyspace_user_created(self, event: ResourceEntityCreatedEvent) -> None:
         response: ResourceProviderModel = event.response
 
         rolename: UserSecretStr = response.username
@@ -138,7 +159,7 @@ class ApplicationCharm(CharmBase):
         """)
 
         tbl_name = f"{self.app.name.replace('-', '_')}_table"
-        logger.debug(f"Creating Table: {tbl_name}")
+        logger.info(f"Creating Table: {tbl_name}")
         self._create_test_table(
             rolename=rolename.get_secret_value(),
             password=password.get_secret_value(),
@@ -146,9 +167,9 @@ class ApplicationCharm(CharmBase):
             tbl=tbl_name,
             hosts=str(event.response.endpoints).split(","),
         )
-        logger.debug(f"Table created: {tbl_name}")
+        logger.info(f"Table created: {tbl_name}")
 
-        logger.debug("Changing entity permissions")
+        logger.info("Changing entity permissions")
 
         new_permissions = EntityPermissionModel(
             resource_name=event.response.resource,
@@ -159,13 +180,18 @@ class ApplicationCharm(CharmBase):
         self._set_keyspace_permissions(new_permissions)
 
         model = self.cassandra_client.interface.build_model(
-            event.relation.id, model=RequirerDataContractV1[RequirerCommonModel]
+            event.relation.id,
+            model=RequirerDataContractV1[RequirerCommonModel],
+            component=event.relation.app # Will chage databag on app side and will triger _on_resource_entity_requested hook on provied charm
         )
 
-        for request in model.requests:
-            request.entity_permissions = self._data.keyspaces
+        model.requests.append(RequirerCommonModel(
+            resource=response.resource,
+            entity_type="USER",
+            entity_permissions=self._storage_data.keyspaces,
+        ))
 
-        logger.debug(f"Updating entity_permissions: {json.dumps(self._data.keyspaces)}")
+        logger.info(f"Updating entity_permissions: {json.dumps(self._storage_data.keyspaces)}")
         self.cassandra_client.interface.write_model(event.relation.id, model)
 
     def _create_test_table(self, rolename: str, password: str, ks: str, tbl: str, hosts: list[str]) -> None:
@@ -186,9 +212,9 @@ class ApplicationCharm(CharmBase):
             session.execute(cql)
 
     def _set_keyspace_permissions(self, perm: EntityPermissionModel) -> None:
-        for i, ks in enumerate(self._data.keyspaces):
+        for i, ks in enumerate(self._storage_data.keyspaces):
             if ks.resource_name == perm.resource_name:
-                self._data.keyspaces[i] = perm
+                self._storage_data.keyspaces[i] = perm
 
     @contextmanager
     def _cqlsh_session(

@@ -211,7 +211,10 @@ class DatabaseManager:
         valid_ks = self.validate_identifier(ks)
         valid_role = self.validate_identifier(rolename)
 
-        perms_str = str(permissions) if not permissions.is_all() else "ALL PERMISSIONS"        
+        perms_str = str(permissions) if not permissions.is_all() else "ALL PERMISSIONS"
+        query = f"""REWOKE {",".join(permissions.get_all_valid_permissions())} ON KEYSPACE {valid_ks} FROM %s"""
+
+        logger.info(f"executing query: {query}")
         
         with self._session(
             hosts=self.hosts,
@@ -220,7 +223,8 @@ class DatabaseManager:
             ),
         ) as session:
             session.execute(
-                f"""REWOKE {",".join(permissions.get_all_valid_permissions())} ON KEYSPACE {valid_ks} FROM %s"""
+                query,
+                [valid_role]
             )
             
             if len(permissions) != 0:
