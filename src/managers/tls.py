@@ -55,12 +55,9 @@ class TLSManager:
     @property
     def client_tls_ready(self) -> bool:
         """Return the readiness of client TLS configuration files."""
-        return all(
-            self.workload.path_exists(f.as_posix())
-            for f in [
-                self.workload.cassandra_paths.get_truststore(TLSScope.CLIENT),
-                self.workload.cassandra_paths.get_keystore(TLSScope.CLIENT),
-            ]
+        return (
+            self.workload.cassandra_paths.get_truststore(TLSScope.CLIENT).exists()
+            and self.workload.cassandra_paths.get_keystore(TLSScope.CLIENT).exists()
         )
 
     def build_sans(self, sans_dns: list[str], sans_ip: list[str]) -> Sans:

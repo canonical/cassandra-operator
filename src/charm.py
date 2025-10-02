@@ -59,10 +59,10 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         )
         database_manager = DatabaseManager(
             workload=self.workload,
+            tls_manager=self.tls_manager,
             hosts=[self.state.unit.ip],
             user=CASSANDRA_ADMIN_USERNAME,
             password=self.state.cluster.operator_password_secret,
-            enable_ssl=self.state.unit.client_tls.ready,
         )
         bootstrap_manager = RollingOpsManager(
             charm=self, relation="bootstrap", callback=self.bootstrap

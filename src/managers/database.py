@@ -23,6 +23,7 @@ from cassandra.policies import DCAwareRoundRobinPolicy, TokenAwarePolicy
 from core.literals import CASSANDRA_ADMIN_USERNAME
 from core.state import TLSScope
 from core.workload import WorkloadBase
+from managers.tls import TLSManager
 
 logger = logging.getLogger(__name__)
 
@@ -35,10 +36,10 @@ class DatabaseManager:
     def __init__(
         self,
         workload: WorkloadBase,
+        tls_manager: TLSManager | None,
         hosts: list[str],
         user: str,
         password: str,
-        enable_ssl: bool = False,
     ):
         self.execution_profile = ExecutionProfile(
             load_balancing_policy=TokenAwarePolicy(DCAwareRoundRobinPolicy())
@@ -46,7 +47,7 @@ class DatabaseManager:
         self.auth_provider = (
             PlainTextAuthProvider(username=user, password=password) if user and password else None
         )
-        if enable_ssl:
+        if tls_manager and tls_manager.client_tls_ready:
             self.ssl_context = SSLContext(PROTOCOL_TLS)
             self.ssl_context.load_cert_chain(
                 certfile=workload.cassandra_paths.get_certificate(TLSScope.CLIENT).as_posix(),
