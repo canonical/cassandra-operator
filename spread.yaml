@@ -85,7 +85,7 @@ backends:
     # HACK: spread does not pass environment variables set on runner
     # Manually pass specific environment variables
     environment:
-      CI: '$(HOST: echo $CI)'
+      CI: "$(HOST: echo $CI)"
     systems:
       - ubuntu-24.04:
           username: runner
@@ -113,10 +113,16 @@ prepare: |
   pipx install tox poetry
 prepare-each: |
   cd "$SPREAD_PATH"
+
+  # Wait for all snap changes to gone to avoid error:
+  # level=ERROR msg="concierge failed" error="failed to install MicroK8s: failed to install snap: command failed: exit status 10"
+  (while snap changes | grep Doing; do sleep 1; done)
+
   # `concierge prepare` needs to be run for each spread job in case Juju version changed
   concierge prepare --trace
 
   # Unable to set constraint on all models because of Juju bug:
   # https://bugs.launchpad.net/juju/+bug/2065050
   juju set-model-constraints arch="$(dpkg --print-architecture)"
+
 # Only restore on lxd backend—no need to restore on CI

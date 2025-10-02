@@ -18,7 +18,7 @@ from tenacity import Retrying, stop_after_delay, wait_fixed
 
 logger = logging.getLogger(__name__)
 COS_METRICS_PORT = 7071
-DEFAULT_MICROK8S_CHANNEL = "1.32-strict"
+DEFAULT_MICROK8S_CHANNEL = "1.32-strict/stable"
 
 
 @contextmanager
