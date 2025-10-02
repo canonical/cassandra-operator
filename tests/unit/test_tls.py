@@ -350,7 +350,13 @@ def test_tls_relation_created_sets_tls_state(ctx, is_leader):
         leader=is_leader, relations={relation, bootstrap_relation, client_tls_relation}
     )
 
-    with patch("charm.CassandraWorkload") as workload:
+    with (
+        patch(
+            "managers.tls.TLSManager.client_tls_ready",
+            new_callable=PropertyMock(return_value=False),
+        ),
+        patch("charm.CassandraWorkload") as workload,
+    ):
         workload.return_value.generate_password.return_value = "password"
 
         state_out = ctx.run(ctx.on.relation_created(client_tls_relation), state)
@@ -372,6 +378,10 @@ def test_tls_default_certificates_files_setup(ctx):
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
         patch("managers.tls.TLSManager.configure"),
+        patch(
+            "managers.tls.TLSManager.client_tls_ready",
+            new_callable=PropertyMock(return_value=False),
+        ),
         patch("managers.database.DatabaseManager.init_admin"),
         patch(
             "managers.cluster.ClusterManager.is_healthy",
@@ -414,6 +424,10 @@ def test_tls_default_certificates_files_setup(ctx):
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
         patch("managers.tls.TLSManager.configure"),
+        patch(
+            "managers.tls.TLSManager.client_tls_ready",
+            new_callable=PropertyMock(return_value=False),
+        ),
         patch(
             "core.state.ClusterContext.internal_ca",
             new_callable=PropertyMock(return_value=default_tls_context.default_provider_ca_crt),

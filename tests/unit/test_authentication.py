@@ -37,6 +37,10 @@ def test_start_custom_secret(bad_secret: bool):
         patch("charm.CassandraWorkload") as workload,
         patch("managers.tls.TLSManager.configure"),
         patch(
+            "managers.tls.TLSManager.client_tls_ready",
+            new_callable=PropertyMock(return_value=False),
+        ),
+        patch(
             "managers.cluster.ClusterManager.is_healthy",
             new_callable=PropertyMock(return_value=True),
         ),
@@ -75,6 +79,10 @@ def test_update_custom_secret():
 
     with (
         patch("managers.database.DatabaseManager.update_role_password") as update_role_password,
+        patch(
+            "managers.tls.TLSManager.client_tls_ready",
+            new_callable=PropertyMock(return_value=False),
+        ),
         patch("charm.CassandraWorkload") as workload,
     ):
         workload.return_value.generate_password.return_value = "password"
