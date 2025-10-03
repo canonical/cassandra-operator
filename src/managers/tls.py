@@ -42,6 +42,11 @@ class Sans:
     sans_dns: list[str]
 
 
+@dataclass
+class StoreEntry:
+    alias: str
+    cert: Certificate
+    
 class TLSManager:
     """Manage all TLS related events."""
 
@@ -476,6 +481,9 @@ class TLSManager:
                 logger.debug(f"Removing {path}")
                 path.unlink()
 
+    def update_truststore(self, entities: set[StoreEntry], scope: TLSScope) -> None:
+        pass
+    
     @staticmethod
     def certificate_fingerprint(cert: str):
         """Return the certificate fingerprint using SHA-256 algorithm."""

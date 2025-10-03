@@ -183,7 +183,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             return self.read_auth_secret(self.config.system_users)
         if self.state.cluster.operator_password_secret:
             return self.state.cluster.operator_password_secret
-        return self.workload.generate_password()
+        return self.workload.generate_string()
 
     def read_auth_secret(self, secret_id: str) -> str:
         """Read and validate user-defined authentication secret.

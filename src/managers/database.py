@@ -28,11 +28,12 @@ _CASSANDRA_DEFAULT_CREDENTIALS = "cassandra"
 
 from typing import Tuple
 
+ALL_PERMISSION = "ALL"
+
 class Permissions:
     """Wrapper class around Cassandra permissions."""
 
     _valid_permissions = {
-        "ALL",
         "ALTER",
         "AUTHORIZE",
         "DESCRIBE",
@@ -42,7 +43,7 @@ class Permissions:
     }
 
     def __init__(self, *perms: str) -> None:
-        invalid = [p for p in perms if p.upper() not in self._valid_permissions]
+        invalid = [p for p in perms if p.upper() not in [*self._valid_permissions, ALL_PERMISSION]]
         if invalid:
             raise ValueError(f"Invalid permissions: {invalid}")
 
@@ -212,7 +213,7 @@ class DatabaseManager:
         valid_role = self.validate_identifier(rolename)
 
         perms_str = str(permissions) if not permissions.is_all() else "ALL PERMISSIONS"
-        query = f"""REWOKE {",".join(permissions.get_all_valid_permissions())} ON KEYSPACE {valid_ks} FROM %s"""
+        query = f"""REVOKE ALL PERMISSIONS  ON KEYSPACE {valid_ks} FROM %s"""
 
         logger.info(f"executing query: {query}")
         
