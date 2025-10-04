@@ -58,6 +58,8 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             authentication=True,
         )
         database_manager = DatabaseManager(
+            workload=self.workload,
+            tls_manager=self.tls_manager,
             hosts=[self.state.unit.ip],
             user=CASSANDRA_ADMIN_USERNAME,
             password=self.state.cluster.operator_password_secret,
