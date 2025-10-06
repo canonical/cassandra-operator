@@ -3,7 +3,7 @@
 #
 # Learn more about testing at: https://juju.is/docs/sdk/testing
 
-from unittest.mock import patch
+from unittest.mock import patch, PropertyMock
 
 import pytest
 from ops import testing
@@ -36,7 +36,11 @@ def test_start_custom_secret(bad_secret: bool):
         patch("charm.CassandraWorkload") as workload,
         patch("managers.tls.TLSManager.configure"),
         patch("managers.node.NodeManager.is_healthy", return_value=True),
-        patch("charm.CassandraCharm.restart"),
+        patch("charm.CassandraCharm.restart") as restart,
+        patch(
+            "managers.tls.TLSManager.client_tls_ready",
+            new_callable=PropertyMock(return_value=False),
+        ),
     ):
         workload.return_value.generate_password.return_value = "password"
 
@@ -72,6 +76,10 @@ def test_update_custom_secret():
 
     with (
         patch("managers.database.DatabaseManager.update_role_password") as update_role_password,
+        patch(
+            "managers.tls.TLSManager.client_tls_ready",
+            new_callable=PropertyMock(return_value=False),
+        ),
         patch("charm.CassandraWorkload") as workload,
     ):
         workload.return_value.generate_password.return_value = "password"

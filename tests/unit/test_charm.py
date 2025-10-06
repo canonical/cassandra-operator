@@ -30,6 +30,10 @@ def test_start_change_password():
         patch("managers.tls.TLSManager.configure"),
         patch("managers.node.NodeManager.is_healthy", return_value=True),
         patch("charm.CassandraCharm.restart") as restart,
+        patch(
+            "managers.tls.TLSManager.client_tls_ready",
+            new_callable=PropertyMock(return_value=False),
+        ),
     ):
         workload.return_value.generate_password.return_value = "password"
 
@@ -53,6 +57,13 @@ def test_start_subordinate_only_after_leader_active():
         patch("charm.CassandraCharm.setup_internal_certificates", return_value=True),
         patch("charm.CassandraWorkload") as workload,
         patch("charm.CassandraCharm.restart") as restart,
+        patch(
+            "managers.tls.TLSManager.client_tls_ready",
+            new_callable=PropertyMock(return_value=False),
+        ),
+        patch(
+            "charms.rolling_ops.v0.rollingops.RollingOpsManager._on_acquire_lock", autospec=True
+        ) as bootstrap,
     ):
         workload.return_value.generate_password.return_value = "password"
 
@@ -94,6 +105,13 @@ def test_start_subordinate_only_after_seed_active(workload_active: bool, seed_ac
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
         patch("managers.node.NodeManager.network_address", return_value=("1.1.1.1", "hostname")),
+        patch(
+            "managers.node.NodeManager.network_address", return_value=("1.1.1.1", "hostname")
+        ),
+        patch(
+            "managers.tls.TLSManager.client_tls_ready",
+            new_callable=PropertyMock(return_value=False),
+        ),
         patch("managers.database.DatabaseManager.check", return_value=seed_active),
         patch("charm.CassandraCharm.setup_internal_certificates", return_value=True),
         patch("charm.CassandraWorkload") as workload,
@@ -117,6 +135,10 @@ def test_start_invalid_config():
     with (
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
+        patch(
+            "managers.tls.TLSManager.client_tls_ready",
+            new_callable=PropertyMock(return_value=False),
+        ),
         patch("charm.CassandraCharm.setup_internal_certificates", return_value=True),
         patch("charm.CassandraWorkload") as workload,
         patch(
@@ -143,6 +165,10 @@ def test_config_changed_invalid_config():
     with (
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
+        patch(
+            "managers.tls.TLSManager.client_tls_ready",
+            new_callable=PropertyMock(return_value=False),
+        ),
         patch("charm.CassandraCharm.setup_internal_certificates", return_value=True),
         patch("charm.CassandraWorkload") as workload,
     ):
@@ -167,6 +193,10 @@ def test_config_changed(env_changed: bool, cassandra_config_changed: bool):
             return_value=cassandra_config_changed,
         ) as render_cassandra_config,
         patch("managers.database.DatabaseManager.update_role_password"),
+        patch(
+            "managers.tls.TLSManager.client_tls_ready",
+            new_callable=PropertyMock(return_value=False),
+        ),
         patch("charm.CassandraWorkload") as workload,
         patch("charm.CassandraCharm.setup_internal_certificates", return_value=True),
         patch(
