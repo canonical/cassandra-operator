@@ -385,8 +385,7 @@ class CassandraEvents(Object):
     @property
     def _are_seeds_reachable(self) -> bool:
         return self.state.unit.is_seed or any(
-            unit.is_operational
-            and self.database_manager.check(hosts=[unit.ip])
+            unit.is_operational and self.database_manager.check(hosts=[unit.ip])
             for unit in self.state.other_seed_units
         )
 

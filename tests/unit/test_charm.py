@@ -63,7 +63,7 @@ def test_start_subordinate_only_after_leader_active():
         ),
         patch(
             "charms.rolling_ops.v0.rollingops.RollingOpsManager._on_acquire_lock", autospec=True
-        ) as bootstrap,
+        ),
     ):
         workload.return_value.generate_password.return_value = "password"
 
@@ -105,9 +105,7 @@ def test_start_subordinate_only_after_seed_active(workload_active: bool, seed_ac
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
         patch("managers.node.NodeManager.network_address", return_value=("1.1.1.1", "hostname")),
-        patch(
-            "managers.node.NodeManager.network_address", return_value=("1.1.1.1", "hostname")
-        ),
+        patch("managers.node.NodeManager.network_address", return_value=("1.1.1.1", "hostname")),
         patch(
             "managers.tls.TLSManager.client_tls_ready",
             new_callable=PropertyMock(return_value=False),

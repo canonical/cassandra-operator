@@ -3,7 +3,7 @@
 #
 # Learn more about testing at: https://juju.is/docs/sdk/testing
 
-from unittest.mock import patch, PropertyMock
+from unittest.mock import PropertyMock, patch
 
 import pytest
 from ops import testing
@@ -36,7 +36,7 @@ def test_start_custom_secret(bad_secret: bool):
         patch("charm.CassandraWorkload") as workload,
         patch("managers.tls.TLSManager.configure"),
         patch("managers.node.NodeManager.is_healthy", return_value=True),
-        patch("charm.CassandraCharm.restart") as restart,
+        patch("charm.CassandraCharm.restart"),
         patch(
             "managers.tls.TLSManager.client_tls_ready",
             new_callable=PropertyMock(return_value=False),
