@@ -17,7 +17,6 @@ def test_deploy_bad_config(juju: jubilant.Juju, cassandra_charm: Path, app_name:
         cassandra_charm,
         app=app_name,
         config={"profile": "bad_value"},
-        num_units=1,
     )
     juju.wait(jubilant.all_blocked)
 

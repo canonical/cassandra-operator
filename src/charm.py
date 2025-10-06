@@ -8,11 +8,10 @@ import logging
 
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from charms.grafana_agent.v0.cos_agent import COSAgentProvider
-from charms.rolling_ops.v0.rollingops import RollingOpsManager, RunWithLock
-from ops import ModelError, SecretNotFoundError, main
-from tenacity import Retrying, stop_after_delay, wait_exponential
+from ops import EventBase, ModelError, SecretNotFoundError, main
 
-from common.exceptions import BadSecretError
+from common.exceptions import BadSecretError, ExecError
+from common.lock_manager import LockManager
 from core.config import CharmConfig
 from core.literals import CASSANDRA_ADMIN_USERNAME
 from core.state import (
@@ -24,9 +23,9 @@ from core.state import (
 )
 from events.cassandra import CassandraEvents
 from events.tls import TLSEvents
-from managers.cluster import ClusterManager
 from managers.config import ConfigManager
 from managers.database import DatabaseManager
+from managers.node import NodeManager
 from managers.tls import Sans, TLSManager
 from workload import SNAP_NAME, CassandraWorkload
 
@@ -41,9 +40,12 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
     def __init__(self, *args):
         super().__init__(*args)
 
+        self.on.define_event("bootstrap", EventBase)
+        self.framework.observe(self.on.bootstrap, self._on_bootstrap)
+
         self.state = ApplicationState(self)
         self.workload = CassandraWorkload()
-        self.cluster_manager = ClusterManager(workload=self.workload)
+        self.node_manager = NodeManager(workload=self.workload)
         self.tls_manager = TLSManager(workload=self.workload)
 
         config_manager = ConfigManager(
@@ -64,32 +66,30 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             user=CASSANDRA_ADMIN_USERNAME,
             password=self.state.cluster.operator_password_secret,
         )
-        bootstrap_manager = RollingOpsManager(
-            charm=self, relation="bootstrap", callback=self.bootstrap
-        )
+        self.bootstrap_manager = LockManager(self, "bootstrap")
 
         self.cassandra_events = CassandraEvents(
             self,
             state=self.state,
             workload=self.workload,
-            cluster_manager=self.cluster_manager,
+            node_manager=self.node_manager,
             config_manager=config_manager,
             database_manager=database_manager,
-            bootstrap_manager=bootstrap_manager,
             tls_manager=self.tls_manager,
             setup_internal_certificates=self.setup_internal_certificates,
             read_auth_secret=self.read_auth_secret,
+            restart=self.restart,
         )
 
         self.tls_events = TLSEvents(
             self,
             state=self.state,
             workload=self.workload,
-            cluster_manager=self.cluster_manager,
+            node_manager=self.node_manager,
             config_manager=config_manager,
-            bootstrap_manager=bootstrap_manager,
             tls_manager=self.tls_manager,
             setup_internal_certificates=self.setup_internal_certificates,
+            restart=self.restart,
         )
 
         self._grafana_agent = COSAgentProvider(
@@ -101,18 +101,37 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             log_slots=[f"{SNAP_NAME}:logs"],
         )
 
-    def bootstrap(self, event: RunWithLock) -> None:
-        """Start workload and join this unit to the cluster."""
-        self.state.unit.workload_state = UnitWorkloadState.STARTING
+    def _on_bootstrap(self, event: EventBase) -> None:
+        if self.state.unit.workload_state != UnitWorkloadState.STARTING:
+            if self.bootstrap_manager.try_lock():
+                logger.debug("Bootstrap lock is acquired")
+                if self.workload.is_alive():
+                    logger.debug("Gracefully shutting down an active workload")
+                    try:
+                        self.node_manager.prepare_shutdown()
+                    except ExecError as e:
+                        logger.error(f"Failed to prepare workload shutdown during restart: {e}")
+                self.workload.restart()
+                self.state.unit.workload_state = UnitWorkloadState.STARTING
+            event.defer()
+            return
 
-        self.workload.restart()
+        if not self._on_bootstrap_pending_check():
+            # TODO: determine whether we need removing var/lib/cassandra/* and in which cases.
+            logger.error(
+                "Releasing the bootstrap exclusive lock and migrating to CANT_START workload state"
+            )
+            self.state.unit.workload_state = UnitWorkloadState.CANT_START
+            self.bootstrap_manager.release()
+            return
 
-        for attempt in Retrying(
-            wait=wait_exponential(), stop=stop_after_delay(1800), reraise=True
-        ):
-            with attempt:
-                if not self.cluster_manager.is_healthy:
-                    raise Exception("bootstrap timeout exceeded")
+        if not self.node_manager.is_healthy(ip=self.state.unit.ip):
+            logger.debug("Deferring on_bootstrap due to workload not being healthy yet")
+            event.defer()
+            return
+
+        logger.debug("Releasing the exclusive lock after successful bootstrap")
+        self.bootstrap_manager.release()
 
         if self.state.unit.peer_tls.rotation:
             self.state.unit.peer_tls.rotation = False
@@ -121,6 +140,33 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         self.state.unit.workload_state = UnitWorkloadState.ACTIVE
         if self.unit.is_leader():
             self.state.cluster.state = ClusterState.ACTIVE
+
+    def _on_bootstrap_pending_check(self) -> bool:
+        if not self.workload.is_alive():
+            logger.error("Cassandra service abruptly stopped during bootstrap")
+            return False
+
+        if self.node_manager.is_bootstrap_pending:
+            logger.warning("Pending Cassandra bootstrap is detected, trying to resume")
+            if self.node_manager.resume_bootstrap():
+                logger.info("Cassandra bootstrap resuming successful")
+                return True
+            else:
+                logger.error("Cassandra bootstrap resuming failed")
+                return False
+
+        if self.node_manager.is_bootstrap_in_unknown_state:
+            logger.error("Cassandra bootstrap is in unknown state, failed bootstrap assumed")
+            return False
+
+        return True
+
+    def restart(self) -> None:
+        """Restart Cassandra service."""
+        if not self.bootstrap_manager.is_active:
+            self.on.bootstrap.emit()
+        else:
+            logger.debug("Restart request was skipped as unit already bootstrapping")
 
     def setup_internal_certificates(self, sans: Sans) -> bool:
         """Configure internal TLS certificates for the current unit using an internally managed CA.
