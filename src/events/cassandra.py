@@ -237,7 +237,10 @@ class CassandraEvents(Object):
                 return
 
             if self.state.unit.workload_state != UnitWorkloadState.ACTIVE:
-                logger.debug("Deferring on_secret_changed due trelated to client charmso inactive unit workload state")
+                logger.debug(
+                    """Deferring on_secret_changed due trelated to
+                    client charmso inactive unit workload state"""
+                )
                 event.defer()
                 return
 

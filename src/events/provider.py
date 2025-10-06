@@ -5,46 +5,34 @@
 """Handler for main Cassandra charm events."""
 
 import logging
-import hashlib
-from random import randrange
-import string
-from time import sleep
 from typing import Callable
 
-from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from charms.data_platform_libs.v1.data_interfaces import (
     EntityPermissionModel,
-    EntitySecretStr,
-    ResourceEntityPermissionsChangedEvent,
-    ResourceProviderEventHandler,
     RequirerCommonModel,
+    ResourceEntityPermissionsChangedEvent,
+    ResourceEntityRequestedEvent,
+    ResourceProviderEventHandler,
     ResourceProviderModel,
     ResourceRequestedEvent,
-    ResourceEntityRequestedEvent,
     SecretBool,
-    RelationCreatedEvent,
-    )
-from charms.rolling_ops.v0.rollingops import RollingOpsManager
+)
+from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from ops import (
     Object,
     RelationBrokenEvent,
 )
+from pydantic import SecretStr
 
-from pydantic import ValidationError, SecretStr
-from tenacity import Retrying, stop_after_delay, wait_exponential, wait_fixed
-
-from common.exceptions import BadSecretError
 from core.config import CharmConfig
-from core.literals import CASSANDRA_ADMIN_USERNAME
-from core.state import CASSANDRA_CLIENT_PORT, PEER_RELATION, ApplicationState, UnitWorkloadState, CLIENT_RELATION
-from core.statuses import Status
+from core.state import CLIENT_RELATION, ApplicationState, UnitWorkloadState
 from core.workload import WorkloadBase
 from managers.cluster import ClusterManager
-from managers.config import ConfigManager
 from managers.database import DatabaseManager, Permissions
-from managers.tls import Sans, TLSManager
+from managers.tls import TLSManager
 
 logger = logging.getLogger(__name__)
+
 
 class ExternalClientsEvents(Object):
     """Handle all base and cassandra related events."""
@@ -73,7 +61,7 @@ class ExternalClientsEvents(Object):
             self.charm,
             relation_name=CLIENT_RELATION,
             request_model=RequirerCommonModel,
-            mtls_enabled=False,
+            mtls_enabled=False,  # mTLS feature is not yet ready.
         )
 
         self.framework.observe(
@@ -83,63 +71,60 @@ class ExternalClientsEvents(Object):
             self.cassandra_client.on.resource_entity_requested, self._on_resource_entity_requested
         )
         self.framework.observe(
-            self.cassandra_client.on.resource_entity_permissions_changed, self._on_resource_entity_permissions_changed
+            self.cassandra_client.on.resource_entity_permissions_changed,
+            self._on_resource_entity_permissions_changed,
         )
-        self.framework.observe(
-            self.charm.on.cassandra_client_relation_created, self._cassandra_client_relation_created,
-        )        
+
         self.framework.observe(
             self.charm.on.cassandra_client_relation_broken, self._on_relation_broken
         )
 
-    def _cassandra_client_relation_created(self, _: RelationCreatedEvent) -> None:
-        if not self.tls_manager.client_tls_ready:
-            return
-        
     def _on_resource_requested(self, event: ResourceRequestedEvent) -> None:
         """Event triggered when a new keyspace is requested."""
-
-        logger.info(f"_on_resource_requested PROV RAW RELATION DATA #1: {event.relation.data}")
-        if not self.charm.unit.is_leader():
-            return
-
-        if any([self.state.unit.workload_state != UnitWorkloadState.ACTIVE, not self.workload.is_alive()]):
-            logger.debug(f"Defering _on_resource_requested unit workload is not ready")
-            event.defer()
-            return
-
-        if not event.relation or not event.relation.app:
-            logger.debug(f"Defering _on_resource_requested event relation is not ready")            
-            event.defer()
-            return
-        
-        logger.debug(f"External client requested database resource")
-
-        client = next(
-            iter(
-                [
-                    client
-                    for client in self.state.clients
-                    if client.relation == event.relation
-                ]
-            )
-        )
+        logger.debug("External client requested database resource")
 
         request: RequirerCommonModel = event.request
         resource = request.resource
         relation_id = event.relation.id
 
+        if not self.charm.unit.is_leader():
+            return
+
+        if any(
+            [
+                self.state.unit.workload_state != UnitWorkloadState.ACTIVE,
+                not self.workload.is_alive(),
+            ]
+        ):
+            logger.debug("Deferring _on_resource_requested unit workload is not ready")
+            event.defer()
+            return
+
+        if not event.relation or not event.relation.app:
+            logger.debug("Deferring _on_resource_requested event relation is not ready")
+            event.defer()
+            return
+
+        if request.mtls_cert and self.tls_manager.alias_needs_update(
+            self._client_alias_from_relation(self.charm.app.name, relation_id),
+            request.mtls_cert.get_secret_value(),
+        ):
+            logging.debug("Deferring _on_resource_requested waiting for MTLS setup")
+            event.defer()
+            return
+
         rolename = self._rolename_from_relation(relation_id, request.salt)
         password = self.workload.generate_string()
 
-        if rolename in client.roles:
+        if rolename in self.state.cluster.roles:
             logger.error(f"Rolename: {rolename} already exists for this relation")
             return
 
         self.database_manager.init_user(rolename, password, self.acquire_operator_password())
 
-
-        self.database_manager.create_keyspace(resource, len(self.state.units), self.acquire_operator_password())
+        self.database_manager.create_keyspace(
+            resource, len(self.state.units), self.acquire_operator_password()
+        )
 
         self.database_manager.set_ks_permissions(
             rolename,
@@ -156,44 +141,34 @@ class ExternalClientsEvents(Object):
             request_id=request.request_id,
             endpoints=",".join([f"{unit.ip}" for unit in self.state.units]),
             tls=SecretBool(self.state.unit.client_tls.ready),
-            tls_ca=SecretStr(self.state.unit.client_tls.ca.raw if self.state.unit.client_tls.ca else ""),
-            version="v1"
+            tls_ca=SecretStr(
+                self.state.unit.client_tls.ca.raw if self.state.unit.client_tls.ca else ""
+            ),
+            version="v1",
         )
-
-        logger.info(f"Sending response on resource requested: {response}")
 
         self.cassandra_client.set_response(relation_id, response)
 
-        logger.info(f"_on_resource_requested PROV RAW RELATION DATA #2: {event.relation.data}")
-
-
-        client.roles = {*client.roles, rolename}
+        self.state.cluster.roles = {*self.state.cluster.roles, rolename}
 
     def _on_resource_entity_requested(self, event: ResourceEntityRequestedEvent) -> None:
         """Event triggered when a new user in a keyspace is requested."""
-        logger.info(f"_on_resource_entity_requested PROV RAW RELATION DATA #1: {event.relation.data}")
-        
         if not self.charm.unit.is_leader():
             return
 
-        if any([self.state.unit.workload_state != UnitWorkloadState.ACTIVE, not self.workload.is_alive()]):
-            logger.debug(f"Defering _on_resource_entity_requested unit workload is not ready")
+        if any(
+            [
+                self.state.unit.workload_state != UnitWorkloadState.ACTIVE,
+                not self.workload.is_alive(),
+            ]
+        ):
+            logger.debug("Deferring _on_resource_entity_requested unit workload is not ready")
             event.defer()
             return
 
-        client = next(
-            iter(
-                [
-                    client
-                    for client in self.state.clients
-                    if client.relation == event.relation
-                ]
-            )
-        )        
-        
-        logger.debug(f"External client requested entity in database")        
+        logger.debug("External client requested entity in database")
 
-        request: RequirerCommonModel = event.request        
+        request: RequirerCommonModel = event.request
         resource = request.resource
 
         if not resource:
@@ -203,10 +178,12 @@ class ExternalClientsEvents(Object):
         relation_id = event.relation.id
         rolename = self._rolename_from_relation(relation_id, request.salt)
         password = self.workload.generate_string()
-        permissions_req: list[EntityPermissionModel] = request.entity_permissions if request.entity_permissions else []
+        permissions_req: list[EntityPermissionModel] = (
+            request.entity_permissions if request.entity_permissions else []
+        )
         self._validate_entity_permissions(permissions_req)
 
-        if rolename in client.roles:
+        if rolename in self.state.cluster.roles:
             logger.error(f"Rolename: {rolename} already exists for this relation")
             return
 
@@ -229,26 +206,37 @@ class ExternalClientsEvents(Object):
             entity_name=SecretStr(rolename),
             entity_password=SecretStr(password),
             endpoints=",".join([f"{unit.ip}" for unit in self.state.units]),
-            version="v1"            
+            tls=SecretBool(self.state.unit.client_tls.ready),
+            tls_ca=SecretStr(
+                self.state.unit.client_tls.ca.raw if self.state.unit.client_tls.ca else ""
+            ),
+            version="v1",
         )
 
         self.cassandra_client.set_response(relation_id, response)
 
-        client.roles = {*client.roles, rolename}
+        self.state.cluster.roles = {*self.state.cluster.roles, rolename}
 
-        logger.info(f"_on_resource_entity_requested PROV RAW RELATION DATA #2: {event.relation.data}")
-        
-    def _on_resource_entity_permissions_changed(self, event: ResourceEntityPermissionsChangedEvent) -> None:
-        """Event triggered when a client chaged user permissions for a keyspace."""        
+    def _on_resource_entity_permissions_changed(
+        self, event: ResourceEntityPermissionsChangedEvent
+    ) -> None:
+        """Event triggered when a client changed user permissions for a keyspace."""
         if not self.charm.unit.is_leader():
             return
 
-        if any([self.state.unit.workload_state != UnitWorkloadState.ACTIVE, not self.workload.is_alive()]):
-            logger.debug(f"Defering _on_resource_entity_permissions_changed unit workload is not ready")
+        if any(
+            [
+                self.state.unit.workload_state != UnitWorkloadState.ACTIVE,
+                not self.workload.is_alive(),
+            ]
+        ):
+            logger.debug(
+                "Deferring _on_resource_entity_permissions_changed unit workload is not ready"
+            )
             event.defer()
             return
-        
-        logger.info(f"External client changed user permissions")
+
+        logger.info("External client changed user permissions")
 
         request: RequirerCommonModel = event.request
         resource = request.resource
@@ -256,22 +244,14 @@ class ExternalClientsEvents(Object):
         relation_id = event.relation.id
         rolename = self._rolename_from_relation(relation_id, request.salt)
 
-        client = next(
-            iter(
-                [
-                    client
-                    for client in self.state.clients
-                    if client.relation == event.relation
-                ]
-            )
-        )
-
-        if rolename not in client.roles:
+        if rolename not in self.state.cluster.roles:
             logger.error(f"Requested user not exists: {rolename} for this relation")
             return
 
-        permissions_req: list[EntityPermissionModel]  = request.entity_permissions if request.entity_permissions else []
-        self._validate_entity_permissions(permissions_req)        
+        permissions_req: list[EntityPermissionModel] = (
+            request.entity_permissions if request.entity_permissions else []
+        )
+        self._validate_entity_permissions(permissions_req)
 
         for perm_req in permissions_req:
             # Ignore resource_type. This hook is only for keyspaces.
@@ -288,14 +268,15 @@ class ExternalClientsEvents(Object):
             username=SecretStr(rolename),
             endpoints=",".join([f"{unit.ip}" for unit in self.state.units]),
             tls=SecretBool(self.state.unit.client_tls.ready),
-            tls_ca=SecretStr(self.state.unit.client_tls.ca.raw if self.state.unit.client_tls.ca else "")
+            tls_ca=SecretStr(
+                self.state.unit.client_tls.ca.raw if self.state.unit.client_tls.ca else ""
+            ),
         )
 
         self.cassandra_client.set_response(relation_id, response)
 
-        
     def _on_relation_broken(self, event: RelationBrokenEvent) -> None:
-        """Handler for `client-relation-broken` event.
+        """Event triggered when client relation is broken.
 
         Removes relation users from cluster.
 
@@ -305,8 +286,13 @@ class ExternalClientsEvents(Object):
         if not self.charm.unit.is_leader():
             return
 
-        if any([self.state.unit.workload_state != UnitWorkloadState.ACTIVE, not self.workload.is_alive()]):
-            logger.debug(f"Defering _on_relation_broken inactive unit workload state")
+        if any(
+            [
+                self.state.unit.workload_state != UnitWorkloadState.ACTIVE,
+                not self.workload.is_alive(),
+            ]
+        ):
+            logger.debug("Deferring _on_relation_broken inactive unit workload state")
             event.defer()
             return
 
@@ -314,25 +300,19 @@ class ExternalClientsEvents(Object):
         if self.charm.app.planned_units() == 0:
             return
 
-        client = next(
-            iter(
-                [
-                    client
-                    for client in self.state.clients
-                    if client.relation == event.relation
-                ]
-            )
-        )
-
         if event.relation.app != self.charm.app:
-            for rolename in client.roles:
+            for rolename in self.state.cluster.roles:
                 self.database_manager.remove_user(rolename, self.acquire_operator_password())
 
     @staticmethod
     def _validate_entity_permissions(perms: list[EntityPermissionModel]) -> None:
         for perm in perms:
             Permissions(*perm.privileges)
-            
+
+    @staticmethod
+    def _client_alias_from_relation(app_name: str, relation_id: int) -> str:
+        return f"{app_name}-{relation_id}"
+
     @staticmethod
     def _rolename_from_relation(relation_id: int, salt: str) -> str:
         return f"user_{salt}_relation_{relation_id}"

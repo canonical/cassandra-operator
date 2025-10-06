@@ -1,12 +1,7 @@
 # This file configures Charmcraft.
 # See https://canonical-charmcraft.readthedocs-hosted.com/en/stable/reference/files/charmcraft-yaml-file/
 type: charm
-name: appliation-charm
-summary: Test application charm
-description: TODO
 
-# Documentation:
-# https://canonical-charmcraft.readthedocs-hosted.com/en/stable/howto/build-guides/select-platforms/
 base: ubuntu@22.04
 platforms:
   amd64:
@@ -15,10 +10,6 @@ platforms:
 charm-libs:
   - lib: operator_libs_linux.snap
     version: "2"
-
-requires:
-  cassandra-client:
-    interface: cassandra_client
 
 # Files implicitly created by charmcraft without a part:
 # - dispatch (https://github.com/canonical/charmcraft/pull/1898)

@@ -7,7 +7,7 @@
 import logging
 import re
 from contextlib import contextmanager
-from typing import Generator
+from typing import Generator, Tuple
 
 from cassandra import AuthenticationFailed
 from cassandra.auth import PlainTextAuthProvider
@@ -26,9 +26,9 @@ logger = logging.getLogger(__name__)
 
 _CASSANDRA_DEFAULT_CREDENTIALS = "cassandra"
 
-from typing import Tuple
 
 ALL_PERMISSION = "ALL"
+
 
 class Permissions:
     """Wrapper class around Cassandra permissions."""
@@ -62,18 +62,19 @@ class Permissions:
         return item.upper() in self._perms
 
     def is_all(self) -> bool:
+        """Return True if 'ALL' permission is included."""
         return "ALL" in self._perms
 
     def __len__(self) -> int:
-        """Return number of permissions."""
         return len(self._perms)
 
     def __bool__(self) -> bool:
-        """Allow direct truthiness check: if permissions:"""
-        return bool(self._perms)    
+        return bool(self._perms)
 
     def get_all_valid_permissions(self) -> list[str]:
+        """Return list of all valid Cassandra permissions."""
         return list(self._valid_permissions)
+
 
 class DatabaseManager:
     """Manager of Cassandra database."""
@@ -137,29 +138,26 @@ class DatabaseManager:
             ),
         ) as session:
             session.execute("DROP ROLE %s", [_CASSANDRA_DEFAULT_CREDENTIALS])
-            
+
     def create_keyspace(self, ks: str, rf: int, op_password: str) -> None:
         """Create keyspace safely with replication factor."""
-        
         valid_ks = self.validate_identifier(ks)
-    
+
         cql = f"""
         CREATE KEYSPACE {valid_ks}
         WITH REPLICATION = {{'class': 'SimpleStrategy', 'replication_factor': %s}}
         """
-        
+
         with self._session(
             hosts=self.hosts,
             auth_provider=PlainTextAuthProvider(
-                username=CASSANDRA_ADMIN_USERNAME,
-                password=op_password
+                username=CASSANDRA_ADMIN_USERNAME, password=op_password
             ),
         ) as session:
             session.execute(cql, [rf])
 
     def remove_keyspace(self, ks: str, op_password: str) -> None:
         """Remove keyspace."""
-
         valid_ks = self.validate_identifier(ks)
 
         with self._session(
@@ -171,16 +169,14 @@ class DatabaseManager:
             session.execute(
                 f"DROP KEYSPACE IF EXISTS {valid_ks}",
             )
-            
 
     def init_user(self, rolename: str, password: str, op_password: str) -> None:
         """Create user role with the specified password.
 
         Grant user role LOGIN.
         """
-
         valid_role = self.validate_identifier(rolename)
-        
+
         with self._session(
             hosts=self.hosts,
             auth_provider=PlainTextAuthProvider(
@@ -194,7 +190,6 @@ class DatabaseManager:
 
     def remove_user(self, rolename: str, op_password: str) -> None:
         """Remove keyspace."""
-        
         with self._session(
             hosts=self.hosts,
             auth_provider=PlainTextAuthProvider(
@@ -204,11 +199,12 @@ class DatabaseManager:
             session.execute(
                 "DROP ROLE IF EXISTS %s",
                 [rolename],
-            )            
+            )
 
-    def set_ks_permissions(self, rolename: str, ks: str, permissions: Permissions, op_password: str) -> None:
+    def set_ks_permissions(
+        self, rolename: str, ks: str, permissions: Permissions, op_password: str
+    ) -> None:
         """Grant user role on keyspace."""
-
         valid_ks = self.validate_identifier(ks)
         valid_role = self.validate_identifier(rolename)
 
@@ -216,24 +212,17 @@ class DatabaseManager:
         query = f"""REVOKE ALL PERMISSIONS  ON KEYSPACE {valid_ks} FROM %s"""
 
         logger.info(f"executing query: {query}")
-        
+
         with self._session(
             hosts=self.hosts,
             auth_provider=PlainTextAuthProvider(
                 username=CASSANDRA_ADMIN_USERNAME, password=op_password
             ),
         ) as session:
-            session.execute(
-                query,
-                [valid_role]
-            )
-            
+            session.execute(query, [valid_role])
+
             if len(permissions) != 0:
-                session.execute(
-                    f"GRANT {perms_str} ON KEYSPACE {valid_ks} TO %s",
-                    [valid_role]
-                )
-        
+                session.execute(f"GRANT {perms_str} ON KEYSPACE {valid_ks} TO %s", [valid_role])
 
     def update_role_password(self, user: str, op_password: str) -> None:
         """Change password of the specified role."""
@@ -244,12 +233,12 @@ class DatabaseManager:
                 [user, op_password],
             )
 
-    @staticmethod    
+    @staticmethod
     def validate_identifier(name: str) -> str:
+        """Validate a string as a valid Cassandra CQL identifier."""
         if not re.match(r"^[A-Za-z_][A-Za-z0-9_]*$", name):
             raise ValueError(f"Invalid CQL identifier: {name}")
         return name
-            
 
     @contextmanager
     def _session(

@@ -14,11 +14,12 @@ from charms.data_platform_libs.v0.data_interfaces import (
     DataPeerData,
     DataPeerOtherUnitData,
     DataPeerUnitData,
-    ProviderData,
 )
-
-from charms.data_platform_libs.v1.data_interfaces import ProviderCommonModel, RequirerDataContractV1, ResourceProviderModel
-
+from charms.data_platform_libs.v1.data_interfaces import (
+    OpsRepository,
+    RepositoryInterface,
+    RequirerCommonModel,
+)
 from charms.tls_certificates_interface.v4.tls_certificates import (
     Certificate,
     CertificateSigningRequest,
@@ -92,6 +93,7 @@ class UnitWorkloadState(StrEnum):
     """Cassandra is starting."""
     ACTIVE = "active"
     """Cassandra is active and ready."""
+
 
 class RelationState:
     """Basic class for relation bag mapping classes."""
@@ -278,6 +280,7 @@ class TLSContext(RelationState):
             scope=self.scope,
         )
 
+
 class UnitContext(RelationState):
     """Unit context of the application state.
 
@@ -398,46 +401,6 @@ class UnitContext(RelationState):
         """Whether this unit's `peer_url` present in `ClusterContext.seeds`."""
         return self.peer_url in self.seeds
 
-class ClientContext(RelationState):
-    def __init__(
-        self,
-        relation: Relation | None,
-        data_interface: Data,
-        component: Application,
-    ):
-        super().__init__(relation, data_interface, component)
-        self.app = component
-
-    @property
-    def roles(self) -> set[str]:
-        return set(*self.relation_data.get("roles", []))
-
-    @roles.setter
-    def roles(self, value: set[str]) -> None:
-        return self._field_setter_wrapper("roles", str(value))
-
-    @property
-    def mtls_cert(self) -> Certificate | None:
-        """Returns TLS cert of the client."""
-        cert = self.relation_data.get("mtls-cert", None)
-        if not cert:
-            return None
-        
-        return Certificate.from_string(cert)
-
-    @property
-    def alias(self) -> str:
-        """The alias used to refer to client's MTLS certificate."""
-        if not self.relation:
-            return ""
-
-        return self.generate_alias(self.relation.app.name, self.relation.id)
-
-    @staticmethod
-    def generate_alias(app_name: str, relation_id: int) -> str:
-        """Generate an alias from a relation."""
-        return f"{app_name}-{relation_id}"
-    
 
 class ClusterContext(RelationState):
     """Cluster context of the application state.
@@ -475,6 +438,16 @@ class ClusterContext(RelationState):
     @state.setter
     def state(self, value: ClusterState) -> None:
         self._field_setter_wrapper("cluster_state", value.value)
+
+    @property
+    def roles(self) -> set[str]:
+        """Set of Cassandra roles created by the operator."""
+        roles = self.relation_data.get("roles", "")
+        return set(roles.split(",")) if roles else set()
+
+    @roles.setter
+    def roles(self, value: set[str]) -> None:
+        self._field_setter_wrapper("roles", ",".join(value))
 
     @property
     def is_active(self) -> bool:
@@ -543,9 +516,12 @@ class ApplicationState(Object):
             relation_name=PEER_RELATION,
             additional_secret_fields=SECRETS_UNIT,
         )
-        self.client_provider_interface = ProviderData(
-            self.model,
+        self.client_interface = RepositoryInterface(
+            charm,
             relation_name=CLIENT_RELATION,
+            component=charm.app,
+            repository_type=OpsRepository,
+            model=RequirerCommonModel,
         )
 
     @property
@@ -624,21 +600,3 @@ class ApplicationState(Object):
         See `ApplicationState.other_units` for more info.
         """
         return {unit for unit in self.other_units if unit.is_seed}
-
-    @property
-    def clients(self) -> set[ClientContext]:
-        clients = set()
-        for relation in self.model.relations[CLIENT_RELATION]:
-            if not relation.app:
-                continue
-
-            clients.add(
-                ClientContext(
-                    relation=relation,
-                    data_interface=self.client_provider_interface,
-                    component=self.cluster.app,
-                )
-            )
-
-        return clients
-

@@ -96,6 +96,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             state=self.state,
             workload=self.workload,
             cluster_manager=self.cluster_manager,
+            tls_manager=self.tls_manager,
             database_manager=database_manager,
             acquire_operator_password=self.acquire_operator_password,
         )
@@ -179,6 +180,19 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         return True
 
     def acquire_operator_password(self) -> str:
+        """Retrieve the operator password for Cassandra authentication.
+
+        The password is obtained in the following order:
+        1. If `system_users` is configured, read the password from the corresponding Juju secret.
+        2. If an operator password secret is stored in the cluster state, return it.
+        3. Otherwise, generate a new random password.
+
+        Returns:
+            str: The operator password used for Cassandra authentication.
+
+        Raises:
+            BadSecretError: If the configured Juju secret cannot be found or is invalid.
+        """
         if self.config.system_users:
             return self.read_auth_secret(self.config.system_users)
         if self.state.cluster.operator_password_secret:

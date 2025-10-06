@@ -129,7 +129,7 @@ def _cache_init(func: Callable[_P, _T]) -> Callable[_P, _T]:
 
 # this is used for return types, so it (a) uses concrete types and (b) does not contain None
 # because setting snap config values to null removes the key so a null value can't be returned
-_JSONLeaf: TypeAlias = 'str | int | float | bool'
+_JSONLeaf: TypeAlias = "str | int | float | bool"
 JSONType: TypeAlias = "dict[str, JSONType] | list[JSONType] | _JSONLeaf"
 # we also need a jsonable type for arguments,
 # which (a) uses abstract types and (b) may contain None
@@ -282,19 +282,19 @@ class SnapError(Error):
     def _from_called_process_error(cls, msg: str, error: CalledProcessError) -> Self:
         lines = [msg]
         if error.stdout:
-            lines.extend(['Stdout:', error.stdout])
+            lines.extend(["Stdout:", error.stdout])
         if error.stderr:
-            lines.extend(['Stderr:', error.stderr])
+            lines.extend(["Stderr:", error.stderr])
         try:
-            cmd = ['journalctl', '--unit', 'snapd', '--lines', '20']
+            cmd = ["journalctl", "--unit", "snapd", "--lines", "20"]
             with tracer.start_as_current_span(cmd[0]) as span:
                 span.set_attribute("argv", cmd)
                 logs = subprocess.check_output(cmd, text=True)
         except Exception as e:
-            lines.extend(['Error fetching logs:', str(e)])
+            lines.extend(["Error fetching logs:", str(e)])
         else:
-            lines.extend(['Latest logs:', logs])
-        return cls('\n'.join(lines))
+            lines.extend(["Latest logs:", logs])
+        return cls("\n".join(lines))
 
 
 class SnapNotFoundError(Error):
@@ -376,7 +376,7 @@ class Snap:
                 span.set_attribute("argv", args)
                 return subprocess.check_output(args, text=True, stderr=subprocess.PIPE)
         except CalledProcessError as e:
-            msg = f'Snap: {self._name!r} -- command {args!r} failed!'
+            msg = f"Snap: {self._name!r} -- command {args!r} failed!"
             raise SnapError._from_called_process_error(msg=msg, error=e) from e
 
     def _snap_daemons(
@@ -406,7 +406,7 @@ class Snap:
                 span.set_attribute("argv", args)
                 return subprocess.run(args, text=True, check=True, capture_output=True)
         except CalledProcessError as e:
-            msg = f'Snap: {self._name!r} -- command {args!r} failed!'
+            msg = f"Snap: {self._name!r} -- command {args!r} failed!"
             raise SnapError._from_called_process_error(msg=msg, error=e) from e
 
     @typing.overload
@@ -515,7 +515,7 @@ class Snap:
                 span.set_attribute("argv", args)
                 subprocess.run(args, text=True, check=True, capture_output=True)
         except CalledProcessError as e:
-            msg = f'Snap: {self._name!r} -- command {args!r} failed!'
+            msg = f"Snap: {self._name!r} -- command {args!r} failed!"
             raise SnapError._from_called_process_error(msg=msg, error=e) from e
 
     def hold(self, duration: timedelta | None = None) -> None:
@@ -549,7 +549,7 @@ class Snap:
                 span.set_attribute("argv", args)
                 subprocess.run(args, text=True, check=True, capture_output=True)
         except CalledProcessError as e:
-            msg = f'Snap: {self._name!r} -- command {args!r} failed!'
+            msg = f"Snap: {self._name!r} -- command {args!r} failed!"
             raise SnapError._from_called_process_error(msg=msg, error=e) from e
 
     def restart(self, services: list[str] | None = None, reload: bool = False) -> None:
@@ -617,8 +617,8 @@ class Snap:
         if revision:
             args.append(f'--revision="{revision}"')
 
-        if self.confinement == 'classic':
-            args.append('--classic')
+        if self.confinement == "classic":
+            args.append("--classic")
 
         if devmode:
             args.append("--devmode")
@@ -1338,7 +1338,7 @@ def install_local(
             )
             raise SnapError(f"Failed to find snap {snap_name} in Snap cache") from e
     except CalledProcessError as e:
-        msg = f'Cound not install snap {filename}!'
+        msg = f"Cound not install snap {filename}!"
         raise SnapError._from_called_process_error(msg=msg, error=e) from e
 
 
