@@ -420,7 +420,7 @@ class CassandraEvents(Object):
         )
 
     def _on_storage_detaching(self, _: StorageDetachingEvent) -> None:
-        if not self.cluster_manager.cluster_healthy():
+        if not self.node_manager.is_healthy(self.state.unit.ip):
             raise Exception("Cluster is not healthy, cannot remove unit")
 
         if self.charm.app.planned_units() < len(self.state.units) - 1:
@@ -431,7 +431,7 @@ class CassandraEvents(Object):
 
         logger.info(f"Starting unit {self.state.unit.unit_name} node decommissioning")
         try:
-            self.cluster_manager.decommission()
+            self.node_manager.decommission()
         except ExecError as e:
             logger.error(f"Failed to decommission unit: {e}")
             raise e

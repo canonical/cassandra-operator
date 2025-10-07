@@ -115,18 +115,6 @@ class NodeManager:
 
         return True
         
-    def cluster_healthy(self) -> bool:
-        """Check if all nodes in cluster are Up and Normal."""
-        gossip = self.get_gossipinfo()
-        if not gossip:
-            return False
-
-        for node in gossip.values():
-            if "NORMAL" not in str(node.status_with_port):
-                return False
-
-        return True
-
     def get_gossipinfo(self) -> dict[str, GossipNode]:
         """Get `nodetool gossipinfo` command.
 
