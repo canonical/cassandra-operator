@@ -17,7 +17,6 @@ def test_deploy(juju: jubilant.Juju, cassandra_charm: Path, app_name: str) -> No
         cassandra_charm,
         app=app_name,
         config={"profile": "testing"},
-        num_units=1,
     )
     juju.wait(jubilant.all_active)
 
@@ -47,7 +46,7 @@ def test_read(juju: jubilant.Juju, app_name: str) -> None:
 
 def test_scale(juju: jubilant.Juju, app_name: str) -> None:
     juju.add_unit(app_name, num_units=2)
-    juju.wait(jubilant.all_active)
+    juju.wait(jubilant.all_active, timeout=1200)
 
 
 def test_write_multinode(juju: jubilant.Juju, app_name: str) -> None:

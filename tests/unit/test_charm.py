@@ -20,8 +20,7 @@ def test_start_change_password():
     """Leader should generate & configure cassandra password."""
     ctx = testing.Context(CassandraCharm)
     peer_relation = testing.PeerRelation(id=1, endpoint=PEER_RELATION)
-    bootstrap_relation = testing.PeerRelation(id=2, endpoint=BOOTSTRAP_RELATION)
-    state = testing.State(leader=True, relations={peer_relation, bootstrap_relation})
+    state = testing.State(leader=True, relations={peer_relation})
 
     with (
         patch("managers.config.ConfigManager.render_env") as render_env,
@@ -29,9 +28,11 @@ def test_start_change_password():
         patch("managers.database.DatabaseManager.init_admin") as init_admin,
         patch("charm.CassandraWorkload") as workload,
         patch("managers.tls.TLSManager.configure"),
+        patch("managers.node.NodeManager.is_healthy", return_value=True),
+        patch("charm.CassandraCharm.restart") as restart,
         patch(
-            "managers.cluster.ClusterManager.is_healthy",
-            new_callable=PropertyMock(return_value=True),
+            "managers.tls.TLSManager.client_tls_ready",
+            new_callable=PropertyMock(return_value=False),
         ),
     ):
         workload.return_value.generate_password.return_value = "password"
@@ -39,9 +40,8 @@ def test_start_change_password():
         state = ctx.run(ctx.on.start(), state)
         render_env.assert_called()
         render_cassandra_config.assert_called()
-        workload.return_value.start.assert_called()
         init_admin.assert_called_once_with("password")
-        workload.return_value.restart.assert_called()
+        restart.assert_called_once()
 
 
 def test_start_subordinate_only_after_leader_active():
@@ -53,19 +53,22 @@ def test_start_subordinate_only_after_leader_active():
     with (
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
-        patch(
-            "managers.cluster.ClusterManager.network_address", return_value=("1.1.1.1", "hostname")
-        ),
+        patch("managers.node.NodeManager.network_address", return_value=("1.1.1.1", "hostname")),
         patch("charm.CassandraCharm.setup_internal_certificates", return_value=True),
         patch("charm.CassandraWorkload") as workload,
+        patch("charm.CassandraCharm.restart") as restart,
+        patch(
+            "managers.tls.TLSManager.client_tls_ready",
+            new_callable=PropertyMock(return_value=False),
+        ),
         patch(
             "charms.rolling_ops.v0.rollingops.RollingOpsManager._on_acquire_lock", autospec=True
-        ) as bootstrap,
+        ),
     ):
         workload.return_value.generate_password.return_value = "password"
 
         state = ctx.run(ctx.on.start(), state)
-        bootstrap.assert_not_called()
+        restart.assert_not_called()
 
         relation = testing.PeerRelation(
             id=1,
@@ -76,7 +79,7 @@ def test_start_subordinate_only_after_leader_active():
         state = testing.State(relations={relation})
 
         state = ctx.run(ctx.on.start(), state)
-        bootstrap.assert_called_once()
+        restart.assert_called_once()
 
 
 @pytest.mark.parametrize("workload_active", [True, False])
@@ -101,23 +104,24 @@ def test_start_subordinate_only_after_seed_active(workload_active: bool, seed_ac
     with (
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
+        patch("managers.node.NodeManager.network_address", return_value=("1.1.1.1", "hostname")),
+        patch("managers.node.NodeManager.network_address", return_value=("1.1.1.1", "hostname")),
         patch(
-            "managers.cluster.ClusterManager.network_address", return_value=("1.1.1.1", "hostname")
+            "managers.tls.TLSManager.client_tls_ready",
+            new_callable=PropertyMock(return_value=False),
         ),
         patch("managers.database.DatabaseManager.check", return_value=seed_active),
         patch("charm.CassandraCharm.setup_internal_certificates", return_value=True),
         patch("charm.CassandraWorkload") as workload,
-        patch(
-            "charms.rolling_ops.v0.rollingops.RollingOpsManager._on_acquire_lock", autospec=True
-        ) as bootstrap,
+        patch("charm.CassandraCharm.restart") as restart,
     ):
         workload.return_value.generate_password.return_value = "password"
 
         state = ctx.run(ctx.on.start(), state)
         if workload_active and seed_active:
-            bootstrap.assert_called()
+            restart.assert_called()
         else:
-            bootstrap.assert_not_called()
+            restart.assert_not_called()
 
 
 def test_start_invalid_config():
@@ -129,6 +133,10 @@ def test_start_invalid_config():
     with (
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
+        patch(
+            "managers.tls.TLSManager.client_tls_ready",
+            new_callable=PropertyMock(return_value=False),
+        ),
         patch("charm.CassandraCharm.setup_internal_certificates", return_value=True),
         patch("charm.CassandraWorkload") as workload,
         patch(
@@ -155,6 +163,10 @@ def test_config_changed_invalid_config():
     with (
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
+        patch(
+            "managers.tls.TLSManager.client_tls_ready",
+            new_callable=PropertyMock(return_value=False),
+        ),
         patch("charm.CassandraCharm.setup_internal_certificates", return_value=True),
         patch("charm.CassandraWorkload") as workload,
     ):
@@ -179,10 +191,14 @@ def test_config_changed(env_changed: bool, cassandra_config_changed: bool):
             return_value=cassandra_config_changed,
         ) as render_cassandra_config,
         patch("managers.database.DatabaseManager.update_role_password"),
+        patch(
+            "managers.tls.TLSManager.client_tls_ready",
+            new_callable=PropertyMock(return_value=False),
+        ),
         patch("charm.CassandraWorkload") as workload,
         patch("charm.CassandraCharm.setup_internal_certificates", return_value=True),
         patch(
-            "managers.cluster.ClusterManager.is_healthy",
+            "managers.node.NodeManager.is_healthy",
             new_callable=PropertyMock(return_value=True),
         ),
     ):

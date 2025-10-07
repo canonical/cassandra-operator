@@ -28,7 +28,7 @@ def temp_model_named(
     if not model:
         model = "jubilant-" + secrets.token_hex(4)  # 4 bytes (8 hex digits) should be plenty
     try:
-        juju.add_model(model, controller=controller)
+        juju.add_model(model, controller=controller, config={"update-status-hook-interval": "60s"})
     except Exception as e:
         if "already exists" not in str(e):
             raise e

@@ -53,12 +53,24 @@ class CassandraPaths:
         return self.data_dir / "saved_caches"
 
     def get_truststore(self, scope: TLSScope) -> pathops.PathProtocol:
-        """Get keystore path for the scope."""
+        """Get truststore path for the TLS scope."""
         return self.tls_dir / f"{scope.value}-truststore.jks"
 
     def get_keystore(self, scope: TLSScope) -> pathops.PathProtocol:
-        """Get keystore path for the scope."""
+        """Get keystore path for the TLS scope."""
         return self.tls_dir / f"{scope.value}-keystore.p12"
+
+    def get_ca(self, scope: TLSScope) -> pathops.PathProtocol:
+        """Get ca path for the TLS scope."""
+        return self.tls_dir / f"{scope.value}-ca.pem"
+
+    def get_certificate(self, scope: TLSScope) -> pathops.PathProtocol:
+        """Get certificate path for the TLS scope."""
+        return self.tls_dir / f"{scope.value}-unit.pem"
+
+    def get_private_key(self, scope: TLSScope) -> pathops.PathProtocol:
+        """Get private key path for the TLS scope."""
+        return self.tls_dir / f"{scope.value}-private.key"
 
     @property
     def jmx_exporter(self) -> pathops.PathProtocol:

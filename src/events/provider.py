@@ -42,7 +42,7 @@ class ExternalClientsEvents(Object):
         charm: TypedCharmBase[CharmConfig],
         state: ApplicationState,
         workload: WorkloadBase,
-        cluster_manager: ClusterManager,
+        node_manager: ClusterManager,
         tls_manager: TLSManager,
         database_manager: DatabaseManager,
         acquire_operator_password: Callable[[], str],
@@ -52,7 +52,7 @@ class ExternalClientsEvents(Object):
         self.state = state
         self.workload = workload
         self.database_manager = database_manager
-        self.cluster_manager = cluster_manager
+        self.node_manager = node_manager
         self.tls_manager = tls_manager
 
         self.acquire_operator_password = acquire_operator_password
