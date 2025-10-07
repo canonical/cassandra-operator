@@ -6,10 +6,10 @@
 
 import logging
 import socket
+from dataclasses import dataclass
 
 from common.exceptions import ExecError
 from core.workload import WorkloadBase
-from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
@@ -114,7 +114,7 @@ class NodeManager:
             return False
 
         return True
-        
+
     def get_gossipinfo(self) -> dict[str, GossipNode]:
         """Get `nodetool gossipinfo` command.
 
@@ -154,4 +154,3 @@ class NodeManager:
             )
             result[ip] = node
         return result
-
