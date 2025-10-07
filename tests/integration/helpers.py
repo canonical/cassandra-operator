@@ -64,6 +64,56 @@ def connect_cql(
         cluster.shutdown()
 
 
+def get_db_users(juju, app_name) -> set[str]:
+    """Return a set of all Cassandra user names for the given application."""
+    users: set[str] = set()
+
+    with connect_cql(
+        juju=juju, app_name=app_name, hosts=[get_address(juju, app_name, 0)]
+    ) as session:
+        rows = session.execute("SELECT role FROM system_auth.roles;")
+        users = {row.role for row in rows}
+
+    return users
+
+
+def keyspace_exists(juju, app_name, keyspace_name: str) -> bool:
+    """Check if the given Cassandra keyspace exists."""
+    with connect_cql(
+        juju=juju, app_name=app_name, hosts=[get_address(juju, app_name, 0)]
+    ) as session:
+        query = """
+        SELECT keyspace_name
+        FROM system_schema.keyspaces
+        WHERE keyspace_name = %s
+        """
+        result = session.execute(query, (keyspace_name,))
+        return bool(result.one())
+
+
+def table_exists(juju, app_name, keyspace_name: str, table_name: str) -> bool:
+    """Check if the given table exists in the specified Cassandra keyspace."""
+    with connect_cql(
+        juju=juju, app_name=app_name, hosts=[get_address(juju, app_name, 0)]
+    ) as session:
+        query = """
+        SELECT table_name
+        FROM system_schema.tables
+        WHERE keyspace_name = %s AND table_name = %s
+        """
+        result = session.execute(query, (keyspace_name, table_name))
+        return bool(result.one())
+
+
+def get_user_permissions(juju, app_name, username: str) -> set[str]:
+    """Return a set of permissions granted to the given Cassandra user."""
+    with connect_cql(
+        juju=juju, app_name=app_name, hosts=[get_address(juju, app_name, 0)]
+    ) as session:
+        rows = session.execute(f'LIST ALL PERMISSIONS OF "{username}";')
+        return {row.permission for row in rows}
+
+
 def get_secrets_by_label(juju: jubilant.Juju, label: str, owner: str) -> list[dict[str, str]]:
     secrets_meta_raw = juju.cli("secrets", "--format", "json", include_model=True)
     secrets_meta = json.loads(secrets_meta_raw)
@@ -302,3 +352,21 @@ def all_prometheus_exporters_data(juju: jubilant.Juju, check_field: str, app_nam
     for unit in status.apps[app_name].units.values():
         result = result and check_field in (prometheus_exporter_data(unit.public_address) or "")
     return result
+
+
+def get_peer_app_data(juju: jubilant.Juju, app_name: str, peer_name: str) -> dict[str, str]:
+    """Return peer relation application data for the given app as a dict."""
+    unit_name = next(iter(juju.status().apps[app_name].units))
+
+    result = juju.cli("show-unit", unit_name, "--format", "json")
+    unit_info = json.loads(result)
+    unit_data = unit_info[unit_name]
+
+    logger.info(f"INFO: {unit_info}")
+
+    for rel in unit_data.get("relation-info", []):
+        if rel["endpoint"] == peer_name:
+            app_data = rel.get("application-data", {})
+            return {k: str(v) for k, v in app_data.items()}
+
+    raise RuntimeError(f"No peer relation data found for application {app_name}")

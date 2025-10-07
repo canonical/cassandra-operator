@@ -40,6 +40,7 @@ class Permissions:
         "DROP",
         "MODIFY",
         "SELECT",
+        "CREATE",
     }
 
     def __init__(self, *perms: str) -> None:
@@ -144,7 +145,7 @@ class DatabaseManager:
         valid_ks = self.validate_identifier(ks)
 
         cql = f"""
-        CREATE KEYSPACE {valid_ks}
+        CREATE KEYSPACE IF NOT EXISTS {valid_ks}
         WITH REPLICATION = {{'class': 'SimpleStrategy', 'replication_factor': %s}}
         """
 

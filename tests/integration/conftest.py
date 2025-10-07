@@ -125,6 +125,27 @@ def cassandra_charm() -> Path:
 
 
 @pytest.fixture(scope="module")
+def requirer_charm() -> Path:
+    """Path to the packed cassandra charm."""
+    if not (
+        path := next(
+            iter((Path.cwd() / "tests" / "integration" / "appliation-charm").glob("*.charm")), None
+        )
+    ):
+        raise FileNotFoundError("Could not find packed requirer charm.")
+
+    return path
+
+
+@pytest.fixture(scope="module")
 def app_name() -> str:
     metadata = yaml.safe_load(Path("./metadata.yaml").read_text())
+    return metadata["name"]
+
+
+@pytest.fixture(scope="module")
+def requirer_app_name() -> str:
+    metadata = yaml.safe_load(
+        Path("./tests/integration/appliation-charm/metadata.yaml").read_text()
+    )
     return metadata["name"]

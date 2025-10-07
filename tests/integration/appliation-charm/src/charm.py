@@ -8,7 +8,7 @@
 
 import logging
 from contextlib import contextmanager
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Generator
 
 from cassandra.auth import PlainTextAuthProvider
@@ -31,7 +31,8 @@ from charms.data_platform_libs.v1.data_interfaces import (
 )
 from charms.operator_libs_linux.v2 import snap
 from ops import ActionEvent, InstallEvent, RelationCreatedEvent
-from ops.charm import CharmBase
+from ops.charm import CharmBase, ConfigChangedEvent
+from ops.framework import StoredState
 from ops.main import main
 from ops.model import ActiveStatus, WaitingStatus
 
@@ -45,31 +46,32 @@ logger = logging.getLogger(__name__)
 class UnitData:
     """Holds unit-specific data for database access."""
 
-    keyspaces: list[EntityPermissionModel] = field(default_factory=list)
+    keyspace: EntityPermissionModel
 
 
 class ApplicationCharm(CharmBase):
     """Application charm that connects to database charms."""
 
+    _stored = StoredState()
+
     def __init__(self, *args):
         super().__init__(*args)
 
-        self.keyspace_name = f"{self.app.name.replace('-', '_')}_test"
-
         self._storage_data = UnitData(
-            keyspaces=[
-                EntityPermissionModel(
-                    resource_name=self.keyspace_name,
-                    resource_type="ks",
-                    privileges=["ALL"],
-                )
-            ]
+            EntityPermissionModel(
+                resource_name=self.keyspace_name,
+                resource_type="ks",
+                privileges=self.user_permissions,
+            )
         )
+
+        self._stored.set_default(prev_permissions=self.user_permissions)
 
         self._cqlsh_snap = snap.SnapCache()[CQLSH_SNAP_NAME]
 
         self.framework.observe(self.on.start, self._on_start)
         self.framework.observe(self.on.install, self._on_install)
+        self.framework.observe(self.on.config_changed, self._on_config_changed)
 
         self.cassandra_client = ResourceRequirerEventHandler(
             self,
@@ -79,7 +81,7 @@ class ApplicationCharm(CharmBase):
                 RequirerCommonModel(
                     resource=self.keyspace_name,
                     entity_type="USER",
-                    entity_permissions=self._storage_data.keyspaces,
+                    entity_permissions=[self._storage_data.keyspace],
                 ),
             ],
             response_model=ResourceProviderModel,
@@ -106,10 +108,6 @@ class ApplicationCharm(CharmBase):
         )
 
         self.framework.observe(self.on.create_table_action, self._create_table_action)
-
-        self.framework.observe(
-            self.on.change_user_permission_action, self._change_user_permission_action
-        )
 
         self.execution_profile = ExecutionProfile(
             load_balancing_policy=TokenAwarePolicy(DCAwareRoundRobinPolicy())
@@ -186,10 +184,27 @@ class ApplicationCharm(CharmBase):
         peer_relation.data[self.app]["ks_user_rolename"] = rolename
         peer_relation.data[self.app]["ks_user_password"] = password
 
-        logger.info(f"User {rolename} created with permissions: {self._storage_data.keyspaces}")
+        logger.info(f"User {rolename} created with permissions: {self._storage_data.keyspace}")
 
         if response.endpoints:
             peer_relation.data[self.app]["hosts"] = str(event.response.endpoints)
+
+        self.unit.status = ActiveStatus()
+
+    def _on_config_changed(self, event: ConfigChangedEvent) -> None:
+        self.unit.status = WaitingStatus("handling config changed event")
+
+        old_perms = set(self._stored.prev_permissions)
+        new_perms = set(self.user_permissions)
+
+        logger.info(f"Changing permissions from: {old_perms} to: {new_perms}")
+
+        if old_perms != new_perms:
+            self._change_user_permissions(self.user_permissions)
+            self._stored.prev_permissions = list(new_perms)
+            logger.info("Permissions updated")
+        else:
+            logger.info("Permissions unchanged")
 
         self.unit.status = ActiveStatus()
 
@@ -220,16 +235,12 @@ class ApplicationCharm(CharmBase):
 
         self.unit.status = ActiveStatus()
 
-    def _change_user_permission_action(self, event: ActionEvent) -> None:
-        self.unit.status = WaitingStatus("changing permissions")
-
+    def _change_user_permissions(self, permissions: list[str]) -> None:
         new_permissions = EntityPermissionModel(
             resource_name=self.keyspace_name,
             resource_type="ks",
-            privileges=["SELECT", "MODIFY"],
+            privileges=permissions,
         )
-
-        self._set_keyspace_permissions(new_permissions)
 
         model = self.cassandra_client.interface.build_model(
             self.cassandra_client.relations[0].id,
@@ -240,12 +251,12 @@ class ApplicationCharm(CharmBase):
         for req in model.requests:
             req.resource = self.keyspace_name
             req.entity_type = "USER"
-            req.entity_permissions = self._storage_data.keyspaces
+            req.entity_permissions = [new_permissions]
 
-        logger.info(f"Updating entity_permissions: {self._storage_data.keyspaces}")
+        logger.info(f"Updating entity_permissions: {new_permissions}")
         self.cassandra_client.interface.write_model(self.cassandra_client.relations[0].id, model)
 
-        self.unit.status = ActiveStatus()
+        self._storage_data.keyspace = new_permissions
 
     def _create_table(
         self, rolename: str, password: str, ks: str, tbl: str, hosts: list[str]
@@ -263,10 +274,15 @@ class ApplicationCharm(CharmBase):
             logger.debug(f"Query: {cql}")
             session.execute(cql)
 
-    def _set_keyspace_permissions(self, perm: EntityPermissionModel) -> None:
-        for i, ks in enumerate(self._storage_data.keyspaces):
-            if ks.resource_name == perm.resource_name:
-                self._storage_data.keyspaces[i] = perm
+    @property
+    def keyspace_name(self) -> str:
+        """Keyspace name."""
+        return str(self.config.get("keyspace-name", default=""))
+
+    @property
+    def user_permissions(self) -> list[str]:
+        """List of permissions for requested user."""
+        return str(self.config.get("user-permissions", default="ALL")).split(",")
 
     @contextmanager
     def _cqlsh_session(
