@@ -27,7 +27,7 @@ from pydantic import SecretStr
 from core.config import CharmConfig
 from core.state import CLIENT_RELATION, ApplicationState, UnitWorkloadState
 from core.workload import WorkloadBase
-from managers.cluster import ClusterManager
+from managers.node import NodeManager
 from managers.database import DatabaseManager, Permissions
 from managers.tls import TLSManager
 
@@ -42,7 +42,7 @@ class ExternalClientsEvents(Object):
         charm: TypedCharmBase[CharmConfig],
         state: ApplicationState,
         workload: WorkloadBase,
-        node_manager: ClusterManager,
+        node_manager: NodeManager,
         tls_manager: TLSManager,
         database_manager: DatabaseManager,
         acquire_operator_password: Callable[[], str],
