@@ -5,15 +5,15 @@ providers:
   lxd:
     enable: true
     bootstrap: true
+    channel: 6/stable
   microk8s:
     enable: true
     bootstrap: true
-    channel: 1.32-strict
+    channel: 1.32-strict/stable
     addons:
+      - dns
       - rbac
       - hostpath-storage
-      - dns
-      - minio
       - metallb:10.64.140.43-10.64.140.49
     
 host:

@@ -18,7 +18,6 @@ def test_deploy(juju: jubilant.Juju, cassandra_charm: Path, app_name: str) -> No
         cassandra_charm,
         app=app_name,
         config={"profile": "testing"},
-        num_units=1,
     )
     juju.wait(jubilant.all_active)
 
@@ -33,7 +32,7 @@ def test_scale_up(juju: jubilant.Juju, app_name: str) -> None:
     old_units = set(juju.status().apps[app_name].units.keys())
 
     juju.add_unit(app_name, num_units=2)
-    juju.wait(jubilant.all_active)
+    juju.wait(jubilant.all_active, timeout=1200)
 
     all_units = set(juju.status().apps[app_name].units.keys())
     new_units = list(all_units - old_units)

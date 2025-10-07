@@ -6,10 +6,10 @@
 
 import logging
 import socket
-from dataclasses import dataclass
 
 from common.exceptions import ExecError
 from core.workload import WorkloadBase
+from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
@@ -25,25 +25,40 @@ class GossipNode:
     status_with_port: str | None = None
 
 
-class ClusterManager:
+class NodeManager:
     """Manager of Cassandra cluster, including this unit."""
 
     def __init__(self, workload: WorkloadBase):
         self._workload = workload
 
-    @property
-    def is_healthy(self) -> bool:
+    def is_healthy(self, ip: str) -> bool:
         """Whether Cassandra healthy and ready in this unit."""
-        gossip_info = self.get_gossipinfo().get(self.network_address()[0])
-        if not gossip_info:
-            gossip_info = self.get_gossipinfo().get("127.0.0.1")
-
-        if not gossip_info or "NORMAL" not in str(gossip_info.status_with_port):
+        if not self._is_in_cluster(ip):
             return False
+        if not self._is_gossip_ready:
+            return False
+        if not self._is_gossip_active:
+            return False
+        return True
 
+    @property
+    def is_bootstrap_pending(self) -> bool:
+        """Whether `nodetool info` bootstrap state is NEEDS_BOOTSTRAP."""
         try:
             stdout, _ = self._workload.exec([_NODETOOL, "info"], suppress_error_log=True)
-            return "Native Transport active: true" in stdout
+            return "Bootstrap state        : NEEDS_BOOTSTRAP" in stdout
+        except ExecError:
+            return False
+
+    @property
+    def is_bootstrap_in_unknown_state(self) -> bool:
+        """Whether `nodetool info` bootstrap state is not IN_PROGRESS or COMPLETED."""
+        try:
+            stdout, _ = self._workload.exec([_NODETOOL, "info"], suppress_error_log=True)
+            return (
+                "Bootstrap state        : IN_PROGRESS" not in stdout
+                and "Bootstrap state        : COMPLETED" not in stdout
+            )
         except ExecError:
             return False
 
@@ -52,14 +67,54 @@ class ClusterManager:
         hostname = socket.gethostname()
         return socket.gethostbyname(hostname), hostname
 
+    def resume_bootstrap(self) -> bool:
+        """Resume Cassandra bootstrap.
+
+        Returns:
+            whether operation was successful.
+        """
+        try:
+            self._workload.exec([_NODETOOL, "bootstrap", "resume"])
+            return True
+        except ExecError:
+            return False
+
     def prepare_shutdown(self) -> None:
-        """Prepare Cassandra unit for safe shutdown."""
+        """Prepare Cassandra unit for safe shutdown using nodetool drain command."""
         self._workload.exec([_NODETOOL, "drain"])
 
     def decommission(self) -> None:
-        """Disconnect node from the cluster."""
+        """Disconnect node from the cluster using nodetool decommission command."""
         self._workload.exec([_NODETOOL, "decommission", "-f"])
 
+    def _is_in_cluster(self, ip: str) -> bool:
+        if not ip:
+            return False
+        try:
+            stdout, _ = self._workload.exec([_NODETOOL, "status"], suppress_error_log=True)
+            return f"UN  {ip}" in stdout
+        except ExecError:
+            return False
+
+    @property
+    def _is_gossip_active(self) -> bool:
+        try:
+            stdout, _ = self._workload.exec([_NODETOOL, "info"], suppress_error_log=True)
+            return "Gossip active          : true" in stdout
+        except ExecError:
+            return False
+
+    @property
+    def _is_gossip_ready(self) -> bool:
+        gossip_info = self.get_gossipinfo().get(self.network_address()[0])
+        if not gossip_info:
+            gossip_info = self.get_gossipinfo().get("127.0.0.1")
+
+        if not gossip_info or "NORMAL" not in str(gossip_info.status_with_port):
+            return False
+
+        return True
+        
     def cluster_healthy(self) -> bool:
         """Check if all nodes in cluster are Up and Normal."""
         gossip = self.get_gossipinfo()
@@ -111,3 +166,4 @@ class ClusterManager:
             )
             result[ip] = node
         return result
+

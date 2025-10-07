@@ -1,8 +1,8 @@
 # Charmed Apache Cassandra
+
 [![Tests](https://github.com/canonical/cassandra-operator/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/canonical/cassandra-operator/actions/workflows/ci.yaml/badge.svg?query=branch%3Amain)
 
 This repository contains a charmed operator for deploying [Apache Cassandra](https://cassandra.apache.org/_/cassandra-basics.html) on virtual machines via the [Juju orchestration engine](https://juju.is/).
-
 
 This operator provides an [Apache Cassandra](https://cassandra.apache.org/) database and automates its deployment and lifecycle management, supporting both single-node and multi-node clusters for reliable operation.
 
@@ -21,7 +21,7 @@ Before deploying Cassandra, make sure your environment is ready:
 * **Juju** is installed – [installation guide](https://juju.is/docs/olm/get-started-with-juju).
 * **LXD** is installed and initialized – [LXD setup guide](https://juju.is/docs/olm/lxd).
 * **Charmcraft** is installed for building the charm – [installation guide](https://juju.is/docs/sdk/install-charmcraft).
-* A Juju controller is bootstrapped. 
+* A Juju controller is bootstrapped.
 
 To create a local controller with LXD:
 
@@ -61,7 +61,9 @@ To start a Cassandra cluster with multiple nodes, set the desired number of unit
 juju deploy cassandra_ubuntu@24.04-amd64.charm cassandra -n <number_of_units>
 ```
 
-The seed node will always be the leader unit in the cluster.
+Cassandra charm bootstrapping process is dependent on `update-status-hook-interval`, therefore reducing that interval will speed up deployment, especially in deployments with multiple units.
+
+When possible, the seed node will be the leader unit in the cluster.
 
 ## Node management
 

@@ -18,7 +18,7 @@ def test_render_env_preserves_existing_vars():
         workload=workload,
         cluster_name="",
         listen_address="",
-        seeds=[],
+        seeds=set(),
         enable_peer_tls=False,
         enable_client_tls=False,
         keystore_password="",

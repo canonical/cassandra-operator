@@ -8,7 +8,6 @@ import logging
 from typing import Callable
 
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
-from charms.rolling_ops.v0.rollingops import RollingOpsManager
 from charms.tls_certificates_interface.v4.tls_certificates import (
     CertificateAvailableEvent,
     CertificateRequestAttributes,
@@ -25,11 +24,10 @@ from core.state import (
     TLSContext,
     TLSScope,
     TLSState,
-    UnitWorkloadState,
 )
 from core.workload import WorkloadBase
-from managers.cluster import ClusterManager
 from managers.config import ConfigManager
+from managers.node import NodeManager
 from managers.tls import Sans, TLSManager
 
 logger = logging.getLogger(__name__)
@@ -49,23 +47,23 @@ class TLSEvents(Object):
         charm: TypedCharmBase[CharmConfig],
         state: ApplicationState,
         workload: WorkloadBase,
-        cluster_manager: ClusterManager,
+        node_manager: NodeManager,
         config_manager: ConfigManager,
-        bootstrap_manager: RollingOpsManager,
         tls_manager: TLSManager,
         setup_internal_certificates: Callable[[Sans], bool],
+        restart: Callable[[], None],
     ):
         super().__init__(charm, key="tls_events")
         self.charm = charm
         self.state = state
         self.workload = workload
-        self.cluster_manager = cluster_manager
+        self.node_manager = node_manager
         self.config_manager = config_manager
-        self.bootstrap_manager = bootstrap_manager
         self.tls_manager = tls_manager
         self.setup_internal_certificates = setup_internal_certificates
+        self.restart = restart
 
-        ip, hostname = self.cluster_manager.network_address()
+        ip, hostname = self.node_manager.network_address()
         self.sans = self.tls_manager.build_sans(
             sans_ip=[ip],
             sans_dns=[hostname, self.charm.unit.name],
@@ -153,6 +151,10 @@ class TLSEvents(Object):
             event.defer()
             return
 
+        if not self.state.unit.is_ready:
+            event.defer()
+            return
+
         tls_changed = (
             tls_state.certificate and event.certificate.raw != tls_state.certificate.raw
         ) or (tls_state.ca and event.ca.raw != tls_state.ca.raw)
@@ -161,18 +163,27 @@ class TLSEvents(Object):
         tls_state.ca = event.ca
         tls_state.chain = event.chain
 
-        if self.charm.unit.is_leader():
-            self.state.seed_units = self.state.unit
-
-        if self.state.unit.workload_state == UnitWorkloadState.ACTIVE:
-            self.cluster_manager.prepare_shutdown()
-
         self.tls_manager.remove_stores(scope=tls_state.scope)
         self.tls_manager.configure(
             tls_state.resolved,
             keystore_password=self.state.unit.keystore_password,
             trust_password=self.state.unit.truststore_password,
         )
+
+        if tls_changed:
+            tls_state.rotation = True
+
+        if not tls_state.rotation:
+            return
+
+        # TODO: logging
+        if not self.state.unit.is_config_change_eligible:
+            event.defer()
+            return
+
+        if self.charm.unit.is_leader():
+            self.state.seed_units = self.state.unit
+
         self.config_manager.render_cassandra_config(
             seeds=self.state.cluster.seeds,
             enable_peer_tls=self.state.unit.peer_tls.ready,
@@ -181,19 +192,21 @@ class TLSEvents(Object):
             truststore_password=self.state.unit.truststore_password,
         )
 
-        if tls_changed:
-            tls_state.rotation = True
-
-        if self.state.unit.workload_state == UnitWorkloadState.ACTIVE:
-            self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
+        self.restart()
 
     def _tls_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Handle `certificates_relation_broken` event."""
+        if not self.state.unit.is_ready:
+            event.defer()
+            return
+
         state = (
             self.state.unit.peer_tls
             if event.relation.name == PEER_TLS_RELATION
             else self.state.unit.client_tls
         )
+
+        tls_changed = state.certificate or state.ca
 
         # clear TLS state
         state.csr = None
@@ -210,13 +223,19 @@ class TLSEvents(Object):
             if not self.setup_internal_certificates(self.sans):
                 event.defer()
                 return
+
+        if tls_changed:
             state.rotation = True
+
+        if not state.rotation:
+            return
+
+        if not self.state.unit.is_config_change_eligible:
+            event.defer()
+            return
 
         if self.charm.unit.is_leader():
             self.state.seed_units = self.state.unit
-
-        if self.state.unit.workload_state == UnitWorkloadState.ACTIVE:
-            self.cluster_manager.prepare_shutdown()
 
         self.config_manager.render_cassandra_config(
             seeds=self.state.cluster.seeds,
@@ -226,8 +245,7 @@ class TLSEvents(Object):
             truststore_password=self.state.unit.truststore_password,
         )
 
-        if self.state.unit.workload_state == UnitWorkloadState.ACTIVE:
-            self.charm.on[str(self.bootstrap_manager.name)].acquire_lock.emit()
+        self.restart()
 
     def requirer_state(self, requirer: TLSCertificatesRequiresV4) -> TLSContext:
         """Return the appropriate TLSState based on the scope."""
