@@ -20,6 +20,7 @@ from cassandra.cluster import (
 )
 from cassandra.policies import DCAwareRoundRobinPolicy, TokenAwarePolicy
 from charms.data_platform_libs.v1.data_interfaces import (
+    AuthenticationUpdatedEvent,
     EntityPermissionModel,
     RequirerCommonModel,
     RequirerDataContractV1,
@@ -103,6 +104,11 @@ class ApplicationCharm(CharmBase):
         )
 
         self.framework.observe(
+            self.cassandra_client.on.authentication_updated,
+            self._cassandra_client_authentication_updated
+        )
+
+        self.framework.observe(
             self.cassandra_client.on.cassandra_client_relation_created,
             self._cassandra_client_relation_created,
         )
@@ -119,6 +125,17 @@ class ApplicationCharm(CharmBase):
     def _on_start(self, _) -> None:
         """Only sets an Active status."""
         self.unit.status = ActiveStatus()
+
+    def _cassandra_client_authentication_updated(self, event: AuthenticationUpdatedEvent[ResourceProviderModel]) -> None:
+        logger.debug("---- _cassandra_client_authentication_updated ----")
+        resp = event.response
+
+        logger.info(f"""
+        ---------- UPDATED SECRETS ----------
+        tls: {resp.tls}
+        tls_ca: {resp.tls_ca}
+        secret_tls: {resp.secret_tls}
+        """)
 
     def _cassandra_client_relation_created(self, _: RelationCreatedEvent) -> None:
         logger.debug("---- _cassandra_client_relation_created ----")
