@@ -3,13 +3,14 @@
 # See LICENSE file for licensing details.
 
 import logging
+from itertools import pairwise
 from pathlib import Path
 
 import jubilant
-from cassandra.cluster import ResultSet
-from helpers import connect_cql
+from helpers import assert_rows, prepare_keyspace_and_table, read_n_rows, write_n_rows
 
 logger = logging.getLogger(__name__)
+TEST_ROW_NUM = 100
 
 
 def test_deploy(juju: jubilant.Juju, cassandra_charm: Path, app_name: str) -> None:
@@ -21,49 +22,74 @@ def test_deploy(juju: jubilant.Juju, cassandra_charm: Path, app_name: str) -> No
     juju.wait(jubilant.all_active)
 
 
-def test_write(juju: jubilant.Juju, app_name: str) -> None:
-    host = juju.status().apps[app_name].units[f"{app_name}/0"].public_address
-    with connect_cql(juju=juju, app_name=app_name, hosts=[host], timeout=300) as session:
-        session.execute(
-            "CREATE KEYSPACE test "
-            "WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 3}",
-        )
-        session.set_keyspace("test")
-        session.execute("CREATE TABLE test(message TEXT PRIMARY KEY)")
-        session.execute("INSERT INTO test(message) VALUES ('hello')")
+def test_scale_up(juju: jubilant.Juju, app_name: str) -> None:
+    ks, tb = prepare_keyspace_and_table(juju, app_name=app_name, ks="upks", table="uptbl")
 
+    wrote = write_n_rows(juju, app_name, ks=ks, table=tb)
+    got1 = read_n_rows(juju, app_name, ks=ks, table=tb)
+    assert_rows(wrote, got1)
 
-def test_read(juju: jubilant.Juju, app_name: str) -> None:
-    host = juju.status().apps[app_name].units[f"{app_name}/0"].public_address
-    with connect_cql(juju=juju, app_name=app_name, hosts=[host], keyspace="test") as session:
-        res = session.execute("SELECT message FROM test", timeout=300)
-        assert (
-            isinstance(res, ResultSet)
-            and len(res_list := res.all()) == 1
-            and res_list[0].message == "hello"
-        ), "test data written prior aren't found"
+    old_units = set(juju.status().apps[app_name].units.keys())
 
-
-def test_scale(juju: jubilant.Juju, app_name: str) -> None:
     juju.add_unit(app_name, num_units=2)
     juju.wait(jubilant.all_active, timeout=1200)
 
+    all_units = set(juju.status().apps[app_name].units.keys())
+    new_units = list(all_units - old_units)
+    assert new_units, "No new units detected after scale-up"
 
-def test_write_multinode(juju: jubilant.Juju, app_name: str) -> None:
-    host = juju.status().apps[app_name].units[f"{app_name}/0"].public_address
-    with connect_cql(
-        juju=juju, app_name=app_name, hosts=[host], timeout=300, keyspace="test"
-    ) as session:
-        session.execute("INSERT INTO test(message) VALUES ('world')")
+    got2 = read_n_rows(juju, app_name, ks=ks, table=tb, unit_name=new_units[0])
+    assert_rows(wrote, got2)
 
 
-def test_read_multinode(juju: jubilant.Juju, app_name: str) -> None:
-    host = juju.status().apps[app_name].units[f"{app_name}/2"].public_address
-    with connect_cql(juju=juju, app_name=app_name, hosts=[host], keyspace="test") as session:
-        res = session.execute("SELECT message FROM test", timeout=300)
-        assert (
-            isinstance(res, ResultSet)
-            and len(res_list := res.all()) == 2
-            and res_list[0].message == "hello"
-            and res_list[1].message == "world"
-        ), "test data written prior aren't found"
+def test_read_write_multinode(juju: jubilant.Juju, app_name: str) -> None:
+    units = juju.status().apps[app_name].units.items()
+    for unit_pair in pairwise(units):
+        unit1_name: str = unit_pair[0][0]
+        unit2_name: str = unit_pair[1][0]
+
+        ks, tb = prepare_keyspace_and_table(
+            juju,
+            app_name=app_name,
+            ks="multiks",
+            table=f"""multitbl_{unit1_name.replace("/", "_")}_{unit2_name.replace("/", "_")}""",
+        )
+
+        assert len(unit_pair) > 1
+
+        wrote = write_n_rows(juju, app_name, ks=ks, table=tb, unit_name=unit1_name)
+        got = read_n_rows(juju, app_name, ks=ks, table=tb, unit_name=unit2_name)
+        assert_rows(wrote, got)
+
+
+def test_single_node_scale_down(juju: jubilant.Juju, app_name: str) -> None:
+    non_leader_units = [
+        name for name, unit in juju.status().apps[app_name].units.items() if not unit.leader
+    ]
+
+    leader_unit = [
+        name for name, unit in juju.status().apps[app_name].units.items() if unit.leader
+    ][0]
+
+    assert len(non_leader_units) != 0 and len(non_leader_units) > 1
+
+    ks, tb = prepare_keyspace_and_table(juju, app_name=app_name, ks="downks", table="downtbl")
+    wrote = write_n_rows(juju, app_name, ks=ks, table=tb, unit_name=non_leader_units[0])
+
+    juju.remove_unit(non_leader_units[0])
+    juju.wait(jubilant.all_active)
+
+    got = read_n_rows(juju, app_name, ks=ks, table=tb, unit_name=non_leader_units[1])
+    assert_rows(wrote, got)
+
+    juju.remove_unit(leader_unit)
+    juju.wait(jubilant.all_active)
+
+    new_leader_unit = [
+        name for name, unit in juju.status().apps[app_name].units.items() if unit.leader
+    ][0]
+
+    assert new_leader_unit
+
+    got = read_n_rows(juju, app_name, ks=ks, table=tb, unit_name=new_leader_unit)
+    assert_rows(wrote, got)
