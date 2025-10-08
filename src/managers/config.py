@@ -172,7 +172,7 @@ class ConfigManager:
                         TLSScope.CLIENT
                     ).as_posix(),
                     "truststore_password": truststore_password,
-                    "require_client_auth": True,
+                    "require_client_auth": False, # mTLS is disabled
                     "algorithm": "SunX509",
                     "store_type": "JKS",
                     "protocol": "TLS",
