@@ -209,9 +209,7 @@ def test_remove_user_after_relation_broken(
     requested_user = _get_requested_user(juju, requirer_app_name)
     initial_user = _get_initial_user(juju, requirer_app_name)
 
-    juju.remove_relation(
-        f"{requirer_app_name}:cassandra-client", f"{app_name}:cassandra-client"
-    )
+    juju.remove_relation(f"{requirer_app_name}:cassandra-client", f"{app_name}:cassandra-client")
 
     juju.wait(lambda status: jubilant.all_active(status, app_name))
 

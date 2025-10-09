@@ -413,6 +413,7 @@ def app_secret_extract(juju: jubilant.Juju, cluster_name: str, secret_name: str)
 
     return None
 
+
 def get_hosts(juju: jubilant.Juju, app_name: str, unit_name: str = "") -> list[str]:
     """Return list of host addresses for the given app.
 
@@ -426,6 +427,7 @@ def get_hosts(juju: jubilant.Juju, app_name: str, unit_name: str = "") -> list[s
             u.public_address for name, u in units.items() if name != unit_name
         ]
     return [u.public_address for u in units.values()]
+
 
 def get_db_users(juju, app_name, client_ca: str | None = None) -> set[str]:
     """Return a set of all Cassandra user names for the given application."""
@@ -468,6 +470,7 @@ def table_exists(
         """
         result = session.execute(query, (keyspace_name, table_name))
         return bool(result.one())
+
 
 def prepare_keyspace_and_table(
     juju: jubilant.Juju, app_name: str, ks: str = "test", table: str = "kv", unit_name: str = ""
