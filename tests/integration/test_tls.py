@@ -7,7 +7,12 @@ from pathlib import Path
 
 import jubilant
 from help_types import IntegrationTestsCharms
-from helpers import check_node_is_up, check_tls, get_unit_address, get_secrets_by_label, app_secret_extract, unit_secret_extract
+from helpers import (
+    check_node_is_up,
+    check_tls,
+    get_unit_address,
+    unit_secret_extract,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -203,6 +208,7 @@ def test_disable_peer_self_signed_tls(
 
     assert peer_ca_1 != peer_ca_2
 
+
 def test_disable_client_self_signed_tls(
     juju: jubilant.Juju, app_name: str, charm_versions: IntegrationTestsCharms
 ) -> None:
@@ -245,4 +251,3 @@ def test_disable_client_self_signed_tls(
     )
 
     assert not client_ca_2
-

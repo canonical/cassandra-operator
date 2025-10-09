@@ -6,7 +6,12 @@
 
 import logging
 
-from charms.data_platform_libs.v1.data_interfaces import DataContractV1, ResourceProviderModel, SecretBool, SecretStr
+from charms.data_platform_libs.v1.data_interfaces import (
+    DataContractV1,
+    ResourceProviderModel,
+    SecretBool,
+    SecretStr,
+)
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from charms.grafana_agent.v0.cos_agent import COSAgentProvider
 from ops import EventBase, ModelError, SecretNotFoundError, main
@@ -113,7 +118,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             log_slots=[f"{SNAP_NAME}:logs"],
         )
 
-    def _on_bootstrap(self, event: EventBase) -> None:
+    def _on_bootstrap(self, event: EventBase) -> None:  # noqa: C901
         if self.state.unit.workload_state != UnitWorkloadState.STARTING:
             if self.bootstrap_manager.try_lock():
                 logger.debug("Bootstrap lock is acquired")
@@ -289,13 +294,10 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             for request in model.requests:
                 request.tls = SecretBool(self.state.unit.client_tls.ready)
                 request.tls_ca = SecretStr(
-                    self.state.unit.client_tls.ca.raw
-                    if self.state.unit.client_tls.ca
-                    else ""
+                    self.state.unit.client_tls.ca.raw if self.state.unit.client_tls.ca else ""
                 )
 
             self.state.client_interface.write_model(relation.id, model)
-        
 
 
 if __name__ == "__main__":  # pragma: nocover

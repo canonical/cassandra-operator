@@ -17,7 +17,6 @@ from charms.data_platform_libs.v0.data_interfaces import (
 )
 from charms.data_platform_libs.v1.data_interfaces import (
     OpsRelationRepository,
-    OpsRepository,
     RepositoryInterface,
     RequirerCommonModel,
 )

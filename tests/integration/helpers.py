@@ -7,17 +7,16 @@ import logging
 import os
 import subprocess
 from contextlib import contextmanager
+from ssl import CERT_NONE, PROTOCOL_TLS_CLIENT, SSLContext
 from typing import Generator
 
 import jubilant
 import requests
+import tenacity
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.cluster import EXEC_PROFILE_DEFAULT, Cluster, ExecutionProfile, Session
 from cassandra.policies import DCAwareRoundRobinPolicy, TokenAwarePolicy
 from tenacity import Retrying, stop_after_delay, wait_fixed
-from ssl import CERT_NONE, CERT_REQUIRED, PROTOCOL_TLS, PROTOCOL_TLS_CLIENT, SSLContext
-
-import tenacity
 
 logger = logging.getLogger(__name__)
 COS_METRICS_PORT = 7071
@@ -57,19 +56,16 @@ def connect_cql(
     ssl_context = SSLContext(PROTOCOL_TLS_CLIENT)
     if client_ca:
         logger.info(f"Loading SSL context with cert: {client_ca}")
-        
-        # TODO: change for mTLS            
+
+        # TODO: change for mTLS
         ssl_context.check_hostname = False
         ssl_context.verify_mode = CERT_NONE
-        
-        ssl_context.load_verify_locations(
-            cadata=client_ca
-        )
+
+        ssl_context.load_verify_locations(cadata=client_ca)
     else:
-        logger.info(f"SSL context is disabled")
+        logger.info("SSL context is disabled")
         ssl_context = None
-    
-    
+
     for attempt in Retrying(wait=wait_fixed(2), stop=stop_after_delay(120), reraise=True):
         with attempt:
             cluster = Cluster(
@@ -94,7 +90,7 @@ def get_db_users(juju, app_name, client_ca: str | None = None) -> set[str]:
     users: set[str] = set()
 
     with connect_cql(
-            juju=juju, app_name=app_name, hosts=get_unit_addresses(juju, app_name),client_ca=client_ca
+        juju=juju, app_name=app_name, hosts=get_unit_addresses(juju, app_name), client_ca=client_ca
     ) as session:
         rows = session.execute("SELECT role FROM system_auth.roles;")
         users = {row.role for row in rows}
@@ -105,7 +101,7 @@ def get_db_users(juju, app_name, client_ca: str | None = None) -> set[str]:
 def keyspace_exists(juju, app_name, keyspace_name: str, client_ca: str | None = None) -> bool:
     """Check if the given Cassandra keyspace exists."""
     with connect_cql(
-            juju=juju, app_name=app_name, hosts=get_unit_addresses(juju, app_name), client_ca=client_ca
+        juju=juju, app_name=app_name, hosts=get_unit_addresses(juju, app_name), client_ca=client_ca
     ) as session:
         query = """
         SELECT keyspace_name
@@ -115,11 +111,13 @@ def keyspace_exists(juju, app_name, keyspace_name: str, client_ca: str | None = 
         result = session.execute(query, (keyspace_name,))
         return bool(result.one())
 
-def table_exists(juju, app_name, keyspace_name: str, table_name: str, client_ca: str | None = None) -> bool:
-    """Check if the given table exists in the specified Cassandra keyspace."""
 
+def table_exists(
+    juju, app_name, keyspace_name: str, table_name: str, client_ca: str | None = None
+) -> bool:
+    """Check if the given table exists in the specified Cassandra keyspace."""
     with connect_cql(
-            juju=juju, app_name=app_name, hosts=get_unit_addresses(juju, app_name),client_ca=client_ca
+        juju=juju, app_name=app_name, hosts=get_unit_addresses(juju, app_name), client_ca=client_ca
     ) as session:
         query = """
         SELECT table_name
@@ -129,10 +127,11 @@ def table_exists(juju, app_name, keyspace_name: str, table_name: str, client_ca:
         result = session.execute(query, (keyspace_name, table_name))
         return bool(result.one())
 
+
 @tenacity.retry(
     retry=tenacity.retry_if_exception_type(AssertionError),
-    stop=stop_after_delay(60),   
-    wait=wait_fixed(5),          
+    stop=stop_after_delay(60),
+    wait=wait_fixed(5),
     reraise=True,
 )
 def get_cluster_client_ca(juju: jubilant.Juju, app_name: str) -> str:
@@ -152,14 +151,20 @@ def get_cluster_client_ca(juju: jubilant.Juju, app_name: str) -> str:
         logger.warning(
             f"Units have different or missing client CA certs ({len(certs)} found). Retrying..."
         )
-        raise AssertionError("Units have different client certificates, waiting for rotation to end")
+        raise AssertionError(
+            "Units have different client certificates, waiting for rotation to end"
+        )
 
     return certs.pop()
+
 
 def get_user_permissions(juju, app_name, username: str, client_ca: str | None = None) -> set[str]:
     """Return a set of permissions granted to the given Cassandra user."""
     with connect_cql(
-            juju=juju, app_name=app_name, hosts=get_unit_addresses(juju, app_name),client_ca=client_ca,
+        juju=juju,
+        app_name=app_name,
+        hosts=get_unit_addresses(juju, app_name),
+        client_ca=client_ca,
     ) as session:
         rows = session.execute(f'LIST ALL PERMISSIONS OF "{username}";')
         return {row.permission for row in rows}
@@ -223,11 +228,13 @@ def get_unit_address(juju: jubilant.Juju, app_name: str, unit_num) -> str:
     address = status.apps[app_name].units[f"{app_name}/{unit_num}"].public_address
     return address
 
+
 def get_unit_addresses(juju: jubilant.Juju, app_name: str) -> list[str]:
     """Get the address for a unit."""
     units = juju.status().apps[app_name].units.values()
     addresses = [u.public_address for u in units]
     return addresses
+
 
 def get_unit_names(juju: jubilant.Juju, app_name: str) -> list[str]:
     """Get the address for a unit."""
@@ -427,6 +434,7 @@ def get_peer_app_data(juju: jubilant.Juju, app_name: str, peer_name: str) -> dic
             return {k: str(v) for k, v in app_data.items()}
 
     raise RuntimeError(f"No peer relation data found for application {app_name}")
+
 
 def unit_secret_extract(juju: jubilant.Juju, unit_name: str, secret_name: str) -> str | None:
     user_secret = get_secrets_by_label(

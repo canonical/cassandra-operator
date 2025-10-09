@@ -8,7 +8,6 @@ import logging
 from typing import Callable
 
 from charms.data_platform_libs.v1.data_interfaces import (
-    DataContractV1,
     EntityPermissionModel,
     RequirerCommonModel,
     ResourceEntityPermissionsChangedEvent,
@@ -28,8 +27,8 @@ from pydantic import SecretStr
 from core.config import CharmConfig
 from core.state import CLIENT_RELATION, ApplicationState, UnitWorkloadState
 from core.workload import WorkloadBase
-from managers.node import NodeManager
 from managers.database import DatabaseManager, Permissions
+from managers.node import NodeManager
 from managers.tls import TLSManager
 
 logger = logging.getLogger(__name__)

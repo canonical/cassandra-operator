@@ -9,6 +9,7 @@
 import logging
 from contextlib import contextmanager
 from dataclasses import dataclass
+from ssl import CERT_NONE, PROTOCOL_TLS_CLIENT, SSLContext
 from typing import Generator
 
 from cassandra.auth import PlainTextAuthProvider
@@ -31,12 +32,11 @@ from charms.data_platform_libs.v1.data_interfaces import (
     ResourceRequirerEventHandler,
 )
 from charms.operator_libs_linux.v2 import snap
-from ops import ActionEvent, InstallEvent, RelationCreatedEvent
+from ops import ActionEvent, InstallEvent
 from ops.charm import CharmBase, ConfigChangedEvent
 from ops.framework import StoredState
 from ops.main import main
 from ops.model import ActiveStatus, WaitingStatus
-from ssl import CERT_NONE, CERT_REQUIRED, PROTOCOL_TLS, PROTOCOL_TLS_CLIENT, SSLContext
 
 CQLSH_SNAP_NAME = "cqlsh"
 PEER_REL = "local"
@@ -55,6 +55,7 @@ class ApplicationCharm(CharmBase):
     """Application charm that connects to database charms."""
 
     _stored = StoredState()
+
     def __init__(self, *args):
         super().__init__(*args)
 
@@ -104,7 +105,7 @@ class ApplicationCharm(CharmBase):
 
         self.framework.observe(
             self.cassandra_client.on.authentication_updated,
-            self._cassandra_client_authentication_updated
+            self._cassandra_client_authentication_updated,
         )
 
         self.framework.observe(self.on.create_table_action, self._create_table_action)
@@ -120,9 +121,11 @@ class ApplicationCharm(CharmBase):
         """Only sets an Active status."""
         self.unit.status = ActiveStatus()
 
-    def _cassandra_client_authentication_updated(self, event: AuthenticationUpdatedEvent[ResourceProviderModel]) -> None:
+    def _cassandra_client_authentication_updated(
+        self, event: AuthenticationUpdatedEvent[ResourceProviderModel]
+    ) -> None:
         tls_ca = event.response.tls_ca
-        tls = event.response.tls        
+        tls = event.response.tls
 
         if tls is None:
             return
@@ -169,7 +172,7 @@ class ApplicationCharm(CharmBase):
         logger.info(f"Initial user created: {rolename}")
 
         if response.tls_ca:
-            self.set_tls(response.tls_ca.get_secret_value())            
+            self.set_tls(response.tls_ca.get_secret_value())
 
         self.unit.status = ActiveStatus()
 
@@ -199,7 +202,7 @@ class ApplicationCharm(CharmBase):
             peer_relation.data[self.app]["hosts"] = str(event.response.endpoints)
 
         if response.tls_ca:
-            self.set_tls(response.tls_ca.get_secret_value())            
+            self.set_tls(response.tls_ca.get_secret_value())
 
         self.unit.status = ActiveStatus()
 
@@ -286,11 +289,12 @@ class ApplicationCharm(CharmBase):
             session.execute(cql)
 
     def set_tls(self, tls_ca: str) -> None:
+        """Set TLS certificate."""
         if not (peer_relation := self.model.get_relation(PEER_REL)):
             return
 
-        peer_relation.data[self.app].update({"tls_ca":tls_ca})
-            
+        peer_relation.data[self.app].update({"tls_ca": tls_ca})
+
     @property
     def keyspace_name(self) -> str:
         """Keyspace name."""
@@ -317,17 +321,15 @@ class ApplicationCharm(CharmBase):
         if tls_ca:
             logger.info(f"Loading SSL context with cert: {tls_ca}")
 
-            # TODO: change for mTLS            
+            # TODO: change for mTLS
             ssl_context.check_hostname = False
             ssl_context.verify_mode = CERT_NONE
 
-            ssl_context.load_verify_locations(
-                cadata=tls_ca
-            )
+            ssl_context.load_verify_locations(cadata=tls_ca)
         else:
-            logger.info(f"SSL context is disabled")
+            logger.info("SSL context is disabled")
             ssl_context = None
-        
+
         cluster = Cluster(
             auth_provider=auth_provider,
             contact_points=hosts,

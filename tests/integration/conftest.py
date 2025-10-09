@@ -129,7 +129,8 @@ def requirer_charm() -> Path:
     """Path to the packed cassandra charm."""
     if not (
         path := next(
-            iter((Path.cwd() / "tests" / "integration" / "application-charm").glob("*.charm")), None
+            iter((Path.cwd() / "tests" / "integration" / "application-charm").glob("*.charm")),
+            None,
         )
     ):
         raise FileNotFoundError("Could not find packed requirer charm.")
