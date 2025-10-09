@@ -206,13 +206,14 @@ def test_change_user_permissions(
 def test_remove_user_after_relation_broken(
     juju: jubilant.Juju, app_name: str, requirer_app_name: str
 ) -> None:
-    unit_name = next(iter(juju.status().apps[requirer_app_name].units))
     requested_user = _get_requested_user(juju, requirer_app_name)
     initial_user = _get_initial_user(juju, requirer_app_name)
 
-    juju.remove_unit(unit_name)
+    juju.remove_relation(
+        f"{requirer_app_name}:cassandra-client", f"{app_name}:cassandra-client"
+    )
 
-    juju.wait(jubilant.all_active)
+    juju.wait(lambda status: jubilant.all_active(status, app_name))
 
     users_left = get_db_users(juju, app_name)
 
