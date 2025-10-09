@@ -18,15 +18,21 @@ from ops import (
     RelationDepartedEvent,
     SecretChangedEvent,
     StartEvent,
+    StorageDetachingEvent,
     UpdateStatusEvent,
 )
 from pydantic import ValidationError
-from tenacity import Retrying, stop_after_delay, wait_exponential, wait_fixed
+from tenacity import (
+    Retrying,
+    stop_after_delay,
+    wait_exponential,
+    wait_fixed,
+)
 
-from common.exceptions import BadSecretError
+from common.exceptions import BadSecretError, ExecError
 from core.config import CharmConfig
 from core.literals import CASSANDRA_ADMIN_USERNAME
-from core.state import PEER_RELATION, ApplicationState, UnitWorkloadState
+from core.state import DATA_STORAGE, PEER_RELATION, ApplicationState, UnitWorkloadState
 from core.statuses import Status
 from core.workload import WorkloadBase
 from managers.config import ConfigManager
@@ -79,6 +85,9 @@ class CassandraEvents(Object):
         self.framework.observe(self.charm.on.update_status, self._on_update_status)
         self.framework.observe(self.charm.on.collect_unit_status, self._on_collect_unit_status)
         self.framework.observe(self.charm.on.collect_app_status, self._on_collect_app_status)
+        self.framework.observe(
+            self.charm.on[DATA_STORAGE].storage_detaching, self._on_storage_detaching
+        )
 
     def _on_install(self, _: InstallEvent) -> None:
         self.workload.install()
@@ -402,3 +411,22 @@ class CassandraEvents(Object):
             and bool(old_hostname)
             and (old_ip != self.state.unit.ip or old_hostname != self.state.unit.hostname)
         )
+
+    def _on_storage_detaching(self, _: StorageDetachingEvent) -> None:
+        if not self.node_manager.is_healthy(self.state.unit.ip):
+            raise Exception("Cluster is not healthy, cannot remove unit")
+
+        if self.charm.app.planned_units() < len(self.state.units) - 1:
+            logger.warning(
+                """More than one unit removing at a time is not supported.
+                   The charm may be in a broken, unrecoverable state"""
+            )
+
+        logger.info(f"Starting unit {self.state.unit.unit_name} node decommissioning")
+        try:
+            self.node_manager.decommission()
+        except ExecError as e:
+            logger.error(f"Failed to decommission unit: {e}")
+            raise e
+
+        logger.info("Hook for storage-detaching event completed")

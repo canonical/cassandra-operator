@@ -81,7 +81,13 @@ The implementation of `add-unit` allows adding multiple units at once, but unit 
 
 ### Removing nodes
 
-Node removal support is in progress.
+To remove one node, use `juju remove-unit` command:
+```shell
+juju remove-unit <unit-name>
+```
+> [!NOTE]
+> Only one unit can be removed at a time. Support for removing multiple units simultaneously is not yet available.
+
 
 ### Connecting
 

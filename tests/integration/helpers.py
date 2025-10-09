@@ -14,7 +14,7 @@ import jubilant
 import requests
 import tenacity
 from cassandra.auth import PlainTextAuthProvider
-from cassandra.cluster import EXEC_PROFILE_DEFAULT, Cluster, ExecutionProfile, Session
+from cassandra.cluster import EXEC_PROFILE_DEFAULT, Cluster, ExecutionProfile, ResultSet, Session
 from cassandra.policies import DCAwareRoundRobinPolicy, TokenAwarePolicy
 from tenacity import Retrying, stop_after_delay, wait_fixed
 
@@ -85,49 +85,6 @@ def connect_cql(
         cluster.shutdown()
 
 
-def get_db_users(juju, app_name, client_ca: str | None = None) -> set[str]:
-    """Return a set of all Cassandra user names for the given application."""
-    users: set[str] = set()
-
-    with connect_cql(
-        juju=juju, app_name=app_name, hosts=get_unit_addresses(juju, app_name), client_ca=client_ca
-    ) as session:
-        rows = session.execute("SELECT role FROM system_auth.roles;")
-        users = {row.role for row in rows}
-
-    return users
-
-
-def keyspace_exists(juju, app_name, keyspace_name: str, client_ca: str | None = None) -> bool:
-    """Check if the given Cassandra keyspace exists."""
-    with connect_cql(
-        juju=juju, app_name=app_name, hosts=get_unit_addresses(juju, app_name), client_ca=client_ca
-    ) as session:
-        query = """
-        SELECT keyspace_name
-        FROM system_schema.keyspaces
-        WHERE keyspace_name = %s
-        """
-        result = session.execute(query, (keyspace_name,))
-        return bool(result.one())
-
-
-def table_exists(
-    juju, app_name, keyspace_name: str, table_name: str, client_ca: str | None = None
-) -> bool:
-    """Check if the given table exists in the specified Cassandra keyspace."""
-    with connect_cql(
-        juju=juju, app_name=app_name, hosts=get_unit_addresses(juju, app_name), client_ca=client_ca
-    ) as session:
-        query = """
-        SELECT table_name
-        FROM system_schema.tables
-        WHERE keyspace_name = %s AND table_name = %s
-        """
-        result = session.execute(query, (keyspace_name, table_name))
-        return bool(result.one())
-
-
 @tenacity.retry(
     retry=tenacity.retry_if_exception_type(AssertionError),
     stop=stop_after_delay(60),
@@ -163,7 +120,7 @@ def get_user_permissions(juju, app_name, username: str, client_ca: str | None = 
     with connect_cql(
         juju=juju,
         app_name=app_name,
-        hosts=get_unit_addresses(juju, app_name),
+        hosts=get_hosts(juju, app_name),
         client_ca=client_ca,
     ) as session:
         rows = session.execute(f'LIST ALL PERMISSIONS OF "{username}";')
@@ -227,13 +184,6 @@ def get_unit_address(juju: jubilant.Juju, app_name: str, unit_num) -> str:
     status = juju.status()
     address = status.apps[app_name].units[f"{app_name}/{unit_num}"].public_address
     return address
-
-
-def get_unit_addresses(juju: jubilant.Juju, app_name: str) -> list[str]:
-    """Get the address for a unit."""
-    units = juju.status().apps[app_name].units.values()
-    addresses = [u.public_address for u in units]
-    return addresses
 
 
 def get_unit_names(juju: jubilant.Juju, app_name: str) -> list[str]:
@@ -462,3 +412,119 @@ def app_secret_extract(juju: jubilant.Juju, cluster_name: str, secret_name: str)
             return found
 
     return None
+
+def get_hosts(juju: jubilant.Juju, app_name: str, unit_name: str = "") -> list[str]:
+    """Return list of host addresses for the given app.
+
+    Adding unit_name will prioritize a specific unit host address.
+    """
+    units = juju.status().apps[app_name].units
+    if unit_name:
+        if unit_name not in units:
+            raise ValueError(f"Unit {unit_name} not found in app {app_name}")
+        return [units[unit_name].public_address] + [
+            u.public_address for name, u in units.items() if name != unit_name
+        ]
+    return [u.public_address for u in units.values()]
+
+def get_db_users(juju, app_name, client_ca: str | None = None) -> set[str]:
+    """Return a set of all Cassandra user names for the given application."""
+    users: set[str] = set()
+
+    with connect_cql(
+        juju=juju, app_name=app_name, hosts=get_hosts(juju, app_name), client_ca=client_ca
+    ) as session:
+        rows = session.execute("SELECT role FROM system_auth.roles;")
+        users = {row.role for row in rows}
+
+    return users
+
+
+def keyspace_exists(juju, app_name, keyspace_name: str, client_ca: str | None = None) -> bool:
+    """Check if the given Cassandra keyspace exists."""
+    with connect_cql(
+        juju=juju, app_name=app_name, hosts=get_hosts(juju, app_name), client_ca=client_ca
+    ) as session:
+        query = """
+        SELECT keyspace_name
+        FROM system_schema.keyspaces
+        WHERE keyspace_name = %s
+        """
+        result = session.execute(query, (keyspace_name,))
+        return bool(result.one())
+
+
+def table_exists(
+    juju, app_name, keyspace_name: str, table_name: str, client_ca: str | None = None
+) -> bool:
+    """Check if the given table exists in the specified Cassandra keyspace."""
+    with connect_cql(
+        juju=juju, app_name=app_name, hosts=get_hosts(juju, app_name), client_ca=client_ca
+    ) as session:
+        query = """
+        SELECT table_name
+        FROM system_schema.tables
+        WHERE keyspace_name = %s AND table_name = %s
+        """
+        result = session.execute(query, (keyspace_name, table_name))
+        return bool(result.one())
+
+def prepare_keyspace_and_table(
+    juju: jubilant.Juju, app_name: str, ks: str = "test", table: str = "kv", unit_name: str = ""
+) -> tuple[str, str]:
+    """Create test keyspace and table."""
+    hosts = get_hosts(juju, app_name, unit_name)
+
+    with connect_cql(juju=juju, app_name=app_name, hosts=hosts, timeout=300) as session:
+        session.execute(
+            f"CREATE KEYSPACE IF NOT EXISTS {ks} "
+            "WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 3}"
+        )
+        session.set_keyspace(ks)
+        session.execute(f"CREATE TABLE IF NOT EXISTS {table} (id INT PRIMARY KEY, value TEXT)")
+    return ks, table
+
+
+def write_n_rows(
+    juju: jubilant.Juju, app_name: str, ks: str, table: str, n: int = 100, unit_name: str = ""
+) -> dict[int, str]:
+    """Write n rows to the table."""
+    hosts = get_hosts(juju, app_name, unit_name)
+
+    with connect_cql(
+        juju=juju, app_name=app_name, hosts=hosts, timeout=300, keyspace=ks
+    ) as session:
+        for i in range(n):
+            session.execute(
+                f"INSERT INTO {table} (id, value) VALUES (%s, %s)",
+                (i, f"msg-{i}"),
+            )
+
+    return {i: f"msg-{i}" for i in range(n)}
+
+
+def read_n_rows(
+    juju: jubilant.Juju, app_name: str, ks: str, table: str, n: int = 100, unit_name: str = ""
+) -> dict[int, str]:
+    """Check that table have exactly n rows."""
+    hosts = get_hosts(juju, app_name, unit_name)
+
+    got = {}
+    with connect_cql(
+        juju=juju, app_name=app_name, hosts=hosts, timeout=300, keyspace=ks
+    ) as session:
+        res = session.execute(f"SELECT id, value FROM {table}")
+        assert isinstance(res, ResultSet)
+        rows = res.all()
+        if len(rows) != n:
+            return got
+
+        got = {row.id: row.value for row in rows}
+
+    return got
+
+
+def assert_rows(wrote: dict[int, str], got: dict[int, str]) -> None:
+    """Assert rows are equal."""
+    assert len(got) == len(wrote), f"Expected {len(wrote)} rows, got {len(got)}"
+    assert got == wrote, "Row data mismatch"

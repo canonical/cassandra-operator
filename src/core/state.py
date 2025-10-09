@@ -27,6 +27,7 @@ from charms.tls_certificates_interface.v4.tls_certificates import (
 )
 from ops import Application, CharmBase, Object, Relation, Unit
 
+DATA_STORAGE = "data"
 CLIENT_TLS_RELATION = "client-certificates"
 PEER_TLS_RELATION = "peer-certificates"
 PEER_RELATION = "cassandra-peers"
