@@ -145,8 +145,6 @@ def get_cluster_client_ca(juju: jubilant.Juju, app_name: str) -> str:
             secret_name=CLIENT_CA_CERT,
         )
 
-        logger.info(f"FOUND CERT: {client_ca[:40] if client_ca else None}")
-        
         if client_ca:
             certs.add(client_ca)
 
@@ -171,8 +169,6 @@ def get_secrets_by_label(juju: jubilant.Juju, label: str, owner: str) -> list[di
     secrets_meta_raw = juju.cli("secrets", "--format", "json", include_model=True)
     secrets_meta = json.loads(secrets_meta_raw)
 
-    logger.info(f"raw secrets: {secrets_meta}")
-
     selected_secret_ids = []
 
     for secret_id in secrets_meta:
@@ -183,8 +179,6 @@ def get_secrets_by_label(juju: jubilant.Juju, label: str, owner: str) -> list[di
 
     if len(selected_secret_ids) == 0:
         return []
-
-    logger.info(f"selected secrets ids: {selected_secret_ids}")
 
     secret_data_list = []
 
@@ -427,8 +421,6 @@ def get_peer_app_data(juju: jubilant.Juju, app_name: str, peer_name: str) -> dic
     unit_info = json.loads(result)
     unit_data = unit_info[unit_name]
 
-    logger.info(f"INFO: {unit_info}")
-
     for rel in unit_data.get("relation-info", []):
         if rel["endpoint"] == peer_name:
             app_data = rel.get("application-data", {})
@@ -437,15 +429,11 @@ def get_peer_app_data(juju: jubilant.Juju, app_name: str, peer_name: str) -> dic
     raise RuntimeError(f"No peer relation data found for application {app_name}")
 
 def unit_secret_extract(juju: jubilant.Juju, unit_name: str, secret_name: str) -> str | None:
-    logger.info(f"EXTRACTING SECRET: {secret_name} from unit: {unit_name}")
-
     user_secret = get_secrets_by_label(
         juju,
         label=f"cassandra-peers.{unit_name.split('/')[0]}.unit",
         owner=unit_name,
     )
-
-    logger.info(f"SECRET: {user_secret}")    
 
     for secret in user_secret:
         if found := secret.get(secret_name):

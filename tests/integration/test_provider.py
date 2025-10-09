@@ -202,7 +202,7 @@ def test_change_user_permissions(
 def test_remove_user_after_relation_broken(
     juju: jubilant.Juju, app_name: str, requirer_app_name: str
 ) -> None:
-    unit_name = next(iter(juju.status().apps[app_name].units))
+    unit_name = next(iter(juju.status().apps[requirer_app_name].units))
     requested_user = _get_requested_user(juju, requirer_app_name)
     initial_user = _get_initial_user(juju, requirer_app_name)
 

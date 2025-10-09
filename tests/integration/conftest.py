@@ -107,8 +107,8 @@ def charm_versions() -> IntegrationTestsCharms:
     return IntegrationTestsCharms(
         tls=TestCharm(
             name="self-signed-certificates",
-            channel="latest/stable",
-            revision=393,
+            channel="1/stable",
+            revision=317,
             base="ubuntu@24.04",
             alias="self-signed-certificates",
         ),
