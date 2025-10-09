@@ -80,20 +80,6 @@ class ExternalClientsEvents(Object):
             self.charm.on.cassandra_client_relation_broken, self._on_relation_broken
         )
 
-    def update_certs(self) -> None:
-        for relation in self.cassandra_client.relations:
-            model = self.cassandra_client.interface.build_model(
-                relation.id, DataContractV1[ResourceProviderModel]
-            )
-
-            for request in model.requests:
-                request.tls = SecretBool(self.state.unit.client_tls.ready)
-                if self.state.unit.client_tls.ca:
-                    request.tls_ca = SecretStr(self.state.unit.client_tls.ca.raw)
-                    
-            self.cassandra_client.interface.write_model(relation.id, model)
-
-
     def _on_resource_requested(self, event: ResourceRequestedEvent) -> None:
         """Event triggered when a new keyspace is requested."""
         logger.debug("External client requested database resource")

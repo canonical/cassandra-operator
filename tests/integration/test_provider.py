@@ -4,16 +4,21 @@
 
 import logging
 from dataclasses import dataclass
+import time
 from pathlib import Path
 
 import jubilant
+from tenacity import sleep
 from helpers import (
+    get_cluster_client_ca,
     get_db_users,
     get_peer_app_data,
     get_user_permissions,
     keyspace_exists,
     table_exists,
 )
+
+from help_types import IntegrationTestsCharms
 
 logger = logging.getLogger(__name__)
 
@@ -87,6 +92,99 @@ def test_create_table(juju: jubilant.Juju, app_name: str, requirer_app_name: str
     assert table_exists(juju, app_name, KEYSPACE_NAME, TABLE_NAME)
 
 
+def test_connection_updated_on_tls_enabled(
+        juju: jubilant.Juju,
+        app_name: str,
+        requirer_app_name: str,
+        charm_versions: IntegrationTestsCharms,
+) -> None:
+    TABLE_PREFIX = "_tls_enabled"
+    
+    juju.deploy(
+        **charm_versions.tls.deploy_dict(),
+        config={"ca-common-name": "cassandra"},
+    )
+
+    juju.wait(jubilant.all_active)
+
+    juju.integrate(f"{charm_versions.tls.app}:certificates", f"{app_name}:client-certificates")
+
+    # Wait for client_certs rotation
+    juju.wait(
+        ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
+        delay=3,
+        successes=6,
+        timeout=1000,
+    )
+
+    ca = get_cluster_client_ca(juju, app_name)
+
+    requirer_unit = next(iter(juju.status().apps[requirer_app_name].units))
+
+    juju.run(requirer_unit, "create-table", {"table-name": TABLE_NAME+TABLE_PREFIX})
+
+    juju.wait(jubilant.all_active)
+
+    assert table_exists(juju, app_name, KEYSPACE_NAME, TABLE_NAME+TABLE_PREFIX, client_ca=ca)
+    
+def test_connection_updated_on_tls_updated(
+        juju: jubilant.Juju,
+        app_name: str,
+        requirer_app_name: str,
+        charm_versions: IntegrationTestsCharms,        
+) -> None:
+    TABLE_PREFIX = "_tls_updated"
+
+    tls_unit = next(iter(juju.status().apps[charm_versions.tls.app].units))    
+
+    juju.run(tls_unit, "rotate-private-key")
+
+    time.sleep(20)
+
+    # Wait for client_certs rotation
+    juju.wait(
+        ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
+        delay=3,
+        successes=6,
+        timeout=1000,
+    )
+
+    ca = get_cluster_client_ca(juju, app_name)    
+
+    requirer_unit = next(iter(juju.status().apps[requirer_app_name].units))
+
+    juju.run(requirer_unit, "create-table", {"table-name": TABLE_NAME+TABLE_PREFIX})
+
+    juju.wait(jubilant.all_active)
+
+    assert table_exists(juju, app_name, KEYSPACE_NAME, TABLE_NAME+TABLE_PREFIX, client_ca=ca)
+
+def test_connection_updated_on_tls_disabled(
+        juju: jubilant.Juju,
+        app_name: str,
+        requirer_app_name: str,
+        charm_versions: IntegrationTestsCharms,        
+) -> None:
+    TABLE_PREFIX = "_tls_disabled"
+
+    juju.remove_relation(f"{charm_versions.tls.app}:certificates", f"{app_name}:client-certificates")
+    
+    # Wait for client_certs rotation
+    juju.wait(
+        ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
+        delay=5,
+        successes=4,
+        timeout=1000,
+    )
+
+    requirer_unit = next(iter(juju.status().apps[requirer_app_name].units))
+
+    juju.run(requirer_unit, "create-table", {"table-name": TABLE_NAME+TABLE_PREFIX})
+
+    juju.wait(jubilant.all_active)
+
+    assert table_exists(juju, app_name, KEYSPACE_NAME, TABLE_NAME+TABLE_PREFIX)
+
 def test_change_user_permissions(
     juju: jubilant.Juju, app_name: str, requirer_app_name: str
 ) -> None:
@@ -100,8 +198,7 @@ def test_change_user_permissions(
     assert USER_KEYSPACE_PERMISSIONS.issubset(user_perms), (
         f"{USER_KEYSPACE_PERMISSIONS} not in {user_perms}"
     )
-
-
+    
 def test_remove_user_after_relation_broken(
     juju: jubilant.Juju, app_name: str, requirer_app_name: str
 ) -> None:
@@ -117,7 +214,6 @@ def test_remove_user_after_relation_broken(
 
     assert requested_user.username not in users_left
     assert initial_user.username not in users_left
-
 
 @dataclass
 class User:

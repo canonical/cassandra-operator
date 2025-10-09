@@ -169,6 +169,7 @@ class TLSEvents(Object):
             keystore_password=self.state.unit.keystore_password,
             trust_password=self.state.unit.truststore_password,
         )
+        
 
         if tls_changed:
             tls_state.rotation = True
@@ -181,6 +182,7 @@ class TLSEvents(Object):
             event.defer()
             return
 
+        
         if self.charm.unit.is_leader():
             self.state.seed_units = self.state.unit
 
@@ -229,11 +231,11 @@ class TLSEvents(Object):
 
         if not state.rotation:
             return
-
+        
         if not self.state.unit.is_config_change_eligible:
             event.defer()
             return
-
+        
         if self.charm.unit.is_leader():
             self.state.seed_units = self.state.unit
 

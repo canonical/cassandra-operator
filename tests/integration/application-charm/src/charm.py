@@ -36,6 +36,7 @@ from ops.charm import CharmBase, ConfigChangedEvent
 from ops.framework import StoredState
 from ops.main import main
 from ops.model import ActiveStatus, WaitingStatus
+from ssl import CERT_NONE, CERT_REQUIRED, PROTOCOL_TLS, PROTOCOL_TLS_CLIENT, SSLContext
 
 CQLSH_SNAP_NAME = "cqlsh"
 PEER_REL = "local"
@@ -54,7 +55,6 @@ class ApplicationCharm(CharmBase):
     """Application charm that connects to database charms."""
 
     _stored = StoredState()
-
     def __init__(self, *args):
         super().__init__(*args)
 
@@ -67,7 +67,6 @@ class ApplicationCharm(CharmBase):
         )
 
         self._stored.set_default(prev_permissions=self.user_permissions)
-
         self._cqlsh_snap = snap.SnapCache()[CQLSH_SNAP_NAME]
 
         self.framework.observe(self.on.start, self._on_start)
@@ -108,11 +107,6 @@ class ApplicationCharm(CharmBase):
             self._cassandra_client_authentication_updated
         )
 
-        self.framework.observe(
-            self.cassandra_client.on.cassandra_client_relation_created,
-            self._cassandra_client_relation_created,
-        )
-
         self.framework.observe(self.on.create_table_action, self._create_table_action)
 
         self.execution_profile = ExecutionProfile(
@@ -127,18 +121,13 @@ class ApplicationCharm(CharmBase):
         self.unit.status = ActiveStatus()
 
     def _cassandra_client_authentication_updated(self, event: AuthenticationUpdatedEvent[ResourceProviderModel]) -> None:
-        logger.debug("---- _cassandra_client_authentication_updated ----")
-        resp = event.response
+        tls_ca = event.response.tls_ca
+        tls = event.response.tls        
 
-        logger.info(f"""
-        ---------- UPDATED SECRETS ----------
-        tls: {resp.tls}
-        tls_ca: {resp.tls_ca}
-        secret_tls: {resp.secret_tls}
-        """)
+        if tls is None:
+            return
 
-    def _cassandra_client_relation_created(self, _: RelationCreatedEvent) -> None:
-        logger.debug("---- _cassandra_client_relation_created ----")
+        self.set_tls(tls_ca.get_secret_value() if tls_ca else "")
 
     def _on_endpoints_changed(self, event: ResourceEndpointsChangedEvent) -> None:
         """Handle etcd client relation data changed event."""
@@ -179,6 +168,9 @@ class ApplicationCharm(CharmBase):
         logger.info(f"Keyspace created: {ks}")
         logger.info(f"Initial user created: {rolename}")
 
+        if response.tls_ca:
+            self.set_tls(response.tls_ca.get_secret_value())            
+
         self.unit.status = ActiveStatus()
 
     def _on_keyspace_user_created(self, event: ResourceEntityCreatedEvent) -> None:
@@ -206,6 +198,9 @@ class ApplicationCharm(CharmBase):
         if response.endpoints:
             peer_relation.data[self.app]["hosts"] = str(event.response.endpoints)
 
+        if response.tls_ca:
+            self.set_tls(response.tls_ca.get_secret_value())            
+
         self.unit.status = ActiveStatus()
 
     def _on_config_changed(self, event: ConfigChangedEvent) -> None:
@@ -214,9 +209,8 @@ class ApplicationCharm(CharmBase):
         old_perms = set(self._stored.prev_permissions)
         new_perms = set(self.user_permissions)
 
-        logger.info(f"Changing permissions from: {old_perms} to: {new_perms}")
-
         if old_perms != new_perms:
+            logger.info(f"Changing permissions from: {old_perms} to: {new_perms}")
             self._change_user_permissions(self.user_permissions)
             self._stored.prev_permissions = list(new_perms)
             logger.info("Permissions updated")
@@ -291,6 +285,12 @@ class ApplicationCharm(CharmBase):
             logger.debug(f"Query: {cql}")
             session.execute(cql)
 
+    def set_tls(self, tls_ca: str) -> None:
+        if not (peer_relation := self.model.get_relation(PEER_REL)):
+            return
+
+        peer_relation.data[self.app].update({"tls_ca":tls_ca})
+            
     @property
     def keyspace_name(self) -> str:
         """Keyspace name."""
@@ -308,11 +308,32 @@ class ApplicationCharm(CharmBase):
         hosts: list[str],
         keyspace: str | None = None,
     ) -> Generator[Session, None, None]:
+        if not (peer_relation := self.model.get_relation(PEER_REL)):
+            return
+
+        tls_ca = peer_relation.data[self.app].get("tls_ca")
+        ssl_context = SSLContext(PROTOCOL_TLS_CLIENT)
+
+        if tls_ca:
+            logger.info(f"Loading SSL context with cert: {tls_ca}")
+
+            # TODO: change for mTLS            
+            ssl_context.check_hostname = False
+            ssl_context.verify_mode = CERT_NONE
+
+            ssl_context.load_verify_locations(
+                cadata=tls_ca
+            )
+        else:
+            logger.info(f"SSL context is disabled")
+            ssl_context = None
+        
         cluster = Cluster(
             auth_provider=auth_provider,
             contact_points=hosts,
             protocol_version=5,
             execution_profiles={EXEC_PROFILE_DEFAULT: self.execution_profile},
+            ssl_context=ssl_context,
         )
         session = cluster.connect()
         if keyspace:

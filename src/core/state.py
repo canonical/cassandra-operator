@@ -16,6 +16,7 @@ from charms.data_platform_libs.v0.data_interfaces import (
     DataPeerUnitData,
 )
 from charms.data_platform_libs.v1.data_interfaces import (
+    OpsRelationRepository,
     OpsRepository,
     RepositoryInterface,
     RequirerCommonModel,
@@ -549,7 +550,7 @@ class ApplicationState(Object):
             charm,
             relation_name=CLIENT_RELATION,
             component=charm.app,
-            repository_type=OpsRepository,
+            repository_type=OpsRelationRepository,
             model=RequirerCommonModel,
         )
 

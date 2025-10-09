@@ -6,6 +6,7 @@
 
 import logging
 
+from charms.data_platform_libs.v1.data_interfaces import DataContractV1, ResourceProviderModel, SecretBool, SecretStr
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from charms.grafana_agent.v0.cos_agent import COSAgentProvider
 from ops import EventBase, ModelError, SecretNotFoundError, main
@@ -144,6 +145,11 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         logger.debug("Releasing the exclusive lock after successful bootstrap")
         self.bootstrap_manager.release()
 
+        # Update client certificates when leader is active after TLS rotation
+        # TODO: should we transfer updated certificates after ALL units are up?
+        if self.unit.is_leader():
+            self._update_external_clients_certs()
+
         if self.state.unit.peer_tls.rotation:
             self.state.unit.peer_tls.rotation = False
         if self.state.unit.client_tls.rotation:
@@ -272,6 +278,24 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         except ModelError as e:
             logger.error(f"Error accessing user-defined system users secret: {e}")
             raise BadSecretError()
+
+    def _update_external_clients_certs(self) -> None:
+        logger.info("----------UPDATING CERTS----------")
+        for relation in self.state.client_interface.relations:
+            model = self.state.client_interface.build_model(
+                relation.id, DataContractV1[ResourceProviderModel]
+            )
+
+            for request in model.requests:
+                request.tls = SecretBool(self.state.unit.client_tls.ready)
+                request.tls_ca = SecretStr(
+                    self.state.unit.client_tls.ca.raw
+                    if self.state.unit.client_tls.ca
+                    else ""
+                )
+
+            self.state.client_interface.write_model(relation.id, model)
+        
 
 
 if __name__ == "__main__":  # pragma: nocover
