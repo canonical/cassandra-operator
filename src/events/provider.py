@@ -76,7 +76,7 @@ class ExternalClientsEvents(Object):
         )
 
         self.framework.observe(
-            self.charm.on.cassandra_client_relation_broken, self._on_relation_broken
+            self.charm.on[CLIENT_RELATION].relation_broken, self._on_relation_broken
         )
 
     def _on_resource_requested(self, event: ResourceRequestedEvent) -> None:
@@ -178,6 +178,7 @@ class ExternalClientsEvents(Object):
         relation_id = event.relation.id
         rolename = self._rolename_from_relation(relation_id, request.salt)
         password = self.workload.generate_string()
+        logger.info(f"GENERATED PASSWORD: {password}")
         permissions_req: list[EntityPermissionModel] = (
             request.entity_permissions if request.entity_permissions else []
         )
