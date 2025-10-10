@@ -3,19 +3,16 @@
 #
 # Learn more about testing at: https://juju.is/docs/sdk/testing
 
-import logging
-from unittest.mock import MagicMock, PropertyMock, patch
-from typing import Any
 import dataclasses
+import logging
+from unittest.mock import MagicMock, patch
 
-import ops
 import pytest
 from charms.data_platform_libs.v1.data_interfaces import (
     EntityPermissionModel,
     RequirerCommonModel,
     ResourceEntityPermissionsChangedEvent,
     ResourceEntityRequestedEvent,
-    ResourceProviderModel,
     ResourceRequestedEvent,
     SecretBool,
     SecretStr,
@@ -24,110 +21,23 @@ from charms.data_platform_libs.v1.data_interfaces import (
 )
 from ops import testing
 from ops.testing import Context
-from ops.model import Relation
 
 from charm import CassandraCharm
-from events.provider import ExternalClientsEvents
-from managers.database import Permissions
-from core.state import CLIENT_RELATION, CLIENT_TLS_RELATION, PEER_RELATION, PEER_TLS_RELATION, TLSScope, UnitWorkloadState
+from core.state import (
+    CLIENT_RELATION,
+    CLIENT_TLS_RELATION,
+    PEER_RELATION,
+)
 
 logger = logging.getLogger(__name__)
 
 BOOTSTRAP_RELATION = "bootstrap"
 
+
 @pytest.fixture
 def ctx() -> Context[CassandraCharm]:
     """Create a test context for CassandraCharm."""
     return Context(CassandraCharm, unit_id=0)
-
-def create_external_clients_events(charm, mock_state, mock_workload, mock_managers):
-    """Helper function to create ExternalClientsEvents instance."""
-    acquire_operator_password = MagicMock(return_value="operator_password")
-    
-    return ExternalClientsEvents(
-        charm=charm,
-        state=mock_state,
-        workload=mock_workload,
-        node_manager=mock_managers["node_manager"],
-        tls_manager=mock_managers["tls_manager"],
-        database_manager=mock_managers["database_manager"],
-        acquire_operator_password=acquire_operator_password,
-    )
-
-
-def create_resource_requested_event(relation_id: int = 1, **kwargs) -> ResourceRequestedEvent:
-    """Create a mock ResourceRequestedEvent."""
-    event = MagicMock(spec=ResourceRequestedEvent)
-    event.relation = MagicMock()
-    event.relation.id = relation_id
-    event.relation.app = MagicMock()
-    event.defer = MagicMock()
-    
-    # Default request
-    request_data = {
-        "resource": "test_keyspace",
-        "salt": "test_salt",
-        "request_id": "test_request_id",
-        "mtls_cert": None,
-        **kwargs
-    }
-    event.request = RequirerCommonModel(**request_data)
-    
-    return event
-
-
-def create_resource_entity_requested_event(relation_id: int = 1, **kwargs) -> ResourceEntityRequestedEvent:
-    """Create a mock ResourceEntityRequestedEvent."""
-    event = MagicMock(spec=ResourceEntityRequestedEvent)
-    event.relation = MagicMock()
-    event.relation.id = relation_id
-    event.relation.app = MagicMock()
-    event.defer = MagicMock()
-    
-    # Default request
-    request_data = {
-        "resource": "test_keyspace",
-        "salt": "test_salt",
-        "request_id": "test_request_id",
-        "entity_permissions": [
-            EntityPermissionModel(
-                resource_name="test_keyspace",
-                resource_type="keyspace",
-                privileges=["ALL"]
-            )
-        ],
-        **kwargs
-    }
-    event.request = RequirerCommonModel(**request_data)
-    
-    return event
-
-
-def create_resource_entity_permissions_changed_event(relation_id: int = 1, **kwargs) -> ResourceEntityPermissionsChangedEvent:
-    """Create a mock ResourceEntityPermissionsChangedEvent."""
-    event = MagicMock(spec=ResourceEntityPermissionsChangedEvent)
-    event.relation = MagicMock()
-    event.relation.id = relation_id
-    event.relation.app = MagicMock()
-    event.defer = MagicMock()
-    
-    # Default request
-    request_data = {
-        "resource": "test_keyspace",
-        "salt": "test_salt",
-        "request_id": "test_request_id",
-        "entity_permissions": [
-            EntityPermissionModel(
-                resource_name="test_keyspace",
-                resource_type="keyspace",
-                privileges=["SELECT", "MODIFY"]
-            )
-        ],
-        **kwargs
-    }
-    event.request = RequirerCommonModel(**request_data)
-    
-    return event
 
 
 @dataclasses.dataclass
@@ -138,22 +48,23 @@ class ClientRealtionContext:
     client_tls_relation: testing.Relation
     bootstrap_relation: testing.PeerRelation
 
+
 #    client_csr: CertificateSigningRequest
 #    client_crt: Certificate
 #    client_provider_crt: ProviderCertificate
 
 
 def client_relations_context(
-        ctx: Context[CassandraCharm], 
-        workload_active: bool,
+    ctx: Context[CassandraCharm],
+    workload_active: bool,
 ) -> ClientRealtionContext:
     peer_relation = testing.PeerRelation(
-        id=1, 
-        endpoint=PEER_RELATION, 
+        id=1,
+        endpoint=PEER_RELATION,
         local_unit_data={
             "ip": "1.1.1.1",
             "workload_state": "active" if workload_active else "",
-            },
+        },
         local_app_data={"cluster_state": "active", "seeds": "2.2.2.2:7000"},
     )
     client_relation = testing.Relation(id=2, endpoint=CLIENT_RELATION)
@@ -168,29 +79,33 @@ def client_relations_context(
         bootstrap_relation=bootstrap_relation,
     )
 
+
 # ===================== TESTS =====================
+
 
 def generate_resource_request() -> RequirerCommonModel:
     resource = "test_ks"
     resource_name = "ks"
     salt = gen_salt()
     return RequirerCommonModel(
-            resource=resource,
-            salt=salt,
-            request_id=gen_hash(resource_name, salt),
-        )
+        resource=resource,
+        salt=salt,
+        request_id=gen_hash(resource_name, salt),
+    )
 
-def generate_resource_entity_request(permisions: EntityPermissionModel) -> RequirerCommonModel:
+
+def generate_resource_entity_request(permissions: EntityPermissionModel) -> RequirerCommonModel:
     resource = "test_ks"
     resource_name = "ks"
     salt = gen_salt()
     return RequirerCommonModel(
-            resource=resource,
-            salt=salt,
-            request_id=gen_hash(resource_name, salt),
-            entity_type="USER",
-            entity_permissions=[permisions],
-        )
+        resource=resource,
+        salt=salt,
+        request_id=gen_hash(resource_name, salt),
+        entity_type="USER",
+        entity_permissions=[permissions],
+    )
+
 
 @pytest.mark.parametrize("is_leader", [True, False])
 @pytest.mark.parametrize("workload_active", [True, False])
@@ -223,10 +138,10 @@ def test_resource_requested_non_leader_does_nothing(ctx, is_leader, workload_act
         resource_requested_event.request = generate_resource_request()
         resource_requested_event.relation = new_ctx.client_relation
         resource_requested_event.defer = MagicMock()
-        
+
         # For some reason ops.testing.Relation do not have app
-        object.__setattr__(resource_requested_event.relation, 'app', MagicMock())
-        
+        object.__setattr__(resource_requested_event.relation, "app", MagicMock())
+
         charm.provider_events._on_resource_requested(resource_requested_event)
 
         manager.run()
@@ -237,7 +152,6 @@ def test_resource_requested_non_leader_does_nothing(ctx, is_leader, workload_act
             set_ks_permissions.assert_called_once()
         else:
             init_user.assert_not_called()
-
 
 
 @pytest.mark.parametrize("is_leader", [True, False])
@@ -274,7 +188,7 @@ def test_resource_entity_requested_behaviour(ctx, is_leader, workload_active):
         event.request = generate_resource_entity_request(permissions)
         event.relation = new_ctx.client_relation
         event.defer = MagicMock()
-        object.__setattr__(event.relation, 'app', MagicMock())
+        object.__setattr__(event.relation, "app", MagicMock())
 
         charm.provider_events._on_resource_entity_requested(event)
 
@@ -322,7 +236,7 @@ def test_resource_entity_requested_empty_resource_no_calls(ctx):
         event.request = req
         event.relation = new_ctx.client_relation
         event.defer = MagicMock()
-        object.__setattr__(event.relation, 'app', MagicMock())
+        object.__setattr__(event.relation, "app", MagicMock())
 
         charm.provider_events._on_resource_entity_requested(event)
 
@@ -366,7 +280,7 @@ def test_resource_requested_mtls_defers_when_alias_needs_update(ctx):
         event.request = req
         event.relation = new_ctx.client_relation
         event.defer = MagicMock()
-        object.__setattr__(event.relation, 'app', MagicMock())
+        object.__setattr__(event.relation, "app", MagicMock())
 
         charm.provider_events._on_resource_requested(event)
 
@@ -406,10 +320,12 @@ def test_resource_requested_existing_role_noop(ctx):
         event.request = generate_resource_request()
         event.relation = new_ctx.client_relation
         event.defer = MagicMock()
-        object.__setattr__(event.relation, 'app', MagicMock())
+        object.__setattr__(event.relation, "app", MagicMock())
 
         # Pre-add role to cluster state to trigger early return
-        rolename = charm.provider_events._rolename_from_relation(event.relation.id, event.request.salt)
+        rolename = charm.provider_events._rolename_from_relation(
+            event.relation.id, event.request.salt
+        )
         charm.provider_events.state.cluster.roles = {rolename}
 
         charm.provider_events._on_resource_requested(event)
@@ -443,10 +359,23 @@ def test_permissions_changed_respects_existing_role(ctx, role_exists):
         workload.return_value.is_alive.return_value = True
         charm: CassandraCharm = manager.charm
 
-        event = create_resource_entity_permissions_changed_event(new_ctx.client_relation.id)
+        event = MagicMock(spec=ResourceEntityPermissionsChangedEvent)
+        event.relation = MagicMock()
+        event.relation.id = new_ctx.client_relation.id
+        event.relation.app = MagicMock()
+        event.defer = MagicMock()
+        event.request = generate_resource_entity_request(
+            EntityPermissionModel(
+                resource_name="test_keyspace",
+                resource_type="keyspace",
+                privileges=["SELECT", "MODIFY"],
+            )
+        )
 
         # Adjust cluster state based on role_exists
-        rolename = charm.provider_events._rolename_from_relation(event.relation.id, event.request.salt)
+        rolename = charm.provider_events._rolename_from_relation(
+            event.relation.id, event.request.salt
+        )
         charm.provider_events.state.cluster.roles = {rolename} if role_exists else set()
 
         charm.provider_events._on_resource_entity_permissions_changed(event)
@@ -504,7 +433,7 @@ def test_relation_broken_removes_users_for_remote_app(ctx):
     [
         ["INVALID"],
         ["SELECT", "WRONG"],
-        ["alll"],
+        ["ALLY"],
         ["ALL", "NOPE"],
     ],
 )
@@ -542,7 +471,7 @@ def test_resource_entity_requested_with_invalid_permissions_raises_and_no_db_cal
         event.request = generate_resource_entity_request(permissions)
         event.relation = new_ctx.client_relation
         event.defer = MagicMock()
-        object.__setattr__(event.relation, 'app', MagicMock())
+        object.__setattr__(event.relation, "app", MagicMock())
 
         with pytest.raises(ValueError):
             charm.provider_events._on_resource_entity_requested(event)
@@ -582,7 +511,7 @@ def test_resource_requested_defers_when_relation_app_missing(ctx):
         event.request = generate_resource_request()
         event.relation = new_ctx.client_relation
         event.defer = MagicMock()
-        object.__setattr__(event.relation, 'app', None)
+        object.__setattr__(event.relation, "app", None)
 
         charm.provider_events._on_resource_requested(event)
 
@@ -699,7 +628,7 @@ def test_entity_requested_empty_permissions_still_creates_user_and_response(ctx)
         event.request = req
         event.relation = new_ctx.client_relation
         event.defer = MagicMock()
-        object.__setattr__(event.relation, 'app', MagicMock())
+        object.__setattr__(event.relation, "app", MagicMock())
 
         charm.provider_events._on_resource_entity_requested(event)
 
@@ -730,9 +659,23 @@ def test_permissions_changed_empty_permissions_only_sets_response(ctx):
         workload.return_value.is_alive.return_value = True
         charm: CassandraCharm = manager.charm
 
-        event = create_resource_entity_permissions_changed_event(new_ctx.client_relation.id)
+        event = MagicMock(spec=ResourceEntityPermissionsChangedEvent)
+        event.relation = MagicMock()
+        event.relation.id = new_ctx.client_relation.id
+        event.relation.app = MagicMock()
+        event.defer = MagicMock()
+        event.request = generate_resource_entity_request(
+            EntityPermissionModel(
+                resource_name="test_keyspace",
+                resource_type="keyspace",
+                privileges=["SELECT", "MODIFY"],
+            )
+        )
+
         # Ensure role exists to pass that guard
-        rolename = charm.provider_events._rolename_from_relation(event.relation.id, event.request.salt)
+        rolename = charm.provider_events._rolename_from_relation(
+            event.relation.id, event.request.salt
+        )
         charm.provider_events.state.cluster.roles = {rolename}
 
         # Make permissions empty
@@ -774,7 +717,7 @@ def test_resource_requested_response_payload_fields(ctx):
         event.request = req
         event.relation = new_ctx.client_relation
         event.defer = MagicMock()
-        object.__setattr__(event.relation, 'app', MagicMock())
+        object.__setattr__(event.relation, "app", MagicMock())
 
         charm.provider_events._on_resource_requested(event)
 
@@ -827,7 +770,7 @@ def test_entity_requested_response_payload_fields(ctx):
         event.request = req
         event.relation = new_ctx.client_relation
         event.defer = MagicMock()
-        object.__setattr__(event.relation, 'app', MagicMock())
+        object.__setattr__(event.relation, "app", MagicMock())
 
         charm.provider_events._on_resource_entity_requested(event)
 
