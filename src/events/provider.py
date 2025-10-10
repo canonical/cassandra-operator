@@ -178,7 +178,7 @@ class ExternalClientsEvents(Object):
         relation_id = event.relation.id
         rolename = self._rolename_from_relation(relation_id, request.salt)
         password = self.workload.generate_string()
-        logger.info(f"GENERATED PASSWORD: {password}")
+
         permissions_req: list[EntityPermissionModel] = (
             request.entity_permissions if request.entity_permissions else []
         )
@@ -304,6 +304,7 @@ class ExternalClientsEvents(Object):
         if event.relation.app != self.charm.app:
             for rolename in self.state.cluster.roles:
                 self.database_manager.remove_user(rolename, self.acquire_operator_password())
+                self.state.cluster.roles = self.state.cluster.roles - {rolename}
 
     @staticmethod
     def _validate_entity_permissions(perms: list[EntityPermissionModel]) -> None:
