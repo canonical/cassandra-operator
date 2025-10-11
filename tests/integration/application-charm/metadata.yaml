@@ -1,0 +1,17 @@
+# Copyright 2022 Canonical Ltd.
+# See LICENSE file for licensing details.
+
+name: application
+summary: |
+  Dummy charm application meant to be used
+  only for testing of the libs in this repository.
+description: |
+  Dummy charm used in integration tests for Cassandra.
+
+peers:
+  local:
+    interface: cluster
+
+requires:
+  cassandra-client:
+    interface: cassandra_client

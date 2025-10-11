@@ -35,7 +35,7 @@ def test_start_change_password():
             new_callable=PropertyMock(return_value=False),
         ),
     ):
-        workload.return_value.generate_password.return_value = "password"
+        workload.return_value.generate_string.return_value = "password"
 
         state = ctx.run(ctx.on.start(), state)
         render_env.assert_called()
@@ -65,7 +65,7 @@ def test_start_subordinate_only_after_leader_active():
             "charms.rolling_ops.v0.rollingops.RollingOpsManager._on_acquire_lock", autospec=True
         ),
     ):
-        workload.return_value.generate_password.return_value = "password"
+        workload.return_value.generate_string.return_value = "password"
 
         state = ctx.run(ctx.on.start(), state)
         restart.assert_not_called()
@@ -115,7 +115,7 @@ def test_start_subordinate_only_after_seed_active(workload_active: bool, seed_ac
         patch("charm.CassandraWorkload") as workload,
         patch("charm.CassandraCharm.restart") as restart,
     ):
-        workload.return_value.generate_password.return_value = "password"
+        workload.return_value.generate_string.return_value = "password"
 
         state = ctx.run(ctx.on.start(), state)
         if workload_active and seed_active:
@@ -143,7 +143,7 @@ def test_start_invalid_config():
             "charms.rolling_ops.v0.rollingops.RollingOpsManager._on_acquire_lock", autospec=True
         ) as bootstrap,
     ):
-        workload.return_value.generate_password.return_value = "password"
+        workload.return_value.generate_string.return_value = "password"
 
         state = ctx.run(ctx.on.start(), state)
         workload.return_value.restart.assert_not_called()
@@ -170,7 +170,7 @@ def test_config_changed_invalid_config():
         patch("charm.CassandraCharm.setup_internal_certificates", return_value=True),
         patch("charm.CassandraWorkload") as workload,
     ):
-        workload.return_value.generate_password.return_value = "password"
+        workload.return_value.generate_string.return_value = "password"
 
         state = ctx.run(ctx.on.config_changed(), state)
         assert state.unit_status == ops.BlockedStatus("invalid config")
@@ -202,7 +202,7 @@ def test_config_changed(env_changed: bool, cassandra_config_changed: bool):
             new_callable=PropertyMock(return_value=True),
         ),
     ):
-        workload.return_value.generate_password.return_value = "password"
+        workload.return_value.generate_string.return_value = "password"
 
         state = ctx.run(ctx.on.config_changed(), state)
         render_env.assert_not_called()

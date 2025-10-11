@@ -15,6 +15,11 @@ from charms.data_platform_libs.v0.data_interfaces import (
     DataPeerOtherUnitData,
     DataPeerUnitData,
 )
+from charms.data_platform_libs.v1.data_interfaces import (
+    OpsRelationRepository,
+    RepositoryInterface,
+    RequirerCommonModel,
+)
 from charms.tls_certificates_interface.v4.tls_certificates import (
     Certificate,
     CertificateSigningRequest,
@@ -26,6 +31,7 @@ DATA_STORAGE = "data"
 CLIENT_TLS_RELATION = "client-certificates"
 PEER_TLS_RELATION = "peer-certificates"
 PEER_RELATION = "cassandra-peers"
+CLIENT_RELATION = "cassandra-client"
 CASSANDRA_PEER_PORT = 7000
 CASSANDRA_CLIENT_PORT = 9042
 JMX_EXPORTER_PORT = 7071
@@ -464,6 +470,16 @@ class ClusterContext(RelationState):
         self._field_setter_wrapper("cluster_state", value.value)
 
     @property
+    def roles(self) -> set[str]:
+        """Set of Cassandra roles created by the operator."""
+        roles = self.relation_data.get("roles", "")
+        return set(roles.split(",")) if roles else set()
+
+    @roles.setter
+    def roles(self, value: set[str]) -> None:
+        self._field_setter_wrapper("roles", ",".join(value))
+
+    @property
     def is_active(self) -> bool:
         """Whether Cassandra cluster state is `ACTIVE`."""
         return self.state == ClusterState.ACTIVE
@@ -529,6 +545,13 @@ class ApplicationState(Object):
             self.model,
             relation_name=PEER_RELATION,
             additional_secret_fields=SECRETS_UNIT,
+        )
+        self.client_interface = RepositoryInterface(
+            charm,
+            relation_name=CLIENT_RELATION,
+            component=charm.app,
+            repository_type=OpsRelationRepository,
+            model=RequirerCommonModel,
         )
 
     @property

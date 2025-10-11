@@ -6,6 +6,12 @@
 
 import logging
 
+from charms.data_platform_libs.v1.data_interfaces import (
+    DataContractV1,
+    ResourceProviderModel,
+    SecretBool,
+    SecretStr,
+)
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from charms.grafana_agent.v0.cos_agent import COSAgentProvider
 from ops import EventBase, ModelError, SecretNotFoundError, main
@@ -22,6 +28,7 @@ from core.state import (
     UnitWorkloadState,
 )
 from events.cassandra import CassandraEvents
+from events.provider import ExternalClientsEvents
 from events.tls import TLSEvents
 from managers.config import ConfigManager
 from managers.database import DatabaseManager
@@ -77,7 +84,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             database_manager=database_manager,
             tls_manager=self.tls_manager,
             setup_internal_certificates=self.setup_internal_certificates,
-            read_auth_secret=self.read_auth_secret,
+            acquire_operator_password=self.acquire_operator_password,
             restart=self.restart,
         )
 
@@ -92,6 +99,16 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             restart=self.restart,
         )
 
+        self.provider_events = ExternalClientsEvents(
+            self,
+            state=self.state,
+            workload=self.workload,
+            node_manager=self.node_manager,
+            tls_manager=self.tls_manager,
+            database_manager=database_manager,
+            acquire_operator_password=self.acquire_operator_password,
+        )
+
         self._grafana_agent = COSAgentProvider(
             self,
             metrics_endpoints=[
@@ -101,7 +118,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             log_slots=[f"{SNAP_NAME}:logs"],
         )
 
-    def _on_bootstrap(self, event: EventBase) -> None:
+    def _on_bootstrap(self, event: EventBase) -> None:  # noqa: C901
         if self.state.unit.workload_state != UnitWorkloadState.STARTING:
             if self.bootstrap_manager.try_lock():
                 logger.debug("Bootstrap lock is acquired")
@@ -132,6 +149,11 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
 
         logger.debug("Releasing the exclusive lock after successful bootstrap")
         self.bootstrap_manager.release()
+
+        # Update client certificates when leader is active after TLS rotation
+        # TODO: should we transfer updated certificates after ALL units are up?
+        if self.unit.is_leader():
+            self._update_external_clients_certs()
 
         if self.state.unit.peer_tls.rotation:
             self.state.unit.peer_tls.rotation = False
@@ -216,6 +238,26 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
 
         return True
 
+    def acquire_operator_password(self) -> str:
+        """Retrieve the operator password for Cassandra authentication.
+
+        The password is obtained in the following order:
+        1. If `system_users` is configured, read the password from the corresponding Juju secret.
+        2. If an operator password secret is stored in the cluster state, return it.
+        3. Otherwise, generate a new random password.
+
+        Returns:
+            str: The operator password used for Cassandra authentication.
+
+        Raises:
+            BadSecretError: If the configured Juju secret cannot be found or is invalid.
+        """
+        if self.config.system_users:
+            return self.read_auth_secret(self.config.system_users)
+        if self.state.cluster.operator_password_secret:
+            return self.state.cluster.operator_password_secret
+        return self.workload.generate_string()
+
     def read_auth_secret(self, secret_id: str) -> str:
         """Read and validate user-defined authentication secret.
 
@@ -241,6 +283,21 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         except ModelError as e:
             logger.error(f"Error accessing user-defined system users secret: {e}")
             raise BadSecretError()
+
+    def _update_external_clients_certs(self) -> None:
+        logger.info("----------UPDATING CERTS----------")
+        for relation in self.state.client_interface.relations:
+            model = self.state.client_interface.build_model(
+                relation.id, DataContractV1[ResourceProviderModel]
+            )
+
+            for request in model.requests:
+                request.tls = SecretBool(self.state.unit.client_tls.ready)
+                request.tls_ca = SecretStr(
+                    self.state.unit.client_tls.ca.raw if self.state.unit.client_tls.ca else ""
+                )
+
+            self.state.client_interface.write_model(relation.id, model)
 
 
 if __name__ == "__main__":  # pragma: nocover
