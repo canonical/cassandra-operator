@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import jubilant
-from tenacity import Retrying, wait_fixed, stop_after_delay
 from help_types import IntegrationTestsCharms
 from helpers import (
     get_cluster_client_ca,
@@ -18,6 +17,7 @@ from helpers import (
     keyspace_exists,
     table_exists,
 )
+from tenacity import Retrying, stop_after_delay, wait_fixed
 
 logger = logging.getLogger(__name__)
 
@@ -203,22 +203,25 @@ def test_change_user_permissions(
         f"{USER_KEYSPACE_PERMISSIONS} not in {user_perms}"
     )
 
+
 def test_remove_user_after_relation_broken(
     juju: jubilant.Juju, app_name: str, requirer_app_name: str
 ) -> None:
     requested_user = _get_requested_user(juju, requirer_app_name)
     initial_user = _get_initial_user(juju, requirer_app_name)
 
-    juju.remove_relation(
-        f"{requirer_app_name}:cassandra-client", f"{app_name}:cassandra-client"
-    )
+    juju.remove_relation(f"{requirer_app_name}:cassandra-client", f"{app_name}:cassandra-client")
     juju.wait(lambda status: jubilant.all_active(status, app_name))
 
     for attempt in Retrying(wait=wait_fixed(2), stop=stop_after_delay(120), reraise=True):
         with attempt:
             users_left = get_db_users(juju, app_name)
-            assert requested_user.username not in users_left, f"User {requested_user.username} still exists"
-            assert initial_user.username not in users_left, f"User {initial_user.username} still exists"
+            assert requested_user.username not in users_left, (
+                f"User {requested_user.username} still exists"
+            )
+            assert initial_user.username not in users_left, (
+                f"User {initial_user.username} still exists"
+            )
 
 
 @dataclass
