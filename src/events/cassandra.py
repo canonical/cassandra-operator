@@ -293,7 +293,6 @@ class CassandraEvents(Object):
                 )
                 event.defer()
                 return
-            self.node_manager.decommission()
         elif self.charm.unit.is_leader():
             if not self.state.unit.is_config_change_eligible:
                 logger.debug(
