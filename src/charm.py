@@ -176,7 +176,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         False if the caller should continue normal bootstrap processing.
         """
         if self.state.unit.workload_state == UnitWorkloadState.STARTING:
-            return False
+            return True
 
         if self.bootstrap_manager.try_lock():
             logger.debug("Bootstrap lock is acquired")
@@ -186,8 +186,9 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
                     self.node_manager.prepare_shutdown()
                 except ExecError as e:
                     logger.error(f"Failed to prepare workload shutdown during restart: {e}")
-                    self.workload.restart()
-                    self.state.unit.workload_state = UnitWorkloadState.STARTING
+                    
+            self.workload.restart()
+            self.state.unit.workload_state = UnitWorkloadState.STARTING
 
         event.defer()
         return True

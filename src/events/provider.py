@@ -86,12 +86,7 @@ class ProviderEvents(Object):
         if not self.charm.unit.is_leader():
             return
 
-        if any(
-            [
-                self.state.unit.workload_state != UnitWorkloadState.ACTIVE,
-                not self.workload.is_alive(),
-            ]
-        ):
+        if not self.state.unit.is_operational:
             logger.debug("Deferring _on_resource_requested unit workload is not ready")
             event.defer()
             return
@@ -152,7 +147,7 @@ class ProviderEvents(Object):
         if not self.charm.unit.is_leader():
             return
 
-        if self.state.unit.is_operational:
+        if not self.state.unit.is_operational:
             logger.debug("Deferring _on_resource_entity_requested unit workload is not ready")
             event.defer()
             return
@@ -215,12 +210,7 @@ class ProviderEvents(Object):
         if not self.charm.unit.is_leader():
             return
 
-        if any(
-            [
-                self.state.unit.workload_state != UnitWorkloadState.ACTIVE,
-                not self.workload.is_alive(),
-            ]
-        ):
+        if not self.state.unit.is_operational:
             logger.debug(
                 "Deferring _on_resource_entity_permissions_changed unit workload is not ready"
             )
@@ -276,12 +266,7 @@ class ProviderEvents(Object):
         if not self.charm.unit.is_leader():
             return
 
-        if any(
-            [
-                self.state.unit.workload_state != UnitWorkloadState.ACTIVE,
-                not self.workload.is_alive(),
-            ]
-        ):
+        if not self.state.unit.is_operational:
             logger.debug("Deferring _on_relation_broken inactive unit workload state")
             event.defer()
             return
