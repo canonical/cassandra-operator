@@ -186,7 +186,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
                     self.node_manager.prepare_shutdown()
                 except ExecError as e:
                     logger.error(f"Failed to prepare workload shutdown during restart: {e}")
-                    
+
             self.workload.restart()
             self.state.unit.workload_state = UnitWorkloadState.STARTING
 
