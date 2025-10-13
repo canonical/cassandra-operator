@@ -28,7 +28,7 @@ from core.state import (
     UnitWorkloadState,
 )
 from events.cassandra import CassandraEvents
-from events.provider import ExternalClientsEvents
+from events.provider import ProviderEvents
 from events.tls import TLSEvents
 from managers.config import ConfigManager
 from managers.database import DatabaseManager
@@ -84,7 +84,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             database_manager=database_manager,
             tls_manager=self.tls_manager,
             setup_internal_certificates=self.setup_internal_certificates,
-            acquire_operator_password=self.acquire_operator_password,
+            read_auth_secret=self.read_auth_secret,
             restart=self.restart,
         )
 
@@ -99,14 +99,13 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             restart=self.restart,
         )
 
-        self.provider_events = ExternalClientsEvents(
+        self.provider_events = ProviderEvents(
             self,
             state=self.state,
             workload=self.workload,
             node_manager=self.node_manager,
             tls_manager=self.tls_manager,
             database_manager=database_manager,
-            acquire_operator_password=self.acquire_operator_password,
         )
 
         self._grafana_agent = COSAgentProvider(
@@ -118,23 +117,11 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             log_slots=[f"{SNAP_NAME}:logs"],
         )
 
-    def _on_bootstrap(self, event: EventBase) -> None:  # noqa: C901
-        if self.state.unit.workload_state != UnitWorkloadState.STARTING:
-            if self.bootstrap_manager.try_lock():
-                logger.debug("Bootstrap lock is acquired")
-                if self.workload.is_alive():
-                    logger.debug("Gracefully shutting down an active workload")
-                    try:
-                        self.node_manager.prepare_shutdown()
-                    except ExecError as e:
-                        logger.error(f"Failed to prepare workload shutdown during restart: {e}")
-                self.workload.restart()
-                self.state.unit.workload_state = UnitWorkloadState.STARTING
-            event.defer()
+    def _on_bootstrap(self, event: EventBase) -> None:
+        if self._handle_starting_state(event):
             return
 
         if not self._on_bootstrap_pending_check():
-            # TODO: determine whether we need removing var/lib/cassandra/* and in which cases.
             logger.error(
                 "Releasing the bootstrap exclusive lock and migrating to CANT_START workload state"
             )
@@ -150,8 +137,6 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         logger.debug("Releasing the exclusive lock after successful bootstrap")
         self.bootstrap_manager.release()
 
-        # Update client certificates when leader is active after TLS rotation
-        # TODO: should we transfer updated certificates after ALL units are up?
         if self.unit.is_leader():
             self._update_external_clients_certs()
 
@@ -159,6 +144,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             self.state.unit.peer_tls.rotation = False
         if self.state.unit.client_tls.rotation:
             self.state.unit.client_tls.rotation = False
+
         self.state.unit.workload_state = UnitWorkloadState.ACTIVE
         if self.unit.is_leader():
             self.state.cluster.state = ClusterState.ACTIVE
@@ -181,6 +167,29 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             logger.error("Cassandra bootstrap is in unknown state, failed bootstrap assumed")
             return False
 
+        return True
+
+    def _handle_starting_state(self, event: EventBase) -> bool:
+        """Handle the case when workload is not in STARTING state.
+
+        Returns True if the event was handled (lock acquired, workload restarted, etc.),
+        False if the caller should continue normal bootstrap processing.
+        """
+        if self.state.unit.workload_state == UnitWorkloadState.STARTING:
+            return False
+
+        if self.bootstrap_manager.try_lock():
+            logger.debug("Bootstrap lock is acquired")
+            if self.workload.is_alive():
+                logger.debug("Gracefully shutting down an active workload")
+                try:
+                    self.node_manager.prepare_shutdown()
+                except ExecError as e:
+                    logger.error(f"Failed to prepare workload shutdown during restart: {e}")
+                    self.workload.restart()
+                    self.state.unit.workload_state = UnitWorkloadState.STARTING
+
+        event.defer()
         return True
 
     def restart(self) -> None:
@@ -237,26 +246,6 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         )
 
         return True
-
-    def acquire_operator_password(self) -> str:
-        """Retrieve the operator password for Cassandra authentication.
-
-        The password is obtained in the following order:
-        1. If `system_users` is configured, read the password from the corresponding Juju secret.
-        2. If an operator password secret is stored in the cluster state, return it.
-        3. Otherwise, generate a new random password.
-
-        Returns:
-            str: The operator password used for Cassandra authentication.
-
-        Raises:
-            BadSecretError: If the configured Juju secret cannot be found or is invalid.
-        """
-        if self.config.system_users:
-            return self.read_auth_secret(self.config.system_users)
-        if self.state.cluster.operator_password_secret:
-            return self.state.cluster.operator_password_secret
-        return self.workload.generate_string()
 
     def read_auth_secret(self, secret_id: str) -> str:
         """Read and validate user-defined authentication secret.

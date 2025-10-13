@@ -27,6 +27,7 @@ from core.state import (
     CLIENT_RELATION,
     CLIENT_TLS_RELATION,
     PEER_RELATION,
+    DbRole,
 )
 
 logger = logging.getLogger(__name__)
@@ -326,7 +327,7 @@ def test_resource_requested_existing_role_noop(ctx):
         rolename = charm.provider_events._rolename_from_relation(
             event.relation.id, event.request.salt
         )
-        charm.provider_events.state.cluster.roles = {rolename}
+        charm.provider_events.state.cluster.roles = {DbRole(rolename, event.relation.id)}
 
         charm.provider_events._on_resource_requested(event)
 
@@ -376,7 +377,9 @@ def test_permissions_changed_respects_existing_role(ctx, role_exists):
         rolename = charm.provider_events._rolename_from_relation(
             event.relation.id, event.request.salt
         )
-        charm.provider_events.state.cluster.roles = {rolename} if role_exists else set()
+        charm.provider_events.state.cluster.roles = (
+            {DbRole(rolename, event.relation.id)} if role_exists else set()
+        )
 
         charm.provider_events._on_resource_entity_permissions_changed(event)
 
@@ -409,14 +412,18 @@ def test_relation_broken_removes_users_for_remote_app(ctx):
         workload.return_value.is_alive.return_value = True
         charm: CassandraCharm = manager.charm
 
-        # Prepare state with roles
-        charm.provider_events.state.cluster.roles = {"user_a", "user_b"}
-
         # Build a RelationBrokenEvent-like object
         event = MagicMock()
         event.relation = MagicMock()
+        event.relation.id = new_ctx.client_relation.id
         event.relation.app = MagicMock()  # remote app
         event.defer = MagicMock()
+
+        # Prepare state with roles
+        charm.provider_events.state.cluster.roles = {
+            DbRole("user_a", event.relation.id),
+            DbRole("user_b", event.relation.id),
+        }
 
         # Ensure planned_units != 0
         charm.app.planned_units = MagicMock(return_value=1)
@@ -544,12 +551,13 @@ def test_relation_broken_no_removal_when_planned_units_zero(ctx):
         workload.return_value.is_alive.return_value = True
         charm: CassandraCharm = manager.charm
 
-        charm.provider_events.state.cluster.roles = {"user_a"}
-
         event = MagicMock()
         event.relation = MagicMock()
+        event.relation.id = new_ctx.client_relation.id
         event.relation.app = MagicMock()  # remote app
         event.defer = MagicMock()
+
+        charm.provider_events.state.cluster.roles = {DbRole("user_a", event.relation.id)}
 
         charm.app.planned_units = MagicMock(return_value=0)
 
@@ -581,12 +589,13 @@ def test_relation_broken_same_app_no_removal(ctx):
         workload.return_value.is_alive.return_value = True
         charm: CassandraCharm = manager.charm
 
-        charm.provider_events.state.cluster.roles = {"user_a"}
-
         event = MagicMock()
         event.relation = MagicMock()
+        event.relation.id = new_ctx.client_relation.id
         event.relation.app = charm.app  # same app
         event.defer = MagicMock()
+
+        charm.provider_events.state.cluster.roles = {DbRole("user_a", event.relation.id)}
 
         charm.app.planned_units = MagicMock(return_value=1)
 
@@ -595,6 +604,50 @@ def test_relation_broken_same_app_no_removal(ctx):
         manager.run()
 
         remove_user.assert_not_called()
+
+
+def test_relation_broken_no_removal_other_relations(ctx):
+    new_ctx = client_relations_context(ctx, True)
+    context = new_ctx.context
+    state_in = testing.State(
+        relations=[
+            new_ctx.peer_relation,
+            new_ctx.client_relation,
+            new_ctx.bootstrap_relation,
+        ],
+        leader=True,
+    )
+
+    with (
+        patch("workload.snap.SnapCache"),
+        patch("managers.database.DatabaseManager.remove_user") as remove_user,
+        context(context.on.relation_created(new_ctx.client_relation), state=state_in) as manager,
+        patch("charm.CassandraWorkload") as workload,
+    ):
+        workload.return_value.is_alive.return_value = True
+        charm: CassandraCharm = manager.charm
+
+        event = MagicMock()
+        event.relation = MagicMock()
+        event.relation.id = new_ctx.client_relation.id
+        event.relation.app = MagicMock()
+        event.defer = MagicMock()
+
+        same_relation_user = DbRole("user_a", event.relation.id)
+        other_relation_user = DbRole("user_b", event.relation.id + 10)
+
+        charm.provider_events.state.cluster.roles = {same_relation_user, other_relation_user}
+
+        charm.app.planned_units = MagicMock(return_value=1)
+
+        charm.provider_events._on_relation_broken(event)
+
+        manager.run()
+
+        remove_user.assert_called()
+
+        assert other_relation_user in charm.provider_events.state.cluster.roles
+        assert same_relation_user not in charm.provider_events.state.cluster.roles
 
 
 def test_entity_requested_empty_permissions_still_creates_user_and_response(ctx):
@@ -676,7 +729,7 @@ def test_permissions_changed_empty_permissions_only_sets_response(ctx):
         rolename = charm.provider_events._rolename_from_relation(
             event.relation.id, event.request.salt
         )
-        charm.provider_events.state.cluster.roles = {rolename}
+        charm.provider_events.state.cluster.roles = {DbRole(rolename, event.relation.id)}
 
         # Make permissions empty
         event.request.entity_permissions = []

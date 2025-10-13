@@ -8,7 +8,7 @@ import logging
 import re
 from contextlib import contextmanager
 from ssl import CERT_REQUIRED, PROTOCOL_TLS, SSLContext
-from typing import Generator, Tuple
+from typing import Generator
 
 from cassandra import AuthenticationFailed
 from cassandra.auth import PlainTextAuthProvider
@@ -48,11 +48,11 @@ class Permissions:
     }
 
     def __init__(self, *perms: str) -> None:
-        invalid = [p for p in perms if p.upper() not in [*self._valid_permissions, ALL_PERMISSION]]
+        invalid = [p for p in perms if p.upper() not in [*self._valid_permissions, "ALL"]]
         if invalid:
             raise ValueError(f"Invalid permissions: {invalid}")
 
-        self._perms: Tuple[str, ...] = tuple(p.upper() for p in perms)
+        self._perms: tuple[str, ...] = tuple(p.upper() for p in perms)
 
     def __iter__(self):
         return iter(self._perms)
@@ -76,9 +76,10 @@ class Permissions:
     def __bool__(self) -> bool:
         return bool(self._perms)
 
-    def get_all_valid_permissions(self) -> list[str]:
+    @staticmethod
+    def all_valid_permissions() -> list[str]:
         """Return list of all valid Cassandra permissions."""
-        return list(self._valid_permissions)
+        return list(Permissions._valid_permissions)
 
 
 class DatabaseManager:
@@ -163,7 +164,7 @@ class DatabaseManager:
         ) as session:
             session.execute("DROP ROLE %s", [_CASSANDRA_DEFAULT_CREDENTIALS])
 
-    def create_keyspace(self, ks: str, rf: int, op_password: str) -> None:
+    def create_keyspace(self, ks: str, rf: int) -> None:
         """Create keyspace safely with replication factor."""
         valid_ks = self.validate_identifier(ks)
 
@@ -174,27 +175,23 @@ class DatabaseManager:
 
         with self._session(
             hosts=self.hosts,
-            auth_provider=PlainTextAuthProvider(
-                username=CASSANDRA_ADMIN_USERNAME, password=op_password
-            ),
+            auth_provider=self.auth_provider,
         ) as session:
             session.execute(cql, [rf])
 
-    def remove_keyspace(self, ks: str, op_password: str) -> None:
+    def remove_keyspace(self, ks: str) -> None:
         """Remove keyspace."""
         valid_ks = self.validate_identifier(ks)
 
         with self._session(
             hosts=self.hosts,
-            auth_provider=PlainTextAuthProvider(
-                username=CASSANDRA_ADMIN_USERNAME, password=op_password
-            ),
+            auth_provider=self.auth_provider,
         ) as session:
             session.execute(
                 f"DROP KEYSPACE IF EXISTS {valid_ks}",
             )
 
-    def init_user(self, rolename: str, password: str, op_password: str) -> None:
+    def init_user(self, rolename: str, password: str) -> None:
         """Create user role with the specified password.
 
         Grant user role LOGIN.
@@ -203,31 +200,25 @@ class DatabaseManager:
 
         with self._session(
             hosts=self.hosts,
-            auth_provider=PlainTextAuthProvider(
-                username=CASSANDRA_ADMIN_USERNAME, password=op_password
-            ),
+            auth_provider=self.auth_provider,
         ) as session:
             session.execute(
                 "CREATE ROLE IF NOT EXISTS %s WITH LOGIN = true and PASSWORD = %s",
                 [valid_role, password],
             )
 
-    def remove_user(self, rolename: str, op_password: str) -> None:
+    def remove_user(self, rolename: str) -> None:
         """Remove keyspace."""
         with self._session(
             hosts=self.hosts,
-            auth_provider=PlainTextAuthProvider(
-                username=CASSANDRA_ADMIN_USERNAME, password=op_password
-            ),
+            auth_provider=self.auth_provider,
         ) as session:
             session.execute(
                 "DROP ROLE IF EXISTS %s",
                 [rolename],
             )
 
-    def set_ks_permissions(
-        self, rolename: str, ks: str, permissions: Permissions, op_password: str
-    ) -> None:
+    def set_ks_permissions(self, rolename: str, ks: str, permissions: Permissions) -> None:
         """Grant user role on keyspace."""
         valid_ks = self.validate_identifier(ks)
         valid_role = self.validate_identifier(rolename)
@@ -239,22 +230,20 @@ class DatabaseManager:
 
         with self._session(
             hosts=self.hosts,
-            auth_provider=PlainTextAuthProvider(
-                username=CASSANDRA_ADMIN_USERNAME, password=op_password
-            ),
+            auth_provider=self.auth_provider,
         ) as session:
             session.execute(query, [valid_role])
 
             if len(permissions) != 0:
                 session.execute(f"GRANT {perms_str} ON KEYSPACE {valid_ks} TO %s", [valid_role])
 
-    def update_role_password(self, user: str, op_password: str) -> None:
+    def update_role_password(self, user: str, password: str) -> None:
         """Change password of the specified role."""
         with self._session() as session:
             # TODO: increase replication factor of system_auth.
             session.execute(
                 "ALTER ROLE %s WITH PASSWORD = %s",
-                [user, op_password],
+                [user, password],
             )
 
     @staticmethod

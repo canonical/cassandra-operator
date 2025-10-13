@@ -5,7 +5,6 @@
 """Handler for main Cassandra charm events."""
 
 import logging
-from typing import Callable
 
 from charms.data_platform_libs.v1.data_interfaces import (
     EntityPermissionModel,
@@ -25,7 +24,7 @@ from ops import (
 from pydantic import SecretStr
 
 from core.config import CharmConfig
-from core.state import CLIENT_RELATION, ApplicationState, UnitWorkloadState
+from core.state import CLIENT_RELATION, ApplicationState, DbRole, UnitWorkloadState
 from core.workload import WorkloadBase
 from managers.database import DatabaseManager, Permissions
 from managers.node import NodeManager
@@ -34,7 +33,7 @@ from managers.tls import TLSManager
 logger = logging.getLogger(__name__)
 
 
-class ExternalClientsEvents(Object):
+class ProviderEvents(Object):
     """Handle all base and cassandra related events."""
 
     def __init__(
@@ -45,7 +44,6 @@ class ExternalClientsEvents(Object):
         node_manager: NodeManager,
         tls_manager: TLSManager,
         database_manager: DatabaseManager,
-        acquire_operator_password: Callable[[], str],
     ):
         super().__init__(charm, key="provider_events")
         self.charm = charm
@@ -54,8 +52,6 @@ class ExternalClientsEvents(Object):
         self.database_manager = database_manager
         self.node_manager = node_manager
         self.tls_manager = tls_manager
-
-        self.acquire_operator_password = acquire_operator_password
 
         self.cassandra_client = ResourceProviderEventHandler(
             self.charm,
@@ -116,21 +112,21 @@ class ExternalClientsEvents(Object):
         rolename = self._rolename_from_relation(relation_id, request.salt)
         password = self.workload.generate_string()
 
-        if rolename in self.state.cluster.roles:
+        if rolename in {r.name for r in self.state.cluster.roles}:
             logger.error(f"Rolename: {rolename} already exists for this relation")
             return
 
-        self.database_manager.init_user(rolename, password, self.acquire_operator_password())
+        self.database_manager.init_user(rolename, password)
 
         self.database_manager.create_keyspace(
-            resource, len(self.state.units), self.acquire_operator_password()
+            resource,
+            len(self.state.units),
         )
 
         self.database_manager.set_ks_permissions(
             rolename,
             resource,
             Permissions("ALL"),
-            self.acquire_operator_password(),
         )
 
         response = ResourceProviderModel(
@@ -149,19 +145,14 @@ class ExternalClientsEvents(Object):
 
         self.cassandra_client.set_response(relation_id, response)
 
-        self.state.cluster.roles = {*self.state.cluster.roles, rolename}
+        self.state.cluster.roles = {*self.state.cluster.roles, DbRole(rolename, event.relation.id)}
 
     def _on_resource_entity_requested(self, event: ResourceEntityRequestedEvent) -> None:
         """Event triggered when a new user in a keyspace is requested."""
         if not self.charm.unit.is_leader():
             return
 
-        if any(
-            [
-                self.state.unit.workload_state != UnitWorkloadState.ACTIVE,
-                not self.workload.is_alive(),
-            ]
-        ):
+        if self.state.unit.is_operational:
             logger.debug("Deferring _on_resource_entity_requested unit workload is not ready")
             event.defer()
             return
@@ -184,12 +175,12 @@ class ExternalClientsEvents(Object):
         )
         self._validate_entity_permissions(permissions_req)
 
-        if rolename in self.state.cluster.roles:
+        if rolename in {r.name for r in self.state.cluster.roles}:
             logger.error(f"Rolename: {rolename} already exists for this relation")
             return
 
         # User will remain if code below throws an exception
-        self.database_manager.init_user(rolename, password, self.acquire_operator_password())
+        self.database_manager.init_user(rolename, password)
 
         for perm_req in permissions_req:
             # Ignore resource_type. This hook is only for keyspaces.
@@ -197,7 +188,6 @@ class ExternalClientsEvents(Object):
                 rolename,
                 perm_req.resource_name,
                 Permissions(*perm_req.privileges),
-                self.acquire_operator_password(),
             )
 
         response = ResourceProviderModel(
@@ -216,7 +206,7 @@ class ExternalClientsEvents(Object):
 
         self.cassandra_client.set_response(relation_id, response)
 
-        self.state.cluster.roles = {*self.state.cluster.roles, rolename}
+        self.state.cluster.roles = {*self.state.cluster.roles, DbRole(rolename, event.relation.id)}
 
     def _on_resource_entity_permissions_changed(
         self, event: ResourceEntityPermissionsChangedEvent
@@ -245,7 +235,7 @@ class ExternalClientsEvents(Object):
         relation_id = event.relation.id
         rolename = self._rolename_from_relation(relation_id, request.salt)
 
-        if rolename not in self.state.cluster.roles:
+        if rolename not in {r.name for r in self.state.cluster.roles}:
             logger.error(f"Requested user not exists: {rolename} for this relation")
             return
 
@@ -260,7 +250,6 @@ class ExternalClientsEvents(Object):
                 rolename,
                 perm_req.resource_name,
                 Permissions(*perm_req.privileges),
-                self.acquire_operator_password(),
             )
 
         response = ResourceProviderModel(
@@ -302,9 +291,12 @@ class ExternalClientsEvents(Object):
             return
 
         if event.relation.app != self.charm.app:
-            for rolename in self.state.cluster.roles:
-                self.database_manager.remove_user(rolename, self.acquire_operator_password())
-                self.state.cluster.roles = self.state.cluster.roles - {rolename}
+            for role in self.state.cluster.roles:
+                if role.relation_id != event.relation.id:
+                    continue
+
+                self.database_manager.remove_user(role.name)
+                self.state.cluster.roles = self.state.cluster.roles - {role}
 
     @staticmethod
     def _validate_entity_permissions(perms: list[EntityPermissionModel]) -> None:

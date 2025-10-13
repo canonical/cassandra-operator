@@ -432,6 +432,24 @@ class UnitContext(RelationState):
         return self.workload_state == UnitWorkloadState.ACTIVE
 
 
+@dataclass(frozen=True)
+class DbRole:
+    """Represents a Cassandra database role linked to a specific relation."""
+
+    name: str
+    relation_id: int
+
+    def to_str(self) -> str:
+        """Convert DbRole to string with format 'name:relation_id'."""
+        return f"{self.name}:{self.relation_id}"
+
+    @classmethod
+    def from_str(cls, s: str) -> "DbRole":
+        """Convert string to DbRole with format 'name:relation_id'."""
+        name, relation_id = s.split(":", 1)
+        return cls(name=name, relation_id=int(relation_id))
+
+
 class ClusterContext(RelationState):
     """Cluster context of the application state.
 
@@ -470,14 +488,18 @@ class ClusterContext(RelationState):
         self._field_setter_wrapper("cluster_state", value.value)
 
     @property
-    def roles(self) -> set[str]:
+    def roles(self) -> set[DbRole]:
         """Set of Cassandra roles created by the operator."""
-        roles = self.relation_data.get("roles", "")
-        return set(roles.split(",")) if roles else set()
+        roles_str = self.relation_data.get("roles", "")
+        if not roles_str:
+            return set()
+        return {DbRole.from_str(r) for r in roles_str.split(",")}
 
     @roles.setter
-    def roles(self, value: set[str]) -> None:
-        self._field_setter_wrapper("roles", ",".join(value))
+    def roles(self, value: set[DbRole]) -> None:
+        logger.info(f"Setting role: {value}")
+        roles_str = ",".join(r.to_str() for r in value)
+        self._field_setter_wrapper("roles", roles_str)
 
     @property
     def is_active(self) -> bool:

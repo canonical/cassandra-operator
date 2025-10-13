@@ -180,14 +180,14 @@ def check_tls(ip: str, port: int) -> bool:
 
 
 def get_unit_address(juju: jubilant.Juju, app_name: str, unit_num) -> str:
-    """Get the address for a unit."""
+    """Get the addresses for a units."""
     status = juju.status()
     address = status.apps[app_name].units[f"{app_name}/{unit_num}"].public_address
     return address
 
 
 def get_unit_names(juju: jubilant.Juju, app_name: str) -> list[str]:
-    """Get the address for a unit."""
+    """Get the names for a units."""
     units = juju.status().apps[app_name].units.items()
     addresses = [u[0] for u in units]
     return addresses
