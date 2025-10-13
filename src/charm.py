@@ -119,6 +119,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
 
     def _on_bootstrap(self, event: EventBase) -> None:
         if self._handle_starting_state(event):
+            event.defer()
             return
 
         if not self._on_bootstrap_pending_check():
@@ -176,7 +177,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         False if the caller should continue normal bootstrap processing.
         """
         if self.state.unit.workload_state == UnitWorkloadState.STARTING:
-            return True
+            return False
 
         if self.bootstrap_manager.try_lock():
             logger.debug("Bootstrap lock is acquired")
@@ -190,7 +191,6 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             self.workload.restart()
             self.state.unit.workload_state = UnitWorkloadState.STARTING
 
-        event.defer()
         return True
 
     def restart(self) -> None:
