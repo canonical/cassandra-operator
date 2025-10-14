@@ -10,8 +10,8 @@ from pathlib import Path
 
 import jubilant
 import requests
-from cos_helpers import COS, COSAssertions
-from helpers import all_prometheus_exporters_data, using_k8s, using_vm
+from helpers.cos import COS, COSAssertions, all_prometheus_exporters_data
+from helpers.juju import using_k8s, using_vm
 from requests.auth import HTTPBasicAuth
 
 logger = logging.getLogger(__name__)

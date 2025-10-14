@@ -2,87 +2,22 @@
 # Copyright 2025 Canonical Ltd.
 # See LICENSE file for licensing details.
 
+
 import json
 import logging
 import os
 import subprocess
 from contextlib import contextmanager
-from ssl import CERT_NONE, PROTOCOL_TLS_CLIENT, SSLContext
-from typing import Generator
 
 import jubilant
-import requests
 import tenacity
-from cassandra.auth import PlainTextAuthProvider
-from cassandra.cluster import EXEC_PROFILE_DEFAULT, Cluster, ExecutionProfile, ResultSet, Session
-from cassandra.policies import DCAwareRoundRobinPolicy, TokenAwarePolicy
-from tenacity import Retrying, stop_after_delay, wait_fixed
+from tenacity import stop_after_delay, wait_fixed
 
 logger = logging.getLogger(__name__)
-COS_METRICS_PORT = 7071
+
+
 CLIENT_CA_CERT = "client-ca-cert-secret"
 DEFAULT_MICROK8S_CHANNEL = "1.32-strict/stable"
-
-
-@contextmanager
-def connect_cql(
-    juju: jubilant.Juju,
-    app_name: str,
-    hosts: list[str],
-    username: str | None = None,
-    password: str | None = None,
-    keyspace: str | None = None,
-    client_ca: str | None = None,
-    timeout: float | None = None,
-) -> Generator[Session, None, None]:
-    if username is None:
-        username = "operator"
-    if password is None:
-        secrets = get_secrets_by_label(juju, f"cassandra-peers.{app_name}.app", app_name)
-        assert len(secrets) == 1
-        password = secrets[0]["operator-password"]
-
-    assert len(hosts) > 0
-
-    execution_profile = ExecutionProfile(
-        load_balancing_policy=TokenAwarePolicy(DCAwareRoundRobinPolicy()),
-        request_timeout=timeout or 10,
-    )
-    auth_provider = PlainTextAuthProvider(username=username, password=password)
-    # TODO: get rid of retrying on connection.
-    cluster = None
-    session = None
-
-    ssl_context = SSLContext(PROTOCOL_TLS_CLIENT)
-    if client_ca:
-        logger.info(f"Loading SSL context with cert: {client_ca}")
-
-        # TODO: change for mTLS
-        ssl_context.check_hostname = False
-        ssl_context.verify_mode = CERT_NONE
-
-        ssl_context.load_verify_locations(cadata=client_ca)
-    else:
-        logger.info("SSL context is disabled")
-        ssl_context = None
-
-    for attempt in Retrying(wait=wait_fixed(2), stop=stop_after_delay(120), reraise=True):
-        with attempt:
-            cluster = Cluster(
-                auth_provider=auth_provider,
-                contact_points=hosts,
-                protocol_version=5,
-                execution_profiles={EXEC_PROFILE_DEFAULT: execution_profile},
-                ssl_context=ssl_context,
-            )
-            session = cluster.connect()
-    assert cluster and session
-    if keyspace:
-        session.set_keyspace(keyspace)
-    try:
-        yield session
-    finally:
-        cluster.shutdown()
 
 
 @tenacity.retry(
@@ -113,18 +48,6 @@ def get_cluster_client_ca(juju: jubilant.Juju, app_name: str) -> str:
         )
 
     return certs.pop()
-
-
-def get_user_permissions(juju, app_name, username: str, client_ca: str | None = None) -> set[str]:
-    """Return a set of permissions granted to the given Cassandra user."""
-    with connect_cql(
-        juju=juju,
-        app_name=app_name,
-        hosts=get_hosts(juju, app_name),
-        client_ca=client_ca,
-    ) as session:
-        rows = session.execute(f'LIST ALL PERMISSIONS OF "{username}";')
-        return {row.permission for row in rows}
 
 
 def get_secrets_by_label(juju: jubilant.Juju, label: str, owner: str) -> list[dict[str, str]]:
@@ -158,29 +81,8 @@ def get_secrets_by_label(juju: jubilant.Juju, label: str, owner: str) -> list[di
     return secret_data_list
 
 
-def check_tls(ip: str, port: int) -> bool:
-    try:
-        proc = subprocess.run(
-            f"echo | openssl s_client -connect {ip}:{port}",
-            shell=True,
-            capture_output=True,
-            text=True,
-            timeout=5,
-        )
-    except subprocess.TimeoutExpired:
-        logger.debug(f"OpenSSL timeout on {ip}:{port}")
-        return False
-
-    output = proc.stdout + proc.stderr
-
-    if proc.returncode != 0:
-        logger.debug(f"OpenSSL exited with code {proc.returncode} on {ip}:{port}")
-
-    return "TLSv1.2" in output or "TLSv1.3" in output
-
-
 def get_unit_address(juju: jubilant.Juju, app_name: str, unit_num) -> str:
-    """Get the addresses for a units."""
+    """Get the address for a units."""
     status = juju.status()
     address = status.apps[app_name].units[f"{app_name}/{unit_num}"].public_address
     return address
@@ -345,31 +247,6 @@ def configure_microk8s(channel: str = DEFAULT_MICROK8S_CHANNEL) -> None:
     )
 
 
-def prometheus_exporter_data(host: str) -> str | None:
-    """Check if a given host has metric service available and it is publishing."""
-    url = f"http://{host}:{COS_METRICS_PORT}/metrics"
-    logger.info(f"prometheus_exporter_data making request: {url}")
-    try:
-        response = requests.get(url)
-    except requests.exceptions.RequestException as e:
-        logger.info(f"prometheus_exporter_data exception: {e}")
-        return None
-
-    if response.status_code == 200:
-        return response.text
-
-    return None
-
-
-def all_prometheus_exporters_data(juju: jubilant.Juju, check_field: str, app_name: str) -> bool:
-    """Check if a all units has metric service available and publishing."""
-    result = True
-    status = juju.status()
-    for unit in status.apps[app_name].units.values():
-        result = result and check_field in (prometheus_exporter_data(unit.public_address) or "")
-    return result
-
-
 def get_peer_app_data(juju: jubilant.Juju, app_name: str, peer_name: str) -> dict[str, str]:
     """Return peer relation application data for the given app as a dict."""
     unit_name = next(iter(juju.status().apps[app_name].units))
@@ -425,110 +302,6 @@ def get_hosts(juju: jubilant.Juju, app_name: str, unit_name: str = "") -> list[s
             raise ValueError(f"Unit {unit_name} not found in app {app_name}")
         return [units[unit_name].public_address]
     return [u.public_address for u in units.values()]
-
-
-def get_db_users(juju, app_name, client_ca: str | None = None) -> set[str]:
-    """Return a set of all Cassandra user names for the given application."""
-    users: set[str] = set()
-
-    with connect_cql(
-        juju=juju, app_name=app_name, hosts=get_hosts(juju, app_name), client_ca=client_ca
-    ) as session:
-        rows = session.execute("SELECT role FROM system_auth.roles;")
-        users = {row.role for row in rows}
-
-    return users
-
-
-def keyspace_exists(juju, app_name, keyspace_name: str, client_ca: str | None = None) -> bool:
-    """Check if the given Cassandra keyspace exists."""
-    with connect_cql(
-        juju=juju, app_name=app_name, hosts=get_hosts(juju, app_name), client_ca=client_ca
-    ) as session:
-        query = """
-        SELECT keyspace_name
-        FROM system_schema.keyspaces
-        WHERE keyspace_name = %s
-        """
-        result = session.execute(query, (keyspace_name,))
-        return bool(result.one())
-
-
-def table_exists(
-    juju, app_name, keyspace_name: str, table_name: str, client_ca: str | None = None
-) -> bool:
-    """Check if the given table exists in the specified Cassandra keyspace."""
-    with connect_cql(
-        juju=juju, app_name=app_name, hosts=get_hosts(juju, app_name), client_ca=client_ca
-    ) as session:
-        query = """
-        SELECT table_name
-        FROM system_schema.tables
-        WHERE keyspace_name = %s AND table_name = %s
-        """
-        result = session.execute(query, (keyspace_name, table_name))
-        return bool(result.one())
-
-
-def prepare_keyspace_and_table(
-    juju: jubilant.Juju, app_name: str, ks: str = "test", table: str = "kv", unit_name: str = ""
-) -> tuple[str, str]:
-    """Create test keyspace and table."""
-    hosts = get_hosts(juju, app_name, unit_name)
-
-    with connect_cql(juju=juju, app_name=app_name, hosts=hosts, timeout=300) as session:
-        session.execute(
-            f"CREATE KEYSPACE IF NOT EXISTS {ks} "
-            "WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 3}"
-        )
-        session.set_keyspace(ks)
-        session.execute(f"CREATE TABLE IF NOT EXISTS {table} (id INT PRIMARY KEY, value TEXT)")
-    return ks, table
-
-
-def write_n_rows(
-    juju: jubilant.Juju, app_name: str, ks: str, table: str, n: int = 100, unit_name: str = ""
-) -> dict[int, str]:
-    """Write n rows to the table."""
-    hosts = get_hosts(juju, app_name, unit_name)
-
-    with connect_cql(
-        juju=juju, app_name=app_name, hosts=hosts, timeout=300, keyspace=ks
-    ) as session:
-        for i in range(n):
-            session.execute(
-                f"INSERT INTO {table} (id, value) VALUES (%s, %s)",
-                (i, f"msg-{i}"),
-            )
-
-    return {i: f"msg-{i}" for i in range(n)}
-
-
-def read_n_rows(
-    juju: jubilant.Juju, app_name: str, ks: str, table: str, n: int = 100, unit_name: str = ""
-) -> dict[int, str]:
-    """Check that table have exactly n rows."""
-    hosts = get_hosts(juju, app_name, unit_name)
-
-    got = {}
-    with connect_cql(
-        juju=juju, app_name=app_name, hosts=hosts, timeout=300, keyspace=ks
-    ) as session:
-        res = session.execute(f"SELECT id, value FROM {table}")
-        assert isinstance(res, ResultSet)
-        rows = res.all()
-        if len(rows) != n:
-            return got
-
-        got = {row.id: row.value for row in rows}
-
-    return got
-
-
-def assert_rows(wrote: dict[int, str], got: dict[int, str]) -> None:
-    """Assert rows are equal."""
-    assert len(got) == len(wrote), f"Expected {len(wrote)} rows, got {len(got)}"
-    assert got == wrote, "Row data mismatch"
 
 
 def get_leader_unit(juju, app_name: str) -> str:
