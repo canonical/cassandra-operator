@@ -8,7 +8,7 @@ from pathlib import Path
 
 import jubilant
 from cassandra.cluster import ResultSet
-from helpers import connect_cql
+from helpers.cassandra import connect_cql
 from tenacity import sleep
 
 logger = logging.getLogger(__name__)
