@@ -4,8 +4,10 @@
 
 import logging
 import time
+import pytest
 from dataclasses import dataclass
 from pathlib import Path
+from cassandra.cluster import NoHostAvailable
 
 import jubilant
 from help_types import IntegrationTestsCharms
@@ -127,6 +129,16 @@ def test_connection_updated_on_tls_enabled(
     assert table_exists(juju, app_name, KEYSPACE_NAME, TABLE_NAME + table_prefix, client_ca=ca)
 
 
+def test_connection_no_tls_on_tls_enabled(
+    juju: jubilant.Juju,
+    app_name: str,
+) -> None:
+    with pytest.raises(NoHostAvailable) as exc_info:
+        table_exists(juju, app_name, KEYSPACE_NAME, TABLE_NAME)
+
+    err = exc_info.value
+    assert isinstance(err, NoHostAvailable)
+    
 def test_connection_updated_on_tls_updated(
     juju: jubilant.Juju,
     app_name: str,

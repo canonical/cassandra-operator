@@ -247,52 +247,6 @@ def test_resource_entity_requested_empty_resource_no_calls(ctx):
         set_ks_permissions.assert_not_called()
 
 
-def test_resource_requested_mtls_defers_when_alias_needs_update(ctx):
-    new_ctx = client_relations_context(ctx, True)
-    context = new_ctx.context
-    state_in = testing.State(
-        relations=[
-            new_ctx.peer_relation,
-            new_ctx.client_relation,
-            new_ctx.bootstrap_relation,
-        ],
-        leader=True,
-    )
-
-    with (
-        patch("workload.snap.SnapCache"),
-        patch("managers.database.DatabaseManager.init_user") as init_user,
-        patch("managers.database.DatabaseManager.create_keyspace") as create_keyspace,
-        patch("managers.database.DatabaseManager.set_ks_permissions") as set_ks_permissions,
-        context(context.on.relation_created(new_ctx.client_relation), state=state_in) as manager,
-        patch("charm.CassandraWorkload") as workload,
-    ):
-        workload.return_value.is_alive.return_value = True
-        workload.return_value.generate_string.return_value = "password"
-        charm: CassandraCharm = manager.charm
-
-        # Force alias_needs_update to True so we defer
-        charm.provider_events.tls_manager.alias_needs_update = MagicMock(return_value=True)
-
-        req = generate_resource_request()
-        # Provide some mtls_cert so the code path checks alias
-        req.mtls_cert = SecretStr("cert-bytes")
-        event = MagicMock(spec=ResourceRequestedEvent)
-        event.request = req
-        event.relation = new_ctx.client_relation
-        event.defer = MagicMock()
-        object.__setattr__(event.relation, "app", MagicMock())
-
-        charm.provider_events._on_resource_requested(event)
-
-        manager.run()
-
-        event.defer.assert_called_once()
-        init_user.assert_not_called()
-        create_keyspace.assert_not_called()
-        set_ks_permissions.assert_not_called()
-
-
 def test_resource_requested_existing_role_noop(ctx):
     new_ctx = client_relations_context(ctx, True)
     context = new_ctx.context

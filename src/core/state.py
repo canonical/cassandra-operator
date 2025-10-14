@@ -439,7 +439,7 @@ class DbRole:
     name: str
     relation_id: int
 
-    def to_str(self) -> str:
+    def __str__(self) -> str:
         """Convert DbRole to string with format 'name:relation_id'."""
         return f"{self.name}:{self.relation_id}"
 
@@ -498,7 +498,7 @@ class ClusterContext(RelationState):
     @roles.setter
     def roles(self, value: set[DbRole]) -> None:
         logger.info(f"Setting role: {value}")
-        roles_str = ",".join(r.to_str() for r in value)
+        roles_str = ",".join(str(r) for r in value)
         self._field_setter_wrapper("roles", roles_str)
 
     @property

@@ -140,7 +140,7 @@ class WorkloadBase(ABC):
         pass
 
     @staticmethod
-    def generate_string(length: int = 32, salt: str = "") -> str:
+    def generate_string(length: int = 32, prefix: str = "") -> str:
         """Create randomized string for use as app passwords.
 
         Returns:
@@ -148,4 +148,4 @@ class WorkloadBase(ABC):
         """
         alphabet = string.ascii_letters + string.digits
         random_part = "".join(secrets.choice(alphabet) for _ in range(length))
-        return salt + random_part
+        return prefix + random_part

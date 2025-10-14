@@ -492,36 +492,6 @@ class TLSManager:
                 logger.debug(f"Removing {path}")
                 path.unlink()
 
-    def reload_truststore(self, scope: TLSScope) -> None:
-        """Reload the Cassandra truststore for the given TLS scope."""
-        if not self.workload.cassandra_paths.get_truststore(scope).exists():
-            return
-
-        self.workload.exec([self.nodetool, "reloadssl"])
-
-    def update_truststore(
-        self, entities: set[StoreEntry], trust_password: str, scope: TLSScope
-    ) -> None:
-        """Update the truststore with the given certificates.
-
-        Each entity's certificate is added or updated if needed.
-        Reloads the truststore if any changes were made.
-        """
-        should_reload = False
-        live_aliases = set()
-
-        for entity in entities:
-            if not self.alias_needs_update(entity.alias, entity.cert.raw):
-                continue
-
-            self.update_cert(entity.alias, entity.cert.raw, trust_password, scope)
-            live_aliases.add(entity.alias)
-            should_reload = True
-
-        if should_reload:
-            logger.debug(f"Following aliases should be in the {scope} truststore: {live_aliases}")
-            self.reload_truststore(scope)
-
     @staticmethod
     def certificate_fingerprint(cert: str):
         """Return the certificate fingerprint using SHA-256 algorithm."""
