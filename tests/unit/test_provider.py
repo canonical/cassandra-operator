@@ -15,7 +15,6 @@ from charms.data_platform_libs.v1.data_interfaces import (
     ResourceEntityRequestedEvent,
     ResourceRequestedEvent,
     SecretBool,
-    SecretStr,
     gen_hash,
     gen_salt,
 )

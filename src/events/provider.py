@@ -26,7 +26,7 @@ from pydantic import SecretStr
 from core.config import CharmConfig
 from core.state import CLIENT_RELATION, ApplicationState, DbRole
 from core.workload import WorkloadBase
-from managers.database import _CASSANDRA_DEFAULT_CREDENTIALS, DatabaseManager, Permissions
+from managers.database import DatabaseManager, Permissions
 from managers.node import NodeManager
 from managers.tls import TLSManager
 

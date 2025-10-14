@@ -4,12 +4,12 @@
 
 import logging
 import time
-import pytest
 from dataclasses import dataclass
 from pathlib import Path
-from cassandra.cluster import NoHostAvailable
 
 import jubilant
+import pytest
+from cassandra.cluster import NoHostAvailable
 from help_types import IntegrationTestsCharms
 from helpers import (
     get_cluster_client_ca,
@@ -138,7 +138,8 @@ def test_connection_no_tls_on_tls_enabled(
 
     err = exc_info.value
     assert isinstance(err, NoHostAvailable)
-    
+
+
 def test_connection_updated_on_tls_updated(
     juju: jubilant.Juju,
     app_name: str,
