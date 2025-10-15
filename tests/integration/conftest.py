@@ -12,8 +12,10 @@ from typing import Generator
 import jubilant
 import pytest
 import yaml
-from helpers.juju import get_microk8s_controller, using_k8s, using_vm
-from helpers.types import IntegrationTestsCharms, TestCharm
+
+from integration.helpers.continuous_writes import ContinuousWrites
+from integration.helpers.juju import get_microk8s_controller, using_k8s, using_vm
+from integration.helpers.types import IntegrationTestsCharms, TestCharm
 
 logger = logging.getLogger(__name__)
 
@@ -150,3 +152,9 @@ def requirer_app_name() -> str:
         Path("./tests/integration/application-charm/metadata.yaml").read_text()
     )
     return metadata["name"]
+
+
+@pytest.fixture(scope="module")
+def continuous_writes() -> Generator[ContinuousWrites, None, None]:
+    continuous_writes = ContinuousWrites()
+    yield continuous_writes
