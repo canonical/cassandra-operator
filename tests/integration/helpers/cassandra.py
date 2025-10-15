@@ -12,8 +12,9 @@ import jubilant
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.cluster import EXEC_PROFILE_DEFAULT, Cluster, ExecutionProfile, ResultSet, Session
 from cassandra.policies import DCAwareRoundRobinPolicy, TokenAwarePolicy
-from helpers.juju import get_hosts, get_secrets_by_label
 from tenacity import Retrying, stop_after_delay, wait_fixed
+
+from integration.helpers.juju import get_hosts, get_secrets_by_label
 
 logger = logging.getLogger(__name__)
 
@@ -22,13 +23,15 @@ logger = logging.getLogger(__name__)
 def connect_cql(
     juju: jubilant.Juju,
     app_name: str,
-    hosts: list[str],
+    hosts: list[str] | None = None,
     username: str | None = None,
     password: str | None = None,
     keyspace: str | None = None,
     client_ca: str | None = None,
     timeout: float | None = None,
 ) -> Generator[Session, None, None]:
+    if hosts is None:
+        hosts = get_hosts(juju, app_name)
     if username is None:
         username = "operator"
     if password is None:
