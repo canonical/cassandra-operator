@@ -286,7 +286,7 @@ class CassandraEvents(Object):
         if not self.state.unit.is_ready:
             logger.debug("Exiting on_peer_relation_departed due to unit not being ready")
             return
-        
+
         if event.departing_unit != self.charm.unit and self.charm.unit.is_leader():
             if not self.state.unit.is_config_change_eligible:
                 logger.debug(
