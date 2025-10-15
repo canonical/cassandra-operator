@@ -333,7 +333,7 @@ def test_tls_enabled_but_not_ready_sets_waiting_status(ctx, is_leader):
             "core.state.ClusterContext.tls_state", new_callable=PropertyMock(return_value="active")
         ),
     ):
-        workload.return_value.generate_password.return_value = "password"
+        workload.return_value.generate_string.return_value = "password"
 
         state_out = ctx.run(
             ctx.on.relation_created(default_tls_context.client_tls_relation), state_in
@@ -358,7 +358,7 @@ def test_tls_relation_created_sets_tls_state(ctx, is_leader):
         ),
         patch("charm.CassandraWorkload") as workload,
     ):
-        workload.return_value.generate_password.return_value = "password"
+        workload.return_value.generate_string.return_value = "password"
 
         state_out = ctx.run(ctx.on.relation_created(client_tls_relation), state)
 
@@ -390,7 +390,7 @@ def test_tls_default_certificates_files_setup(ctx):
         ),
         patch("charm.CassandraCharm.restart"),
     ):
-        workload.return_value.generate_password.return_value = "password"
+        workload.return_value.generate_string.return_value = "password"
 
         state_out = ctx.run(ctx.on.start(), state_in)
         latest_content = get_secrets_latest_content_by_label(
@@ -442,7 +442,7 @@ def test_tls_default_certificates_files_setup(ctx):
         patch("managers.node.NodeManager.is_healthy", return_value=True),
         patch("charm.CassandraCharm.restart"),
     ):
-        workload.return_value.generate_password.return_value = "password"
+        workload.return_value.generate_string.return_value = "password"
 
         state_out = ctx.run(ctx.on.start(), state_in)
         latest_content = get_secrets_latest_content_by_label(

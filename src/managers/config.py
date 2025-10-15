@@ -172,7 +172,7 @@ class ConfigManager:
                         TLSScope.CLIENT
                     ).as_posix(),
                     "truststore_password": truststore_password,
-                    "require_client_auth": True,
+                    "require_client_auth": False,  # mTLS is disabled
                     "algorithm": "SunX509",
                     "store_type": "JKS",
                     "protocol": "TLS",
@@ -248,7 +248,7 @@ class ConfigManager:
     def _cassandra_default_config() -> dict[str, Any]:
         return {
             "allocate_tokens_for_local_replication_factor": 3,
-            "authorizer": "AllowAllAuthorizer",
+            "authorizer": "CassandraAuthorizer",
             "cas_contention_timeout": "1000ms",
             "cidr_authorizer": {"class_name": "AllowAllCIDRAuthorizer"},
             "commitlog_sync": "periodic",
