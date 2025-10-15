@@ -378,3 +378,53 @@ def assert_rows(wrote: dict[int, str], got: dict[int, str]) -> None:
     """Assert rows are equal."""
     assert len(got) == len(wrote), f"Expected {len(wrote)} rows, got {len(got)}"
     assert got == wrote, "Row data mismatch"
+
+def scale_sequentially_to(juju: jubilant.Juju, app_name: str, n: int) -> None:
+    """
+    Sequentially scale Cassandra application to the desired number of units.
+
+    This function ensures that units are removed one by one until the
+    total count matches the target `n`. It will not remove the leader unit
+    and will raise an exception if scaling down to 0 units is requested.
+
+    In case of scaling up, units will be added simultaniosly.
+    """
+    if n <= 0:
+        raise Exception("Cannot scale down to 0 or negative number of units")
+
+    status = juju.status().apps[app_name]
+    units = status.units
+
+    leader_units = [name for name, u in units.items() if u.leader]
+    non_leader_units = [name for name, u in units.items() if not u.leader]
+
+    if not leader_units:
+        raise Exception("No leader unit present")
+
+    total = len(units)
+    if total == n:
+        return
+
+    if total > n:
+        # Remove non-leader units one by one
+        to_remove = total - n
+        for unit in non_leader_units[:to_remove]:
+            logger.info(f"Scaling down unit")
+            juju.remove_unit(unit)
+            juju.wait(
+                ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
+                delay=3,
+                successes=5,
+            )
+            total -= 1
+            if total == n:
+                return
+
+    elif total < n:
+        to_add = n - total
+        juju.add_unit(app_name, num_units=to_add)
+        juju.wait(
+            ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
+            delay=3,
+            successes=5,
+        )
