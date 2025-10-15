@@ -100,7 +100,7 @@ class ProviderEvents(Object):
         password = self.workload.generate_string()
 
         if rolename in {r.name for r in self.state.cluster.roles}:
-            # TODO: improve error propagation accordingly to DA-174                        
+            # TODO: improve error propagation accordingly to DA-174
             logger.error(f"Rolename: {rolename} already exists for this relation")
             return
 
