@@ -24,7 +24,13 @@ class ContinuousWrites:
         self.juju: jubilant.Juju | None = None
         self.app_name: str | None = None
 
-    def start(self, juju: jubilant.Juju, app_name: str, replication_factor: int = 1) -> None:
+    def start(
+        self,
+        juju: jubilant.Juju,
+        app_name: str,
+        hosts: list[str] | None = None,
+        replication_factor: int = 1,
+    ) -> None:
         assert not self.juju
 
         self.juju = juju
@@ -37,6 +43,7 @@ class ContinuousWrites:
                 self.write_event,
                 juju,
                 app_name,
+                hosts,
                 self.keyspace_name,
                 self.timeout,
             ),
@@ -44,11 +51,10 @@ class ContinuousWrites:
         self.process.start()
         self.write_event.wait(self.force_timeout)
 
-    def stop_and_assert_writes(self) -> None:
+    def stop_and_assert_writes(self, hosts: list[str] | None = None) -> None:
         assert self.juju and self.app_name and self.process and self.process.is_alive()
 
-        self.write_event.clear()
-        self.write_event.wait(self.force_timeout)
+        self.assert_new_writes(hosts)
 
         self.stop_event.set()
         self.process.join(self.force_timeout)
@@ -56,7 +62,7 @@ class ContinuousWrites:
             logger.error("continuous writes process was killed forcefully")
             self.process.terminate()
 
-        self._assert_writes()
+        self._assert_writes(hosts)
 
         self._clear_keyspace()
         self.stop_event.clear()
@@ -64,35 +70,67 @@ class ContinuousWrites:
         self.juju = None
         self.app_name = None
 
+    def assert_new_writes(self, hosts: list[str] | None = None) -> None:
+        assert self.juju and self.app_name and self.process and self.process.is_alive()
+
+        position = self._get_max_position(hosts)
+
+        self.write_event.clear()
+        self.write_event.wait(self.force_timeout)
+
+        next_position = self._get_max_position(hosts)
+
+        assert next_position > position
+
     def _init_keyspace(self, replication_factor: int) -> None:
         assert self.juju and self.app_name
-        with connect_cql(juju=self.juju, app_name=self.app_name, timeout=self.timeout) as session:
-            session.execute(
-                f"CREATE KEYSPACE {self.keyspace_name} WITH replication = "
-                f"{{'class': 'SimpleStrategy', 'replication_factor': {replication_factor}}}"
-            )
-            session.set_keyspace(self.keyspace_name)
-            session.execute("CREATE TABLE test_table(position INT PRIMARY KEY)")
+        for attempt in Retrying(
+            wait=wait_fixed(10), stop=stop_after_delay(self.timeout), reraise=True
+        ):
+            with attempt:
+                with connect_cql(
+                    juju=self.juju, app_name=self.app_name, timeout=self.timeout
+                ) as session:
+                    session.execute(
+                        f"CREATE KEYSPACE {self.keyspace_name} WITH replication = "
+                        f"{{'class': 'SimpleStrategy','replication_factor': {replication_factor}}}"
+                    )
+                    session.set_keyspace(self.keyspace_name)
+                    session.execute("CREATE TABLE test_table(position INT PRIMARY KEY)")
 
     def _clear_keyspace(self) -> None:
-        assert self.juju and self.app_name
-        with connect_cql(juju=self.juju, app_name=self.app_name, timeout=self.timeout) as session:
-            session.execute(f"DROP KEYSPACE IF EXISTS {self.keyspace_name}")
+        self._cql_exec(f"DROP KEYSPACE IF EXISTS {self.keyspace_name}")
 
-    def _assert_writes(self) -> None:
+    def _get_max_position(self, hosts: list[str] | None = None) -> int:
+        res = self._cql_exec("SELECT MAX(position) FROM test_table", hosts=hosts)
+        assert isinstance(res, ResultSet)
+        return res.all()[0][0]
+
+    def _assert_writes(self, hosts: list[str] | None = None) -> None:
+        res = self._cql_exec("SELECT * FROM test_table", hosts=hosts)
+        assert isinstance(res, ResultSet)
+        positions = [row.position for row in res.all()]
+        assert positions
+        for position in range(min(positions), max(positions)):
+            assert position in positions
+
+    def _cql_exec(self, query: str, hosts: list[str] | None = None) -> ResultSet | None:
         assert self.juju and self.app_name
-        with connect_cql(
-            juju=self.juju,
-            app_name=self.app_name,
-            keyspace=self.keyspace_name,
-            timeout=self.timeout,
-        ) as session:
-            res = session.execute("SELECT * FROM test_table")
-            assert isinstance(res, ResultSet)
-            positions = [row.position for row in res.all()]
-            assert positions
-            for position in range(min(positions), max(positions)):
-                assert position in positions
+
+        for attempt in Retrying(
+            wait=wait_fixed(10), stop=stop_after_delay(self.timeout), reraise=True
+        ):
+            with attempt:
+                with connect_cql(
+                    juju=self.juju,
+                    app_name=self.app_name,
+                    hosts=hosts,
+                    keyspace=self.keyspace_name,
+                    timeout=self.timeout,
+                ) as session:
+                    return session.execute(query)
+
+        return None
 
     @staticmethod
     def _continuous_writes(
@@ -100,6 +138,7 @@ class ContinuousWrites:
         write_event: synchronize.Event,
         juju: jubilant.Juju,
         app_name: str,
+        hosts: list[str] | None,
         keyspace_name: str,
         timeout: int,
     ) -> None:
@@ -107,7 +146,11 @@ class ContinuousWrites:
         for attempt in Retrying(wait=wait_fixed(10), stop=stop_after_delay(timeout), reraise=True):
             with attempt:
                 with connect_cql(
-                    juju=juju, app_name=app_name, keyspace=keyspace_name, timeout=timeout
+                    juju=juju,
+                    app_name=app_name,
+                    hosts=hosts,
+                    keyspace=keyspace_name,
+                    timeout=timeout,
                 ) as session:
                     while not stop_event.is_set():
                         session.execute(
