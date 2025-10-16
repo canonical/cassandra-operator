@@ -7,14 +7,15 @@ from pathlib import Path
 
 import jubilant
 from cassandra.cluster import ResultSet
-from helpers.cassandra import (
+
+from integration.helpers.cassandra import (
     assert_rows,
     connect_cql,
     prepare_keyspace_and_table,
     read_n_rows,
     write_n_rows,
 )
-from helpers.juju import get_leader_unit, get_non_leader_units
+from integration.helpers.juju import get_leader_unit, get_non_leader_units
 
 logger = logging.getLogger(__name__)
 

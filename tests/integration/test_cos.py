@@ -10,9 +10,10 @@ from pathlib import Path
 
 import jubilant
 import requests
-from helpers.cos import COS, COSAssertions, all_prometheus_exporters_data
-from helpers.juju import using_k8s, using_vm
 from requests.auth import HTTPBasicAuth
+
+from integration.helpers.cos import COS, COSAssertions, all_prometheus_exporters_data
+from integration.helpers.juju import using_k8s, using_vm
 
 logger = logging.getLogger(__name__)
 COS_AGENT_APP_NAME = "grafana-agent"
