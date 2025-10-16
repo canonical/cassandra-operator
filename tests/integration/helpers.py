@@ -379,9 +379,9 @@ def assert_rows(wrote: dict[int, str], got: dict[int, str]) -> None:
     assert len(got) == len(wrote), f"Expected {len(wrote)} rows, got {len(got)}"
     assert got == wrote, "Row data mismatch"
 
+
 def scale_sequentially_to(juju: jubilant.Juju, app_name: str, n: int) -> None:
-    """
-    Sequentially scale Cassandra application to the desired number of units.
+    """Sequentially scale Cassandra application to the desired number of units.
 
     This function ensures that units are removed one by one until the
     total count matches the target `n`. It will not remove the leader unit
@@ -409,10 +409,11 @@ def scale_sequentially_to(juju: jubilant.Juju, app_name: str, n: int) -> None:
         # Remove non-leader units one by one
         to_remove = total - n
         for unit in non_leader_units[:to_remove]:
-            logger.info(f"Scaling down unit")
+            logger.info("Scaling down unit")
             juju.remove_unit(unit)
             juju.wait(
-                ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
+                ready=lambda status: jubilant.all_agents_idle(status)
+                and jubilant.all_active(status),
                 delay=3,
                 successes=5,
             )

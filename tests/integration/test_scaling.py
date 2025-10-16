@@ -7,7 +7,13 @@ from itertools import pairwise
 from pathlib import Path
 
 import jubilant
-from helpers import assert_rows, prepare_keyspace_and_table, read_n_rows, scale_sequentially_to, write_n_rows
+from helpers import (
+    assert_rows,
+    prepare_keyspace_and_table,
+    read_n_rows,
+    scale_sequentially_to,
+    write_n_rows,
+)
 
 logger = logging.getLogger(__name__)
 TEST_ROW_NUM = 100
@@ -60,7 +66,7 @@ def test_read_write_multinode(juju: jubilant.Juju, app_name: str) -> None:
         got = read_n_rows(juju, app_name, ks=ks, table=tb, unit_name=unit2_name)
         assert_rows(wrote, got)
 
-        
+
 def test_single_node_scale_down(juju: jubilant.Juju, app_name: str) -> None:
     non_leader_units = [
         name for name, unit in juju.status().apps[app_name].units.items() if not unit.leader
@@ -101,10 +107,11 @@ def test_single_node_scale_down(juju: jubilant.Juju, app_name: str) -> None:
     got = read_n_rows(juju, app_name, ks=ks, table=tb, unit_name=new_leader_unit)
     assert_rows(wrote, got)
 
+
 def test_single_node_scale_down_scale_up(juju: jubilant.Juju, app_name: str) -> None:
-    logger.info(f"STATUS: {juju.status()}")    
+    logger.info(f"STATUS: {juju.status()}")
     scale_sequentially_to(juju, app_name, 2)
-    
+
     non_leader_units = [
         name for name, unit in juju.status().apps[app_name].units.items() if not unit.leader
     ]
@@ -136,8 +143,7 @@ def test_single_node_scale_down_scale_up(juju: jubilant.Juju, app_name: str) -> 
         name for name, unit in juju.status().apps[app_name].units.items() if not unit.leader
     ]
 
-    assert len(non_leader_units) == 1 
+    assert len(non_leader_units) == 1
 
     got = read_n_rows(juju, app_name, ks=ks, table=tb, unit_name=non_leader_units[0])
     assert_rows(wrote, got)
-    
