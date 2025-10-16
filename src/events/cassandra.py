@@ -414,9 +414,9 @@ class CassandraEvents(Object):
 
     def _on_storage_detaching(self, _: StorageDetachingEvent) -> None:
         if self.node_manager.is_bootstrap_decommissioning:
-            logger.warning(f"Node is already decommissioned")
+            logger.warning("Node is already decommissioned")
             return
-        
+
         if not self.node_manager.is_healthy(self.state.unit.ip):
             raise Exception("Cluster is not healthy, cannot remove unit")
 

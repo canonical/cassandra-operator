@@ -64,9 +64,15 @@ class NodeManager:
 
     @property
     def is_bootstrap_decommissioning(self) -> bool:
+        """Check if the node is in the process of, or has completed, decommissioning."""
         try:
             stdout, _ = self._workload.exec([_NODETOOL, "info"], suppress_error_log=True)
-            return "Bootstrap state        : DECOMMISSIONED" in stdout
+            if "Bootstrap state        : DECOMMISSIONED" in stdout:
+                return True
+
+            stdout, _ = self._workload.exec([_NODETOOL, "info"], suppress_error_log=True)
+            return "Decommissioning        : true" in stdout
+
         except ExecError:
             return False
 
@@ -111,7 +117,7 @@ class NodeManager:
             return "Gossip active          : true" in stdout
         except ExecError:
             return False
-        
+
     @property
     def _is_gossip_ready(self) -> bool:
         gossip_info = self.get_gossipinfo().get(self.network_address()[0])

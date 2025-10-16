@@ -69,7 +69,7 @@ def test_read_write_multinode(juju: jubilant.Juju, app_name: str) -> None:
 
 def test_single_node_scale_down(juju: jubilant.Juju, app_name: str) -> None:
     scale_sequentially_to(juju, app_name, 3)
-    
+
     non_leader_units = [
         name for name, unit in juju.status().apps[app_name].units.items() if not unit.leader
     ]
