@@ -68,6 +68,8 @@ def test_read_write_multinode(juju: jubilant.Juju, app_name: str) -> None:
 
 
 def test_single_node_scale_down(juju: jubilant.Juju, app_name: str) -> None:
+    scale_sequentially_to(juju, app_name, 3)
+    
     non_leader_units = [
         name for name, unit in juju.status().apps[app_name].units.items() if not unit.leader
     ]
@@ -76,7 +78,7 @@ def test_single_node_scale_down(juju: jubilant.Juju, app_name: str) -> None:
         name for name, unit in juju.status().apps[app_name].units.items() if unit.leader
     ][0]
 
-    assert len(non_leader_units) != 0 and len(non_leader_units) > 1
+    assert len(non_leader_units) == 2
 
     ks, tb = prepare_keyspace_and_table(juju, app_name=app_name, ks="downks", table="downtbl")
     wrote = write_n_rows(juju, app_name, ks=ks, table=tb, unit_name=non_leader_units[0])
