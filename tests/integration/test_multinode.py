@@ -7,7 +7,8 @@ from pathlib import Path
 
 import jubilant
 from cassandra.cluster import ResultSet
-from helpers.cassandra import connect_cql
+
+from integration.helpers.cassandra import connect_cql
 
 logger = logging.getLogger(__name__)
 
