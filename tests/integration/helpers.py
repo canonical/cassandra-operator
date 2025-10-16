@@ -378,3 +378,22 @@ def assert_rows(wrote: dict[int, str], got: dict[int, str]) -> None:
     """Assert rows are equal."""
     assert len(got) == len(wrote), f"Expected {len(wrote)} rows, got {len(got)}"
     assert got == wrote, "Row data mismatch"
+
+
+def get_leader_unit(juju, app_name: str) -> str:
+    """Return the name of the leader unit for the given application.
+
+    Raises:
+        ValueError: If no leader unit is found.
+    """
+    app = juju.status().apps[app_name]
+    for name, unit in app.units.items():
+        if unit.leader:
+            return name
+    raise ValueError(f"No leader unit found for application '{app_name}'")
+
+
+def get_non_leader_units(juju, app_name: str) -> list[str]:
+    """Return a list of all non-leader units for the given application."""
+    app = juju.status().apps[app_name]
+    return [name for name, unit in app.units.items() if not unit.leader]
