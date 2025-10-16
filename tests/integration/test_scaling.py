@@ -7,7 +7,13 @@ from itertools import pairwise
 from pathlib import Path
 
 import jubilant
-from helpers.cassandra import assert_rows, prepare_keyspace_and_table, read_n_rows, write_n_rows
+
+from integration.helpers.cassandra import (
+    assert_rows,
+    prepare_keyspace_and_table,
+    read_n_rows,
+    write_n_rows,
+)
 
 logger = logging.getLogger(__name__)
 TEST_ROW_NUM = 100

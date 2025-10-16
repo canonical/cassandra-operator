@@ -6,9 +6,10 @@ import logging
 from pathlib import Path
 
 import jubilant
-from helpers.cassandra import check_tls
-from helpers.juju import check_node_is_up, get_address, get_secrets_by_label
-from helpers.types import IntegrationTestsCharms
+
+from integration.helpers.cassandra import check_tls
+from integration.helpers.juju import check_node_is_up, get_address, get_secrets_by_label
+from integration.helpers.types import IntegrationTestsCharms
 
 logger = logging.getLogger(__name__)
 

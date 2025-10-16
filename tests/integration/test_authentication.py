@@ -6,9 +6,10 @@ import logging
 from pathlib import Path
 
 import jubilant
-from helpers.cassandra import connect_cql
-from helpers.juju import get_address, get_secrets_by_label
 from pytest import raises
+
+from integration.helpers.cassandra import connect_cql
+from integration.helpers.juju import get_address, get_secrets_by_label
 
 logger = logging.getLogger(__name__)
 
