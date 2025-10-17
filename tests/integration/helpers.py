@@ -313,9 +313,7 @@ def get_hosts(juju: jubilant.Juju, app_name: str, unit_name: str = "") -> list[s
     if unit_name:
         if unit_name not in units:
             raise ValueError(f"Unit {unit_name} not found in app {app_name}")
-        return [units[unit_name].public_address] + [
-            u.public_address for name, u in units.items() if name != unit_name
-        ]
+        return [units[unit_name].public_address]
     return [u.public_address for u in units.values()]
 
 
