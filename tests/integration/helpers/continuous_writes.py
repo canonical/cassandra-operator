@@ -107,12 +107,12 @@ class ContinuousWrites:
         return res.all()[0][0]
 
     def _assert_writes(self, hosts: list[str] | None = None) -> None:
-        res = self._cql_exec("SELECT * FROM test_table", hosts=hosts)
+        res = self._cql_exec(
+            "SELECT min(position), max(position), count(position) FROM test_table", hosts=hosts
+        )
         assert isinstance(res, ResultSet)
-        positions = [row.position for row in res.all()]
-        assert positions
-        for position in range(min(positions), max(positions)):
-            assert position in positions
+        pmin, pmax, pcount = res.all()[0]
+        assert pcount == (1 + pmax - pmin)
 
     def _cql_exec(self, query: str, hosts: list[str] | None = None) -> ResultSet | None:
         assert self.juju and self.app_name
