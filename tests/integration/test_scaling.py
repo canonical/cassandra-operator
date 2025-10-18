@@ -7,7 +7,13 @@ from itertools import pairwise
 from pathlib import Path
 
 import jubilant
-from helpers import assert_rows, prepare_keyspace_and_table, read_n_rows, write_n_rows
+from helpers import (
+    assert_rows,
+    prepare_keyspace_and_table,
+    read_n_rows,
+    scale_sequentially_to,
+    write_n_rows,
+)
 
 logger = logging.getLogger(__name__)
 TEST_ROW_NUM = 100
@@ -19,7 +25,7 @@ def test_deploy(juju: jubilant.Juju, cassandra_charm: Path, app_name: str) -> No
         app=app_name,
         config={"profile": "testing"},
     )
-    juju.wait(jubilant.all_active)
+    juju.wait(jubilant.all_active, timeout=1200)
 
 
 def test_scale_up(juju: jubilant.Juju, app_name: str) -> None:
@@ -31,8 +37,7 @@ def test_scale_up(juju: jubilant.Juju, app_name: str) -> None:
 
     old_units = set(juju.status().apps[app_name].units.keys())
 
-    juju.add_unit(app_name, num_units=2)
-    juju.wait(jubilant.all_active, timeout=1200)
+    scale_sequentially_to(juju, app_name, 3)
 
     all_units = set(juju.status().apps[app_name].units.keys())
     new_units = list(all_units - old_units)
@@ -63,6 +68,8 @@ def test_read_write_multinode(juju: jubilant.Juju, app_name: str) -> None:
 
 
 def test_single_node_scale_down(juju: jubilant.Juju, app_name: str) -> None:
+    scale_sequentially_to(juju, app_name, 3)
+
     non_leader_units = [
         name for name, unit in juju.status().apps[app_name].units.items() if not unit.leader
     ]
@@ -71,19 +78,29 @@ def test_single_node_scale_down(juju: jubilant.Juju, app_name: str) -> None:
         name for name, unit in juju.status().apps[app_name].units.items() if unit.leader
     ][0]
 
-    assert len(non_leader_units) != 0 and len(non_leader_units) > 1
+    assert len(non_leader_units) == 2
 
     ks, tb = prepare_keyspace_and_table(juju, app_name=app_name, ks="downks", table="downtbl")
     wrote = write_n_rows(juju, app_name, ks=ks, table=tb, unit_name=non_leader_units[0])
 
     juju.remove_unit(non_leader_units[0])
-    juju.wait(jubilant.all_active)
+    juju.wait(
+        ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
+        delay=3,
+        successes=5,
+        timeout=1200,
+    )
 
     got = read_n_rows(juju, app_name, ks=ks, table=tb, unit_name=non_leader_units[1])
     assert_rows(wrote, got)
 
     juju.remove_unit(leader_unit)
-    juju.wait(jubilant.all_active)
+    juju.wait(
+        ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
+        delay=3,
+        successes=5,
+        timeout=1200,
+    )
 
     new_leader_unit = [
         name for name, unit in juju.status().apps[app_name].units.items() if unit.leader
@@ -92,4 +109,41 @@ def test_single_node_scale_down(juju: jubilant.Juju, app_name: str) -> None:
     assert new_leader_unit
 
     got = read_n_rows(juju, app_name, ks=ks, table=tb, unit_name=new_leader_unit)
+    assert_rows(wrote, got)
+
+
+def test_single_node_scale_down_scale_up(juju: jubilant.Juju, app_name: str) -> None:
+    scale_sequentially_to(juju, app_name, 2)
+
+    non_leader_units = [
+        name for name, unit in juju.status().apps[app_name].units.items() if not unit.leader
+    ]
+
+    assert len(non_leader_units) == 1
+
+    ks, tb = prepare_keyspace_and_table(juju, app_name=app_name, ks="downupks", table="downuptbl")
+    wrote = write_n_rows(juju, app_name, ks=ks, table=tb, unit_name=non_leader_units[0])
+
+    juju.remove_unit(non_leader_units[0])
+    juju.wait(
+        ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
+        delay=3,
+        successes=5,
+    )
+
+    # scale back up
+    juju.add_unit(app_name, num_units=1)
+    juju.wait(
+        ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
+        delay=3,
+        successes=5,
+    )
+
+    non_leader_units = [
+        name for name, unit in juju.status().apps[app_name].units.items() if not unit.leader
+    ]
+
+    assert len(non_leader_units) == 1
+
+    got = read_n_rows(juju, app_name, ks=ks, table=tb, unit_name=non_leader_units[0])
     assert_rows(wrote, got)
