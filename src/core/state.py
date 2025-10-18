@@ -3,7 +3,7 @@
 # See LICENSE file for licensing details.
 
 """Application state definition."""
-
+import os
 import json
 import logging
 from dataclasses import dataclass
@@ -48,7 +48,6 @@ SECRETS_UNIT = [
 ]
 
 SECRETS_APP = ["internal-ca-secret", "internal-ca-key-secret", "operator-password"]
-
 
 logger = logging.getLogger(__name__)
 
@@ -525,11 +524,21 @@ class ApplicationState(Object):
             relation_name=PEER_RELATION,
             additional_secret_fields=SECRETS_APP,
         )
+
+
         self.peer_unit_interface = DataPeerUnitData(
             self.model,
             relation_name=PEER_RELATION,
-            additional_secret_fields=SECRETS_UNIT,
+            additional_secret_fields=SECRETS_UNIT,            
         )
+
+        # TODO: remove when data platform bug is fixed:
+        # https://github.com/canonical/data-platform-libs/issues/243#issue-3527889114
+        if os.getenv("JUJU_HOOK_NAME", "") == f"{DATA_STORAGE}-storage-detaching":
+            self.peer_unit_interface = DataPeerUnitData(
+                self.model,
+                relation_name=PEER_RELATION,
+            )
 
     @property
     def peer_relation(self) -> Relation | None:

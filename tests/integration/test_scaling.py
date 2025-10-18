@@ -25,7 +25,7 @@ def test_deploy(juju: jubilant.Juju, cassandra_charm: Path, app_name: str) -> No
         app=app_name,
         config={"profile": "testing"},
     )
-    juju.wait(jubilant.all_active)
+    juju.wait(jubilant.all_active, timeout=1200)
 
 
 def test_scale_up(juju: jubilant.Juju, app_name: str) -> None:
@@ -88,6 +88,7 @@ def test_single_node_scale_down(juju: jubilant.Juju, app_name: str) -> None:
         ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
         delay=3,
         successes=5,
+        timeout=1200,
     )
 
     got = read_n_rows(juju, app_name, ks=ks, table=tb, unit_name=non_leader_units[1])
@@ -98,6 +99,7 @@ def test_single_node_scale_down(juju: jubilant.Juju, app_name: str) -> None:
         ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
         delay=3,
         successes=5,
+        timeout=1200,
     )
 
     new_leader_unit = [

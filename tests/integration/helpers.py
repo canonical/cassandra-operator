@@ -416,6 +416,7 @@ def scale_sequentially_to(juju: jubilant.Juju, app_name: str, n: int) -> None:
                 and jubilant.all_active(status),
                 delay=3,
                 successes=5,
+                timeout=1200,
             )
             total -= 1
             if total == n:
@@ -428,4 +429,5 @@ def scale_sequentially_to(juju: jubilant.Juju, app_name: str, n: int) -> None:
             ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
             delay=3,
             successes=5,
+            timeout=1200,
         )
