@@ -10,8 +10,6 @@ import os
 from dataclasses import dataclass
 from enum import StrEnum
 
-from ops.model import Model
-
 from charms.data_platform_libs.v0.data_interfaces import (
     Data,
     DataPeerData,
@@ -533,7 +531,9 @@ class ApplicationState(Object):
 
         # TODO: remove when data platform bug is fixed:
         # https://github.com/canonical/data-platform-libs/issues/243#issue-3527889114
-        if (self.model.juju_version <= JujuVersion("3.5.7")) and  os.getenv("JUJU_HOOK_NAME", "") == f"{DATA_STORAGE}-storage-detaching":
+        if (self.model.juju_version <= JujuVersion("3.5.7")) and os.getenv(
+            "JUJU_HOOK_NAME", ""
+        ) == f"{DATA_STORAGE}-storage-detaching":
             unit_additional_secret_fields = None
 
         self.peer_unit_interface = DataPeerUnitData(
