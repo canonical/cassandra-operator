@@ -110,6 +110,12 @@ jobs:
           pipx uninstall-all
           printf '\nDisk usage\n'
           df --human-readable
+      - name: Enable permissive iptables policy
+        run: |
+          echo "Setting iptables FORWARD policy to ACCEPT"
+          sudo iptables -P FORWARD ACCEPT
+          sudo iptables -F FORWARD
+          sudo iptables -L FORWARD	  
       - name: Checkout
         timeout-minutes: 3
         uses: actions/checkout@v4
@@ -360,7 +366,7 @@ jobs:
               json.dump(DATA, file)
       - name: Generate Allure report
         run: allure generate
-      - name: Create index.html
+      - name: Create index.htmlвшы
         shell: python
         run: |
           DATA = f"""<!DOCTYPE html>
