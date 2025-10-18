@@ -3,9 +3,10 @@
 # See LICENSE file for licensing details.
 
 """Application state definition."""
-import os
+
 import json
 import logging
+import os
 from dataclasses import dataclass
 from enum import StrEnum
 
@@ -525,11 +526,10 @@ class ApplicationState(Object):
             additional_secret_fields=SECRETS_APP,
         )
 
-
         self.peer_unit_interface = DataPeerUnitData(
             self.model,
             relation_name=PEER_RELATION,
-            additional_secret_fields=SECRETS_UNIT,            
+            additional_secret_fields=SECRETS_UNIT,
         )
 
         # TODO: remove when data platform bug is fixed:
