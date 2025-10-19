@@ -146,7 +146,8 @@ jobs:
       - name: Inspect microk8s and print diagnostics
         run: |
           sudo microk8s inspect || true
-          REPORT=$(ls -t /var/snap/microk8s/current/inspection-report-*.tar.gz | head -n1)
+          REPORT=$(find /var/snap/microk8s/current -maxdepth 1 -type f -name "inspection-report-*.tar.gz" -printf "%T@ %p\n" | sort -nr | head -n1 | cut -d' ' -f2)
+
           mkdir -p inspect
           sudo tar -xzf "$REPORT" -C inspect
           echo "=== k8s.get-all ==="
