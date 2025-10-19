@@ -147,29 +147,33 @@ jobs:
       - name: Inspect microk8s and print diagnostics
         if: always()
         run: |
-          sudo microk8s inspect || true
-          REPORT=$(find /var/snap/microk8s/current -maxdepth 1 -type f -name "inspection-report-*.tar.gz" -printf "%T@ %p\n" | sort -nr | head -n1 | cut -d' ' -f2)
-
-          mkdir -p inspect
-          sudo tar -xzf "$REPORT" -C inspect
-          echo "=== k8s.get-all ==="
-          cat inspect/inspection-report*/k8s/get-all || true
-          echo "=== k8s.cluster-info ==="
-          cat inspect/inspection-report*/k8s/cluster-info || true
-          echo "=== network.iptables ==="
-          cat inspect/inspection-report*/network/iptables || true
-          echo "=== network.ip-addr ==="
-          cat inspect/inspection-report*/network/ip-addr || true
-          echo "=== network.ip-route ==="
-          cat inspect/inspection-report*/network/ip-route || true
-          echo "=== network.iptables-L ==="
-          cat inspect/inspection-report*/network/iptables-L || true
-          echo "=== network.iptables-S ==="
-          cat inspect/inspection-report*/network/iptables-S || true
-          echo "=== dqlite.cluster.yaml ==="
-          cat inspect/inspection-report*/dqlite/cluster.yaml || true
-          echo "=== microk8s.daemon-kubelite.journal.log ==="
-          cat inspect/inspection-report*/microk8s.daemon-kubelite/journal.log || true
+          REPORT=$(sudo microk8s inspect 2>&1 | tee inspect.log | grep 'Report tarball is at' | awk '{print $6}')    
+          if [ -f "$REPORT" ]; then
+            echo "Report found: $REPORT"      
+            mkdir -p inspect
+            sudo tar -xzf "$REPORT" -C inspect
+        
+            echo "=== k8s.get-all ==="
+            cat inspect/inspection-report*/k8s/get-all || true
+            echo "=== k8s.cluster-info ==="
+            cat inspect/inspection-report*/k8s/cluster-info || true
+            echo "=== network.iptables ==="
+            cat inspect/inspection-report*/network/iptables || true
+            echo "=== network.ip-addr ==="
+            cat inspect/inspection-report*/network/ip-addr || true
+            echo "=== network.ip-route ==="
+            cat inspect/inspection-report*/network/ip-route || true
+            echo "=== network.iptables-L ==="
+            cat inspect/inspection-report*/network/iptables-L || true
+            echo "=== network.iptables-S ==="
+            cat inspect/inspection-report*/network/iptables-S || true
+            echo "=== dqlite.cluster.yaml ==="
+            cat inspect/inspection-report*/dqlite/cluster.yaml || true
+            echo "=== microk8s.daemon-kubelite.journal.log ==="
+            cat inspect/inspection-report*/microk8s.daemon-kubelite/journal.log || true
+          else
+            echo "MicroK8s inspect report not found"
+          fi
 
       - name: Upload Allure results
         timeout-minutes: 3
