@@ -131,7 +131,7 @@ jobs:
           pattern: ${{ inputs.artifact-prefix }}-*
           merge-multiple: true
       - name: Run spread job
-        timeout-minutes: 180
+        timeout-minutes: 10
         id: spread
         # TODO: replace with `charmcraft test` when
         # https://github.com/canonical/charmcraft/issues/2105 and
@@ -139,11 +139,13 @@ jobs:
         run: ~/go/bin/spread -vv -artifacts=artifacts '${{ matrix.job.spread_job }}'
 
       - name: Inspect lxd
+        if: always()
         run: |
           lxc network list
           lxc network show lxdbr0
 
       - name: Inspect microk8s and print diagnostics
+        if: always()
         run: |
           sudo microk8s inspect || true
           REPORT=$(find /var/snap/microk8s/current -maxdepth 1 -type f -name "inspection-report-*.tar.gz" -printf "%T@ %p\n" | sort -nr | head -n1 | cut -d' ' -f2)
