@@ -110,12 +110,9 @@ jobs:
           pipx uninstall-all
           printf '\nDisk usage\n'
           df --human-readable
-      - name: Enable permissive iptables policy
+      - name: Check IP range
         run: |
-          echo "Setting iptables FORWARD policy to ACCEPT"
-          sudo iptables -P FORWARD ACCEPT
-          sudo iptables -F FORWARD
-          sudo iptables -L FORWARD	  
+          ip -4 addr show | grep inet
       - name: Checkout
         timeout-minutes: 3
         uses: actions/checkout@v4
