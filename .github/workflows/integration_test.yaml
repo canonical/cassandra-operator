@@ -137,6 +137,37 @@ jobs:
         # https://github.com/canonical/charmcraft/issues/2105 and
         # https://github.com/canonical/charmcraft/issues/2130 fixed
         run: ~/go/bin/spread -vv -artifacts=artifacts '${{ matrix.job.spread_job }}'
+
+      - name: Inspect lxd
+        run: |
+          lxc network list
+          lxc network show lxdbr0
+
+      - name: Inspect microk8s and print diagnostics
+        run: |
+          sudo microk8s inspect || true
+          REPORT=$(ls -t /var/snap/microk8s/current/inspection-report-*.tar.gz | head -n1)
+          mkdir -p inspect
+          sudo tar -xzf "$REPORT" -C inspect
+          echo "=== k8s.get-all ==="
+          cat inspect/inspection-report*/k8s/get-all || true
+          echo "=== k8s.cluster-info ==="
+          cat inspect/inspection-report*/k8s/cluster-info || true
+          echo "=== network.iptables ==="
+          cat inspect/inspection-report*/network/iptables || true
+          echo "=== network.ip-addr ==="
+          cat inspect/inspection-report*/network/ip-addr || true
+          echo "=== network.ip-route ==="
+          cat inspect/inspection-report*/network/ip-route || true
+          echo "=== network.iptables-L ==="
+          cat inspect/inspection-report*/network/iptables-L || true
+          echo "=== network.iptables-S ==="
+          cat inspect/inspection-report*/network/iptables-S || true
+          echo "=== dqlite.cluster.yaml ==="
+          cat inspect/inspection-report*/dqlite/cluster.yaml || true
+          echo "=== microk8s.daemon-kubelite.journal.log ==="
+          cat inspect/inspection-report*/microk8s.daemon-kubelite/journal.log || true
+
       - name: Upload Allure results
         timeout-minutes: 3
         # Only upload results from one spread system & one spread variant
@@ -150,7 +181,7 @@ jobs:
           if-no-files-found: error
       - timeout-minutes: 1
         if: ${{ success() || (failure() && steps.spread.outcome == 'failure') }}
-        run: snap list
+        run: snap list    
       - timeout-minutes: 1
         if: ${{ success() || (failure() && steps.spread.outcome == 'failure') }}
         run: sudo juju controllers
