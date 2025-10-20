@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 
 import jubilant
-from helpers import connect_cql, get_address, get_secrets_by_label
+from helpers import connect_cql, get_secrets_by_label, get_unit_address
 from pytest import raises
 
 logger = logging.getLogger(__name__)
@@ -40,7 +40,7 @@ def test_update_custom_secret(juju: jubilant.Juju, app_name: str) -> None:
     secrets = get_secrets_by_label(juju, f"cassandra-peers.{app_name}.app", app_name)
     assert len(secrets) == 1 and secrets[0].get("operator-password") == "custom_password"
     with connect_cql(
-        juju=juju, app_name=app_name, hosts=[get_address(juju, app_name, 0)]
+        juju=juju, app_name=app_name, hosts=[get_unit_address(juju, app_name, 0)]
     ) as session:
         session.execute(
             "CREATE KEYSPACE test "
@@ -66,7 +66,7 @@ def test_change_custom_secret(juju: jubilant.Juju, app_name: str) -> None:
     secrets = get_secrets_by_label(juju, f"cassandra-peers.{app_name}.app", app_name)
     assert len(secrets) == 1 and secrets[0].get("operator-password") == "custom_password_second"
     with connect_cql(
-        juju=juju, app_name=app_name, hosts=[get_address(juju, app_name, 0)], keyspace="test"
+        juju=juju, app_name=app_name, hosts=[get_unit_address(juju, app_name, 0)], keyspace="test"
     ) as session:
         session.execute("INSERT INTO test(message) VALUES ('hello')")
 
@@ -89,7 +89,7 @@ def test_remove_custom_secret(juju: jubilant.Juju, app_name: str) -> None:
     secrets = get_secrets_by_label(juju, f"cassandra-peers.{app_name}.app", app_name)
     assert len(secrets) == 1 and secrets[0].get("operator-password") == "custom_password_second"
     with connect_cql(
-        juju=juju, app_name=app_name, hosts=[get_address(juju, app_name, 0)], keyspace="test"
+        juju=juju, app_name=app_name, hosts=[get_unit_address(juju, app_name, 0)], keyspace="test"
     ) as session:
         session.execute("INSERT INTO test(message) VALUES ('world')")
 
@@ -99,7 +99,7 @@ def test_bad_credentials(juju: jubilant.Juju, app_name: str) -> None:
         with connect_cql(
             juju=juju,
             app_name=app_name,
-            hosts=[get_address(juju, app_name, 0)],
+            hosts=[get_unit_address(juju, app_name, 0)],
             username="bad",
             keyspace="test",
         ) as session:
@@ -109,7 +109,7 @@ def test_bad_credentials(juju: jubilant.Juju, app_name: str) -> None:
         with connect_cql(
             juju=juju,
             app_name=app_name,
-            hosts=[get_address(juju, app_name, 0)],
+            hosts=[get_unit_address(juju, app_name, 0)],
             password="bad",
             keyspace="test",
         ) as session:
