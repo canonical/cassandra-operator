@@ -113,6 +113,24 @@ jobs:
       - name: Check IP range
         run: |
           ip -4 addr show | grep inet
+      - name: Fix AppArmor for MicroK8s (allow network raw)
+        shell: bash
+        run: |
+          set -eux
+          FILE=/etc/apparmor.d/cri-containerd.apparmor.d
+
+          echo "Checking if 'network raw,' is present in $FILE..."
+          if ! grep -q "network raw," "$FILE"; then
+            echo "Adding missing rule to $FILE"
+            sudo sed -i '/network netlink,/a\  network raw,' "$FILE"
+          else
+            echo "'network raw,' already present"
+          fi
+
+          echo "Reloading AppArmor profile..."
+          sudo apparmor_parser -r "$FILE"
+
+          echo "AppArmor fix applied successfully." 
       - name: Checkout
         timeout-minutes: 3
         uses: actions/checkout@v4
@@ -130,12 +148,6 @@ jobs:
         with:
           pattern: ${{ inputs.artifact-prefix }}-*
           merge-multiple: true
-
-      - name: Fix metallb
-        run: |
-          sudo mkdir -p /var/snap/microk8s/common/var/lib/metallb/memberlist
-          sudo chown -R 65534:65534 /var/snap/microk8s/common/var/lib/metallb
-
       - name: Run spread job
         timeout-minutes: 20
         id: spread
