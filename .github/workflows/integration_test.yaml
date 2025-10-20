@@ -110,9 +110,6 @@ jobs:
           pipx uninstall-all
           printf '\nDisk usage\n'
           df --human-readable
-      - name: Check IP range
-        run: |
-          ip -4 addr show | grep inet
       - name: Checkout
         timeout-minutes: 3
         uses: actions/checkout@v4
@@ -131,77 +128,12 @@ jobs:
           pattern: ${{ inputs.artifact-prefix }}-*
           merge-multiple: true
       - name: Run spread job
-        timeout-minutes: 20
+        timeout-minutes: 180
         id: spread
         # TODO: replace with `charmcraft test` when
         # https://github.com/canonical/charmcraft/issues/2105 and
         # https://github.com/canonical/charmcraft/issues/2130 fixed
         run: ~/go/bin/spread -vv -artifacts=artifacts '${{ matrix.job.spread_job }}'
-
-      - name: Fix AppArmor for MicroK8s (allow network raw)
-        if: always()      
-        shell: bash
-        run: |
-          set -eux
-          FILE=/etc/apparmor.d/cri-containerd.apparmor.d
-
-          echo "Checking if 'network raw,' is present in $FILE..."
-          if ! grep -q "network raw," "$FILE"; then
-            echo "Adding missing rule to $FILE"
-            sudo sed -i '/network netlink,/a\  network raw,' "$FILE"
-          else
-            echo "'network raw,' already present"
-          fi
-
-          echo "Reloading AppArmor profile..."
-          sudo apparmor_parser -r "$FILE"
-
-          echo "AppArmor fix applied successfully." 
-
-      - name: Inspect lxd
-        if: always()
-        run: |
-          lxc network list
-          lxc network show lxdbr0
-
-      - name: Inspect microk8s and print diagnostics
-        if: always()
-        run: |
-          echo "=== Running microk8s inspect ==="
-          sudo microk8s inspect || true
-
-          echo "=== Saving stdout to inspect.log ==="
-          sudo microk8s inspect 2>&1 | tee inspect.log || true
-
-          echo "=== Finding latest inspection report tarball ==="
-          REPORT=$(sudo find /var/snap/microk8s/ -maxdepth 2 -type f -name "inspection-report-*.tar.gz" | sort -r | head -n1)
-
-          if [ -f "$REPORT" ]; then
-            echo "Report found: $REPORT"      
-            mkdir -p inspect
-            sudo tar -xzf "$REPORT" -C inspect
-        
-            echo "=== k8s.get-all ==="
-            cat inspect/inspection-report*/k8s/get-all || true
-            echo "=== k8s.cluster-info ==="
-            cat inspect/inspection-report*/k8s/cluster-info || true
-            echo "=== network.iptables ==="
-            cat inspect/inspection-report*/network/iptables || true
-            echo "=== network.ip-addr ==="
-            cat inspect/inspection-report*/network/ip-addr || true
-            echo "=== network.ip-route ==="
-            cat inspect/inspection-report*/network/ip-route || true
-            echo "=== network.iptables-L ==="
-            cat inspect/inspection-report*/network/iptables-L || true
-            echo "=== network.iptables-S ==="
-            cat inspect/inspection-report*/network/iptables-S || true
-            echo "=== dqlite.cluster.yaml ==="
-            cat inspect/inspection-report*/dqlite/cluster.yaml || true
-            echo "=== microk8s.daemon-kubelite.journal.log ==="
-            cat inspect/inspection-report*/microk8s.daemon-kubelite/journal.log || true
-          else
-            echo "MicroK8s inspect report not found"
-          fi
 
       - name: Upload Allure results
         timeout-minutes: 3
@@ -429,7 +361,7 @@ jobs:
               json.dump(DATA, file)
       - name: Generate Allure report
         run: allure generate
-      - name: Create index.htmlвшы
+      - name: Create index.html
         shell: python
         run: |
           DATA = f"""<!DOCTYPE html>
