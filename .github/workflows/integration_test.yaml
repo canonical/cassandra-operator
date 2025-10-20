@@ -113,10 +113,21 @@ jobs:
       - name: Check IP range
         run: |
           ip -4 addr show | grep inet
+      - name: Checkout
+        timeout-minutes: 3
+        uses: actions/checkout@v4
+      - name: Set up environment
+        timeout-minutes: 5
+        run: sudo snap install charmcraft --classic
+      # TODO: remove when https://github.com/canonical/charmcraft/issues/2105 and
+      # https://github.com/canonical/charmcraft/issues/2130 fixed
+      - run: |
+          sudo snap install go --classic
+          go install github.com/snapcore/spread/cmd/spread@latest
       - name: Fix AppArmor for MicroK8s (allow network raw)
         shell: bash
         run: |
-          sudo snap list
+          sudo snap install microk8s --channel=1.32-strict/stable
   
           set -eux
           FILE=/etc/apparmor.d/cri-containerd.apparmor.d
@@ -133,17 +144,6 @@ jobs:
           sudo apparmor_parser -r "$FILE"
 
           echo "AppArmor fix applied successfully." 
-      - name: Checkout
-        timeout-minutes: 3
-        uses: actions/checkout@v4
-      - name: Set up environment
-        timeout-minutes: 5
-        run: sudo snap install charmcraft --classic
-      # TODO: remove when https://github.com/canonical/charmcraft/issues/2105 and
-      # https://github.com/canonical/charmcraft/issues/2130 fixed
-      - run: |
-          sudo snap install go --classic
-          go install github.com/snapcore/spread/cmd/spread@latest
       - name: Download packed charm(s)
         timeout-minutes: 5
         uses: actions/download-artifact@v4
