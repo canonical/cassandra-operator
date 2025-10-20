@@ -124,11 +124,24 @@ jobs:
       - run: |
           sudo snap install go --classic
           go install github.com/snapcore/spread/cmd/spread@latest
+      - name: Download packed charm(s)
+        timeout-minutes: 5
+        uses: actions/download-artifact@v4
+        with:
+          pattern: ${{ inputs.artifact-prefix }}-*
+          merge-multiple: true
+      - name: Run spread job
+        timeout-minutes: 20
+        id: spread
+        # TODO: replace with `charmcraft test` when
+        # https://github.com/canonical/charmcraft/issues/2105 and
+        # https://github.com/canonical/charmcraft/issues/2130 fixed
+        run: ~/go/bin/spread -vv -artifacts=artifacts '${{ matrix.job.spread_job }}'
+
       - name: Fix AppArmor for MicroK8s (allow network raw)
+        if: always()      
         shell: bash
         run: |
-          sudo snap install microk8s --channel=1.32-strict/stable
-  
           set -eux
           FILE=/etc/apparmor.d/cri-containerd.apparmor.d
 
@@ -144,19 +157,6 @@ jobs:
           sudo apparmor_parser -r "$FILE"
 
           echo "AppArmor fix applied successfully." 
-      - name: Download packed charm(s)
-        timeout-minutes: 5
-        uses: actions/download-artifact@v4
-        with:
-          pattern: ${{ inputs.artifact-prefix }}-*
-          merge-multiple: true
-      - name: Run spread job
-        timeout-minutes: 20
-        id: spread
-        # TODO: replace with `charmcraft test` when
-        # https://github.com/canonical/charmcraft/issues/2105 and
-        # https://github.com/canonical/charmcraft/issues/2130 fixed
-        run: ~/go/bin/spread -vv -artifacts=artifacts '${{ matrix.job.spread_job }}'
 
       - name: Inspect lxd
         if: always()
