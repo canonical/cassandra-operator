@@ -147,7 +147,15 @@ jobs:
       - name: Inspect microk8s and print diagnostics
         if: always()
         run: |
-          REPORT=$(sudo microk8s inspect 2>&1 | tee inspect.log | grep 'Report tarball is at' | awk '{print $6}')    
+          echo "=== Running microk8s inspect ==="
+          sudo microk8s inspect || true
+
+          echo "=== Saving stdout to inspect.log ==="
+          sudo microk8s inspect 2>&1 | tee inspect.log || true
+
+          echo "=== Finding latest inspection report tarball ==="
+          REPORT=$(sudo find /var/snap/microk8s/ -maxdepth 2 -type f -name "inspection-report-*.tar.gz" | sort -r | head -n1)
+
           if [ -f "$REPORT" ]; then
             echo "Report found: $REPORT"      
             mkdir -p inspect
