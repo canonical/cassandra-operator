@@ -249,6 +249,7 @@ class ConfigManager:
         return {
             "allocate_tokens_for_local_replication_factor": 3,
             "authorizer": "CassandraAuthorizer",
+            "auth_read_consistency_level": "LOCAL_ONE",
             "cas_contention_timeout": "1000ms",
             "cidr_authorizer": {"class_name": "AllowAllCIDRAuthorizer"},
             "commitlog_sync": "periodic",

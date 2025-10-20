@@ -87,6 +87,15 @@ class NodeManager:
         """Disconnect node from the cluster using nodetool decommission command."""
         self._workload.exec([_NODETOOL, "decommission", "-f"])
 
+    @property
+    def active_cluster_nodes_count(self) -> int:
+        """Number of an active cluster nodes."""
+        try:
+            stdout, _ = self._workload.exec([_NODETOOL, "status"], suppress_error_log=True)
+            return stdout.count("UN  ")
+        except ExecError:
+            return 0
+
     def _is_in_cluster(self, ip: str) -> bool:
         if not ip:
             return False

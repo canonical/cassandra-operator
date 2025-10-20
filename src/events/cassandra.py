@@ -11,11 +11,13 @@ from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from ops import (
     CollectStatusEvent,
     ConfigChangedEvent,
+    EventBase,
     InstallEvent,
     LeaderElectedEvent,
     Object,
     RelationChangedEvent,
     RelationDepartedEvent,
+    RelationJoinedEvent,
     SecretChangedEvent,
     StartEvent,
     StorageDetachingEvent,
@@ -71,10 +73,16 @@ class CassandraEvents(Object):
         self.read_auth_secret = read_auth_secret
         self.restart = restart
 
+        self.charm.on.define_event("update_auth_rf", EventBase)
+        self.framework.observe(self.charm.on.update_auth_rf, self._on_update_auth_rf)
+
         self.framework.observe(self.charm.on.start, self._on_start)
         self.framework.observe(self.charm.on.install, self._on_install)
         self.framework.observe(self.charm.on.config_changed, self._on_config_changed)
         self.framework.observe(self.charm.on.secret_changed, self._on_secret_changed)
+        self.framework.observe(
+            self.charm.on[PEER_RELATION].relation_joined, self._on_peer_relation_joined
+        )
         self.framework.observe(
             self.charm.on[PEER_RELATION].relation_changed, self._on_peer_relation_changed
         )
@@ -269,6 +277,11 @@ class CassandraEvents(Object):
             logger.error(f"Secret haven't passed validation: {e}")
             return
 
+    def _on_peer_relation_joined(self, event: RelationJoinedEvent) -> None:
+        if event.unit == self.charm.unit or not self.charm.unit.is_leader():
+            return
+        self.charm.on.update_auth_rf.emit()
+
     def _on_peer_relation_changed(self, event: RelationChangedEvent) -> None:
         if not self.state.unit.is_ready:
             logger.debug("Exiting on_peer_relation_changed due to unit not being ready")
@@ -295,6 +308,7 @@ class CassandraEvents(Object):
                 event.defer()
                 return
             self._recover_seeds()
+            self.charm.on.update_auth_rf.emit()
 
     def _on_leader_elected(self, event: LeaderElectedEvent) -> None:
         if not self.state.unit.is_ready:
@@ -305,6 +319,7 @@ class CassandraEvents(Object):
             event.defer()
             return
         self._recover_seeds()
+        self.charm.on.update_auth_rf.emit()
 
     def _on_update_status(self, _: UpdateStatusEvent) -> None:
         if self.state.unit.is_operational and not self.workload.is_alive():
@@ -430,3 +445,13 @@ class CassandraEvents(Object):
             raise e
 
         logger.info("Hook for storage-detaching event completed")
+
+    def _on_update_auth_rf(self, event: EventBase) -> None:
+        if not self.state.unit.is_operational:
+            logger.debug("Deferring on_peer_relation_departed due to unit not being operational")
+            event.defer()
+            return
+        if (n := self.node_manager.active_cluster_nodes_count) != self.charm.app.planned_units():
+            event.defer()
+            return
+        self.database_manager.update_system_auth_replication_factor(min(n, 3))
