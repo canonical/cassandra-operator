@@ -130,6 +130,12 @@ jobs:
         with:
           pattern: ${{ inputs.artifact-prefix }}-*
           merge-multiple: true
+	  
+      - name: Fix metallb
+        run: |
+          sudo mkdir -p /var/snap/microk8s/common/var/lib/metallb/memberlist
+          sudo chown -R 65534:65534 /var/snap/microk8s/common/var/lib/metallb
+
       - name: Run spread job
         timeout-minutes: 20
         id: spread
