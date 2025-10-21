@@ -7,6 +7,7 @@ import subprocess
 from contextlib import contextmanager
 from typing import Generator
 
+from cassandra import ConsistencyLevel
 import jubilant
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.cluster import EXEC_PROFILE_DEFAULT, Cluster, ExecutionProfile, ResultSet, Session
@@ -40,6 +41,7 @@ def connect_cql(
     execution_profile = ExecutionProfile(
         load_balancing_policy=TokenAwarePolicy(DCAwareRoundRobinPolicy()),
         request_timeout=timeout or 10,
+        consistency_level=ConsistencyLevel.QUORUM
     )
     auth_provider = PlainTextAuthProvider(username=username, password=password)
     # TODO: get rid of retrying on connection.

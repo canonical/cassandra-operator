@@ -23,6 +23,7 @@ class ContinuousWrites:
         self.write_event = Event()
         self.juju: jubilant.Juju | None = None
         self.app_name: str | None = None
+        self.context_str: str | None = None
 
     def start(
         self,
@@ -30,6 +31,7 @@ class ContinuousWrites:
         app_name: str,
         hosts: list[str] | None = None,
         replication_factor: int = 1,
+        context_str: str | None = None,
     ) -> None:
         assert not self.juju
 
@@ -46,6 +48,7 @@ class ContinuousWrites:
                 hosts,
                 self.keyspace_name,
                 self.timeout,
+                context_str,
             ),
         )
         self.process.start()
@@ -141,23 +144,31 @@ class ContinuousWrites:
         hosts: list[str] | None,
         keyspace_name: str,
         timeout: int,
+        context_str: str | None = None,
     ) -> None:
         position: int = 1
         for attempt in Retrying(wait=wait_fixed(10), stop=stop_after_delay(timeout), reraise=True):
             with attempt:
-                with connect_cql(
-                    juju=juju,
-                    app_name=app_name,
-                    hosts=hosts,
-                    keyspace=keyspace_name,
-                    timeout=timeout,
-                ) as session:
-                    while not stop_event.is_set():
-                        session.execute(
-                            "INSERT INTO test_table (position) VALUES (%s)",
-                            (position,),
-                            timeout=timeout,
-                        )
-                        write_event.set()
-                        position += 1
-                        stop_event.wait(1)
+                try: 
+                  with connect_cql(
+                      juju=juju,
+                      app_name=app_name,
+                      hosts=hosts,
+                      keyspace=keyspace_name,
+                      timeout=timeout,
+                  ) as session:
+                      while not stop_event.is_set():
+                          q = "INSERT INTO test_table (position) VALUES (%s)"
+                          logger.info(f"Context: {context_str}, query: {q} values: {position}")
+                          session.execute(
+                              q,
+                              (position,),
+                              timeout=timeout,
+                          )
+                          write_event.set()
+                          position += 1
+                          stop_event.wait(1)
+                except Exception as e:
+                    logger.error(f"Context: {context_str}, exceprion: {e}")
+                    raise e
+  

@@ -9,6 +9,7 @@ import subprocess
 from contextlib import contextmanager
 
 import jubilant
+from jubilant.statustypes import UnitStatus
 
 logger = logging.getLogger(__name__)
 
@@ -209,7 +210,6 @@ def configure_microk8s(channel: str = DEFAULT_MICROK8S_CHANNEL) -> None:
         """
     )
 
-
 def get_hosts(juju: jubilant.Juju, app_name: str, unit_name: str = "") -> list[str]:
     """Return list of host addresses for the given app.
 
@@ -219,7 +219,17 @@ def get_hosts(juju: jubilant.Juju, app_name: str, unit_name: str = "") -> list[s
     if unit_name:
         if unit_name not in units:
             raise ValueError(f"Unit {unit_name} not found in app {app_name}")
-        return [units[unit_name].public_address] + [
-            u.public_address for name, u in units.items() if name != unit_name
-        ]
+        return [units[unit_name].public_address]
     return [u.public_address for u in units.values()]
+
+def get_leader_unit(juju, app_name: str) -> str:
+    """Return the name of the leader unit for the given application.
+    Raises:
+        ValueError: If no leader unit is found.
+    """
+    app = juju.status().apps[app_name]
+    for name, unit in app.units.items():
+        if unit.leader:
+            return name
+    raise ValueError(f"No leader unit found for application '{app_name}'")
+
