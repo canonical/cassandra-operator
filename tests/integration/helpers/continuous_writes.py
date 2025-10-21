@@ -70,6 +70,10 @@ class ContinuousWrites:
         self.juju = None
         self.app_name = None
 
+    def force_stop(self) -> None:
+        if self.process and self.process.is_alive():
+            self.process.terminate()
+
     def assert_new_writes(self, hosts: list[str] | None = None) -> None:
         assert self.juju and self.app_name and self.process and self.process.is_alive()
 
@@ -107,13 +111,18 @@ class ContinuousWrites:
         return res.all()[0][0]
 
     def _assert_writes(self, hosts: list[str] | None = None) -> None:
-        res = self._cql_exec(
-            "SELECT min(position), max(position), count(position) FROM test_table", hosts=hosts
-        )
-        assert isinstance(res, ResultSet)
-        pmin, pmax, pcount = res.all()[0]
-        logger.info(f"continuous writes min={pmin}, max={pmax}, pcount={pcount}")
-        assert pcount == (1 + pmax - pmin)
+        for attempt in Retrying(
+            wait=wait_fixed(10), stop=stop_after_delay(self.timeout), reraise=True
+        ):
+            with attempt:
+                res = self._cql_exec(
+                    "SELECT min(position), max(position), count(position) FROM test_table",
+                    hosts=hosts,
+                )
+                assert isinstance(res, ResultSet)
+                pmin, pmax, pcount = res.all()[0]
+                logger.info(f"continuous writes min={pmin}, max={pmax}, pcount={pcount}")
+                assert pcount == (1 + pmax - pmin)
 
     def _cql_exec(self, query: str, hosts: list[str] | None = None) -> ResultSet | None:
         assert self.juju and self.app_name
