@@ -112,6 +112,7 @@ class ContinuousWrites:
         )
         assert isinstance(res, ResultSet)
         pmin, pmax, pcount = res.all()[0]
+        logger.info(f"continuous writes min={pmin}, max={pmax}, pcount={pcount}")
         assert pcount == (1 + pmax - pmin)
 
     def _cql_exec(self, query: str, hosts: list[str] | None = None) -> ResultSet | None:
