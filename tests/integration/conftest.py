@@ -158,3 +158,4 @@ def requirer_app_name() -> str:
 def continuous_writes() -> Generator[ContinuousWrites, None, None]:
     continuous_writes = ContinuousWrites()
     yield continuous_writes
+    continuous_writes.force_stop()
