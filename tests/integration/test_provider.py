@@ -10,16 +10,16 @@ from pathlib import Path
 import jubilant
 import pytest
 from cassandra.cluster import NoHostAvailable
-from help_types import IntegrationTestsCharms
-from helpers import (
-    get_cluster_client_ca,
+from tenacity import Retrying, stop_after_delay, wait_fixed
+
+from integration.helpers.cassandra import (
     get_db_users,
-    get_peer_app_data,
     get_user_permissions,
     keyspace_exists,
     table_exists,
 )
-from tenacity import Retrying, stop_after_delay, wait_fixed
+from integration.helpers.juju import get_cluster_client_ca, get_peer_app_data
+from integration.helpers.types import IntegrationTestsCharms
 
 logger = logging.getLogger(__name__)
 
