@@ -222,7 +222,7 @@ def get_hosts(juju: jubilant.Juju, app_name: str, unit_name: str = "") -> list[s
         return [units[unit_name].public_address]
     return [u.public_address for u in units.values()]
 
-def get_leader_unit(juju, app_name: str) -> str:
+def get_leader_unit(juju, app_name: str) -> tuple[str, UnitStatus]:
     """Return the name of the leader unit for the given application.
     Raises:
         ValueError: If no leader unit is found.
@@ -230,6 +230,6 @@ def get_leader_unit(juju, app_name: str) -> str:
     app = juju.status().apps[app_name]
     for name, unit in app.units.items():
         if unit.leader:
-            return name
+            return name, unit
     raise ValueError(f"No leader unit found for application '{app_name}'")
 

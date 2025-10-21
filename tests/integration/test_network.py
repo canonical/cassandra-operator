@@ -14,7 +14,7 @@ from tenacity import Retrying, stop_after_delay, wait_fixed
 
 from integration.helpers.continuous_writes import ContinuousWrites
 from integration.helpers.juju import check_node_is_up, get_address, get_hosts, get_leader_unit
-from integration.helpers.ha import network_cut, network_release, network_restore, network_throttle, get_machine_name
+from integration.helpers.ha import make_unit_checker, network_cut, network_release, network_restore, network_throttle, get_machine_name
 
 logger = logging.getLogger(__name__)
 
@@ -34,17 +34,30 @@ def test_deploy(juju: jubilant.Juju, cassandra_charm: Path, app_name: str) -> No
     )
 
 def test_network_cut_without_ip_change(juju: jubilant.Juju, continuous_writes: ContinuousWrites, app_name: str) -> None:
-    stoped_unit_name = get_leader_unit(juju, app_name)
+    stoped_unit_name, stoped_unit_status = get_leader_unit(juju, app_name)
     stoped_unit_host = get_hosts(juju, app_name, stoped_unit_name)[0]    
-    stoped_unit_machine = get_machine_name(juju, stoped_unit_name)
+    stoped_machine = get_machine_name(juju, stoped_unit_name)
     no_stoped_unit_hosts = list(set(get_hosts(juju, app_name)) - set(stoped_unit_host))
 
     continuous_writes.start(juju, app_name, hosts=no_stoped_unit_hosts, replication_factor=3, context_str="test_network_cut_without_ip_change")
     
-    network_throttle(stoped_unit_machine)
+    network_throttle(stoped_machine)
     logger.info(f"Waiting for unit to go down")
 
-    sleep(REELECTION_TIME)
+    # wait for idle unit to become throttled
+    juju.wait(
+        ready=make_unit_checker(
+            app_name,
+            stoped_unit_name,
+            machine_id=stoped_unit_status.machine,
+            workload="unknown",
+            machine="down",
+        ),
+        delay=20,
+        timeout=1800,
+    )
+
+    sleep(REELECTION_TIME)    
 
     # check node is down
     for attempt in Retrying(
@@ -64,7 +77,9 @@ def test_network_cut_without_ip_change(juju: jubilant.Juju, continuous_writes: C
     
     continuous_writes.assert_new_writes(hosts=no_stoped_unit_hosts)
     
-    network_release(stoped_unit_machine)
+    network_release(stoped_machine)
+
+    sleep(REELECTION_TIME)    
 
     # wait for throttled unit to become idle
     juju.wait(
@@ -80,7 +95,7 @@ def test_network_cut_without_ip_change(juju: jubilant.Juju, continuous_writes: C
 
 
 def test_network_cut(juju: jubilant.Juju, continuous_writes: ContinuousWrites, app_name: str) -> None:
-    stoped_unit_name = get_leader_unit(juju, app_name)
+    stoped_unit_name, stoped_unit_status = get_leader_unit(juju, app_name)
     stoped_unit_host = get_hosts(juju, app_name, stoped_unit_name)[0]
     stoped_machine = get_machine_name(juju, stoped_unit_name)
     no_stoped_hosts = list(set(get_hosts(juju, app_name)) - set(stoped_unit_host))    
@@ -90,7 +105,20 @@ def test_network_cut(juju: jubilant.Juju, continuous_writes: ContinuousWrites, a
     network_cut(stoped_machine)
     logger.info(f"Waiting for unit to go down")
 
-    sleep(REELECTION_TIME)
+    # wait for idle unit to become cut
+    juju.wait(
+        ready=make_unit_checker(
+            app_name,
+            stoped_unit_name,
+            machine_id=stoped_unit_status.machine,
+            workload="unknown",
+            machine="down",
+        ),
+        delay=20,
+        timeout=1800,
+    )
+
+    sleep(REELECTION_TIME)        
 
     # check node is down
     for attempt in Retrying(

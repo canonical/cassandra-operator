@@ -56,4 +56,21 @@ def get_machine_name(juju: jubilant.Juju, unit_name: str) -> str:
     hostname = juju.ssh(unit_name, "hostname")
     if not hostname:
         raise Exception("hostname is not avaliable")
-    return hostname
+    return hostname.rstrip()
+
+def make_unit_checker(
+    app_name: str,
+    unit_name: str,
+    machine_id: str,
+    workload: str | None = None,
+    machine: str | None = None,
+):
+    def check(status: jubilant.Status) -> bool:
+        unit = status.apps[app_name].units[unit_name]
+        m = status.machines[machine_id]
+        return all([
+            workload is None or unit.workload_status.current == workload,
+            machine is None or m.juju_status.current == machine,
+        ])
+
+    return check

@@ -133,6 +133,16 @@ def app_name() -> str:
 
 
 @pytest.fixture(scope="module")
-def continuous_writes() -> Generator[ContinuousWrites, None, None]:
-    continuous_writes = ContinuousWrites()
-    yield continuous_writes
+def continuous_writes(request) -> Generator[ContinuousWrites, None, None]:
+    cw = ContinuousWrites()
+
+    def cleanup():
+        if getattr(cw, "process", None) and cw.process.is_alive():
+            cw.stop_event.set()
+            cw.process.terminate()
+            cw.process.join(5)
+            logging.warning("ContinuousWrites process was force-terminated during cleanup")
+
+    request.addfinalizer(cleanup)
+
+    yield cw
