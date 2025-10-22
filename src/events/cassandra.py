@@ -437,6 +437,13 @@ class CassandraEvents(Object):
                    The charm may be in a broken, unrecoverable state"""
             )
 
+        if self.charm.app.planned_units() == 1:
+            logger.info("Updating system_auth replication factor to 1 accordingly")
+            try:
+                self.database_manager.update_system_auth_replication_factor(1)
+            except Exception as e:
+                logger.error(f"Failed to update system_auth replication factor: {e}")
+
         logger.info(f"Starting unit {self.state.unit.unit_name} node decommissioning")
         try:
             self.node_manager.decommission()
