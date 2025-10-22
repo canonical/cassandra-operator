@@ -9,6 +9,7 @@ from time import sleep
 from typing import Literal
 
 import jubilant
+from jubilant.statustypes import UnitStatus
 
 from integration.helpers.continuous_writes import ContinuousWrites
 from integration.helpers.juju import get_unit_address
@@ -33,10 +34,13 @@ def test_deploy(juju: jubilant.Juju, cassandra_charm: Path, app_name: str) -> No
 def test_graceful_restart_unit(
     juju: jubilant.Juju, app_name: str, continuous_writes: ContinuousWrites
 ) -> None:
+    # TODO: revert safe_unit workaround after proper scaling of system_auth replication factor
+    unit_name, unit_status = safe_unit(juju, app_name)
+
     continuous_writes.start(juju, app_name, replication_factor=3)
 
     juju.ssh(
-        f"{app_name}/0",
+        unit_name,
         "sudo charmed-cassandra.nodetool drain && sudo snap restart charmed-cassandra.daemon",
     )
 
@@ -47,15 +51,17 @@ def test_graceful_restart_unit(
         timeout=600,
     )
 
-    continuous_writes.stop_and_assert_writes([get_unit_address(juju, app_name, 0)])
+    continuous_writes.stop_and_assert_writes([unit_status.public_address])
 
 
 def test_kill_process(
     juju: jubilant.Juju, app_name: str, continuous_writes: ContinuousWrites
 ) -> None:
+    unit_name, unit_status = safe_unit(juju, app_name)
+
     continuous_writes.start(juju, app_name, replication_factor=3)
 
-    send_control_signal(juju, f"{app_name}/0", "SIGKILL")
+    send_control_signal(juju, unit_name, "SIGKILL")
 
     sleep(60)
     juju.wait(
@@ -64,25 +70,28 @@ def test_kill_process(
         timeout=600,
     )
 
-    continuous_writes.stop_and_assert_writes([get_unit_address(juju, app_name, 0)])
+    continuous_writes.stop_and_assert_writes([unit_status.public_address])
 
 
 def test_freeze_process(
     juju: jubilant.Juju, app_name: str, continuous_writes: ContinuousWrites
 ) -> None:
+    unit_name, unit_status = safe_unit(juju, app_name)
+    _, other_unit_status = other_unit(juju, app_name, unit_name)
+
     continuous_writes.start(
-        juju, app_name, [get_unit_address(juju, app_name, 1)], replication_factor=3
+        juju, app_name, [other_unit_status.public_address], replication_factor=3
     )
 
-    continuous_writes.assert_new_writes([get_unit_address(juju, app_name, 0)])
+    continuous_writes.assert_new_writes([unit_status.public_address])
 
-    send_control_signal(juju, f"{app_name}/0", "SIGSTOP")
+    send_control_signal(juju, unit_name, "SIGSTOP")
 
     sleep(10)
 
-    continuous_writes.assert_new_writes([get_unit_address(juju, app_name, 1)])
+    continuous_writes.assert_new_writes([other_unit_status.public_address])
 
-    send_control_signal(juju, f"{app_name}/0", "SIGCONT")
+    send_control_signal(juju, unit_name, "SIGCONT")
 
     sleep(10)
     juju.wait(
@@ -91,7 +100,7 @@ def test_freeze_process(
         timeout=600,
     )
 
-    continuous_writes.stop_and_assert_writes([get_unit_address(juju, app_name, 0)])
+    continuous_writes.stop_and_assert_writes([unit_status.public_address])
 
 
 def test_graceful_restart_cluster(
@@ -152,3 +161,19 @@ def send_control_signal(
             "javaagent:/snap/charmed-cassandra/",
         ]
     )
+
+
+def safe_unit(juju: jubilant.Juju, app_name: str) -> tuple[str, UnitStatus]:
+    for name, status in juju.status().apps[app_name].units.items():
+        if status.leader:
+            continue
+        return name, status
+    raise RuntimeError("cannot find safe unit to shutdown")
+
+
+def other_unit(juju: jubilant.Juju, app_name: str, avoid_unit: str) -> tuple[str, UnitStatus]:
+    for name, status in juju.status().apps[app_name].units.items():
+        if name == avoid_unit:
+            continue
+        return name, status
+    raise RuntimeError(f"cannot find unit other than {avoid_unit}")
