@@ -28,13 +28,13 @@ For an overview of available TLS certificate Provider charms and guidance on cho
 
 ## Relate the charms
 
-To enable **peer-to-peer TLS encryption**, relate Cassandra to the `:peer-certificates` endpoint:
+To enable **peer-to-peer TLS encryption**, relate Charmed Apache Cassandra to the `:peer-certificates` endpoint:
 
 ```shell
 juju integrate <tls-certificates>:certificates cassandra:peer-certificates
 ```
 
-To enable **client-to-node TLS encryption**, relate Cassandra to the `:client-certificates` endpoint:
+To enable **client-to-node TLS encryption**, relate Charmed Apache Cassandra to the `:client-certificates` endpoint:
 
 ```shell
 juju integrate <tls-certificates>:certificates cassandra:client-certificates
@@ -70,27 +70,36 @@ Connection error: ('Unable to connect to any servers',
   {'10.166.144.168:9042': ConnectionResetError(104, 'Connection reset by peer')})
 ```
 
-And in the Cassandra logs you will see:
+And in the Apache Cassandra logs you will see:
 
 ```
 WARN  [epollEventLoopGroup-5-6] ... SSLException in client networking with peer /10.166.144.168:42604
 io.netty.handler.ssl.NotSslRecordException: not an SSL/TLS record
 ```
 
-This confirms that Cassandra requires a secure TLS connection.
+This confirms that Apache Cassandra requires a secure TLS connection.
 
-### Retrieving client certificates
+### Retrieving the root CA
 
-Fetch the client private key and signed certificate from a unit:
+Fetch the root CA from the self-signed certificate operator:
 
 ```shell
-juju ssh <unit-name> "cat /var/snap/charmed-cassandra/current/etc/cassandra/tls/client-private.key" > ./client.key
-juju ssh <unit-name> "cat /var/snap/charmed-cassandra/current/etc/cassandra/tls/client-unit.pem" > ./client.pem
+juju run ssc/0 get-ca-certificate --format yaml | yq '.ssc/0.results.ca-certificate' > ca.cert
 ```
 
-### Configuring `cqlsh`
+The CA needs to be used to verify the certificate provided by the Apache Cassandra servers in the TLS handshake. 
 
-To properly use these files, create a `cqlshrc` configuration file for `cqlsh`:
+### Connecting using `cqlsh`
+
+First of all, install the `charmed-cassandra` snap in the local environment
+
+```shell
+sudo snap install charmed-cassandra --edge
+```
+
+The `charmed-cassandra` snap bundles also the `cqlsh` client to be used to connect to the Apache Cassandra endpoint. Since the snap is strictly confined, the `ca.cert` file needs to be copied to a location that is readable by the snap processes, e.g. `/var/snap/charmed-cassandra/current/etc/cassandra/` where configuration files are generally stored.  
+
+In the same location, also create a `cqlshrc` configuration file for `cqlsh`:
 
 ```ini
 [authentication]
@@ -102,17 +111,17 @@ hostname = <unit-ip>
 port = 9042
 
 [ssl]
-certfile = ./client.pem
+certfile = /var/snap/charmed-cassandra/current/etc/cassandra/ca.cert
 validate = true
-userkey = ./client.key
-usercert = ./client.pem
 ```
 
-Connect to Cassandra with:
+Connect to Apache Cassandra with:
 
 ```shell
-cqlsh --ssl --cqlshrc=./cqlshrc
+cqlsh --ssl --cqlshrc /var/snap/charmed-cassandra/current/etc/cassandra/cqlshrc
 ```
+
+The `cqlsh` client should connect and show the prompt where CQL queries can be run. 
 
 ## Disabling TLS
 
