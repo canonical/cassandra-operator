@@ -84,7 +84,7 @@ This confirms that Apache Cassandra requires a secure TLS connection.
 Fetch the root CA from the self-signed certificate operator:
 
 ```shell
-juju run ssc/0 get-ca-certificate --format yaml | yq '.ssc/0.results.ca-certificate' > ca.cert
+juju run <tls-certificates>/0 get-ca-certificate --format yaml | yq '.<tls-certificates>/0.results.ca-certificate' > ca.cert
 ```
 
 The CA needs to be used to verify the certificate provided by the Apache Cassandra servers in the TLS handshake. 
