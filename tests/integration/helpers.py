@@ -66,7 +66,7 @@ def connect_cql(
         logger.info("SSL context is disabled")
         ssl_context = None
 
-    for attempt in Retrying(wait=wait_fixed(2), stop=stop_after_delay(120), reraise=True):
+    for attempt in Retrying(wait=wait_fixed(10), stop=stop_after_delay(300), reraise=True):
         with attempt:
             cluster = Cluster(
                 auth_provider=auth_provider,
