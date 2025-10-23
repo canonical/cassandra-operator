@@ -270,6 +270,6 @@ class TLSEvents(Object):
 
         # generate unit private key if not already created by action
         if not self.state.unit.keystore_password:
-            self.state.unit.keystore_password = self.workload.generate_password()
+            self.state.unit.keystore_password = self.workload.generate_string()
         if not self.state.unit.truststore_password:
-            self.state.unit.truststore_password = self.workload.generate_password()
+            self.state.unit.truststore_password = self.workload.generate_string()

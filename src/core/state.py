@@ -16,6 +16,11 @@ from charms.data_platform_libs.v0.data_interfaces import (
     DataPeerOtherUnitData,
     DataPeerUnitData,
 )
+from charms.data_platform_libs.v1.data_interfaces import (
+    OpsRelationRepository,
+    RepositoryInterface,
+    RequirerCommonModel,
+)
 from charms.tls_certificates_interface.v4.tls_certificates import (
     Certificate,
     CertificateSigningRequest,
@@ -28,6 +33,7 @@ DATA_STORAGE = "data"
 CLIENT_TLS_RELATION = "client-certificates"
 PEER_TLS_RELATION = "peer-certificates"
 PEER_RELATION = "cassandra-peers"
+CLIENT_RELATION = "cassandra-client"
 CASSANDRA_PEER_PORT = 7000
 CASSANDRA_CLIENT_PORT = 9042
 JMX_EXPORTER_PORT = 7071
@@ -427,6 +433,24 @@ class UnitContext(RelationState):
         return self.workload_state == UnitWorkloadState.ACTIVE
 
 
+@dataclass(frozen=True)
+class DbRole:
+    """Represents a Cassandra database role linked to a specific relation."""
+
+    name: str
+    relation_id: int
+
+    def __str__(self) -> str:
+        """Convert DbRole to string with format 'name:relation_id'."""
+        return f"{self.name}:{self.relation_id}"
+
+    @classmethod
+    def from_str(cls, s: str) -> "DbRole":
+        """Convert string to DbRole with format 'name:relation_id'."""
+        name, relation_id = s.split(":", 1)
+        return cls(name=name, relation_id=int(relation_id))
+
+
 class ClusterContext(RelationState):
     """Cluster context of the application state.
 
@@ -463,6 +487,20 @@ class ClusterContext(RelationState):
     @state.setter
     def state(self, value: ClusterState) -> None:
         self._field_setter_wrapper("cluster_state", value.value)
+
+    @property
+    def roles(self) -> set[DbRole]:
+        """Set of Cassandra roles created by the operator."""
+        roles_str = self.relation_data.get("roles", "")
+        if not roles_str:
+            return set()
+        return {DbRole.from_str(r) for r in roles_str.split(",")}
+
+    @roles.setter
+    def roles(self, value: set[DbRole]) -> None:
+        logger.info(f"Setting role: {value}")
+        roles_str = ",".join(str(r) for r in value)
+        self._field_setter_wrapper("roles", roles_str)
 
     @property
     def is_active(self) -> bool:
@@ -540,6 +578,13 @@ class ApplicationState(Object):
             self.model,
             relation_name=PEER_RELATION,
             additional_secret_fields=unit_additional_secret_fields,
+        )
+        self.client_interface = RepositoryInterface(
+            charm,
+            relation_name=CLIENT_RELATION,
+            component=charm.app,
+            repository_type=OpsRelationRepository,
+            model=RequirerCommonModel,
         )
 
     @property

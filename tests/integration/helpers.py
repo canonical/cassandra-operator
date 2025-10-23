@@ -7,10 +7,12 @@ import logging
 import os
 import subprocess
 from contextlib import contextmanager
+from ssl import CERT_NONE, PROTOCOL_TLS_CLIENT, SSLContext
 from typing import Generator
 
 import jubilant
 import requests
+import tenacity
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.cluster import EXEC_PROFILE_DEFAULT, Cluster, ExecutionProfile, ResultSet, Session
 from cassandra.policies import DCAwareRoundRobinPolicy, TokenAwarePolicy
@@ -18,6 +20,7 @@ from tenacity import Retrying, stop_after_delay, wait_fixed
 
 logger = logging.getLogger(__name__)
 COS_METRICS_PORT = 7071
+CLIENT_CA_CERT = "client-ca-cert-secret"
 DEFAULT_MICROK8S_CHANNEL = "1.32-strict/stable"
 
 
@@ -29,6 +32,7 @@ def connect_cql(
     username: str | None = None,
     password: str | None = None,
     keyspace: str | None = None,
+    client_ca: str | None = None,
     timeout: float | None = None,
 ) -> Generator[Session, None, None]:
     if username is None:
@@ -38,6 +42,8 @@ def connect_cql(
         assert len(secrets) == 1
         password = secrets[0]["operator-password"]
 
+    assert len(hosts) > 0
+
     execution_profile = ExecutionProfile(
         load_balancing_policy=TokenAwarePolicy(DCAwareRoundRobinPolicy()),
         request_timeout=timeout or 10,
@@ -46,6 +52,20 @@ def connect_cql(
     # TODO: get rid of retrying on connection.
     cluster = None
     session = None
+
+    ssl_context = SSLContext(PROTOCOL_TLS_CLIENT)
+    if client_ca:
+        logger.info(f"Loading SSL context with cert: {client_ca}")
+
+        # TODO: change for mTLS
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = CERT_NONE
+
+        ssl_context.load_verify_locations(cadata=client_ca)
+    else:
+        logger.info("SSL context is disabled")
+        ssl_context = None
+
     for attempt in Retrying(wait=wait_fixed(2), stop=stop_after_delay(120), reraise=True):
         with attempt:
             cluster = Cluster(
@@ -53,6 +73,7 @@ def connect_cql(
                 contact_points=hosts,
                 protocol_version=5,
                 execution_profiles={EXEC_PROFILE_DEFAULT: execution_profile},
+                ssl_context=ssl_context,
             )
             session = cluster.connect()
     assert cluster and session
@@ -64,11 +85,51 @@ def connect_cql(
         cluster.shutdown()
 
 
+@tenacity.retry(
+    retry=tenacity.retry_if_exception_type(AssertionError),
+    stop=stop_after_delay(60),
+    wait=wait_fixed(5),
+    reraise=True,
+)
+def get_cluster_client_ca(juju: jubilant.Juju, app_name: str) -> str:
+    certs: set[str] = set()
+
+    for unit in get_unit_names(juju, app_name):
+        client_ca = unit_secret_extract(
+            juju,
+            unit_name=unit,
+            secret_name=CLIENT_CA_CERT,
+        )
+
+        if client_ca:
+            certs.add(client_ca)
+
+    if len(certs) != 1:
+        logger.warning(
+            f"Units have different or missing client CA certs ({len(certs)} found). Retrying..."
+        )
+        raise AssertionError(
+            "Units have different client certificates, waiting for rotation to end"
+        )
+
+    return certs.pop()
+
+
+def get_user_permissions(juju, app_name, username: str, client_ca: str | None = None) -> set[str]:
+    """Return a set of permissions granted to the given Cassandra user."""
+    with connect_cql(
+        juju=juju,
+        app_name=app_name,
+        hosts=get_hosts(juju, app_name),
+        client_ca=client_ca,
+    ) as session:
+        rows = session.execute(f'LIST ALL PERMISSIONS OF "{username}";')
+        return {row.permission for row in rows}
+
+
 def get_secrets_by_label(juju: jubilant.Juju, label: str, owner: str) -> list[dict[str, str]]:
     secrets_meta_raw = juju.cli("secrets", "--format", "json", include_model=True)
     secrets_meta = json.loads(secrets_meta_raw)
-
-    logger.info(f"raw secrets: {secrets_meta}")
 
     selected_secret_ids = []
 
@@ -80,8 +141,6 @@ def get_secrets_by_label(juju: jubilant.Juju, label: str, owner: str) -> list[di
 
     if len(selected_secret_ids) == 0:
         return []
-
-    logger.info(f"selected secrets ids: {selected_secret_ids}")
 
     secret_data_list = []
 
@@ -120,11 +179,18 @@ def check_tls(ip: str, port: int) -> bool:
     return "TLSv1.2" in output or "TLSv1.3" in output
 
 
-def get_address(juju: jubilant.Juju, app_name: str, unit_num) -> str:
-    """Get the address for a unit."""
+def get_unit_address(juju: jubilant.Juju, app_name: str, unit_num) -> str:
+    """Get the addresses for a units."""
     status = juju.status()
     address = status.apps[app_name].units[f"{app_name}/{unit_num}"].public_address
     return address
+
+
+def get_unit_names(juju: jubilant.Juju, app_name: str) -> list[str]:
+    """Get the names for a units."""
+    units = juju.status().apps[app_name].units.items()
+    addresses = [u[0] for u in units]
+    return addresses
 
 
 def check_node_is_up(juju: jubilant.Juju, app_name: str, unit_num: int, unit_addr: str) -> bool:
@@ -304,6 +370,50 @@ def all_prometheus_exporters_data(juju: jubilant.Juju, check_field: str, app_nam
     return result
 
 
+def get_peer_app_data(juju: jubilant.Juju, app_name: str, peer_name: str) -> dict[str, str]:
+    """Return peer relation application data for the given app as a dict."""
+    unit_name = next(iter(juju.status().apps[app_name].units))
+
+    result = juju.cli("show-unit", unit_name, "--format", "json")
+    unit_info = json.loads(result)
+    unit_data = unit_info[unit_name]
+
+    for rel in unit_data.get("relation-info", []):
+        if rel["endpoint"] == peer_name:
+            app_data = rel.get("application-data", {})
+            return {k: str(v) for k, v in app_data.items()}
+
+    raise RuntimeError(f"No peer relation data found for application {app_name}")
+
+
+def unit_secret_extract(juju: jubilant.Juju, unit_name: str, secret_name: str) -> str | None:
+    user_secret = get_secrets_by_label(
+        juju,
+        label=f"cassandra-peers.{unit_name.split('/')[0]}.unit",
+        owner=unit_name,
+    )
+
+    for secret in user_secret:
+        if found := secret.get(secret_name):
+            return found
+
+    return None
+
+
+def app_secret_extract(juju: jubilant.Juju, cluster_name: str, secret_name: str) -> str | None:
+    user_secret = get_secrets_by_label(
+        juju,
+        label=f"cassandra-peers.{cluster_name}.app",
+        owner=cluster_name,
+    )
+
+    for secret in user_secret:
+        if found := secret.get(secret_name):
+            return found
+
+    return None
+
+
 def get_hosts(juju: jubilant.Juju, app_name: str, unit_name: str = "") -> list[str]:
     """Return list of host addresses for the given app.
 
@@ -313,10 +423,51 @@ def get_hosts(juju: jubilant.Juju, app_name: str, unit_name: str = "") -> list[s
     if unit_name:
         if unit_name not in units:
             raise ValueError(f"Unit {unit_name} not found in app {app_name}")
-        return [units[unit_name].public_address] + [
-            u.public_address for name, u in units.items() if name != unit_name
-        ]
+        return [units[unit_name].public_address]
     return [u.public_address for u in units.values()]
+
+
+def get_db_users(juju, app_name, client_ca: str | None = None) -> set[str]:
+    """Return a set of all Cassandra user names for the given application."""
+    users: set[str] = set()
+
+    with connect_cql(
+        juju=juju, app_name=app_name, hosts=get_hosts(juju, app_name), client_ca=client_ca
+    ) as session:
+        rows = session.execute("SELECT role FROM system_auth.roles;")
+        users = {row.role for row in rows}
+
+    return users
+
+
+def keyspace_exists(juju, app_name, keyspace_name: str, client_ca: str | None = None) -> bool:
+    """Check if the given Cassandra keyspace exists."""
+    with connect_cql(
+        juju=juju, app_name=app_name, hosts=get_hosts(juju, app_name), client_ca=client_ca
+    ) as session:
+        query = """
+        SELECT keyspace_name
+        FROM system_schema.keyspaces
+        WHERE keyspace_name = %s
+        """
+        result = session.execute(query, (keyspace_name,))
+        return bool(result.one())
+
+
+def table_exists(
+    juju, app_name, keyspace_name: str, table_name: str, client_ca: str | None = None
+) -> bool:
+    """Check if the given table exists in the specified Cassandra keyspace."""
+    with connect_cql(
+        juju=juju, app_name=app_name, hosts=get_hosts(juju, app_name), client_ca=client_ca
+    ) as session:
+        query = """
+        SELECT table_name
+        FROM system_schema.tables
+        WHERE keyspace_name = %s AND table_name = %s
+        """
+        result = session.execute(query, (keyspace_name, table_name))
+        return bool(result.one())
 
 
 def prepare_keyspace_and_table(
@@ -378,6 +529,25 @@ def assert_rows(wrote: dict[int, str], got: dict[int, str]) -> None:
     """Assert rows are equal."""
     assert len(got) == len(wrote), f"Expected {len(wrote)} rows, got {len(got)}"
     assert got == wrote, "Row data mismatch"
+    
+
+def get_leader_unit(juju, app_name: str) -> str:
+    """Return the name of the leader unit for the given application.
+
+    Raises:
+        ValueError: If no leader unit is found.
+    """
+    app = juju.status().apps[app_name]
+    for name, unit in app.units.items():
+        if unit.leader:
+            return name
+    raise ValueError(f"No leader unit found for application '{app_name}'")
+
+
+def get_non_leader_units(juju, app_name: str) -> list[str]:
+    """Return a list of all non-leader units for the given application."""
+    app = juju.status().apps[app_name]
+    return [name for name, unit in app.units.items() if not unit.leader]
 
 
 def scale_sequentially_to(juju: jubilant.Juju, app_name: str, n: int) -> None:

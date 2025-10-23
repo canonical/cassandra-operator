@@ -42,12 +42,21 @@ class Sans:
     sans_dns: list[str]
 
 
+@dataclass
+class StoreEntry:
+    """Single entry of a keystore or a truststore."""
+
+    alias: str
+    cert: Certificate
+
+
 class TLSManager:
     """Manage all TLS related events."""
 
     DEFAULT_HASH_ALGORITHM: hashes.HashAlgorithm = hashes.SHA256()
     SCOPES = (TLSScope.PEER, TLSScope.CLIENT)
     keytool = "charmed-cassandra.keytool"
+    nodetool = "charmed-cassandra.nodetool"
 
     def __init__(self, workload: WorkloadBase):
         self.workload = workload

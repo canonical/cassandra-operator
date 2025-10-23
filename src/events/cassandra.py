@@ -89,6 +89,13 @@ class CassandraEvents(Object):
             self.charm.on[DATA_STORAGE].storage_detaching, self._on_storage_detaching
         )
 
+    def _acquire_operator_password(self) -> str:
+        if self.charm.config.system_users:
+            return self.read_auth_secret(self.charm.config.system_users)
+        if self.state.cluster.operator_password_secret:
+            return self.state.cluster.operator_password_secret
+        return self.workload.generate_string()
+
     def _on_install(self, _: InstallEvent) -> None:
         self.workload.install()
 
@@ -198,13 +205,6 @@ class CassandraEvents(Object):
             truststore_password=self.state.unit.truststore_password,
         )
         self.restart()
-
-    def _acquire_operator_password(self) -> str:
-        if self.charm.config.system_users:
-            return self.read_auth_secret(self.charm.config.system_users)
-        if self.state.cluster.operator_password_secret:
-            return self.state.cluster.operator_password_secret
-        return self.workload.generate_password()
 
     def _on_config_changed(self, event: ConfigChangedEvent) -> None:
         if not self.state.unit.is_ready:

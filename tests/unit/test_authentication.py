@@ -42,7 +42,7 @@ def test_start_custom_secret(bad_secret: bool):
             new_callable=PropertyMock(return_value=False),
         ),
     ):
-        workload.return_value.generate_password.return_value = "password"
+        workload.return_value.generate_string.return_value = "password"
 
         state = ctx.run(ctx.on.start(), state)
 
@@ -82,7 +82,7 @@ def test_update_custom_secret():
         ),
         patch("charm.CassandraWorkload") as workload,
     ):
-        workload.return_value.generate_password.return_value = "password"
+        workload.return_value.generate_string.return_value = "password"
 
         state = ctx.run(ctx.on.secret_changed(password_secret), state)
 

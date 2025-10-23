@@ -38,7 +38,7 @@ def test_write(juju: jubilant.Juju, app_name: str) -> None:
         session.set_keyspace("test")
         session.execute("CREATE TABLE test(message TEXT PRIMARY KEY)")
         session.execute("INSERT INTO test(message) VALUES ('hello')")
-    sleep(60)
+    sleep(100)
 
 
 def test_lxc_restart(juju: jubilant.Juju) -> None:

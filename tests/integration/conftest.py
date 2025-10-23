@@ -107,9 +107,9 @@ def charm_versions() -> IntegrationTestsCharms:
     return IntegrationTestsCharms(
         tls=TestCharm(
             name="self-signed-certificates",
-            channel="latest/stable",
-            revision=163,  # FIXME (certs): Unpin the revision once the charm is fixed
-            base="ubuntu@22.04",
+            channel="1/stable",
+            revision=317,
+            base="ubuntu@24.04",
             alias="self-signed-certificates",
         ),
     )
@@ -125,6 +125,28 @@ def cassandra_charm() -> Path:
 
 
 @pytest.fixture(scope="module")
+def requirer_charm() -> Path:
+    """Path to the packed cassandra charm."""
+    if not (
+        path := next(
+            iter((Path.cwd() / "tests" / "integration" / "application-charm").glob("*.charm")),
+            None,
+        )
+    ):
+        raise FileNotFoundError("Could not find packed requirer charm.")
+
+    return path
+
+
+@pytest.fixture(scope="module")
 def app_name() -> str:
     metadata = yaml.safe_load(Path("./metadata.yaml").read_text())
+    return metadata["name"]
+
+
+@pytest.fixture(scope="module")
+def requirer_app_name() -> str:
+    metadata = yaml.safe_load(
+        Path("./tests/integration/application-charm/metadata.yaml").read_text()
+    )
     return metadata["name"]
