@@ -2,12 +2,12 @@
 # Copyright 2025 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-import logging
-import uuid
-from pathlib import Path
-from dataclasses import dataclass
 import hashlib
+import logging
 import string
+import uuid
+from dataclasses import dataclass
+from pathlib import Path
 
 import jubilant
 from helpers import (
@@ -26,10 +26,12 @@ class ClusterConfig:
     app_name: str
     config: dict
 
+
 def letter_hash(num: int, length: int = 8) -> str:
     h = hashlib.sha256(str(num).encode()).digest()
     alphabet = string.ascii_lowercase
-    return ''.join(alphabet[b % len(alphabet)] for b in h[:length])    
+    return "".join(alphabet[b % len(alphabet)] for b in h[:length])
+
 
 def cassandra_federation_config(cluster_num: int, app_name: str) -> list[ClusterConfig]:
     """Generate a list of independent cluster configs for federation testing."""
