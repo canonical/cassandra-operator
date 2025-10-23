@@ -400,6 +400,15 @@ class UnitContext(RelationState):
         self._field_setter_wrapper("truststore-password-secret", value)
 
     @property
+    def update_auth_rf_ongoing(self) -> bool:
+        """TODO."""
+        return bool(self.relation_data.get("update_auth_rf_ongoing"))
+
+    @update_auth_rf_ongoing.setter
+    def update_auth_rf_ongoing(self, value: bool) -> None:
+        self._field_setter_wrapper("update_auth_rf_ongoing", str(value) if value else "")
+
+    @property
     def is_seed(self) -> bool:
         """Whether this unit's `peer_url` present in `ClusterContext.seeds`."""
         return self.peer_url in self.seeds
