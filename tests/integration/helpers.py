@@ -529,7 +529,7 @@ def assert_rows(wrote: dict[int, str], got: dict[int, str]) -> None:
     """Assert rows are equal."""
     assert len(got) == len(wrote), f"Expected {len(wrote)} rows, got {len(got)}"
     assert got == wrote, "Row data mismatch"
-    
+
 
 def get_leader_unit(juju, app_name: str) -> str:
     """Return the name of the leader unit for the given application.
