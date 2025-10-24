@@ -68,14 +68,22 @@ def connect_cql(
 
     for attempt in Retrying(wait=wait_fixed(10), stop=stop_after_delay(300), reraise=True):
         with attempt:
-            cluster = Cluster(
-                auth_provider=auth_provider,
-                contact_points=hosts,
-                protocol_version=5,
-                execution_profiles={EXEC_PROFILE_DEFAULT: execution_profile},
-                ssl_context=ssl_context,
-            )
-            session = cluster.connect()
+            try:
+                cluster = Cluster(
+                    auth_provider=auth_provider,
+                    contact_points=hosts,
+                    protocol_version=5,
+                    execution_profiles={EXEC_PROFILE_DEFAULT: execution_profile},
+                    ssl_context=ssl_context,
+                )
+                session = cluster.connect()
+            except Exception as e:
+                logger.debug(
+                    f"Failed attempt to connect with creds "
+                    f"{auth_provider.username}:{auth_provider.password} "
+                    f"{e}"
+                )
+                raise
     assert cluster and session
     if keyspace:
         session.set_keyspace(keyspace)
