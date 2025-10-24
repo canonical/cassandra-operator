@@ -12,7 +12,7 @@ on:
 jobs:
   collect-integration-tests:
     name: Collect integration test spread jobs
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, X64, jammy, large]
     timeout-minutes: 5
     steps:
       - name: Checkout
