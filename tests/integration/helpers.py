@@ -66,16 +66,24 @@ def connect_cql(
         logger.info("SSL context is disabled")
         ssl_context = None
 
-    for attempt in Retrying(wait=wait_fixed(2), stop=stop_after_delay(120), reraise=True):
+    for attempt in Retrying(wait=wait_fixed(10), stop=stop_after_delay(300), reraise=True):
         with attempt:
-            cluster = Cluster(
-                auth_provider=auth_provider,
-                contact_points=hosts,
-                protocol_version=5,
-                execution_profiles={EXEC_PROFILE_DEFAULT: execution_profile},
-                ssl_context=ssl_context,
-            )
-            session = cluster.connect()
+            try:
+                cluster = Cluster(
+                    auth_provider=auth_provider,
+                    contact_points=hosts,
+                    protocol_version=5,
+                    execution_profiles={EXEC_PROFILE_DEFAULT: execution_profile},
+                    ssl_context=ssl_context,
+                )
+                session = cluster.connect()
+            except Exception as e:
+                logger.error(
+                    f"Failed attempt to connect with creds "
+                    f"{auth_provider.username}:{auth_provider.password} "
+                    f"{e}"
+                )
+                raise
     assert cluster and session
     if keyspace:
         session.set_keyspace(keyspace)

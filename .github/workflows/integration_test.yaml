@@ -12,7 +12,7 @@ on:
 jobs:
   collect-integration-tests:
     name: Collect integration test spread jobs
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, X64, noble, large]
     timeout-minutes: 5
     steps:
       - name: Checkout
@@ -20,7 +20,9 @@ jobs:
       - name: Set up environment
         run: |
           sudo snap install charmcraft --classic
-          pipx install tox poetry
+          sudo apt install pipx python3.12 -y
+          pipx install tox --python python3.12
+          pipx install poetry --python python3.12
       - name: Collect spread jobs
         id: collect-jobs
         shell: python
