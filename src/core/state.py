@@ -15,6 +15,11 @@ from charms.data_platform_libs.v0.data_interfaces import (
     DataPeerOtherUnitData,
     DataPeerUnitData,
 )
+from charms.data_platform_libs.v1.data_interfaces import (
+    OpsRelationRepository,
+    RepositoryInterface,
+    RequirerCommonModel,
+)
 from charms.tls_certificates_interface.v4.tls_certificates import (
     Certificate,
     CertificateSigningRequest,
@@ -22,9 +27,11 @@ from charms.tls_certificates_interface.v4.tls_certificates import (
 )
 from ops import Application, CharmBase, Object, Relation, Unit
 
+DATA_STORAGE = "data"
 CLIENT_TLS_RELATION = "client-certificates"
 PEER_TLS_RELATION = "peer-certificates"
 PEER_RELATION = "cassandra-peers"
+CLIENT_RELATION = "cassandra-client"
 CASSANDRA_PEER_PORT = 7000
 CASSANDRA_CLIENT_PORT = 9042
 JMX_EXPORTER_PORT = 7071
@@ -82,9 +89,11 @@ class UnitWorkloadState(StrEnum):
     INSTALLING = ""
     """Cassandra is installing."""
     WAITING_FOR_START = "waiting_for_start"
-    """Subordinate unit is waiting for leader to initialize cluster before it starts workload."""
+    """Unit is waiting prior startup sequence."""
     STARTING = "starting"
     """Cassandra is starting."""
+    CANT_START = "cant_start"
+    """Cassandra service can't start currently. Another attempt will be taken soon."""
     ACTIVE = "active"
     """Cassandra is active and ready."""
 
@@ -286,9 +295,11 @@ class UnitContext(RelationState):
         relation: Relation | None,
         data_interface: DataPeerUnitData,
         component: Unit,
+        seeds: set[str],
     ):
         super().__init__(relation, data_interface, component)
         self.unit = component
+        self.seeds = seeds
 
     @property
     def unit_id(self) -> int:
@@ -388,6 +399,56 @@ class UnitContext(RelationState):
         """
         self._field_setter_wrapper("truststore-password-secret", value)
 
+    @property
+    def is_seed(self) -> bool:
+        """Whether this unit's `peer_url` present in `ClusterContext.seeds`."""
+        return self.peer_url in self.seeds
+
+    @property
+    def is_ready(self) -> bool:
+        """Whether this unit already proceeded with startup phase.
+
+        This can help to determine whether the event can be skipped
+        if it will be reconciled during startup anyway.
+        """
+        return self.workload_state != UnitWorkloadState.INSTALLING
+
+    @property
+    def is_config_change_eligible(self) -> bool:
+        """Whether it's safe to modify Cassandra service configuration.
+
+        WAITING_FOR_START, CANT_START and ACTIVE workload states are considered safe.
+        See UnitWorkloadState documentation for more information.
+        """
+        return self.workload_state in [
+            UnitWorkloadState.WAITING_FOR_START,
+            UnitWorkloadState.CANT_START,
+            UnitWorkloadState.ACTIVE,
+        ]
+
+    @property
+    def is_operational(self) -> bool:
+        """Whether this unit's workload is active."""
+        return self.workload_state == UnitWorkloadState.ACTIVE
+
+
+@dataclass(frozen=True)
+class DbRole:
+    """Represents a Cassandra database role linked to a specific relation."""
+
+    name: str
+    relation_id: int
+
+    def __str__(self) -> str:
+        """Convert DbRole to string with format 'name:relation_id'."""
+        return f"{self.name}:{self.relation_id}"
+
+    @classmethod
+    def from_str(cls, s: str) -> "DbRole":
+        """Convert string to DbRole with format 'name:relation_id'."""
+        name, relation_id = s.split(":", 1)
+        return cls(name=name, relation_id=int(relation_id))
+
 
 class ClusterContext(RelationState):
     """Cluster context of the application state.
@@ -405,13 +466,16 @@ class ClusterContext(RelationState):
         self.app = component
 
     @property
-    def seeds(self) -> list[str]:
-        """List of peer urls of Cassandra seed nodes."""
+    def seeds(self) -> set[str]:
+        """Set of peer urls of Cassandra seed nodes.
+
+        When achievable, it's recommended to use `ApplicationState.seed_units` over this raw value.
+        """
         seeds = self.relation_data.get("seeds", "")
-        return seeds.split(",") if seeds else []
+        return set(seeds.split(",")) if seeds else set()
 
     @seeds.setter
-    def seeds(self, value: list[str]) -> None:
+    def seeds(self, value: set[str]) -> None:
         self._field_setter_wrapper("seeds", ",".join(value))
 
     @property
@@ -422,6 +486,20 @@ class ClusterContext(RelationState):
     @state.setter
     def state(self, value: ClusterState) -> None:
         self._field_setter_wrapper("cluster_state", value.value)
+
+    @property
+    def roles(self) -> set[DbRole]:
+        """Set of Cassandra roles created by the operator."""
+        roles_str = self.relation_data.get("roles", "")
+        if not roles_str:
+            return set()
+        return {DbRole.from_str(r) for r in roles_str.split(",")}
+
+    @roles.setter
+    def roles(self, value: set[DbRole]) -> None:
+        logger.info(f"Setting role: {value}")
+        roles_str = ",".join(str(r) for r in value)
+        self._field_setter_wrapper("roles", roles_str)
 
     @property
     def is_active(self) -> bool:
@@ -490,6 +568,13 @@ class ApplicationState(Object):
             relation_name=PEER_RELATION,
             additional_secret_fields=SECRETS_UNIT,
         )
+        self.client_interface = RepositoryInterface(
+            charm,
+            relation_name=CLIENT_RELATION,
+            component=charm.app,
+            repository_type=OpsRelationRepository,
+            model=RequirerCommonModel,
+        )
 
     @property
     def peer_relation(self) -> Relation | None:
@@ -523,6 +608,7 @@ class ApplicationState(Object):
             relation=self.peer_relation,
             data_interface=self.peer_unit_interface,
             component=self.model.unit,
+            seeds=self.cluster.seeds,
         )
 
     @property
@@ -538,6 +624,31 @@ class ApplicationState(Object):
                 relation=self.peer_relation,
                 data_interface=data_interface,
                 component=unit,
+                seeds=self.cluster.seeds,
             )
             for unit, data_interface in self.peer_relation_units.items()
         }
+
+    @property
+    def seed_units(self) -> set[UnitContext]:
+        """Contexts of all the units, that are configured as seed nodes.
+
+        See `ApplicationState.units` for more info.
+        """
+        return {unit for unit in self.units if unit.is_seed}
+
+    @seed_units.setter
+    def seed_units(self, value: set[UnitContext] | UnitContext):
+        self.cluster.seeds = (
+            {value.peer_url}
+            if isinstance(value, UnitContext)
+            else {unit.peer_url for unit in value}
+        )
+
+    @property
+    def other_seed_units(self) -> set[UnitContext]:
+        """Contexts of other units, that are configured as seed nodes.
+
+        See `ApplicationState.other_units` for more info.
+        """
+        return {unit for unit in self.other_units if unit.is_seed}

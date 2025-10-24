@@ -76,8 +76,7 @@ def ctx() -> Context[CassandraCharm]:
 
 def default_certificate_context(ctx: Context[CassandraCharm]) -> DefaultCertificateContext:
     peer_relation = testing.PeerRelation(
-        id=1,
-        endpoint=PEER_RELATION,
+        id=1, endpoint=PEER_RELATION, local_unit_data={"workload_state": "active"}
     )
     peer_tls_relation = testing.Relation(id=2, endpoint=PEER_TLS_RELATION)
     client_tls_relation = testing.Relation(id=3, endpoint=CLIENT_TLS_RELATION)
@@ -168,8 +167,7 @@ def apply_available_certificates(relation: PeerRelation, new_crts: CertificateAv
 def certificate_available_context(ctx: Context[CassandraCharm]) -> CertificateAvailableContext:
     """Create a context for testing certificate available event."""
     peer_relation = testing.PeerRelation(
-        id=1,
-        endpoint=PEER_RELATION,
+        id=1, endpoint=PEER_RELATION, local_unit_data={"workload_state": "active"}
     )
     peer_tls_relation = testing.Relation(id=2, endpoint=PEER_TLS_RELATION)
     client_tls_relation = testing.Relation(id=3, endpoint=CLIENT_TLS_RELATION)
@@ -272,6 +270,7 @@ def test_tls_relation_broken_resets_certificates_and_triggers_config(ctx, is_lea
     )
     with (
         patch("workload.snap.SnapCache"),
+        patch("charm.CassandraCharm.restart") as restart,
         new_tls_context.context(
             new_tls_context.context.on.relation_broken(new_tls_context.peer_tls_relation),
             state=state_in,
@@ -303,6 +302,8 @@ def test_tls_relation_broken_resets_certificates_and_triggers_config(ctx, is_lea
         mock_gen_ca.assert_not_called()
         mock_gen_internal_creds.assert_called_once()
 
+        restart.assert_called_once()
+
 
 @pytest.mark.parametrize("is_leader", [True, False])
 def test_tls_enabled_but_not_ready_sets_waiting_status(ctx, is_leader):
@@ -332,7 +333,7 @@ def test_tls_enabled_but_not_ready_sets_waiting_status(ctx, is_leader):
             "core.state.ClusterContext.tls_state", new_callable=PropertyMock(return_value="active")
         ),
     ):
-        workload.return_value.generate_password.return_value = "password"
+        workload.return_value.generate_string.return_value = "password"
 
         state_out = ctx.run(
             ctx.on.relation_created(default_tls_context.client_tls_relation), state_in
@@ -350,8 +351,14 @@ def test_tls_relation_created_sets_tls_state(ctx, is_leader):
         leader=is_leader, relations={relation, bootstrap_relation, client_tls_relation}
     )
 
-    with patch("charm.CassandraWorkload") as workload:
-        workload.return_value.generate_password.return_value = "password"
+    with (
+        patch(
+            "managers.tls.TLSManager.client_tls_ready",
+            new_callable=PropertyMock(return_value=False),
+        ),
+        patch("charm.CassandraWorkload") as workload,
+    ):
+        workload.return_value.generate_string.return_value = "password"
 
         state_out = ctx.run(ctx.on.relation_created(client_tls_relation), state)
 
@@ -372,13 +379,18 @@ def test_tls_default_certificates_files_setup(ctx):
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
         patch("managers.tls.TLSManager.configure"),
+        patch(
+            "managers.tls.TLSManager.client_tls_ready",
+            new_callable=PropertyMock(return_value=False),
+        ),
         patch("managers.database.DatabaseManager.init_admin"),
         patch(
-            "managers.cluster.ClusterManager.is_healthy",
-            new_callable=PropertyMock(return_value=True),
+            "managers.node.NodeManager.is_healthy",
+            return_value=True,
         ),
+        patch("charm.CassandraCharm.restart"),
     ):
-        workload.return_value.generate_password.return_value = "password"
+        workload.return_value.generate_string.return_value = "password"
 
         state_out = ctx.run(ctx.on.start(), state_in)
         latest_content = get_secrets_latest_content_by_label(
@@ -415,6 +427,10 @@ def test_tls_default_certificates_files_setup(ctx):
         patch("managers.config.ConfigManager.render_cassandra_config"),
         patch("managers.tls.TLSManager.configure"),
         patch(
+            "managers.tls.TLSManager.client_tls_ready",
+            new_callable=PropertyMock(return_value=False),
+        ),
+        patch(
             "core.state.ClusterContext.internal_ca",
             new_callable=PropertyMock(return_value=default_tls_context.default_provider_ca_crt),
         ),
@@ -423,15 +439,10 @@ def test_tls_default_certificates_files_setup(ctx):
             new_callable=PropertyMock(return_value=default_tls_context.default_provider_pk),
         ),
         patch("managers.database.DatabaseManager.init_admin"),
-        patch(
-            "managers.cluster.ClusterManager.is_healthy",
-            new_callable=PropertyMock(return_value=True),
-        ),
-        patch(
-            "charms.rolling_ops.v0.rollingops.RollingOpsManager._on_acquire_lock", autospec=True
-        ),
+        patch("managers.node.NodeManager.is_healthy", return_value=True),
+        patch("charm.CassandraCharm.restart"),
     ):
-        workload.return_value.generate_password.return_value = "password"
+        workload.return_value.generate_string.return_value = "password"
 
         state_out = ctx.run(ctx.on.start(), state_in)
         latest_content = get_secrets_latest_content_by_label(
@@ -481,6 +492,7 @@ def test_tls_certificate_available_event_triggers_config_and_rotation(ctx, is_le
             "events.tls.TLSCertificatesRequiresV4.get_assigned_certificates",
             return_value=(peer_provider_crt, requirer_private_key),
         ),
+        patch("charm.CassandraCharm.restart"),
         context(context.on.relation_created(peer_tls_relation), state=state_in) as manager,
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
@@ -523,6 +535,7 @@ def test_tls_certificate_available_event_triggers_config_and_rotation(ctx, is_le
             "events.tls.TLSCertificatesRequiresV4.get_assigned_certificates",
             return_value=(client_provider_crt, requirer_private_key),
         ),
+        patch("charm.CassandraCharm.restart"),
         context(context.on.relation_created(client_tls_relation), state=state_in) as manager,
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
