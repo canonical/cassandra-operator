@@ -78,7 +78,7 @@ def connect_cql(
                 )
                 session = cluster.connect()
             except Exception as e:
-                logger.debug(
+                logger.error(
                     f"Failed attempt to connect with creds "
                     f"{auth_provider.username}:{auth_provider.password} "
                     f"{e}"
