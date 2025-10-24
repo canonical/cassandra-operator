@@ -193,6 +193,7 @@ class CassandraEvents(Object):
             return
 
         if not self._are_seeds_reachable:
+            self.state.unit.workload_state = UnitWorkloadState.WAITING_FOR_START
             logger.debug("Deferring subordinate on_start due to seeds not being ready")
             event.defer()
             return
