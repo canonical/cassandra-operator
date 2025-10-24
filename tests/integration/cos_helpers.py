@@ -17,7 +17,7 @@ class COS:
 class COSAssertions:
     APP = "cassandra"
     DASHBOARD_TITLE = "Cassandra Overview"
-    PANELS_COUNT = 61
+    PANELS_COUNT = 66
     PANELS_TO_CHECK = ("JVM", "CQL", "Disk usage", "Compaction")
     ALERTS_COUNT = 2
     LOG_STREAMS = (
