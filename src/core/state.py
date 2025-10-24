@@ -6,6 +6,7 @@
 
 import json
 import logging
+import os
 from dataclasses import dataclass
 from enum import StrEnum
 
@@ -26,6 +27,7 @@ from charms.tls_certificates_interface.v4.tls_certificates import (
     PrivateKey,
 )
 from ops import Application, CharmBase, Object, Relation, Unit
+from ops.jujuversion import JujuVersion
 
 DATA_STORAGE = "data"
 CLIENT_TLS_RELATION = "client-certificates"
@@ -54,7 +56,6 @@ SECRETS_UNIT = [
 ]
 
 SECRETS_APP = ["internal-ca-secret", "internal-ca-key-secret", "operator-password"]
-
 
 logger = logging.getLogger(__name__)
 
@@ -563,10 +564,20 @@ class ApplicationState(Object):
             relation_name=PEER_RELATION,
             additional_secret_fields=SECRETS_APP,
         )
+
+        unit_additional_secret_fields = SECRETS_UNIT
+
+        # TODO: remove when data platform bug is fixed:
+        # https://github.com/canonical/data-platform-libs/issues/243#issue-3527889114
+        if (self.model.juju_version <= JujuVersion("3.5.7")) and os.getenv(
+            "JUJU_HOOK_NAME", ""
+        ) == f"{DATA_STORAGE}-storage-detaching":
+            unit_additional_secret_fields = None
+
         self.peer_unit_interface = DataPeerUnitData(
             self.model,
             relation_name=PEER_RELATION,
-            additional_secret_fields=SECRETS_UNIT,
+            additional_secret_fields=unit_additional_secret_fields,
         )
         self.client_interface = RepositoryInterface(
             charm,
