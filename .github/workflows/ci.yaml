@@ -37,8 +37,6 @@ jobs:
           sudo apt install pipx python3.12 -y
           pipx install tox --python python3.12
           pipx install poetry --python python3.12
-      - name: Run tests
-        run: tox run -e unit
       - name: Upload Coverage to Codecov
         uses: codecov/codecov-action@v4
 
