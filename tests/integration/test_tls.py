@@ -11,6 +11,7 @@ from helpers import (
     check_node_is_up,
     check_tls,
     get_unit_address,
+    get_unit_names,
     unit_secret_extract,
 )
 
@@ -159,7 +160,47 @@ def test_enable_client_self_signed_tls(
 
     assert client_ca_2
 
+def test_scale_up_with_tls(
+    juju: jubilant.Juju, app_name: str
+) -> None:
+    juju.add_unit(app_name)
 
+    # Wait for peer_certs and client_certs rotation for new unit
+    juju.wait(
+        ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
+        delay=20,
+        successes=4,
+        timeout=1000,
+    )
+
+    units = get_unit_names(juju, app_name)
+
+    peer_ca_list = []
+    client_ca_list = []    
+
+    for unit in units:
+       client_ca = unit_secret_extract(
+           juju,
+           unit_name=unit,
+           secret_name=CLIENT_CA_CERT,
+       )
+   
+       assert client_ca
+       client_ca_list.append(client_ca)
+   
+       peer_ca = unit_secret_extract(
+           juju,
+           unit_name=unit,
+           secret_name=PEER_CA_CERT,
+       )
+   
+       assert peer_ca
+       peer_ca_list.append(peer_ca)
+
+
+    assert len(set(peer_ca_list)) == 1, "peer certificates differ"
+    assert len(set(client_ca_list)) == 1, "client certificates differ"    
+       
 def test_disable_peer_self_signed_tls(
     juju: jubilant.Juju, app_name: str, charm_versions: IntegrationTestsCharms
 ) -> None:
