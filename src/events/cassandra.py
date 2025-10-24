@@ -374,9 +374,6 @@ class CassandraEvents(Object):
         if self.state.unit.workload_state == UnitWorkloadState.CANT_START:
             event.add_status(Status.CANT_START.value)
 
-        if self.state.unit.update_auth_rf_ongoing:
-            event.add_status(Status.UPDATING_AUTH_RF.value)
-
         event.add_status(Status.ACTIVE.value)
 
     def _collect_unit_tls_status(self, event: CollectStatusEvent) -> None:
@@ -462,7 +459,6 @@ class CassandraEvents(Object):
         logger.info("Hook for storage-detaching event completed")
 
     def _on_update_auth_rf(self, event: EventBase) -> None:
-        self.state.unit.update_auth_rf_ongoing = True
         if not self.state.unit.is_operational:
             logger.debug("Deferring on_peer_relation_departed due to unit not being operational")
             event.defer()
@@ -471,4 +467,3 @@ class CassandraEvents(Object):
             event.defer()
             return
         self.database_manager.update_system_auth_replication_factor(min(n, 3))
-        self.state.unit.update_auth_rf_ongoing = False
