@@ -4,9 +4,11 @@
 
 import logging
 from pathlib import Path
+from time import sleep
 
 import jubilant
 from cassandra.cluster import ResultSet
+from ha_helpers import kill_unit, make_unit_checker
 from helpers import (
     assert_rows,
     connect_cql,
@@ -16,6 +18,9 @@ from helpers import (
     read_n_rows,
     write_n_rows,
 )
+from tenacity import Retrying, stop_after_delay, wait_fixed
+
+REELECTION_TIME = 300
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +35,7 @@ def test_deploy(juju: jubilant.Juju, cassandra_charm: Path, app_name: str) -> No
 
 
 def test_write(juju: jubilant.Juju, app_name: str) -> None:
-    leader = get_leader_unit(juju, app_name)
+    leader, _ = get_leader_unit(juju, app_name)
     host = juju.status().apps[app_name].units[leader].public_address
     with connect_cql(juju=juju, app_name=app_name, hosts=[host]) as session:
         session.execute(
@@ -43,7 +48,7 @@ def test_write(juju: jubilant.Juju, app_name: str) -> None:
 
 
 def test_read(juju: jubilant.Juju, app_name: str) -> None:
-    leader = get_leader_unit(juju, app_name)
+    leader, _ = get_leader_unit(juju, app_name)
     host = juju.status().apps[app_name].units[leader].public_address
     with connect_cql(juju=juju, app_name=app_name, hosts=[host], keyspace="test") as session:
         res = session.execute("SELECT message FROM test")
@@ -60,9 +65,10 @@ def test_write_primary_read_secondary(juju: jubilant.Juju, app_name: str) -> Non
         ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
         delay=3,
         successes=5,
+        timeout=1200,
     )
 
-    leader = get_leader_unit(juju, app_name)
+    leader, _ = get_leader_unit(juju, app_name)
     secodaries = get_non_leader_units(juju, app_name)
 
     ks, tbl = prepare_keyspace_and_table(juju, app_name, unit_name=leader)
@@ -74,3 +80,29 @@ def test_write_primary_read_secondary(juju: jubilant.Juju, app_name: str) -> Non
     for secondary in secodaries:
         got_secondary_rows = read_n_rows(juju, app_name, ks=ks, table=tbl, unit_name=secondary)
         assert_rows(wrote_leader_rows, got_secondary_rows)
+
+
+def test_kill_primary_check_reelection(juju: jubilant.Juju, app_name: str) -> None:
+    leader, leader_status = get_leader_unit(juju, app_name)
+
+    kill_unit(juju, leader)
+
+    juju.wait(
+        ready=make_unit_checker(
+            app_name,
+            leader,
+            machine_id=leader_status.machine,
+            workload="unknown",
+            machine="down",
+        ),
+        delay=5,
+        timeout=1800,
+    )
+
+    sleep(REELECTION_TIME)
+
+    for attempt in Retrying(wait=wait_fixed(30), stop=stop_after_delay(300), reraise=True):
+        with attempt:
+            new_leader, new_leader_status = get_leader_unit(juju, app_name)
+            assert new_leader != leader
+            assert new_leader_status.is_active

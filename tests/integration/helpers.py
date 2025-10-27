@@ -16,6 +16,7 @@ import tenacity
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.cluster import EXEC_PROFILE_DEFAULT, Cluster, ExecutionProfile, ResultSet, Session
 from cassandra.policies import DCAwareRoundRobinPolicy, TokenAwarePolicy
+from jubilant.statustypes import UnitStatus
 from tenacity import Retrying, stop_after_delay, wait_fixed
 
 logger = logging.getLogger(__name__)
@@ -531,7 +532,7 @@ def assert_rows(wrote: dict[int, str], got: dict[int, str]) -> None:
     assert got == wrote, "Row data mismatch"
 
 
-def get_leader_unit(juju, app_name: str) -> str:
+def get_leader_unit(juju, app_name: str) -> tuple[str, UnitStatus]:
     """Return the name of the leader unit for the given application.
 
     Raises:
@@ -540,7 +541,7 @@ def get_leader_unit(juju, app_name: str) -> str:
     app = juju.status().apps[app_name]
     for name, unit in app.units.items():
         if unit.leader:
-            return name
+            return name, unit
     raise ValueError(f"No leader unit found for application '{app_name}'")
 
 
