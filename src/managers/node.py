@@ -96,6 +96,10 @@ class NodeManager:
         except ExecError:
             return 0
 
+    def repair_auth(self) -> None:
+        """TODO."""
+        self._workload.exec([_NODETOOL, "repair", "system_auth", "--full"])
+
     def _is_in_cluster(self, ip: str) -> bool:
         if not ip:
             return False

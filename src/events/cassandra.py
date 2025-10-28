@@ -295,12 +295,34 @@ class CassandraEvents(Object):
         if self.config_manager.render_cassandra_config():
             self.restart()
 
+        if (
+            self.charm.unit.is_leader()
+            and self.state.cluster.auth_repairing
+            and all(unit.auth_repaired for unit in self.state.units)
+        ):
+            self.state.cluster.auth_repairing = False
+            self.state.unit.auth_repaired = False
+
+        if not self.charm.unit.is_leader():
+            if not self.state.unit.auth_repaired and self.state.cluster.auth_repairing:
+                if not self.state.unit.is_operational:
+                    logger.debug(
+                        "Deferring on_peer_relation_changed due to unit not being operational"
+                    )
+                    event.defer()
+                    return
+                self.node_manager.repair_auth()
+            self.state.unit.auth_repaired = self.state.cluster.auth_repairing
+
     def _on_peer_relation_departed(self, event: RelationDepartedEvent) -> None:
         if not self.state.unit.is_ready:
             logger.debug("Exiting on_peer_relation_departed due to unit not being ready")
             return
 
-        if event.departing_unit != self.charm.unit and self.charm.unit.is_leader():
+        if event.departing_unit == self.charm.unit:
+            return
+
+        if self.charm.unit.is_leader():
             if not self.state.unit.is_config_change_eligible:
                 logger.debug(
                     "Deferring on_peer_relation_departed due to unit not being ready change config"
@@ -462,3 +484,6 @@ class CassandraEvents(Object):
             event.defer()
             return
         self.database_manager.update_system_auth_replication_factor(min(n, 3))
+        self.state.cluster.auth_repairing = True
+        self.node_manager.repair_auth()
+        self.state.unit.auth_repaired = True
