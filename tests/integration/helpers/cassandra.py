@@ -30,6 +30,7 @@ def connect_cql(
     client_ca: str | None = None,
     timeout: float | None = None,
 ) -> Generator[Session, None, None]:
+    """Connect to the Cassandra cluster and acquire CQL session."""
     if hosts is None:
         hosts = get_hosts(juju, app_name)
     if username is None:
