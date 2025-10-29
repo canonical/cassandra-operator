@@ -401,6 +401,15 @@ class UnitContext(RelationState):
         self._field_setter_wrapper("truststore-password-secret", value)
 
     @property
+    def auth_repaired(self) -> bool:
+        """TODO."""
+        return bool(self.relation_data.get("auth-repaired", ""))
+
+    @auth_repaired.setter
+    def auth_repaired(self, value: bool) -> None:
+        self._field_setter_wrapper("auth-repaired", str(value))
+
+    @property
     def is_seed(self) -> bool:
         """Whether this unit's `peer_url` present in `ClusterContext.seeds`."""
         return self.peer_url in self.seeds
@@ -552,6 +561,15 @@ class ClusterContext(RelationState):
     @operator_password_secret.setter
     def operator_password_secret(self, value: str) -> None:
         self._field_setter_wrapper("operator-password", value)
+
+    @property
+    def auth_repairing(self) -> bool:
+        """TODO."""
+        return bool(self.relation_data.get("auth-repairing", ""))
+
+    @auth_repairing.setter
+    def auth_repairing(self, value: bool) -> None:
+        self._field_setter_wrapper("auth-repairing", str(value))
 
 
 class ApplicationState(Object):

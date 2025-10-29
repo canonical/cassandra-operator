@@ -127,6 +127,8 @@ jobs:
         with:
           pattern: ${{ inputs.artifact-prefix }}-*
           merge-multiple: true
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
       - name: Run spread job
         timeout-minutes: 180
         id: spread

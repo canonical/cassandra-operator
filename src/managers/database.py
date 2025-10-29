@@ -253,6 +253,14 @@ class DatabaseManager:
             raise ValueError(f"Invalid CQL identifier: {name}")
         return name
 
+    def update_system_auth_replication_factor(self, replication_factor: int) -> None:
+        """Update replication factor of system_auth keyspace."""
+        with self._session() as session:
+            session.execute(
+                "ALTER KEYSPACE system_auth WITH replication = "
+                f"{{'class': 'SimpleStrategy', 'replication_factor': {replication_factor}}}"
+            )
+
     @contextmanager
     def _session(
         self,
