@@ -290,7 +290,6 @@ class ApplicationCharm(CharmBase):
         return str(self.config.get("user-permissions", default="ALL")).split(",")
 
     def _get_secret_tls(self) -> list[str]:
-        """Возвращает список URI secret-tls из всех cassandra-client relations."""
         secrets = []
 
         for rel in self.model.relations.get("cassandra-client", []):
