@@ -11,11 +11,13 @@ from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from ops import (
     CollectStatusEvent,
     ConfigChangedEvent,
+    EventBase,
     InstallEvent,
     LeaderElectedEvent,
     Object,
     RelationChangedEvent,
     RelationDepartedEvent,
+    RelationJoinedEvent,
     SecretChangedEvent,
     StartEvent,
     StorageDetachingEvent,
@@ -32,7 +34,13 @@ from tenacity import (
 from common.exceptions import BadSecretError, ExecError
 from core.config import CharmConfig
 from core.literals import CASSANDRA_ADMIN_USERNAME
-from core.state import DATA_STORAGE, PEER_RELATION, ApplicationState, UnitWorkloadState
+from core.state import (
+    DATA_STORAGE,
+    PEER_RELATION,
+    ApplicationState,
+    AuthRepairState,
+    UnitWorkloadState,
+)
 from core.statuses import Status
 from core.workload import WorkloadBase
 from managers.config import ConfigManager
@@ -71,10 +79,16 @@ class CassandraEvents(Object):
         self.read_auth_secret = read_auth_secret
         self.restart = restart
 
+        self.charm.on.define_event("update_auth_rf", EventBase)
+        self.framework.observe(self.charm.on.update_auth_rf, self._on_update_auth_rf)
+
         self.framework.observe(self.charm.on.start, self._on_start)
         self.framework.observe(self.charm.on.install, self._on_install)
         self.framework.observe(self.charm.on.config_changed, self._on_config_changed)
         self.framework.observe(self.charm.on.secret_changed, self._on_secret_changed)
+        self.framework.observe(
+            self.charm.on[PEER_RELATION].relation_joined, self._on_peer_relation_joined
+        )
         self.framework.observe(
             self.charm.on[PEER_RELATION].relation_changed, self._on_peer_relation_changed
         )
@@ -270,6 +284,11 @@ class CassandraEvents(Object):
             logger.error(f"Secret haven't passed validation: {e}")
             return
 
+    def _on_peer_relation_joined(self, event: RelationJoinedEvent) -> None:
+        if event.unit == self.charm.unit or not self.charm.unit.is_leader():
+            return
+        self.charm.on.update_auth_rf.emit()
+
     def _on_peer_relation_changed(self, event: RelationChangedEvent) -> None:
         if not self.state.unit.is_ready:
             logger.debug("Exiting on_peer_relation_changed due to unit not being ready")
@@ -282,13 +301,19 @@ class CassandraEvents(Object):
             return
         if self.config_manager.render_cassandra_config():
             self.restart()
+        if not self._repair_auth(event):
+            event.defer()
+            return
 
     def _on_peer_relation_departed(self, event: RelationDepartedEvent) -> None:
         if not self.state.unit.is_ready:
             logger.debug("Exiting on_peer_relation_departed due to unit not being ready")
             return
 
-        if event.departing_unit != self.charm.unit and self.charm.unit.is_leader():
+        if event.departing_unit == self.charm.unit:
+            return
+
+        if self.charm.unit.is_leader():
             if not self.state.unit.is_config_change_eligible:
                 logger.debug(
                     "Deferring on_peer_relation_departed due to unit not being ready change config"
@@ -296,6 +321,11 @@ class CassandraEvents(Object):
                 event.defer()
                 return
             self._recover_seeds()
+            self.charm.on.update_auth_rf.emit()
+
+        if not self._repair_auth(event):
+            event.defer()
+            return
 
     def _on_leader_elected(self, event: LeaderElectedEvent) -> None:
         if not self.state.unit.is_ready:
@@ -306,6 +336,10 @@ class CassandraEvents(Object):
             event.defer()
             return
         self._recover_seeds()
+        self.charm.on.update_auth_rf.emit()
+        if not self._repair_auth(event):
+            event.defer()
+            return
 
     def _on_update_status(self, _: UpdateStatusEvent) -> None:
         if self.state.unit.is_operational and not self.workload.is_alive():
@@ -358,6 +392,9 @@ class CassandraEvents(Object):
 
         if self.state.unit.workload_state == UnitWorkloadState.CANT_START:
             event.add_status(Status.CANT_START.value)
+
+        if self.state.cluster.auth_repair != AuthRepairState.UNPLANNED:
+            event.add_status(Status.REPAIRING_AUTH.value)
 
         event.add_status(Status.ACTIVE.value)
 
@@ -427,6 +464,13 @@ class CassandraEvents(Object):
                    The charm may be in a broken, unrecoverable state"""
             )
 
+        if self.charm.app.planned_units() == 1:
+            logger.info("Updating system_auth replication factor to 1 accordingly")
+            try:
+                self.database_manager.update_system_auth_replication_factor(1)
+            except Exception as e:
+                logger.error(f"Failed to update system_auth replication factor: {e}")
+
         logger.info(f"Starting unit {self.state.unit.unit_name} node decommissioning")
         try:
             self.node_manager.decommission()
@@ -435,3 +479,41 @@ class CassandraEvents(Object):
             raise e
 
         logger.info("Hook for storage-detaching event completed")
+
+    def _on_update_auth_rf(self, event: EventBase) -> None:
+        if not self.charm.unit.is_leader():
+            return
+        self.state.cluster.auth_repair = AuthRepairState.PENDING
+        if not self.state.unit.is_operational:
+            logger.debug("Deferring on_peer_relation_departed due to unit not being operational")
+            event.defer()
+            return
+        if (n := self.node_manager.active_cluster_nodes_count) != self.charm.app.planned_units():
+            event.defer()
+            return
+        self.database_manager.update_system_auth_replication_factor(min(n, 3))
+        self.node_manager.repair_auth()
+        self.state.unit.auth_repaired = True
+        self.state.cluster.auth_repair = AuthRepairState.WAITING_FOR_REPAIR
+
+    def _repair_auth(self, event: EventBase) -> bool:
+        if self.charm.unit.is_leader():
+            if self.state.cluster.auth_repair == AuthRepairState.WAITING_FOR_REPAIR and all(
+                unit.auth_repaired for unit in self.state.units
+            ):
+                self.state.cluster.auth_repair = AuthRepairState.UNPLANNED
+                self.state.unit.auth_repaired = False
+        else:
+            if self.state.cluster.auth_repair == AuthRepairState.WAITING_FOR_REPAIR:
+                if not self.state.unit.auth_repaired:
+                    if not self.state.unit.is_operational:
+                        logger.debug(
+                            "Deferring on_peer_relation_changed due to unit not being operational"
+                        )
+                        event.defer()
+                        return False
+                    self.node_manager.repair_auth()
+                    self.state.unit.auth_repaired = True
+            else:
+                self.state.unit.auth_repaired = False
+        return True

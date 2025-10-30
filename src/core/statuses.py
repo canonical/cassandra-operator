@@ -23,3 +23,4 @@ class Status(Enum):
     WAITING_FOR_TLS = WaitingStatus("waiting for TLS setup")
     ROTATING_PEER_TLS = MaintenanceStatus("waiting for peer tls rotation to complete")
     ROTATING_CLIENT_TLS = MaintenanceStatus("waiting for client tls rotation to complete")
+    REPAIRING_AUTH = MaintenanceStatus("repairing system_auth keyspace")

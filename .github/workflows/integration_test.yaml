@@ -134,7 +134,6 @@ jobs:
         # https://github.com/canonical/charmcraft/issues/2105 and
         # https://github.com/canonical/charmcraft/issues/2130 fixed
         run: ~/go/bin/spread -vv -artifacts=artifacts '${{ matrix.job.spread_job }}'
-
       - name: Upload Allure results
         timeout-minutes: 3
         # Only upload results from one spread system & one spread variant
@@ -148,7 +147,7 @@ jobs:
           if-no-files-found: error
       - timeout-minutes: 1
         if: ${{ success() || (failure() && steps.spread.outcome == 'failure') }}
-        run: snap list    
+        run: snap list
       - timeout-minutes: 1
         if: ${{ success() || (failure() && steps.spread.outcome == 'failure') }}
         run: sudo juju controllers
