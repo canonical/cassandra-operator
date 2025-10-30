@@ -9,17 +9,45 @@ import subprocess
 from contextlib import contextmanager
 
 import jubilant
+import tenacity
+from tenacity import stop_after_delay, wait_fixed
 from jubilant.statustypes import UnitStatus
 
 logger = logging.getLogger(__name__)
 
 
+CLIENT_CA_CERT = "client-ca-cert-secret"
 DEFAULT_MICROK8S_CHANNEL = "1.32-strict/stable"
 
 
-logger = logging.getLogger(__name__)
-COS_METRICS_PORT = 7071
-DEFAULT_MICROK8S_CHANNEL = "1.32-strict/stable"
+@tenacity.retry(
+    retry=tenacity.retry_if_exception_type(AssertionError),
+    stop=stop_after_delay(60),
+    wait=wait_fixed(5),
+    reraise=True,
+)
+def get_cluster_client_ca(juju: jubilant.Juju, app_name: str) -> str:
+    certs: set[str] = set()
+
+    for unit in get_unit_names(juju, app_name):
+        client_ca = unit_secret_extract(
+            juju,
+            unit_name=unit,
+            secret_name=CLIENT_CA_CERT,
+        )
+
+        if client_ca:
+            certs.add(client_ca)
+
+    if len(certs) != 1:
+        logger.warning(
+            f"Units have different or missing client CA certs ({len(certs)} found). Retrying..."
+        )
+        raise AssertionError(
+            "Units have different client certificates, waiting for rotation to end"
+        )
+
+    return certs.pop()
 
 
 def get_secrets_by_label(juju: jubilant.Juju, label: str, owner: str) -> list[dict[str, str]]:
@@ -53,8 +81,8 @@ def get_secrets_by_label(juju: jubilant.Juju, label: str, owner: str) -> list[di
     return secret_data_list
 
 
-def get_address(juju: jubilant.Juju, app_name: str, unit_num) -> str:
-    """Get the address for a unit."""
+def get_unit_address(juju: jubilant.Juju, app_name: str, unit_num) -> str:
+    """Get the address for a units."""
     status = juju.status()
     address = status.apps[app_name].units[f"{app_name}/{unit_num}"].public_address
     return address

@@ -10,6 +10,7 @@ import jubilant
 from integration.helpers.cassandra import check_tls
 from integration.helpers.juju import (
     check_node_is_up,
+    get_unit_address,
     get_hosts,
     get_unit_names,
     unit_secret_extract,

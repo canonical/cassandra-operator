@@ -13,13 +13,12 @@ from cassandra.cluster import NoHostAvailable
 from tenacity import Retrying, stop_after_delay, wait_fixed
 
 from integration.helpers.cassandra import (
-    get_cluster_client_ca,
     get_db_users,
     get_user_permissions,
     keyspace_exists,
     table_exists,
 )
-from integration.helpers.juju import get_peer_app_data
+from integration.helpers.juju import get_cluster_client_ca, get_peer_app_data
 from integration.helpers.types import IntegrationTestsCharms
 
 logger = logging.getLogger(__name__)

@@ -23,7 +23,6 @@ class ContinuousWrites:
         self.write_event = Event()
         self.juju: jubilant.Juju | None = None
         self.app_name: str | None = None
-        self.context_str: str | None = None
 
     def start(
         self,
@@ -31,7 +30,6 @@ class ContinuousWrites:
         app_name: str,
         hosts: list[str] | None = None,
         replication_factor: int = 1,
-        context_str: str | None = None,
     ) -> None:
         assert not self.juju
 
@@ -48,7 +46,6 @@ class ContinuousWrites:
                 hosts,
                 self.keyspace_name,
                 self.timeout,
-                context_str,
             ),
         )
         self.process.start()
@@ -72,6 +69,10 @@ class ContinuousWrites:
         self.write_event.clear()
         self.juju = None
         self.app_name = None
+
+    def force_stop(self) -> None:
+        if self.process and self.process.is_alive():
+            self.process.terminate()
 
     def assert_new_writes(self, hosts: list[str] | None = None) -> None:
         assert self.juju and self.app_name and self.process and self.process.is_alive()
@@ -110,12 +111,18 @@ class ContinuousWrites:
         return res.all()[0][0]
 
     def _assert_writes(self, hosts: list[str] | None = None) -> None:
-        res = self._cql_exec(
-            "SELECT min(position), max(position), count(position) FROM test_table", hosts=hosts
-        )
-        assert isinstance(res, ResultSet)
-        pmin, pmax, pcount = res.all()[0]
-        assert pcount == (1 + pmax - pmin)
+        for attempt in Retrying(
+            wait=wait_fixed(10), stop=stop_after_delay(self.timeout), reraise=True
+        ):
+            with attempt:
+                res = self._cql_exec(
+                    "SELECT min(position), max(position), count(position) FROM test_table",
+                    hosts=hosts,
+                )
+                assert isinstance(res, ResultSet)
+                pmin, pmax, pcount = res.all()[0]
+                logger.info(f"continuous writes min={pmin}, max={pmax}, pcount={pcount}")
+                assert pcount == (1 + pmax - pmin)
 
     def _cql_exec(self, query: str, hosts: list[str] | None = None) -> ResultSet | None:
         assert self.juju and self.app_name
@@ -144,30 +151,23 @@ class ContinuousWrites:
         hosts: list[str] | None,
         keyspace_name: str,
         timeout: int,
-        context_str: str | None = None,
     ) -> None:
         position: int = 1
         for attempt in Retrying(wait=wait_fixed(10), stop=stop_after_delay(timeout), reraise=True):
             with attempt:
-                try:
-                    with connect_cql(
-                        juju=juju,
-                        app_name=app_name,
-                        hosts=hosts,
-                        keyspace=keyspace_name,
-                        timeout=timeout,
-                    ) as session:
-                        while not stop_event.is_set():
-                            q = "INSERT INTO test_table (position) VALUES (%s)"
-                            logger.info(f"Context: {context_str}, query: {q} values: {position}")
-                            session.execute(
-                                q,
-                                (position,),
-                                timeout=timeout,
-                            )
-                            write_event.set()
-                            position += 1
-                            stop_event.wait(1)
-                except Exception as e:
-                    logger.error(f"Context: {context_str}, exceprion: {e}")
-                    raise e
+                with connect_cql(
+                    juju=juju,
+                    app_name=app_name,
+                    hosts=hosts,
+                    keyspace=keyspace_name,
+                    timeout=timeout,
+                ) as session:
+                    while not stop_event.is_set():
+                        session.execute(
+                            "INSERT INTO test_table (position) VALUES (%s)",
+                            (position,),
+                            timeout=timeout,
+                        )
+                        write_event.set()
+                        position += 1
+                        stop_event.wait(1)

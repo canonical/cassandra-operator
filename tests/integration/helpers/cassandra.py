@@ -38,6 +38,7 @@ def connect_cql(
     client_ca: str | None = None,
     timeout: float | None = None,
 ) -> Generator[Session, None, None]:
+    """Connect to the Cassandra cluster and acquire CQL session."""
     if hosts is None:
         hosts = get_hosts(juju, app_name)
     if username is None:
@@ -90,36 +91,6 @@ def connect_cql(
         cluster.shutdown()
 
 
-@tenacity.retry(
-    retry=tenacity.retry_if_exception_type(AssertionError),
-    stop=stop_after_delay(60),
-    wait=wait_fixed(5),
-    reraise=True,
-)
-def get_cluster_client_ca(juju: jubilant.Juju, app_name: str) -> str:
-    certs: set[str] = set()
-
-    for unit in get_unit_names(juju, app_name):
-        client_ca = unit_secret_extract(
-            juju,
-            unit_name=unit,
-            secret_name=CLIENT_CA_CERT,
-        )
-
-        if client_ca:
-            certs.add(client_ca)
-
-    if len(certs) != 1:
-        logger.warning(
-            f"Units have different or missing client CA certs ({len(certs)} found). Retrying..."
-        )
-        raise AssertionError(
-            "Units have different client certificates, waiting for rotation to end"
-        )
-
-    return certs.pop()
-
-
 def check_tls(ip: str, port: int) -> bool:
     try:
         proc = subprocess.run(
@@ -139,6 +110,49 @@ def check_tls(ip: str, port: int) -> bool:
         logger.debug(f"OpenSSL exited with code {proc.returncode} on {ip}:{port}")
 
     return "TLSv1.2" in output or "TLSv1.3" in output
+
+
+def get_db_users(juju, app_name, client_ca: str | None = None) -> set[str]:
+    """Return a set of all Cassandra user names for the given application."""
+    users: set[str] = set()
+
+    with connect_cql(
+        juju=juju, app_name=app_name, hosts=get_hosts(juju, app_name), client_ca=client_ca
+    ) as session:
+        rows = session.execute("SELECT role FROM system_auth.roles;")
+        users = {row.role for row in rows}
+
+    return users
+
+
+def keyspace_exists(juju, app_name, keyspace_name: str, client_ca: str | None = None) -> bool:
+    """Check if the given Cassandra keyspace exists."""
+    with connect_cql(
+        juju=juju, app_name=app_name, hosts=get_hosts(juju, app_name), client_ca=client_ca
+    ) as session:
+        query = """
+        SELECT keyspace_name
+        FROM system_schema.keyspaces
+        WHERE keyspace_name = %s
+        """
+        result = session.execute(query, (keyspace_name,))
+        return bool(result.one())
+
+
+def table_exists(
+    juju, app_name, keyspace_name: str, table_name: str, client_ca: str | None = None
+) -> bool:
+    """Check if the given table exists in the specified Cassandra keyspace."""
+    with connect_cql(
+        juju=juju, app_name=app_name, hosts=get_hosts(juju, app_name), client_ca=client_ca
+    ) as session:
+        query = """
+        SELECT table_name
+        FROM system_schema.tables
+        WHERE keyspace_name = %s AND table_name = %s
+        """
+        result = session.execute(query, (keyspace_name, table_name))
+        return bool(result.one())
 
 
 def prepare_keyspace_and_table(
@@ -196,47 +210,10 @@ def read_n_rows(
     return got
 
 
-def get_db_users(juju, app_name, client_ca: str | None = None) -> set[str]:
-    """Return a set of all Cassandra user names for the given application."""
-    users: set[str] = set()
-
-    with connect_cql(
-        juju=juju, app_name=app_name, hosts=get_hosts(juju, app_name), client_ca=client_ca
-    ) as session:
-        rows = session.execute("SELECT role FROM system_auth.roles;")
-        users = {row.role for row in rows}
-
-    return users
-
-
-def keyspace_exists(juju, app_name, keyspace_name: str, client_ca: str | None = None) -> bool:
-    """Check if the given Cassandra keyspace exists."""
-    with connect_cql(
-        juju=juju, app_name=app_name, hosts=get_hosts(juju, app_name), client_ca=client_ca
-    ) as session:
-        query = """
-        SELECT keyspace_name
-        FROM system_schema.keyspaces
-        WHERE keyspace_name = %s
-        """
-        result = session.execute(query, (keyspace_name,))
-        return bool(result.one())
-
-
-def table_exists(
-    juju, app_name, keyspace_name: str, table_name: str, client_ca: str | None = None
-) -> bool:
-    """Check if the given table exists in the specified Cassandra keyspace."""
-    with connect_cql(
-        juju=juju, app_name=app_name, hosts=get_hosts(juju, app_name), client_ca=client_ca
-    ) as session:
-        query = """
-        SELECT table_name
-        FROM system_schema.tables
-        WHERE keyspace_name = %s AND table_name = %s
-        """
-        result = session.execute(query, (keyspace_name, table_name))
-        return bool(result.one())
+def assert_rows(wrote: dict[int, str], got: dict[int, str]) -> None:
+    """Assert rows are equal."""
+    assert len(got) == len(wrote), f"Expected {len(wrote)} rows, got {len(got)}"
+    assert got == wrote, "Row data mismatch"
 
 
 def get_user_permissions(juju, app_name, username: str, client_ca: str | None = None) -> set[str]:
@@ -249,9 +226,3 @@ def get_user_permissions(juju, app_name, username: str, client_ca: str | None = 
     ) as session:
         rows = session.execute(f'LIST ALL PERMISSIONS OF "{username}";')
         return {row.permission for row in rows}
-
-
-def assert_rows(wrote: dict[int, str], got: dict[int, str]) -> None:
-    """Assert rows are equal."""
-    assert len(got) == len(wrote), f"Expected {len(wrote)} rows, got {len(got)}"
-    assert got == wrote, "Row data mismatch"

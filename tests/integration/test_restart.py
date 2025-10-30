@@ -11,7 +11,7 @@ from typing import Literal
 import jubilant
 
 from integration.helpers.continuous_writes import ContinuousWrites
-from integration.helpers.juju import get_address
+from integration.helpers.juju import get_unit_address
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ def test_graceful_restart_unit(
         timeout=600,
     )
 
-    continuous_writes.stop_and_assert_writes([get_address(juju, app_name, 0)])
+    continuous_writes.stop_and_assert_writes([get_unit_address(juju, app_name, 0)])
 
 
 def test_kill_process(
@@ -64,21 +64,23 @@ def test_kill_process(
         timeout=600,
     )
 
-    continuous_writes.stop_and_assert_writes([get_address(juju, app_name, 0)])
+    continuous_writes.stop_and_assert_writes([get_unit_address(juju, app_name, 0)])
 
 
 def test_freeze_process(
     juju: jubilant.Juju, app_name: str, continuous_writes: ContinuousWrites
 ) -> None:
-    continuous_writes.start(juju, app_name, [get_address(juju, app_name, 1)], replication_factor=3)
+    continuous_writes.start(
+        juju, app_name, [get_unit_address(juju, app_name, 1)], replication_factor=3
+    )
 
-    continuous_writes.assert_new_writes([get_address(juju, app_name, 0)])
+    continuous_writes.assert_new_writes([get_unit_address(juju, app_name, 0)])
 
     send_control_signal(juju, f"{app_name}/0", "SIGSTOP")
 
     sleep(10)
 
-    continuous_writes.assert_new_writes([get_address(juju, app_name, 1)])
+    continuous_writes.assert_new_writes([get_unit_address(juju, app_name, 1)])
 
     send_control_signal(juju, f"{app_name}/0", "SIGCONT")
 
@@ -89,7 +91,7 @@ def test_freeze_process(
         timeout=600,
     )
 
-    continuous_writes.stop_and_assert_writes([get_address(juju, app_name, 0)])
+    continuous_writes.stop_and_assert_writes([get_unit_address(juju, app_name, 0)])
 
 
 def test_graceful_restart_cluster(
@@ -108,9 +110,9 @@ def test_graceful_restart_cluster(
         timeout=1800,
     )
 
-    continuous_writes.start(juju, app_name, [get_address(juju, app_name, 0)])
-    continuous_writes.assert_new_writes([get_address(juju, app_name, 1)])
-    continuous_writes.stop_and_assert_writes([get_address(juju, app_name, 2)])
+    continuous_writes.start(juju, app_name, [get_unit_address(juju, app_name, 0)])
+    continuous_writes.assert_new_writes([get_unit_address(juju, app_name, 1)])
+    continuous_writes.stop_and_assert_writes([get_unit_address(juju, app_name, 2)])
 
 
 def test_lxc_restart_cluster(
@@ -127,9 +129,9 @@ def test_lxc_restart_cluster(
         timeout=1800,
     )
 
-    continuous_writes.assert_new_writes([get_address(juju, app_name, 0)])
-    continuous_writes.assert_new_writes([get_address(juju, app_name, 1)])
-    continuous_writes.stop_and_assert_writes([get_address(juju, app_name, 2)])
+    continuous_writes.assert_new_writes([get_unit_address(juju, app_name, 0)])
+    continuous_writes.assert_new_writes([get_unit_address(juju, app_name, 1)])
+    continuous_writes.stop_and_assert_writes([get_unit_address(juju, app_name, 2)])
 
 
 def send_control_signal(

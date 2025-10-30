@@ -168,3 +168,10 @@ def requirer_app_name() -> str:
         Path("./tests/integration/application-charm/metadata.yaml").read_text()
     )
     return metadata["name"]
+
+
+@pytest.fixture(scope="module")
+def continuous_writes() -> Generator[ContinuousWrites, None, None]:
+    continuous_writes = ContinuousWrites()
+    yield continuous_writes
+    continuous_writes.force_stop()
