@@ -579,12 +579,13 @@ class ApplicationState(Object):
             relation_name=PEER_RELATION,
             additional_secret_fields=unit_additional_secret_fields,
         )
+
         self.client_interface = RepositoryInterface(
-            charm,
+            charm.model,
             relation_name=CLIENT_RELATION,
             component=charm.app,
             repository_type=OpsRelationRepository,
-            model=RequirerCommonModel,
+            data_model=RequirerCommonModel,
         )
 
     @property

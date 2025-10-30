@@ -14,7 +14,6 @@ from charms.data_platform_libs.v1.data_interfaces import (
     ResourceEntityPermissionsChangedEvent,
     ResourceEntityRequestedEvent,
     ResourceRequestedEvent,
-    SecretBool,
     gen_hash,
     gen_salt,
 )
@@ -734,13 +733,12 @@ def test_resource_requested_response_payload_fields(ctx):
         relation_id, response = args
         assert relation_id == new_ctx.client_relation.id
         # Validate selected response fields
-        assert response.username.get_secret_value().startswith("user_")
-        assert response.password.get_secret_value() == "password"
+        assert response.username.startswith("user_")
+        assert response.password == "password"
         assert response.salt == req.salt
         assert response.resource == req.resource
         assert response.request_id == req.request_id
         assert response.endpoints
-        assert isinstance(response.tls, SecretBool)
 
 
 def test_entity_requested_response_payload_fields(ctx):
@@ -787,10 +785,9 @@ def test_entity_requested_response_payload_fields(ctx):
         relation_id, response = args
         assert relation_id == new_ctx.client_relation.id
         # Validate selected response fields
-        assert response.entity_name.get_secret_value().startswith("user_")
-        assert response.entity_password.get_secret_value() == "password"
+        assert response.entity_name.startswith("user_")
+        assert response.entity_password == "password"
         assert response.salt == req.salt
         assert response.resource == req.resource
         assert response.request_id == req.request_id
         assert response.endpoints
-        assert isinstance(response.tls, SecretBool)

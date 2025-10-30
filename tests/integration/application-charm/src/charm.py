@@ -6,6 +6,7 @@
 
 """Application Charm definition."""
 
+import json
 import logging
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -21,7 +22,6 @@ from cassandra.cluster import (
 )
 from cassandra.policies import DCAwareRoundRobinPolicy, TokenAwarePolicy
 from charms.data_platform_libs.v1.data_interfaces import (
-    AuthenticationUpdatedEvent,
     EntityPermissionModel,
     RequirerCommonModel,
     RequirerDataContractV1,
@@ -103,11 +103,6 @@ class ApplicationCharm(CharmBase):
             self._on_endpoints_changed,
         )
 
-        self.framework.observe(
-            self.cassandra_client.on.authentication_updated,
-            self._cassandra_client_authentication_updated,
-        )
-
         self.framework.observe(self.on.create_table_action, self._create_table_action)
 
         self.execution_profile = ExecutionProfile(
@@ -120,17 +115,6 @@ class ApplicationCharm(CharmBase):
     def _on_start(self, _) -> None:
         """Only sets an Active status."""
         self.unit.status = ActiveStatus()
-
-    def _cassandra_client_authentication_updated(
-        self, event: AuthenticationUpdatedEvent[ResourceProviderModel]
-    ) -> None:
-        tls_ca = event.response.tls_ca
-        tls = event.response.tls
-
-        if tls is None:
-            return
-
-        self.set_tls(tls_ca.get_secret_value() if tls_ca else "")
 
     def _on_endpoints_changed(self, event: ResourceEndpointsChangedEvent) -> None:
         """Handle etcd client relation data changed event."""
@@ -305,6 +289,42 @@ class ApplicationCharm(CharmBase):
         """List of permissions for requested user."""
         return str(self.config.get("user-permissions", default="ALL")).split(",")
 
+    def _get_secret_tls(self) -> list[str]:
+        secrets = []
+
+        for rel in self.model.relations.get("cassandra-client", []):
+            app_data = rel.data.get(self.model.get_app("cassandra"))
+            if not app_data:
+                continue
+
+            requests_raw = app_data.get("requests")
+            if not requests_raw:
+                continue
+
+            try:
+                requests = json.loads(requests_raw)
+            except json.JSONDecodeError:
+                logger.warning(f"Cannot parse requests: {requests_raw}")
+                continue
+
+            for req in requests:
+                secret_tls = req.get("secret-tls")
+                if secret_tls:
+                    secrets.append(secret_tls)
+                    logger.info(f"Found TLS secret: {secret_tls}")
+
+        return secrets
+
+    def _read_tls_secret(self) -> str:
+        tls_secrets = self._get_secret_tls()
+        for uri in tls_secrets:
+            secret_id = uri.split("/")[-1]
+            secret = self.model.get_secret(id=secret_id).get_content(refresh=True)
+            tls_enabled = secret.get("tls")
+            if tls_enabled and tls_enabled.lower() == "true":
+                return str(secret.get("tls-ca"))
+        return ""
+
     @contextmanager
     def _cqlsh_session(
         self,
@@ -312,10 +332,10 @@ class ApplicationCharm(CharmBase):
         hosts: list[str],
         keyspace: str | None = None,
     ) -> Generator[Session, None, None]:
-        if not (peer_relation := self.model.get_relation(PEER_REL)):
+        if not (self.model.get_relation(PEER_REL)):
             return
 
-        tls_ca = peer_relation.data[self.app].get("tls_ca")
+        tls_ca = self._read_tls_secret()
         ssl_context = SSLContext(PROTOCOL_TLS_CLIENT)
 
         if tls_ca:
