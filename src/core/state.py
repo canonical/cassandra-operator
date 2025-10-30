@@ -99,6 +99,14 @@ class UnitWorkloadState(StrEnum):
     """Cassandra is active and ready."""
 
 
+class AuthRepairState(StrEnum):
+    """TODO."""
+
+    UNPLANNED = ""
+    PENDING = "pending"
+    WAITING_FOR_REPAIR = "waiting_for_repair"
+
+
 class RelationState:
     """Basic class for relation bag mapping classes."""
 
@@ -563,13 +571,14 @@ class ClusterContext(RelationState):
         self._field_setter_wrapper("operator-password", value)
 
     @property
-    def auth_repairing(self) -> bool:
+    def auth_repair(self) -> AuthRepairState:
         """TODO."""
-        return bool(self.relation_data.get("auth-repairing", ""))
+        return self.relation_data.get("auth-repair", AuthRepairState.UNPLANNED)
 
-    @auth_repairing.setter
-    def auth_repairing(self, value: bool) -> None:
-        self._field_setter_wrapper("auth-repairing", str(value))
+    @auth_repair.setter
+    def auth_repair(self, value: AuthRepairState) -> None:
+        """TODO."""
+        self._field_setter_wrapper("auth-repair", value.value)
 
 
 class ApplicationState(Object):
