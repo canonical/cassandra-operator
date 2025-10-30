@@ -6,8 +6,6 @@
 
 import logging
 
-from pydantic.types import SecretStr
-
 from charms.data_platform_libs.v1.data_interfaces import (
     EntityPermissionModel,
     RequirerCommonModel,
@@ -16,7 +14,6 @@ from charms.data_platform_libs.v1.data_interfaces import (
     ResourceProviderEventHandler,
     ResourceProviderModel,
     ResourceRequestedEvent,
-    TlsSecretStr,
 )
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from ops import (
