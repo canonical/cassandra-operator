@@ -3,18 +3,24 @@
 # See LICENSE file for licensing details.
 
 import logging
-from itertools import pairwise
 from pathlib import Path
 
 import jubilant
 
 from integration.helpers.cassandra import (
+    OPERATOR_PASSWORD,
     assert_rows,
     prepare_keyspace_and_table,
     read_n_rows,
     write_n_rows,
 )
-from integration.helpers.juju import scale_sequentially_to
+from integration.helpers.continuous_writes import ContinuousWrites
+from integration.helpers.juju import (
+    app_secret_extract,
+    get_hosts,
+    get_unit_address,
+    scale_sequentially_to,
+)
 
 logger = logging.getLogger(__name__)
 TEST_ROW_NUM = 100
@@ -29,47 +35,28 @@ def test_deploy(juju: jubilant.Juju, cassandra_charm: Path, app_name: str) -> No
     juju.wait(jubilant.all_active, timeout=1200)
 
 
-def test_scale_up(juju: jubilant.Juju, app_name: str) -> None:
-    ks, tb = prepare_keyspace_and_table(juju, app_name=app_name, ks="upks", table="uptbl")
+def test_scale_up(juju: jubilant.Juju, app_name: str, continuous_writes: ContinuousWrites) -> None:
+    continuous_writes.start(
+        hosts=get_hosts(juju, app_name),
+        password=app_secret_extract(juju, app_name, OPERATOR_PASSWORD),
+    )
 
-    wrote = write_n_rows(juju, app_name, ks=ks, table=tb)
-    got1 = read_n_rows(juju, app_name, ks=ks, table=tb)
-    assert_rows(wrote, got1)
-
-    old_units = set(juju.status().apps[app_name].units.keys())
+    continuous_writes.assert_new_writes()
 
     scale_sequentially_to(juju, app_name, 3)
 
-    all_units = set(juju.status().apps[app_name].units.keys())
-    new_units = list(all_units - old_units)
-    assert new_units, "No new units detected after scale-up"
+    continuous_writes.assert_new_writes(hosts=[get_unit_address(juju, app_name, 1)])
 
-    got2 = read_n_rows(juju, app_name, ks=ks, table=tb, unit_name=new_units[0])
-    assert_rows(wrote, got2)
+    continuous_writes.stop_and_assert_writes(hosts=[get_unit_address(juju, app_name, 2)])
 
 
-def test_read_write_multinode(juju: jubilant.Juju, app_name: str) -> None:
-    units = juju.status().apps[app_name].units.items()
-    for unit_pair in pairwise(units):
-        unit1_name: str = unit_pair[0][0]
-        unit2_name: str = unit_pair[1][0]
-
-        ks, tb = prepare_keyspace_and_table(
-            juju,
-            app_name=app_name,
-            ks="multiks",
-            table=f"""multitbl_{unit1_name.replace("/", "_")}_{unit2_name.replace("/", "_")}""",
-        )
-
-        assert len(unit_pair) > 1
-
-        wrote = write_n_rows(juju, app_name, ks=ks, table=tb, unit_name=unit1_name)
-        got = read_n_rows(juju, app_name, ks=ks, table=tb, unit_name=unit2_name)
-        assert_rows(wrote, got)
-
-
-def test_single_node_scale_down(juju: jubilant.Juju, app_name: str) -> None:
-    scale_sequentially_to(juju, app_name, 3)
+def test_single_node_scale_down(
+    juju: jubilant.Juju, app_name: str, continuous_writes: ContinuousWrites
+) -> None:
+    continuous_writes.start(
+        hosts=get_hosts(juju, app_name),
+        password=app_secret_extract(juju, app_name, OPERATOR_PASSWORD),
+    )
 
     non_leader_units = [
         name for name, unit in juju.status().apps[app_name].units.items() if not unit.leader
@@ -81,9 +68,6 @@ def test_single_node_scale_down(juju: jubilant.Juju, app_name: str) -> None:
 
     assert len(non_leader_units) == 2
 
-    ks, tb = prepare_keyspace_and_table(juju, app_name=app_name, ks="downks", table="downtbl")
-    wrote = write_n_rows(juju, app_name, ks=ks, table=tb, unit_name=non_leader_units[0])
-
     juju.remove_unit(non_leader_units[0])
     juju.wait(
         ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
@@ -92,8 +76,7 @@ def test_single_node_scale_down(juju: jubilant.Juju, app_name: str) -> None:
         timeout=1200,
     )
 
-    got = read_n_rows(juju, app_name, ks=ks, table=tb, unit_name=non_leader_units[1])
-    assert_rows(wrote, got)
+    continuous_writes.assert_new_writes()
 
     juju.remove_unit(leader_unit)
     juju.wait(
@@ -103,27 +86,34 @@ def test_single_node_scale_down(juju: jubilant.Juju, app_name: str) -> None:
         timeout=1200,
     )
 
-    new_leader_unit = [
-        name for name, unit in juju.status().apps[app_name].units.items() if unit.leader
+    new_leader_address = [
+        unit.public_address
+        for _, unit in juju.status().apps[app_name].units.items()
+        if unit.leader
     ][0]
 
-    assert new_leader_unit
+    assert new_leader_address
 
-    got = read_n_rows(juju, app_name, ks=ks, table=tb, unit_name=new_leader_unit)
-    assert_rows(wrote, got)
+    continuous_writes.stop_and_assert_writes(hosts=[new_leader_address])
 
 
 def test_single_node_scale_down_scale_up(juju: jubilant.Juju, app_name: str) -> None:
-    scale_sequentially_to(juju, app_name, 2)
-
     non_leader_units = [
         name for name, unit in juju.status().apps[app_name].units.items() if not unit.leader
     ]
 
     assert len(non_leader_units) == 1
 
-    ks, tb = prepare_keyspace_and_table(juju, app_name=app_name, ks="downupks", table="downuptbl")
-    wrote = write_n_rows(juju, app_name, ks=ks, table=tb, unit_name=non_leader_units[0])
+    non_leader_hosts = [get_unit_address(juju, app_name, non_leader_units[0].split("/")[1])]
+    password = app_secret_extract(juju, app_name, OPERATOR_PASSWORD)
+
+    ks, tb = prepare_keyspace_and_table(
+        hosts=non_leader_hosts,
+        password=password,
+        ks="downupks",
+        table="downuptbl",
+    )
+    wrote = write_n_rows(hosts=non_leader_hosts, password=password, ks=ks, table=tb)
 
     juju.remove_unit(non_leader_units[0])
     juju.wait(
@@ -146,5 +136,10 @@ def test_single_node_scale_down_scale_up(juju: jubilant.Juju, app_name: str) -> 
 
     assert len(non_leader_units) == 1
 
-    got = read_n_rows(juju, app_name, ks=ks, table=tb, unit_name=non_leader_units[0])
+    got = read_n_rows(
+        hosts=[get_unit_address(juju, app_name, non_leader_units[0].split("/")[1])],
+        password=password,
+        ks=ks,
+        table=tb,
+    )
     assert_rows(wrote, got)

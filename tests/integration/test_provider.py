@@ -13,12 +13,18 @@ from cassandra.cluster import NoHostAvailable
 from tenacity import Retrying, stop_after_delay, wait_fixed
 
 from integration.helpers.cassandra import (
+    OPERATOR_PASSWORD,
     get_db_users,
     get_user_permissions,
     keyspace_exists,
     table_exists,
 )
-from integration.helpers.juju import get_cluster_client_ca, get_peer_app_data
+from integration.helpers.juju import (
+    app_secret_extract,
+    get_cluster_client_ca,
+    get_hosts,
+    get_peer_app_data,
+)
 from integration.helpers.types import IntegrationTestsCharms
 
 logger = logging.getLogger(__name__)
@@ -59,13 +65,16 @@ def test_deploy_with_requirer(
 
 
 def test_integrate_client(juju: jubilant.Juju, app_name: str, requirer_app_name: str) -> None:
-    old_users = get_db_users(juju, app_name)
+    hosts = get_hosts(juju, app_name)
+    password = app_secret_extract(juju, app_name, OPERATOR_PASSWORD)
+
+    old_users = get_db_users(hosts=hosts, password=password)
 
     juju.integrate(f"{app_name}:{CLIENT_RELATION}", requirer_app_name)
 
     juju.wait(jubilant.all_active, delay=5, successes=5)
 
-    with_new_users = get_db_users(juju, app_name)
+    with_new_users = get_db_users(hosts=hosts, password=password)
 
     new_users = with_new_users - old_users
 
@@ -74,10 +83,10 @@ def test_integrate_client(juju: jubilant.Juju, app_name: str, requirer_app_name:
     # 1. For the resource itself (initial user and keyspace)
     # 2. For the resource entity (regular user)
     assert len(new_users) == 2
-    assert keyspace_exists(juju, app_name, KEYSPACE_NAME)
+    assert keyspace_exists(hosts=hosts, password=password, keyspace_name=KEYSPACE_NAME)
 
     for user in new_users:
-        user_perms = get_user_permissions(juju, app_name, user)
+        user_perms = get_user_permissions(hosts=hosts, password=password, target_username=user)
         assert USER_KEYSPACE_ALL_PERMISSIONS.issubset(user_perms), (
             f"{USER_KEYSPACE_ALL_PERMISSIONS} not in {user_perms}"
         )
@@ -90,7 +99,12 @@ def test_create_table(juju: jubilant.Juju, app_name: str, requirer_app_name: str
 
     juju.wait(jubilant.all_active)
 
-    assert table_exists(juju, app_name, KEYSPACE_NAME, TABLE_NAME)
+    assert table_exists(
+        hosts=get_hosts(juju, app_name),
+        password=app_secret_extract(juju, app_name, OPERATOR_PASSWORD),
+        keyspace_name=KEYSPACE_NAME,
+        table_name=TABLE_NAME,
+    )
 
 
 def test_connection_updated_on_tls_enabled(
@@ -126,7 +140,13 @@ def test_connection_updated_on_tls_enabled(
 
     juju.wait(jubilant.all_active)
 
-    assert table_exists(juju, app_name, KEYSPACE_NAME, TABLE_NAME + table_prefix, client_ca=ca)
+    assert table_exists(
+        hosts=get_hosts(juju, app_name),
+        password=app_secret_extract(juju, app_name, OPERATOR_PASSWORD),
+        keyspace_name=KEYSPACE_NAME,
+        table_name=TABLE_NAME + table_prefix,
+        client_ca=ca,
+    )
 
 
 def test_connection_no_tls_on_tls_enabled(
@@ -134,7 +154,12 @@ def test_connection_no_tls_on_tls_enabled(
     app_name: str,
 ) -> None:
     with pytest.raises(NoHostAvailable) as exc_info:
-        table_exists(juju, app_name, KEYSPACE_NAME, TABLE_NAME)
+        table_exists(
+            hosts=get_hosts(juju, app_name),
+            password=app_secret_extract(juju, app_name, OPERATOR_PASSWORD),
+            keyspace_name=KEYSPACE_NAME,
+            table_name=TABLE_NAME,
+        )
 
     err = exc_info.value
     assert isinstance(err, NoHostAvailable)
@@ -170,7 +195,13 @@ def test_connection_updated_on_tls_updated(
 
     juju.wait(jubilant.all_active)
 
-    assert table_exists(juju, app_name, KEYSPACE_NAME, TABLE_NAME + table_prefix, client_ca=ca)
+    assert table_exists(
+        hosts=get_hosts(juju, app_name),
+        password=app_secret_extract(juju, app_name, OPERATOR_PASSWORD),
+        keyspace_name=KEYSPACE_NAME,
+        table_name=TABLE_NAME + table_prefix,
+        client_ca=ca,
+    )
 
 
 def test_connection_updated_on_tls_disabled(
@@ -199,7 +230,12 @@ def test_connection_updated_on_tls_disabled(
 
     juju.wait(jubilant.all_active)
 
-    assert table_exists(juju, app_name, KEYSPACE_NAME, TABLE_NAME + table_prefix)
+    assert table_exists(
+        hosts=get_hosts(juju, app_name),
+        password=app_secret_extract(juju, app_name, OPERATOR_PASSWORD),
+        keyspace_name=KEYSPACE_NAME,
+        table_name=TABLE_NAME + table_prefix,
+    )
 
 
 def test_change_user_permissions(
@@ -210,7 +246,11 @@ def test_change_user_permissions(
     juju.wait(jubilant.all_active)
 
     user = _get_requested_user(juju, requirer_app_name)
-    user_perms = get_user_permissions(juju, app_name, user.username)
+    user_perms = get_user_permissions(
+        hosts=get_hosts(juju, app_name),
+        password=app_secret_extract(juju, app_name, OPERATOR_PASSWORD),
+        target_username=user.username,
+    )
 
     assert USER_KEYSPACE_PERMISSIONS.issubset(user_perms), (
         f"{USER_KEYSPACE_PERMISSIONS} not in {user_perms}"
@@ -228,7 +268,10 @@ def test_remove_user_after_relation_broken(
 
     for attempt in Retrying(wait=wait_fixed(2), stop=stop_after_delay(120), reraise=True):
         with attempt:
-            users_left = get_db_users(juju, app_name)
+            users_left = get_db_users(
+                hosts=get_hosts(juju, app_name),
+                password=app_secret_extract(juju, app_name, OPERATOR_PASSWORD),
+            )
             assert requested_user.username not in users_left, (
                 f"User {requested_user.username} still exists"
             )

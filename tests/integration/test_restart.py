@@ -10,8 +10,9 @@ from typing import Literal
 
 import jubilant
 
+from integration.helpers.cassandra import OPERATOR_PASSWORD
 from integration.helpers.continuous_writes import ContinuousWrites
-from integration.helpers.juju import get_unit_address
+from integration.helpers.juju import app_secret_extract, get_hosts, get_unit_address
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +34,11 @@ def test_deploy(juju: jubilant.Juju, cassandra_charm: Path, app_name: str) -> No
 def test_graceful_restart_unit(
     juju: jubilant.Juju, app_name: str, continuous_writes: ContinuousWrites
 ) -> None:
-    continuous_writes.start(juju, app_name, replication_factor=3)
+    continuous_writes.start(
+        hosts=get_hosts(juju, app_name),
+        password=app_secret_extract(juju, app_name, OPERATOR_PASSWORD),
+        replication_factor=3,
+    )
 
     juju.ssh(
         f"{app_name}/0",
@@ -53,7 +58,11 @@ def test_graceful_restart_unit(
 def test_kill_process(
     juju: jubilant.Juju, app_name: str, continuous_writes: ContinuousWrites
 ) -> None:
-    continuous_writes.start(juju, app_name, replication_factor=3)
+    continuous_writes.start(
+        hosts=get_hosts(juju, app_name),
+        password=app_secret_extract(juju, app_name, OPERATOR_PASSWORD),
+        replication_factor=3,
+    )
 
     send_control_signal(juju, f"{app_name}/0", "SIGKILL")
 
@@ -71,7 +80,9 @@ def test_freeze_process(
     juju: jubilant.Juju, app_name: str, continuous_writes: ContinuousWrites
 ) -> None:
     continuous_writes.start(
-        juju, app_name, [get_unit_address(juju, app_name, 1)], replication_factor=3
+        hosts=[get_unit_address(juju, app_name, 1)],
+        password=app_secret_extract(juju, app_name, OPERATOR_PASSWORD),
+        replication_factor=3,
     )
 
     continuous_writes.assert_new_writes([get_unit_address(juju, app_name, 0)])
@@ -110,7 +121,10 @@ def test_graceful_restart_cluster(
         timeout=1800,
     )
 
-    continuous_writes.start(juju, app_name, [get_unit_address(juju, app_name, 0)])
+    continuous_writes.start(
+        hosts=[get_unit_address(juju, app_name, 0)],
+        password=app_secret_extract(juju, app_name, OPERATOR_PASSWORD),
+    )
     continuous_writes.assert_new_writes([get_unit_address(juju, app_name, 1)])
     continuous_writes.stop_and_assert_writes([get_unit_address(juju, app_name, 2)])
 
@@ -118,7 +132,11 @@ def test_graceful_restart_cluster(
 def test_lxc_restart_cluster(
     juju: jubilant.Juju, app_name: str, continuous_writes: ContinuousWrites
 ) -> None:
-    continuous_writes.start(juju, app_name, replication_factor=3)
+    continuous_writes.start(
+        hosts=get_hosts(juju, app_name),
+        password=app_secret_extract(juju, app_name, OPERATOR_PASSWORD),
+        replication_factor=3,
+    )
 
     subprocess.check_call(["lxc", "restart", "--all"])
 

@@ -55,8 +55,8 @@ def test_default_tls(juju: jubilant.Juju, app_name: str) -> None:
     num_unit = 0
 
     unit_addreses = [
-        get_hosts(juju=juju, app_name=app_name, unit_name=f"{app_name}/0")[0],
-        get_hosts(juju=juju, app_name=app_name, unit_name=f"{app_name}/1")[0],
+        get_unit_address(juju=juju, app_name=app_name, unit=0),
+        get_unit_address(juju=juju, app_name=app_name, unit=1),
     ]
 
     peer_ca = unit_secret_extract(
@@ -83,8 +83,8 @@ def test_enable_peer_self_signed_tls(
     num_unit = 0
 
     unit_addreses = [
-        get_hosts(juju=juju, app_name=app_name, unit_name=f"{app_name}/0")[0],
-        get_hosts(juju=juju, app_name=app_name, unit_name=f"{app_name}/1")[0],
+        get_unit_address(juju=juju, app_name=app_name, unit=0),
+        get_unit_address(juju=juju, app_name=app_name, unit=1),
     ]
 
     peer_ca_1 = unit_secret_extract(
@@ -132,8 +132,8 @@ def test_enable_client_self_signed_tls(
     num_unit = 0
 
     unit_addreses = [
-        get_hosts(juju=juju, app_name=app_name, unit_name=f"{app_name}/0")[0],
-        get_hosts(juju=juju, app_name=app_name, unit_name=f"{app_name}/1")[0],
+        get_unit_address(juju=juju, app_name=app_name, unit=0),
+        get_unit_address(juju=juju, app_name=app_name, unit=1),
     ]
 
     juju.integrate(f"{charm_versions.tls.app}:certificates", f"{app_name}:client-certificates")
@@ -207,8 +207,8 @@ def test_disable_peer_self_signed_tls(
     num_unit = 0
 
     unit_addreses = [
-        get_hosts(juju=juju, app_name=app_name, unit_name=f"{app_name}/0")[0],
-        get_hosts(juju=juju, app_name=app_name, unit_name=f"{app_name}/1")[0],
+        get_unit_address(juju=juju, app_name=app_name, unit=0),
+        get_unit_address(juju=juju, app_name=app_name, unit=1),
     ]
 
     logger.info("[test_disable_peer_self_signed_tls] Get peer ca 1")
@@ -256,8 +256,8 @@ def test_disable_client_self_signed_tls(
     num_unit = 0
 
     unit_addreses = [
-        get_hosts(juju=juju, app_name=app_name, unit_name=f"{app_name}/0")[0],
-        get_hosts(juju=juju, app_name=app_name, unit_name=f"{app_name}/1")[0],
+        get_unit_address(juju=juju, app_name=app_name, unit=0),
+        get_unit_address(juju=juju, app_name=app_name, unit=1),
     ]
 
     juju.remove_relation(
