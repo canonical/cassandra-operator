@@ -100,10 +100,16 @@ class UnitWorkloadState(StrEnum):
 
 
 class AuthRepairState(StrEnum):
-    """TODO."""
+    """Current state of the system_auth keyspace repair process."""
 
+    """Auth repair isn't scheduled."""
     UNPLANNED = ""
+    """Auth repair is scheduled and will be done when cluster stabilizes."""
     PENDING = "pending"
+    """Auth repair should be proceeded on all the units.
+
+    Completion of this process should be signalized with UnitContext.auth_repaired.
+    """
     WAITING_FOR_REPAIR = "waiting_for_repair"
 
 
@@ -410,7 +416,10 @@ class UnitContext(RelationState):
 
     @property
     def auth_repaired(self) -> bool:
-        """TODO."""
+        """Signalization of successful system_auth repair completion.
+
+        See AuthRepairState for more information.
+        """
         return bool(self.relation_data.get("auth-repaired", ""))
 
     @auth_repaired.setter
@@ -572,12 +581,11 @@ class ClusterContext(RelationState):
 
     @property
     def auth_repair(self) -> AuthRepairState:
-        """TODO."""
+        """Current state of the system_auth keyspace repair process."""
         return self.relation_data.get("auth-repair", AuthRepairState.UNPLANNED)
 
     @auth_repair.setter
     def auth_repair(self, value: AuthRepairState) -> None:
-        """TODO."""
         self._field_setter_wrapper("auth-repair", value.value)
 
 
