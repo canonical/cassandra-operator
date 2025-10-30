@@ -14,14 +14,12 @@ from charms.data_platform_libs.v1.data_interfaces import (
     ResourceProviderEventHandler,
     ResourceProviderModel,
     ResourceRequestedEvent,
-    SecretBool,
 )
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from ops import (
     Object,
     RelationBrokenEvent,
 )
-from pydantic import SecretStr
 
 from core.config import CharmConfig
 from core.state import CLIENT_RELATION, ApplicationState, DbRole
@@ -119,13 +117,13 @@ class ProviderEvents(Object):
 
         response = ResourceProviderModel(
             salt=request.salt,
-            username=SecretStr(rolename),
-            password=SecretStr(password),
+            username=rolename,
+            password=password,
             resource=resource,
             request_id=request.request_id,
             endpoints=",".join([f"{unit.ip}" for unit in self.state.units]),
-            tls=SecretBool(self.state.unit.client_tls.ready),
-            tls_ca=SecretStr(
+            tls=self.state.unit.client_tls.ready,
+            tls_ca=(
                 self.state.unit.client_tls.ca.raw if self.state.unit.client_tls.ca else ""
             ),
             version="v1",
@@ -182,11 +180,11 @@ class ProviderEvents(Object):
             resource=resource,
             request_id=request.request_id,
             salt=request.salt,
-            entity_name=SecretStr(rolename),
-            entity_password=SecretStr(password),
+            entity_name=rolename,
+            entity_password=password,
             endpoints=",".join([f"{unit.ip}" for unit in self.state.units]),
-            tls=SecretBool(self.state.unit.client_tls.ready),
-            tls_ca=SecretStr(
+            tls=self.state.unit.client_tls.ready,
+            tls_ca=(
                 self.state.unit.client_tls.ca.raw if self.state.unit.client_tls.ca else ""
             ),
             version="v1",
@@ -238,10 +236,10 @@ class ProviderEvents(Object):
         response = ResourceProviderModel(
             request_id=request.request_id,
             resource=resource,
-            username=SecretStr(rolename),
+            username=(rolename),
             endpoints=",".join([f"{unit.ip}" for unit in self.state.units]),
-            tls=SecretBool(self.state.unit.client_tls.ready),
-            tls_ca=SecretStr(
+            tls=self.state.unit.client_tls.ready,
+            tls_ca=(
                 self.state.unit.client_tls.ca.raw if self.state.unit.client_tls.ca else ""
             ),
         )
