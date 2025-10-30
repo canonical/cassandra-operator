@@ -7,6 +7,7 @@
 """Application Charm definition."""
 
 import logging
+import json
 from contextlib import contextmanager
 from dataclasses import dataclass
 from ssl import CERT_NONE, PROTOCOL_TLS_CLIENT, SSLContext
@@ -20,8 +21,10 @@ from cassandra.cluster import (
     Session,
 )
 from cassandra.policies import DCAwareRoundRobinPolicy, TokenAwarePolicy
+from pydantic import SecretStr
 from charms.data_platform_libs.v1.data_interfaces import (
     AuthenticationUpdatedEvent,
+    DataContractV1,
     EntityPermissionModel,
     RequirerCommonModel,
     RequirerDataContractV1,
@@ -30,13 +33,14 @@ from charms.data_platform_libs.v1.data_interfaces import (
     ResourceEntityCreatedEvent,
     ResourceProviderModel,
     ResourceRequirerEventHandler,
+    TlsSecretStr,
 )
 from charms.operator_libs_linux.v2 import snap
 from ops import ActionEvent, InstallEvent
-from ops.charm import CharmBase, ConfigChangedEvent
+from ops.charm import CharmBase, ConfigChangedEvent, SecretChangedEvent
 from ops.framework import StoredState
 from ops.main import main
-from ops.model import ActiveStatus, WaitingStatus
+from ops.model import ActiveStatus, ModelError, SecretNotFoundError, WaitingStatus
 
 CQLSH_SNAP_NAME = "cqlsh"
 PEER_REL = "local"
@@ -104,22 +108,20 @@ class ApplicationCharm(CharmBase):
         )
 
         self.framework.observe(
-            self.cassandra_client.on.authentication_updated,
-            self._cassandra_client_authentication_updated,
+            self.cassandra_client.on.secret_changed,
+            self._on_secret_changed,
         )
 
+        self.framework.observe(
+           self.cassandra_client.on.authentication_updated,
+           self._cassandra_client_authentication_updated,
+        )
+        
         self.framework.observe(self.on.create_table_action, self._create_table_action)
 
         self.execution_profile = ExecutionProfile(
             load_balancing_policy=TokenAwarePolicy(DCAwareRoundRobinPolicy())
         )
-
-    def _on_install(self, _: InstallEvent) -> None:
-        self._cqlsh_snap.ensure(snap.SnapState.Present)
-
-    def _on_start(self, _) -> None:
-        """Only sets an Active status."""
-        self.unit.status = ActiveStatus()
 
     def _cassandra_client_authentication_updated(
         self, event: AuthenticationUpdatedEvent[ResourceProviderModel]
@@ -131,6 +133,14 @@ class ApplicationCharm(CharmBase):
             return
 
         self.set_tls(tls_ca.get_secret_value() if tls_ca else "")
+        
+
+    def _on_install(self, _: InstallEvent) -> None:
+        self._cqlsh_snap.ensure(snap.SnapState.Present)
+
+    def _on_start(self, _) -> None:
+        """Only sets an Active status."""
+        self.unit.status = ActiveStatus()
 
     def _on_endpoints_changed(self, event: ResourceEndpointsChangedEvent) -> None:
         """Handle etcd client relation data changed event."""
@@ -145,6 +155,15 @@ class ApplicationCharm(CharmBase):
 
         peer_relation.data[self.app]["hosts"] = str(event.response.endpoints)
 
+    def _on_secret_changed(self, event: SecretChangedEvent) -> None:
+        """Handle etcd client relation data changed event."""
+        if not (peer_relation := self.model.get_relation(PEER_REL)):
+            event.defer()
+            return
+
+        logger.info(f"SECRET CHANGED: {event.secret}")
+        logger.info(f"SECRET CONTENT : {event.secret.get_content(refresh=True)}") 
+        
     def _on_keyspace_created(self, event: ResourceCreatedEvent[ResourceProviderModel]) -> None:
         self.unit.status = WaitingStatus("handling keyspace created")
 
@@ -305,6 +324,43 @@ class ApplicationCharm(CharmBase):
         """List of permissions for requested user."""
         return str(self.config.get("user-permissions", default="ALL")).split(",")
 
+    def _get_secret_tls(self) -> list[str]:
+        """Возвращает список URI secret-tls из всех cassandra-client relations."""
+        secrets = []
+
+        for rel in self.model.relations.get("cassandra-client", []):
+            app_data = rel.data.get(self.model.get_app("cassandra"))
+            if not app_data:
+                continue
+
+            requests_raw = app_data.get("requests")
+            if not requests_raw:
+                continue
+
+            try:
+                requests = json.loads(requests_raw)
+            except json.JSONDecodeError:
+                logger.warning(f"Cannot parse requests: {requests_raw}")
+                continue
+
+            for req in requests:
+                secret_tls = req.get("secret-tls")
+                if secret_tls:
+                    secrets.append(secret_tls)
+                    logger.info(f"Found TLS secret: {secret_tls}")
+
+        return secrets
+    
+    def read_tls_secret(self) -> str:
+        tls_secrets = self._get_secret_tls()
+        for uri in tls_secrets:
+            secret_id = uri.split("/")[-1]
+            secret = self.model.get_secret(id=secret_id).get_content(refresh=True)
+            tls_enabled = secret.get("tls")
+            if tls_enabled and tls_enabled.lower() == "true":
+                return str(secret.get("tls-ca"))
+        return ""
+        
     @contextmanager
     def _cqlsh_session(
         self,
@@ -315,7 +371,7 @@ class ApplicationCharm(CharmBase):
         if not (peer_relation := self.model.get_relation(PEER_REL)):
             return
 
-        tls_ca = peer_relation.data[self.app].get("tls_ca")
+        tls_ca = self.read_tls_secret()
         ssl_context = SSLContext(PROTOCOL_TLS_CLIENT)
 
         if tls_ca:

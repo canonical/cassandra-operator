@@ -579,6 +579,7 @@ class ApplicationState(Object):
             relation_name=PEER_RELATION,
             additional_secret_fields=unit_additional_secret_fields,
         )
+        
         self.client_interface = RepositoryInterface(
             charm.model,
             relation_name=CLIENT_RELATION,
