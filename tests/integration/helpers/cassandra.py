@@ -9,7 +9,6 @@ from ssl import CERT_NONE, PROTOCOL_TLS_CLIENT, SSLContext
 from typing import Generator
 
 import jubilant
-import tenacity
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.cluster import EXEC_PROFILE_DEFAULT, Cluster, ExecutionProfile, ResultSet, Session
 from cassandra.policies import DCAwareRoundRobinPolicy, TokenAwarePolicy
@@ -18,8 +17,6 @@ from tenacity import Retrying, stop_after_delay, wait_fixed
 from integration.helpers.juju import (
     get_hosts,
     get_secrets_by_label,
-    get_unit_names,
-    unit_secret_extract,
 )
 
 logger = logging.getLogger(__name__)

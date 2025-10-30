@@ -10,8 +10,8 @@ from contextlib import contextmanager
 
 import jubilant
 import tenacity
-from tenacity import stop_after_delay, wait_fixed
 from jubilant.statustypes import UnitStatus
+from tenacity import stop_after_delay, wait_fixed
 
 logger = logging.getLogger(__name__)
 
