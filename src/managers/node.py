@@ -62,6 +62,20 @@ class NodeManager:
         except ExecError:
             return False
 
+    @property
+    def is_bootstrap_decommissioning(self) -> bool:
+        """Check if the node is in the process of, or has completed, decommissioning."""
+        try:
+            stdout, _ = self._workload.exec([_NODETOOL, "info"], suppress_error_log=True)
+            if "Bootstrap state        : DECOMMISSIONED" in stdout:
+                return True
+
+            stdout, _ = self._workload.exec([_NODETOOL, "info"], suppress_error_log=True)
+            return "Decommissioning        : true" in stdout
+
+        except ExecError:
+            return False
+
     def network_address(self) -> tuple[str, str]:
         """Get IP and hostname of this unit."""
         hostname = socket.gethostname()

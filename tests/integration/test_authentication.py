@@ -9,7 +9,7 @@ import jubilant
 from pytest import raises
 
 from integration.helpers.cassandra import connect_cql
-from integration.helpers.juju import get_address, get_secrets_by_label
+from integration.helpers.juju import get_hosts, get_secrets_by_label
 
 logger = logging.getLogger(__name__)
 
@@ -41,9 +41,7 @@ def test_update_custom_secret(juju: jubilant.Juju, app_name: str) -> None:
 
     secrets = get_secrets_by_label(juju, f"cassandra-peers.{app_name}.app", app_name)
     assert len(secrets) == 1 and secrets[0].get("operator-password") == "custom_password"
-    with connect_cql(
-        juju=juju, app_name=app_name, hosts=[get_address(juju, app_name, 0)]
-    ) as session:
+    with connect_cql(juju=juju, app_name=app_name, hosts=get_hosts(juju, app_name)) as session:
         session.execute(
             "CREATE KEYSPACE test "
             "WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1}"
@@ -68,7 +66,7 @@ def test_change_custom_secret(juju: jubilant.Juju, app_name: str) -> None:
     secrets = get_secrets_by_label(juju, f"cassandra-peers.{app_name}.app", app_name)
     assert len(secrets) == 1 and secrets[0].get("operator-password") == "custom_password_second"
     with connect_cql(
-        juju=juju, app_name=app_name, hosts=[get_address(juju, app_name, 0)], keyspace="test"
+        juju=juju, app_name=app_name, hosts=get_hosts(juju, app_name), keyspace="test"
     ) as session:
         session.execute("INSERT INTO test(message) VALUES ('hello')")
 
@@ -91,7 +89,7 @@ def test_remove_custom_secret(juju: jubilant.Juju, app_name: str) -> None:
     secrets = get_secrets_by_label(juju, f"cassandra-peers.{app_name}.app", app_name)
     assert len(secrets) == 1 and secrets[0].get("operator-password") == "custom_password_second"
     with connect_cql(
-        juju=juju, app_name=app_name, hosts=[get_address(juju, app_name, 0)], keyspace="test"
+        juju=juju, app_name=app_name, hosts=get_hosts(juju, app_name), keyspace="test"
     ) as session:
         session.execute("INSERT INTO test(message) VALUES ('world')")
 
@@ -101,7 +99,7 @@ def test_bad_credentials(juju: jubilant.Juju, app_name: str) -> None:
         with connect_cql(
             juju=juju,
             app_name=app_name,
-            hosts=[get_address(juju, app_name, 0)],
+            hosts=get_hosts(juju, app_name),
             username="bad",
             keyspace="test",
         ) as session:
@@ -111,7 +109,7 @@ def test_bad_credentials(juju: jubilant.Juju, app_name: str) -> None:
         with connect_cql(
             juju=juju,
             app_name=app_name,
-            hosts=[get_address(juju, app_name, 0)],
+            hosts=get_hosts(juju, app_name),
             password="bad",
             keyspace="test",
         ) as session:

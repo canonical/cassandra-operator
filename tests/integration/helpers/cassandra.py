@@ -5,18 +5,26 @@
 import logging
 import subprocess
 from contextlib import contextmanager
+from ssl import CERT_NONE, PROTOCOL_TLS_CLIENT, SSLContext
 from typing import Generator
 
-from cassandra import ConsistencyLevel
 import jubilant
+import tenacity
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.cluster import EXEC_PROFILE_DEFAULT, Cluster, ExecutionProfile, ResultSet, Session
 from cassandra.policies import DCAwareRoundRobinPolicy, TokenAwarePolicy
 from tenacity import Retrying, stop_after_delay, wait_fixed
 
-from integration.helpers.juju import get_hosts, get_secrets_by_label
+from integration.helpers.juju import (
+    get_hosts,
+    get_secrets_by_label,
+    get_unit_names,
+    unit_secret_extract,
+)
 
 logger = logging.getLogger(__name__)
+
+CLIENT_CA_CERT = "client-ca-cert-secret"
 
 
 @contextmanager
@@ -27,6 +35,7 @@ def connect_cql(
     username: str | None = None,
     password: str | None = None,
     keyspace: str | None = None,
+    client_ca: str | None = None,
     timeout: float | None = None,
 ) -> Generator[Session, None, None]:
     if hosts is None:
@@ -38,15 +47,30 @@ def connect_cql(
         assert len(secrets) == 1
         password = secrets[0]["operator-password"]
 
+    assert len(hosts) > 0
+
     execution_profile = ExecutionProfile(
         load_balancing_policy=TokenAwarePolicy(DCAwareRoundRobinPolicy()),
         request_timeout=timeout or 10,
-        consistency_level=ConsistencyLevel.QUORUM
     )
     auth_provider = PlainTextAuthProvider(username=username, password=password)
     # TODO: get rid of retrying on connection.
     cluster = None
     session = None
+
+    ssl_context = SSLContext(PROTOCOL_TLS_CLIENT)
+    if client_ca:
+        logger.info(f"Loading SSL context with cert: {client_ca}")
+
+        # TODO: change for mTLS
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = CERT_NONE
+
+        ssl_context.load_verify_locations(cadata=client_ca)
+    else:
+        logger.info("SSL context is disabled")
+        ssl_context = None
+
     for attempt in Retrying(wait=wait_fixed(2), stop=stop_after_delay(120), reraise=True):
         with attempt:
             cluster = Cluster(
@@ -54,6 +78,7 @@ def connect_cql(
                 contact_points=hosts,
                 protocol_version=5,
                 execution_profiles={EXEC_PROFILE_DEFAULT: execution_profile},
+                ssl_context=ssl_context,
             )
             session = cluster.connect()
     assert cluster and session
@@ -63,6 +88,36 @@ def connect_cql(
         yield session
     finally:
         cluster.shutdown()
+
+
+@tenacity.retry(
+    retry=tenacity.retry_if_exception_type(AssertionError),
+    stop=stop_after_delay(60),
+    wait=wait_fixed(5),
+    reraise=True,
+)
+def get_cluster_client_ca(juju: jubilant.Juju, app_name: str) -> str:
+    certs: set[str] = set()
+
+    for unit in get_unit_names(juju, app_name):
+        client_ca = unit_secret_extract(
+            juju,
+            unit_name=unit,
+            secret_name=CLIENT_CA_CERT,
+        )
+
+        if client_ca:
+            certs.add(client_ca)
+
+    if len(certs) != 1:
+        logger.warning(
+            f"Units have different or missing client CA certs ({len(certs)} found). Retrying..."
+        )
+        raise AssertionError(
+            "Units have different client certificates, waiting for rotation to end"
+        )
+
+    return certs.pop()
 
 
 def check_tls(ip: str, port: int) -> bool:
@@ -139,6 +194,61 @@ def read_n_rows(
         got = {row.id: row.value for row in rows}
 
     return got
+
+
+def get_db_users(juju, app_name, client_ca: str | None = None) -> set[str]:
+    """Return a set of all Cassandra user names for the given application."""
+    users: set[str] = set()
+
+    with connect_cql(
+        juju=juju, app_name=app_name, hosts=get_hosts(juju, app_name), client_ca=client_ca
+    ) as session:
+        rows = session.execute("SELECT role FROM system_auth.roles;")
+        users = {row.role for row in rows}
+
+    return users
+
+
+def keyspace_exists(juju, app_name, keyspace_name: str, client_ca: str | None = None) -> bool:
+    """Check if the given Cassandra keyspace exists."""
+    with connect_cql(
+        juju=juju, app_name=app_name, hosts=get_hosts(juju, app_name), client_ca=client_ca
+    ) as session:
+        query = """
+        SELECT keyspace_name
+        FROM system_schema.keyspaces
+        WHERE keyspace_name = %s
+        """
+        result = session.execute(query, (keyspace_name,))
+        return bool(result.one())
+
+
+def table_exists(
+    juju, app_name, keyspace_name: str, table_name: str, client_ca: str | None = None
+) -> bool:
+    """Check if the given table exists in the specified Cassandra keyspace."""
+    with connect_cql(
+        juju=juju, app_name=app_name, hosts=get_hosts(juju, app_name), client_ca=client_ca
+    ) as session:
+        query = """
+        SELECT table_name
+        FROM system_schema.tables
+        WHERE keyspace_name = %s AND table_name = %s
+        """
+        result = session.execute(query, (keyspace_name, table_name))
+        return bool(result.one())
+
+
+def get_user_permissions(juju, app_name, username: str, client_ca: str | None = None) -> set[str]:
+    """Return a set of permissions granted to the given Cassandra user."""
+    with connect_cql(
+        juju=juju,
+        app_name=app_name,
+        hosts=get_hosts(juju, app_name),
+        client_ca=client_ca,
+    ) as session:
+        rows = session.execute(f'LIST ALL PERMISSIONS OF "{username}";')
+        return {row.permission for row in rows}
 
 
 def assert_rows(wrote: dict[int, str], got: dict[int, str]) -> None:

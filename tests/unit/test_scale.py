@@ -27,15 +27,19 @@ def test_storage_detaching_cluster_unhealthy(caplog):
     state = make_state(storage)
 
     with (
-        patch("charm.CassandraWorkload") as workload,
         patch(
             "managers.tls.TLSManager.client_tls_ready",
             new_callable=PropertyMock(return_value=False),
         ),
         patch("managers.node.NodeManager.is_healthy", return_value=False),
+        patch(
+            "managers.node.NodeManager.is_bootstrap_decommissioning",
+            new_callable=PropertyMock(return_value=False),
+        ),
         patch("managers.node.NodeManager.decommission") as decommission,
+        patch("charm.CassandraWorkload") as workload,
     ):
-        workload.return_value.generate_password.return_value = "password"
+        workload.return_value.generate_string.return_value = "password"
 
         with pytest.raises(Exception, match="Cluster is not healthy"):
             ctx.run(ctx.on.storage_detaching(storage), state)
@@ -55,6 +59,10 @@ def test_storage_detaching_multiple_units_removal_logs_warning(caplog):
             new_callable=PropertyMock(return_value=False),
         ),
         patch("managers.node.NodeManager.is_healthy", return_value=True),
+        patch(
+            "managers.node.NodeManager.is_bootstrap_decommissioning",
+            new_callable=PropertyMock(return_value=False),
+        ),
         patch("managers.node.NodeManager.decommission", return_value=None) as decommission,
         patch("ops.model.Application.planned_units", return_value=1),
         patch(
@@ -62,7 +70,7 @@ def test_storage_detaching_multiple_units_removal_logs_warning(caplog):
             new_callable=PropertyMock(return_value=[MagicMock(), MagicMock(), MagicMock()]),
         ),
     ):
-        workload.return_value.generate_password.return_value = "password"
+        workload.return_value.generate_string.return_value = "password"
 
         with caplog.at_level(logging.WARNING):
             ctx.run(ctx.on.storage_detaching(storage), state)
@@ -84,11 +92,15 @@ def test_storage_detaching_success(caplog):
             new_callable=PropertyMock(return_value=False),
         ),
         patch("managers.node.NodeManager.is_healthy", return_value=True),
+        patch(
+            "managers.node.NodeManager.is_bootstrap_decommissioning",
+            new_callable=PropertyMock(return_value=False),
+        ),
         patch("managers.node.NodeManager.decommission", return_value=None) as decommission,
         patch("ops.model.Application.planned_units", return_value=2),
         patch("core.state.ApplicationState.units", new_callable=PropertyMock) as units,
     ):
-        workload.return_value.generate_password.return_value = "password"
+        workload.return_value.generate_string.return_value = "password"
 
         units.return_value = [MagicMock(), MagicMock(), MagicMock()]
 
@@ -112,6 +124,10 @@ def test_storage_detaching_decommission_fails(caplog):
             "managers.tls.TLSManager.client_tls_ready",
             new_callable=PropertyMock(return_value=False),
         ),
+        patch(
+            "managers.node.NodeManager.is_bootstrap_decommissioning",
+            new_callable=PropertyMock(return_value=False),
+        ),
         patch("managers.node.NodeManager.is_healthy", return_value=True),
         patch("ops.model.Application.planned_units", return_value=1),
         patch("core.state.ApplicationState.units", new_callable=PropertyMock) as units,
@@ -120,7 +136,7 @@ def test_storage_detaching_decommission_fails(caplog):
             side_effect=ExecError(stdout="", stderr="error"),
         ),
     ):
-        workload.return_value.generate_password.return_value = "password"
+        workload.return_value.generate_string.return_value = "password"
 
         units.return_value = [MagicMock()]
         with pytest.raises(scenario.errors.UncaughtCharmError) as e:

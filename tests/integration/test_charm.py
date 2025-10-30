@@ -8,7 +8,14 @@ from pathlib import Path
 import jubilant
 from cassandra.cluster import ResultSet
 
-from integration.helpers.cassandra import connect_cql
+from integration.helpers.cassandra import (
+    assert_rows,
+    connect_cql,
+    prepare_keyspace_and_table,
+    read_n_rows,
+    write_n_rows,
+)
+from integration.helpers.juju import get_leader_unit, get_unit_names
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +30,8 @@ def test_deploy(juju: jubilant.Juju, cassandra_charm: Path, app_name: str) -> No
 
 
 def test_write(juju: jubilant.Juju, app_name: str) -> None:
-    host = juju.status().apps[app_name].units[f"{app_name}/0"].public_address
+    leader, _ = get_leader_unit(juju, app_name)
+    host = juju.status().apps[app_name].units[leader].public_address
     with connect_cql(juju=juju, app_name=app_name, hosts=[host]) as session:
         session.execute(
             "CREATE KEYSPACE test "
@@ -35,7 +43,8 @@ def test_write(juju: jubilant.Juju, app_name: str) -> None:
 
 
 def test_read(juju: jubilant.Juju, app_name: str) -> None:
-    host = juju.status().apps[app_name].units[f"{app_name}/0"].public_address
+    leader, _ = get_leader_unit(juju, app_name)
+    host = juju.status().apps[app_name].units[leader].public_address
     with connect_cql(juju=juju, app_name=app_name, hosts=[host], keyspace="test") as session:
         res = session.execute("SELECT message FROM test")
         assert (
@@ -43,3 +52,27 @@ def test_read(juju: jubilant.Juju, app_name: str) -> None:
             and len(res_list := res.all()) == 1
             and res_list[0].message == "hello"
         ), "test data written prior aren't found"
+
+
+def test_write_primary_read_secondary(juju: jubilant.Juju, app_name: str) -> None:
+    juju.add_unit(app_name, num_units=2)
+    juju.wait(
+        ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
+        delay=3,
+        successes=5,
+    )
+
+    leader, _ = get_leader_unit(juju, app_name)
+    all_units = get_unit_names(juju, app_name)
+
+    ks, tbl = prepare_keyspace_and_table(juju, app_name, unit_name=leader)
+    wrote_leader_rows = write_n_rows(juju, app_name, ks=ks, table=tbl, unit_name=leader)
+    got_leader_rows = read_n_rows(juju, app_name, ks=ks, table=tbl, unit_name=leader)
+
+    assert_rows(wrote_leader_rows, got_leader_rows)
+
+    for unit in all_units:
+        if unit == leader:
+            continue
+        got_secondary_rows = read_n_rows(juju, app_name, ks=ks, table=tbl, unit_name=unit)
+        assert_rows(wrote_leader_rows, got_secondary_rows)

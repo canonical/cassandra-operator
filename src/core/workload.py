@@ -140,10 +140,12 @@ class WorkloadBase(ABC):
         pass
 
     @staticmethod
-    def generate_password() -> str:
+    def generate_string(length: int = 32, prefix: str = "") -> str:
         """Create randomized string for use as app passwords.
 
         Returns:
             String of 32 randomized letter+digit characters
         """
-        return "".join([secrets.choice(string.ascii_letters + string.digits) for _ in range(32)])
+        alphabet = string.ascii_letters + string.digits
+        random_part = "".join(secrets.choice(alphabet) for _ in range(length))
+        return prefix + random_part

@@ -149,26 +149,25 @@ class ContinuousWrites:
         position: int = 1
         for attempt in Retrying(wait=wait_fixed(10), stop=stop_after_delay(timeout), reraise=True):
             with attempt:
-                try: 
-                  with connect_cql(
-                      juju=juju,
-                      app_name=app_name,
-                      hosts=hosts,
-                      keyspace=keyspace_name,
-                      timeout=timeout,
-                  ) as session:
-                      while not stop_event.is_set():
-                          q = "INSERT INTO test_table (position) VALUES (%s)"
-                          logger.info(f"Context: {context_str}, query: {q} values: {position}")
-                          session.execute(
-                              q,
-                              (position,),
-                              timeout=timeout,
-                          )
-                          write_event.set()
-                          position += 1
-                          stop_event.wait(1)
+                try:
+                    with connect_cql(
+                        juju=juju,
+                        app_name=app_name,
+                        hosts=hosts,
+                        keyspace=keyspace_name,
+                        timeout=timeout,
+                    ) as session:
+                        while not stop_event.is_set():
+                            q = "INSERT INTO test_table (position) VALUES (%s)"
+                            logger.info(f"Context: {context_str}, query: {q} values: {position}")
+                            session.execute(
+                                q,
+                                (position,),
+                                timeout=timeout,
+                            )
+                            write_event.set()
+                            position += 1
+                            stop_event.wait(1)
                 except Exception as e:
                     logger.error(f"Context: {context_str}, exceprion: {e}")
                     raise e
-  

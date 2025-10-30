@@ -2,6 +2,7 @@ import subprocess
 
 import jubilant
 
+
 def network_throttle(machine_name: str) -> None:
     """Cut network from a lxc container (without causing the change of the unit IP address).
 
@@ -18,6 +19,7 @@ def network_throttle(machine_name: str) -> None:
     subprocess.check_call(limit_set_command.split())
     limit_set_command = f"lxc config device set {machine_name} eth0 limits.ingress=1kbit"
     subprocess.check_call(limit_set_command.split())
+
 
 def network_release(machine_name: str) -> None:
     """Restore network from a lxc container (without causing the change of the unit IP address).
@@ -51,12 +53,14 @@ def network_restore(machine_name: str) -> None:
     # remove mask from eth0
     restore_network_command = f"lxc config device remove {machine_name} eth0"
     subprocess.check_call(restore_network_command.split())
-    
+
+
 def get_machine_name(juju: jubilant.Juju, unit_name: str) -> str:
     hostname = juju.ssh(unit_name, "hostname")
     if not hostname:
-        raise Exception("hostname is not avaliable")
+        raise Exception("hostname is not available")
     return hostname.rstrip()
+
 
 def make_unit_checker(
     app_name: str,
@@ -68,9 +72,11 @@ def make_unit_checker(
     def check(status: jubilant.Status) -> bool:
         unit = status.apps[app_name].units[unit_name]
         m = status.machines[machine_id]
-        return all([
-            workload is None or unit.workload_status.current == workload,
-            machine is None or m.juju_status.current == machine,
-        ])
+        return all(
+            [
+                workload is None or unit.workload_status.current == workload,
+                machine is None or m.juju_status.current == machine,
+            ]
+        )
 
     return check

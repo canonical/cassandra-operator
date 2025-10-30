@@ -16,7 +16,7 @@ can be used, and this step is shown in the COS tutorial.
 
 ### Offer interfaces via the COS controller
 
-Switch to COS K8s environment and offer COS interfaces to be cross-model related with Charmed Apache Kafka VM model:
+Switch to COS K8s environment and offer COS interfaces to be cross-model related with Charmed Apache Cassandra VM model:
 
 ```shell
 juju switch <k8s_controller>:<cos_model_name>
@@ -154,4 +154,4 @@ Point the corresponding `*_path` configuration options to these files (or their 
 
 ### Conclusion
 
-In this guide, we enabled monitoring on a Charmed Apache Kafka deployment and integrated alert rules and dashboards by syncing a git repository to the COS stack.
+In this guide, we enabled monitoring on a Charmed Apache Cassandra deployment and integrated alert rules and dashboards by syncing a git repository to the COS stack.

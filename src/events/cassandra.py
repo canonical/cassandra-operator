@@ -89,6 +89,13 @@ class CassandraEvents(Object):
             self.charm.on[DATA_STORAGE].storage_detaching, self._on_storage_detaching
         )
 
+    def _acquire_operator_password(self) -> str:
+        if self.charm.config.system_users:
+            return self.read_auth_secret(self.charm.config.system_users)
+        if self.state.cluster.operator_password_secret:
+            return self.state.cluster.operator_password_secret
+        return self.workload.generate_string()
+
     def _on_install(self, _: InstallEvent) -> None:
         self.workload.install()
 
@@ -186,6 +193,7 @@ class CassandraEvents(Object):
             return
 
         if not self._are_seeds_reachable:
+            self.state.unit.workload_state = UnitWorkloadState.WAITING_FOR_START
             logger.debug("Deferring subordinate on_start due to seeds not being ready")
             event.defer()
             return
@@ -198,13 +206,6 @@ class CassandraEvents(Object):
             truststore_password=self.state.unit.truststore_password,
         )
         self.restart()
-
-    def _acquire_operator_password(self) -> str:
-        if self.charm.config.system_users:
-            return self.read_auth_secret(self.charm.config.system_users)
-        if self.state.cluster.operator_password_secret:
-            return self.state.cluster.operator_password_secret
-        return self.workload.generate_password()
 
     def _on_config_changed(self, event: ConfigChangedEvent) -> None:
         if not self.state.unit.is_ready:
@@ -286,15 +287,8 @@ class CassandraEvents(Object):
         if not self.state.unit.is_ready:
             logger.debug("Exiting on_peer_relation_departed due to unit not being ready")
             return
-        if event.departing_unit == self.charm.unit:
-            if not self.state.unit.is_operational:
-                logger.debug(
-                    "Deferring on_peer_relation_departed due to unit not being operational"
-                )
-                event.defer()
-                return
-            self.node_manager.decommission()
-        elif self.charm.unit.is_leader():
+
+        if event.departing_unit != self.charm.unit and self.charm.unit.is_leader():
             if not self.state.unit.is_config_change_eligible:
                 logger.debug(
                     "Deferring on_peer_relation_departed due to unit not being ready change config"
@@ -420,6 +414,10 @@ class CassandraEvents(Object):
         )
 
     def _on_storage_detaching(self, _: StorageDetachingEvent) -> None:
+        if self.node_manager.is_bootstrap_decommissioning:
+            logger.warning("Node is already decommissioned")
+            return
+
         if not self.node_manager.is_healthy(self.state.unit.ip):
             raise Exception("Cluster is not healthy, cannot remove unit")
 

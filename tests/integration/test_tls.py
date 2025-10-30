@@ -8,7 +8,12 @@ from pathlib import Path
 import jubilant
 
 from integration.helpers.cassandra import check_tls
-from integration.helpers.juju import check_node_is_up, get_address, get_secrets_by_label
+from integration.helpers.juju import (
+    check_node_is_up,
+    get_hosts,
+    get_unit_names,
+    unit_secret_extract,
+)
 from integration.helpers.types import IntegrationTestsCharms
 
 logger = logging.getLogger(__name__)
@@ -50,8 +55,8 @@ def test_default_tls(juju: jubilant.Juju, app_name: str) -> None:
     num_unit = 0
 
     unit_addreses = [
-        get_address(juju=juju, app_name=app_name, unit_num=0),
-        get_address(juju=juju, app_name=app_name, unit_num=1),
+        get_hosts(juju=juju, app_name=app_name, unit_name=f"{app_name}/0")[0],
+        get_hosts(juju=juju, app_name=app_name, unit_name=f"{app_name}/1")[0],
     ]
 
     peer_ca = unit_secret_extract(
@@ -78,8 +83,8 @@ def test_enable_peer_self_signed_tls(
     num_unit = 0
 
     unit_addreses = [
-        get_address(juju=juju, app_name=app_name, unit_num=0),
-        get_address(juju=juju, app_name=app_name, unit_num=1),
+        get_hosts(juju=juju, app_name=app_name, unit_name=f"{app_name}/0")[0],
+        get_hosts(juju=juju, app_name=app_name, unit_name=f"{app_name}/1")[0],
     ]
 
     peer_ca_1 = unit_secret_extract(
@@ -127,13 +132,13 @@ def test_enable_client_self_signed_tls(
     num_unit = 0
 
     unit_addreses = [
-        get_address(juju=juju, app_name=app_name, unit_num=0),
-        get_address(juju=juju, app_name=app_name, unit_num=1),
+        get_hosts(juju=juju, app_name=app_name, unit_name=f"{app_name}/0")[0],
+        get_hosts(juju=juju, app_name=app_name, unit_name=f"{app_name}/1")[0],
     ]
 
     juju.integrate(f"{charm_versions.tls.app}:certificates", f"{app_name}:client-certificates")
 
-    # Wait for peer_certs rotation
+    # Wait for client_certs rotation
     juju.wait(
         ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
         delay=20,
@@ -157,14 +162,53 @@ def test_enable_client_self_signed_tls(
     assert client_ca_2
 
 
+def test_scale_up_with_tls(juju: jubilant.Juju, app_name: str) -> None:
+    juju.add_unit(app_name)
+
+    # Wait for peer_certs and client_certs rotation for new unit
+    juju.wait(
+        ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
+        delay=20,
+        successes=4,
+        timeout=1000,
+    )
+
+    units = get_unit_names(juju, app_name)
+
+    peer_ca_list = []
+    client_ca_list = []
+
+    for unit in units:
+        client_ca = unit_secret_extract(
+            juju,
+            unit_name=unit,
+            secret_name=CLIENT_CA_CERT,
+        )
+
+        assert client_ca
+        client_ca_list.append(client_ca)
+
+        peer_ca = unit_secret_extract(
+            juju,
+            unit_name=unit,
+            secret_name=PEER_CA_CERT,
+        )
+
+        assert peer_ca
+        peer_ca_list.append(peer_ca)
+
+    assert len(set(peer_ca_list)) == 1, "peer certificates differ"
+    assert len(set(client_ca_list)) == 1, "client certificates differ"
+
+
 def test_disable_peer_self_signed_tls(
     juju: jubilant.Juju, app_name: str, charm_versions: IntegrationTestsCharms
 ) -> None:
     num_unit = 0
 
     unit_addreses = [
-        get_address(juju=juju, app_name=app_name, unit_num=0),
-        get_address(juju=juju, app_name=app_name, unit_num=1),
+        get_hosts(juju=juju, app_name=app_name, unit_name=f"{app_name}/0")[0],
+        get_hosts(juju=juju, app_name=app_name, unit_name=f"{app_name}/1")[0],
     ]
 
     logger.info("[test_disable_peer_self_signed_tls] Get peer ca 1")
@@ -212,8 +256,8 @@ def test_disable_client_self_signed_tls(
     num_unit = 0
 
     unit_addreses = [
-        get_address(juju=juju, app_name=app_name, unit_num=0),
-        get_address(juju=juju, app_name=app_name, unit_num=1),
+        get_hosts(juju=juju, app_name=app_name, unit_name=f"{app_name}/0")[0],
+        get_hosts(juju=juju, app_name=app_name, unit_name=f"{app_name}/1")[0],
     ]
 
     juju.remove_relation(
@@ -248,31 +292,3 @@ def test_disable_client_self_signed_tls(
     )
 
     assert not client_ca_2
-
-
-def unit_secret_extract(juju: jubilant.Juju, unit_name: str, secret_name: str) -> str | None:
-    user_secret = get_secrets_by_label(
-        juju,
-        label=f"cassandra-peers.{unit_name.split('/')[0]}.unit",
-        owner=unit_name,
-    )
-
-    for secret in user_secret:
-        if found := secret.get(secret_name):
-            return found
-
-    return None
-
-
-def app_secret_extract(juju: jubilant.Juju, cluster_name: str, secret_name: str) -> str | None:
-    user_secret = get_secrets_by_label(
-        juju,
-        label=f"cassandra-peers.{cluster_name}.app",
-        owner=cluster_name,
-    )
-
-    for secret in user_secret:
-        if found := secret.get(secret_name):
-            return found
-
-    return None
