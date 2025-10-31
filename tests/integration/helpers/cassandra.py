@@ -14,9 +14,14 @@ from cassandra.cluster import EXEC_PROFILE_DEFAULT, Cluster, ExecutionProfile, R
 from cassandra.policies import DCAwareRoundRobinPolicy, TokenAwarePolicy
 from tenacity import Retrying, stop_after_delay, wait_fixed
 
-from integration.helpers.juju import get_hosts, get_secrets_by_label
+from integration.helpers.juju import (
+    get_hosts,
+    get_secrets_by_label,
+)
 
 logger = logging.getLogger(__name__)
+
+CLIENT_CA_CERT = "client-ca-cert-secret"
 
 
 @contextmanager

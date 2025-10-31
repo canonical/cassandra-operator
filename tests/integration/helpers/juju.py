@@ -10,6 +10,7 @@ from contextlib import contextmanager
 
 import jubilant
 import tenacity
+from jubilant.statustypes import UnitStatus
 from tenacity import stop_after_delay, wait_fixed
 
 logger = logging.getLogger(__name__)
@@ -303,7 +304,7 @@ def get_hosts(juju: jubilant.Juju, app_name: str, unit_name: str = "") -> list[s
     return [u.public_address for u in units.values()]
 
 
-def get_leader_unit(juju, app_name: str) -> str:
+def get_leader_unit(juju, app_name: str) -> tuple[str, UnitStatus]:
     """Return the name of the leader unit for the given application.
 
     Raises:
@@ -312,7 +313,7 @@ def get_leader_unit(juju, app_name: str) -> str:
     app = juju.status().apps[app_name]
     for name, unit in app.units.items():
         if unit.leader:
-            return name
+            return name, unit
     raise ValueError(f"No leader unit found for application '{app_name}'")
 
 
