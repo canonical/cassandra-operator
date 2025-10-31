@@ -117,9 +117,7 @@ def test_network_cut(
     stoped_machine = get_machine_name(juju, stoped_unit_name)
     no_stoped_hosts = list(set(get_hosts(juju, app_name)) - set(stoped_unit_host))
 
-    continuous_writes.start(
-        juju, app_name, hosts=no_stoped_hosts, replication_factor=3
-    )
+    continuous_writes.start(juju, app_name, hosts=no_stoped_hosts, replication_factor=3)
 
     network_cut(stoped_machine)
     logger.info("Waiting for unit to go down")
