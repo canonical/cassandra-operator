@@ -8,21 +8,21 @@ from time import sleep
 
 import jubilant
 from cassandra.cluster import ResultSet
-from ha_helpers import kill_unit, make_unit_checker
-from helpers import (
+from tenacity import Retrying, stop_after_delay, wait_fixed
+
+from integration.helpers.cassandra import (
     assert_rows,
     connect_cql,
-    get_leader_unit,
-    get_non_leader_units,
     prepare_keyspace_and_table,
     read_n_rows,
     write_n_rows,
 )
-from tenacity import Retrying, stop_after_delay, wait_fixed
-
-REELECTION_TIME = 300
+from integration.helpers.ha import kill_unit, make_unit_checker
+from integration.helpers.juju import get_leader_unit, get_non_leader_units
 
 logger = logging.getLogger(__name__)
+
+REELECTION_TIME = 300
 
 
 def test_deploy(juju: jubilant.Juju, cassandra_charm: Path, app_name: str) -> None:

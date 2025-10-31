@@ -10,13 +10,14 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import jubilant
-from helpers import (
+
+from integration.helpers.cassandra import (
     assert_rows,
-    get_leader_unit,
     prepare_keyspace_and_table,
     read_n_rows,
     write_n_rows,
 )
+from integration.helpers.juju import get_leader_unit
 
 logger = logging.getLogger(__name__)
 

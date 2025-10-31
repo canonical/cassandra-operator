@@ -7,13 +7,14 @@ from itertools import pairwise
 from pathlib import Path
 
 import jubilant
-from helpers import (
+
+from integration.helpers.cassandra import (
     assert_rows,
     prepare_keyspace_and_table,
     read_n_rows,
-    scale_sequentially_to,
     write_n_rows,
 )
+from integration.helpers.juju import scale_sequentially_to
 
 logger = logging.getLogger(__name__)
 TEST_ROW_NUM = 100
