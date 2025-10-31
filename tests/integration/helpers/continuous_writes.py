@@ -23,6 +23,7 @@ class ContinuousWrites:
         self.write_event = Event()
         self.juju: jubilant.Juju | None = None
         self.app_name: str | None = None
+        self.process: Process | None = None
 
     def start(
         self,
