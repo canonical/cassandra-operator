@@ -52,7 +52,6 @@ def test_network_cut_without_ip_change(
         app_name,
         hosts=no_stoped_unit_hosts,
         replication_factor=3,
-        context_str="test_network_cut_without_ip_change",
     )
 
     network_throttle(stoped_machine)
@@ -119,7 +118,7 @@ def test_network_cut(
     no_stoped_hosts = list(set(get_hosts(juju, app_name)) - set(stoped_unit_host))
 
     continuous_writes.start(
-        juju, app_name, hosts=no_stoped_hosts, replication_factor=3, context_str="test_network_cut"
+        juju, app_name, hosts=no_stoped_hosts, replication_factor=3
     )
 
     network_cut(stoped_machine)
