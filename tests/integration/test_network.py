@@ -175,8 +175,6 @@ def test_network_cut(
 
     # check node is up and ip is changed
     assert new_stoped_unit_host != stoped_unit_host
-    assert check_node_is_up(
-        juju, app_name, int(cut_unit_name.split("/")[1]), new_stoped_unit_host
-    )
+    assert check_node_is_up(juju, app_name, int(cut_unit_name.split("/")[1]), new_stoped_unit_host)
 
     continuous_writes.stop_and_assert_writes([new_stoped_unit_host])
