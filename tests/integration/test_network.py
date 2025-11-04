@@ -42,9 +42,9 @@ def test_deploy(juju: jubilant.Juju, cassandra_charm: Path, app_name: str) -> No
 def test_network_cut_without_ip_change(
     juju: jubilant.Juju, continuous_writes: ContinuousWrites, app_name: str
 ) -> None:
-    stopped_unit_name, stopped_unit_status = get_leader_unit(juju, app_name)
-    stoped_unit_host = get_hosts(juju, app_name, stopped_unit_name)[0]
-    stoped_machine = get_machine_name(juju, stopped_unit_name)
+    cut_unit_name, cut_unit_status = get_leader_unit(juju, app_name)
+    stoped_unit_host = get_hosts(juju, app_name, cut_unit_name)[0]
+    stoped_machine = get_machine_name(juju, cut_unit_name)
     no_stoped_unit_hosts = list(set(get_hosts(juju, app_name)) - set(stoped_unit_host))
 
     continuous_writes.start(
@@ -61,8 +61,8 @@ def test_network_cut_without_ip_change(
     juju.wait(
         ready=make_unit_checker(
             app_name,
-            stopped_unit_name,
-            machine_id=stopped_unit_status.machine,
+            cut_unit_name,
+            machine_id=cut_unit_status.machine,
             workload="unknown",
             machine="down",
         ),
@@ -76,7 +76,7 @@ def test_network_cut_without_ip_change(
     for attempt in Retrying(wait=wait_fixed(10), stop=stop_after_delay(180), reraise=True):
         with attempt:
             for name, unit in juju.status().apps[app_name].units.items():
-                if name == stopped_unit_name:
+                if name == cut_unit_name:
                     continue
 
                 logger.info(
@@ -88,7 +88,7 @@ def test_network_cut_without_ip_change(
 
     new_leader, _ = get_leader_unit(juju, app_name)
 
-    assert stopped_unit_name != new_leader
+    assert cut_unit_name != new_leader
 
     continuous_writes.assert_new_writes(hosts=no_stoped_unit_hosts)
 
@@ -104,7 +104,7 @@ def test_network_cut_without_ip_change(
     )
 
     # check node is up and ip not changed
-    assert check_node_is_up(juju, app_name, int(stopped_unit_name.split("/")[1]), stoped_unit_host)
+    assert check_node_is_up(juju, app_name, int(cut_unit_name.split("/")[1]), stoped_unit_host)
 
     continuous_writes.stop_and_assert_writes([stoped_unit_host])
 
@@ -112,9 +112,9 @@ def test_network_cut_without_ip_change(
 def test_network_cut(
     juju: jubilant.Juju, continuous_writes: ContinuousWrites, app_name: str
 ) -> None:
-    stopped_unit_name, stopped_unit_status = get_leader_unit(juju, app_name)
-    stoped_unit_host = get_hosts(juju, app_name, stopped_unit_name)[0]
-    stoped_machine = get_machine_name(juju, stopped_unit_name)
+    cut_unit_name, cut_unit_status = get_leader_unit(juju, app_name)
+    stoped_unit_host = get_hosts(juju, app_name, cut_unit_name)[0]
+    stoped_machine = get_machine_name(juju, cut_unit_name)
     no_stoped_hosts = list(set(get_hosts(juju, app_name)) - set(stoped_unit_host))
 
     continuous_writes.start(juju, app_name, hosts=no_stoped_hosts, replication_factor=3)
@@ -126,8 +126,8 @@ def test_network_cut(
     juju.wait(
         ready=make_unit_checker(
             app_name,
-            stopped_unit_name,
-            machine_id=stopped_unit_status.machine,
+            cut_unit_name,
+            machine_id=cut_unit_status.machine,
             workload="unknown",
             machine="down",
         ),
@@ -141,13 +141,13 @@ def test_network_cut(
     for attempt in Retrying(wait=wait_fixed(10), stop=stop_after_delay(180), reraise=True):
         with attempt:
             for name, unit in juju.status().apps[app_name].units.items():
-                if name == stopped_unit_name:
+                if name == cut_unit_name:
                     continue
 
                 logger.info(
                     f"""
                     Checking: {app_name}/{unit.machine}
-                    if node {stopped_unit_name}:{stoped_unit_host} is down
+                    if node {cut_unit_name}:{stoped_unit_host} is down
                     """
                 )
                 assert not check_node_is_up(juju, app_name, int(unit.machine), stoped_unit_host), (
@@ -156,7 +156,7 @@ def test_network_cut(
 
     new_leader, _ = get_leader_unit(juju, app_name)
 
-    assert stopped_unit_name != new_leader
+    assert cut_unit_name != new_leader
 
     continuous_writes.assert_new_writes(hosts=no_stoped_hosts)
 
@@ -171,12 +171,12 @@ def test_network_cut(
         timeout=1800,
     )
 
-    new_stoped_unit_host = get_hosts(juju, app_name, stopped_unit_name)[0]
+    new_stoped_unit_host = get_hosts(juju, app_name, cut_unit_name)[0]
 
     # check node is up and ip is changed
     assert new_stoped_unit_host != stoped_unit_host
     assert check_node_is_up(
-        juju, app_name, int(stopped_unit_name.split("/")[1]), new_stoped_unit_host
+        juju, app_name, int(cut_unit_name.split("/")[1]), new_stoped_unit_host
     )
 
     continuous_writes.stop_and_assert_writes([new_stoped_unit_host])
