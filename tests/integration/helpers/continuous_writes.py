@@ -39,6 +39,9 @@ class ContinuousWrites:
             and not self.write_event.is_set()
         )
 
+        self.hosts = hosts
+        self.password = password
+
         self._init_keyspace(replication_factor)
         self.process = Process(
             target=self._continuous_writes,
@@ -46,6 +49,7 @@ class ContinuousWrites:
                 self.stop_event,
                 self.write_event,
                 hosts,
+                password,
                 self.keyspace_name,
                 self.timeout,
             ),
