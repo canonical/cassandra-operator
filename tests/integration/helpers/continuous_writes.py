@@ -73,8 +73,9 @@ class ContinuousWrites:
         self._clear_keyspace()
         self.stop_event.clear()
         self.write_event.clear()
-        self.juju = None
-        self.app_name = None
+        self.hosts = None
+        self.password = None
+        self.process = None
 
     def force_stop(self) -> None:
         if self.process and self.process.is_alive():
