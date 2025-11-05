@@ -74,7 +74,7 @@ def test_writes_not_replicated(juju: jubilant.Juju, app_name: str) -> None:
 
     # Writing unique data into each cluster
     for i, cluster in enumerate(fed):
-        leader = get_leader_unit(juju, cluster.app_name)
+        leader, _ = get_leader_unit(juju, cluster.app_name)
         logger.info(f"Preparing keyspace/table on {cluster.app_name} leader {leader}")
         prepare_keyspace_and_table(juju, cluster.app_name, unit_name=leader, ks=ks, table=tbl)
 
@@ -91,7 +91,7 @@ def test_writes_not_replicated(juju: jubilant.Juju, app_name: str) -> None:
 
     # Verifying each cluster can read its own data
     for i, cluster in enumerate(fed):
-        leader = get_leader_unit(juju, cluster.app_name)
+        leader, _ = get_leader_unit(juju, cluster.app_name)
         got_rows = read_n_rows(
             juju,
             cluster.app_name,
@@ -104,7 +104,7 @@ def test_writes_not_replicated(juju: jubilant.Juju, app_name: str) -> None:
         assert_rows(cluster_wrote_rows[i], got_rows)
 
     # Ensuring no cross-cluster replication
-    leader_0 = get_leader_unit(juju, fed[0].app_name)
+    leader_0, _ = get_leader_unit(juju, fed[0].app_name)
     got_0 = read_n_rows(
         juju,
         fed[0].app_name,
@@ -115,7 +115,7 @@ def test_writes_not_replicated(juju: jubilant.Juju, app_name: str) -> None:
     )
     assert got_0 == {}, f"Unexpected rows from cluster 1 visible in cluster 0: {got_0}"
 
-    leader_1 = get_leader_unit(juju, fed[1].app_name)
+    leader_1, _ = get_leader_unit(juju, fed[1].app_name)
     got_1 = read_n_rows(
         juju,
         fed[1].app_name,
