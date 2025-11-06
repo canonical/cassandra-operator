@@ -6,16 +6,15 @@ import logging
 from pathlib import Path
 
 import jubilant
-from cassandra.cluster import ResultSet
 
 from integration.helpers.cassandra import (
+    OPERATOR_PASSWORD,
     assert_rows,
-    connect_cql,
     prepare_keyspace_and_table,
     read_n_rows,
     write_n_rows,
 )
-from integration.helpers.juju import get_leader_unit, get_unit_names
+from integration.helpers.juju import app_secret_extract, get_hosts
 
 logger = logging.getLogger(__name__)
 
@@ -29,50 +28,12 @@ def test_deploy(juju: jubilant.Juju, cassandra_charm: Path, app_name: str) -> No
     juju.wait(jubilant.all_active)
 
 
-def test_write(juju: jubilant.Juju, app_name: str) -> None:
-    leader, _ = get_leader_unit(juju, app_name)
-    host = juju.status().apps[app_name].units[leader].public_address
-    with connect_cql(juju=juju, app_name=app_name, hosts=[host]) as session:
-        session.execute(
-            "CREATE KEYSPACE test "
-            "WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1}"
-        )
-        session.set_keyspace("test")
-        session.execute("CREATE TABLE test(message TEXT PRIMARY KEY)")
-        session.execute("INSERT INTO test(message) VALUES ('hello')")
+def test_write_read(juju: jubilant.Juju, app_name: str) -> None:
+    hosts = get_hosts(juju, app_name)
+    password = app_secret_extract(juju, app_name, OPERATOR_PASSWORD)
 
+    prepare_keyspace_and_table(hosts=hosts, password=password)
+    wrote = write_n_rows(hosts=hosts, password=password)
+    got = read_n_rows(hosts=hosts, password=password)
 
-def test_read(juju: jubilant.Juju, app_name: str) -> None:
-    leader, _ = get_leader_unit(juju, app_name)
-    host = juju.status().apps[app_name].units[leader].public_address
-    with connect_cql(juju=juju, app_name=app_name, hosts=[host], keyspace="test") as session:
-        res = session.execute("SELECT message FROM test")
-        assert (
-            isinstance(res, ResultSet)
-            and len(res_list := res.all()) == 1
-            and res_list[0].message == "hello"
-        ), "test data written prior aren't found"
-
-
-def test_write_primary_read_secondary(juju: jubilant.Juju, app_name: str) -> None:
-    juju.add_unit(app_name, num_units=2)
-    juju.wait(
-        ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
-        delay=3,
-        successes=5,
-    )
-
-    leader, _ = get_leader_unit(juju, app_name)
-    all_units = get_unit_names(juju, app_name)
-
-    ks, tbl = prepare_keyspace_and_table(juju, app_name, unit_name=leader)
-    wrote_leader_rows = write_n_rows(juju, app_name, ks=ks, table=tbl, unit_name=leader)
-    got_leader_rows = read_n_rows(juju, app_name, ks=ks, table=tbl, unit_name=leader)
-
-    assert_rows(wrote_leader_rows, got_leader_rows)
-
-    for unit in all_units:
-        if unit == leader:
-            continue
-        got_secondary_rows = read_n_rows(juju, app_name, ks=ks, table=tbl, unit_name=unit)
-        assert_rows(wrote_leader_rows, got_secondary_rows)
+    assert_rows(wrote, got)

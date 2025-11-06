@@ -5,7 +5,6 @@
 import logging
 from multiprocessing import Event, Process, synchronize
 
-import jubilant
 from cassandra.cluster import ResultSet
 from tenacity import Retrying, stop_after_delay, wait_fixed
 
@@ -21,30 +20,36 @@ class ContinuousWrites:
         self.force_timeout = timeout * 2
         self.stop_event = Event()
         self.write_event = Event()
-        self.juju: jubilant.Juju | None = None
-        self.app_name: str | None = None
+        self.hosts: list[str] | None = None
+        self.password: str | None = None
         self.process: Process | None = None
 
     def start(
         self,
-        juju: jubilant.Juju,
-        app_name: str,
         hosts: list[str] | None = None,
+        password: str | None = None,
         replication_factor: int = 1,
     ) -> None:
-        assert not self.juju
+        assert password
+        assert (
+            not self.hosts
+            and not self.password
+            and not self.process
+            and not self.stop_event.is_set()
+            and not self.write_event.is_set()
+        )
 
-        self.juju = juju
-        self.app_name = app_name
+        self.hosts = hosts
+        self.password = password
+
         self._init_keyspace(replication_factor)
         self.process = Process(
             target=self._continuous_writes,
             args=(
                 self.stop_event,
                 self.write_event,
-                juju,
-                app_name,
                 hosts,
+                password,
                 self.keyspace_name,
                 self.timeout,
             ),
@@ -53,7 +58,7 @@ class ContinuousWrites:
         self.write_event.wait(self.force_timeout)
 
     def stop_and_assert_writes(self, hosts: list[str] | None = None) -> None:
-        assert self.juju and self.app_name and self.process and self.process.is_alive()
+        assert self.process and self.process.is_alive()
 
         self.assert_new_writes(hosts)
 
@@ -68,15 +73,16 @@ class ContinuousWrites:
         self._clear_keyspace()
         self.stop_event.clear()
         self.write_event.clear()
-        self.juju = None
-        self.app_name = None
+        self.hosts = None
+        self.password = None
+        self.process = None
 
     def force_stop(self) -> None:
         if self.process and self.process.is_alive():
             self.process.terminate()
 
     def assert_new_writes(self, hosts: list[str] | None = None) -> None:
-        assert self.juju and self.app_name and self.process and self.process.is_alive()
+        assert self.process and self.process.is_alive()
 
         position = self._get_max_position(hosts)
 
@@ -87,14 +93,17 @@ class ContinuousWrites:
 
         assert next_position > position
 
+        self._assert_writes(hosts)
+
     def _init_keyspace(self, replication_factor: int) -> None:
-        assert self.juju and self.app_name
+        assert self.hosts and self.password
+
         for attempt in Retrying(
             wait=wait_fixed(10), stop=stop_after_delay(self.timeout), reraise=True
         ):
             with attempt:
                 with connect_cql(
-                    juju=self.juju, app_name=self.app_name, timeout=self.timeout
+                    hosts=self.hosts, password=self.password, timeout=self.timeout
                 ) as session:
                     session.execute(
                         f"CREATE KEYSPACE {self.keyspace_name} WITH replication = "
@@ -126,16 +135,15 @@ class ContinuousWrites:
                 assert pcount == (1 + pmax - pmin)
 
     def _cql_exec(self, query: str, hosts: list[str] | None = None) -> ResultSet | None:
-        assert self.juju and self.app_name
+        assert self.hosts and self.password
 
         for attempt in Retrying(
             wait=wait_fixed(10), stop=stop_after_delay(self.timeout), reraise=True
         ):
             with attempt:
                 with connect_cql(
-                    juju=self.juju,
-                    app_name=self.app_name,
-                    hosts=hosts,
+                    hosts=hosts or self.hosts,
+                    password=self.password,
                     keyspace=self.keyspace_name,
                     timeout=self.timeout,
                 ) as session:
@@ -147,9 +155,8 @@ class ContinuousWrites:
     def _continuous_writes(
         stop_event: synchronize.Event,
         write_event: synchronize.Event,
-        juju: jubilant.Juju,
-        app_name: str,
-        hosts: list[str] | None,
+        hosts: list[str],
+        password: str,
         keyspace_name: str,
         timeout: int,
     ) -> None:
@@ -157,9 +164,8 @@ class ContinuousWrites:
         for attempt in Retrying(wait=wait_fixed(10), stop=stop_after_delay(timeout), reraise=True):
             with attempt:
                 with connect_cql(
-                    juju=juju,
-                    app_name=app_name,
                     hosts=hosts,
+                    password=password,
                     keyspace=keyspace_name,
                     timeout=timeout,
                 ) as session:

@@ -81,10 +81,11 @@ def get_secrets_by_label(juju: jubilant.Juju, label: str, owner: str) -> list[di
     return secret_data_list
 
 
-def get_unit_address(juju: jubilant.Juju, app_name: str, unit_num) -> str:
-    """Get the address for a units."""
+def get_unit_address(juju: jubilant.Juju, app_name: str, unit: str | int) -> str:
+    """Get the address for a unit."""
+    unit = unit if (isinstance(unit, str) and app_name in unit) else f"{app_name}/{unit}"
     status = juju.status()
-    address = status.apps[app_name].units[f"{app_name}/{unit_num}"].public_address
+    address = status.apps[app_name].units[unit].public_address
     return address
 
 
@@ -304,7 +305,7 @@ def get_hosts(juju: jubilant.Juju, app_name: str, unit_name: str = "") -> list[s
     return [u.public_address for u in units.values()]
 
 
-def get_leader_unit(juju, app_name: str) -> tuple[str, UnitStatus]:
+def get_leader_unit(juju: jubilant.Juju, app_name: str) -> tuple[str, UnitStatus]:
     """Return the name of the leader unit for the given application.
 
     Raises:
@@ -317,7 +318,7 @@ def get_leader_unit(juju, app_name: str) -> tuple[str, UnitStatus]:
     raise ValueError(f"No leader unit found for application '{app_name}'")
 
 
-def get_non_leader_units(juju, app_name: str) -> list[str]:
+def get_non_leader_units(juju: jubilant.Juju, app_name: str) -> list[str]:
     """Return a list of all non-leader units for the given application."""
     app = juju.status().apps[app_name]
     return [name for name, unit in app.units.items() if not unit.leader]

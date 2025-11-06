@@ -8,43 +8,33 @@ from contextlib import contextmanager
 from ssl import CERT_NONE, PROTOCOL_TLS_CLIENT, SSLContext
 from typing import Generator
 
-import jubilant
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.cluster import EXEC_PROFILE_DEFAULT, Cluster, ExecutionProfile, ResultSet, Session
 from cassandra.policies import DCAwareRoundRobinPolicy, TokenAwarePolicy
 from tenacity import Retrying, stop_after_delay, wait_fixed
-
-from integration.helpers.juju import (
-    get_hosts,
-    get_secrets_by_label,
-)
 
 logger = logging.getLogger(__name__)
 
 CLIENT_CA_CERT = "client-ca-cert-secret"
 
 
+OPERATOR_PASSWORD = "operator-password"
+
+
 @contextmanager
 def connect_cql(
-    juju: jubilant.Juju,
-    app_name: str,
-    hosts: list[str] | None = None,
+    hosts: list[str],
+    password: str | None,
     username: str | None = None,
-    password: str | None = None,
     keyspace: str | None = None,
     client_ca: str | None = None,
     timeout: float | None = None,
 ) -> Generator[Session, None, None]:
     """Connect to the Cassandra cluster and acquire CQL session."""
-    if hosts is None:
-        hosts = get_hosts(juju, app_name)
     if username is None:
         username = "operator"
-    if password is None:
-        secrets = get_secrets_by_label(juju, f"cassandra-peers.{app_name}.app", app_name)
-        assert len(secrets) == 1
-        password = secrets[0]["operator-password"]
 
+    assert password
     assert len(hosts) > 0
 
     execution_profile = ExecutionProfile(
@@ -109,12 +99,17 @@ def check_tls(ip: str, port: int) -> bool:
     return "TLSv1.2" in output or "TLSv1.3" in output
 
 
-def get_db_users(juju, app_name, client_ca: str | None = None) -> set[str]:
+def get_db_users(
+    hosts: list[str],
+    password: str | None,
+    username: str | None = None,
+    client_ca: str | None = None,
+) -> set[str]:
     """Return a set of all Cassandra user names for the given application."""
     users: set[str] = set()
 
     with connect_cql(
-        juju=juju, app_name=app_name, hosts=get_hosts(juju, app_name), client_ca=client_ca
+        hosts=hosts, password=password, username=username, client_ca=client_ca
     ) as session:
         rows = session.execute("SELECT role FROM system_auth.roles;")
         users = {row.role for row in rows}
@@ -122,10 +117,16 @@ def get_db_users(juju, app_name, client_ca: str | None = None) -> set[str]:
     return users
 
 
-def keyspace_exists(juju, app_name, keyspace_name: str, client_ca: str | None = None) -> bool:
+def keyspace_exists(
+    hosts: list[str],
+    password: str | None,
+    keyspace_name: str,
+    username: str | None = None,
+    client_ca: str | None = None,
+) -> bool:
     """Check if the given Cassandra keyspace exists."""
     with connect_cql(
-        juju=juju, app_name=app_name, hosts=get_hosts(juju, app_name), client_ca=client_ca
+        hosts=hosts, password=password, username=username, client_ca=client_ca
     ) as session:
         query = """
         SELECT keyspace_name
@@ -137,11 +138,16 @@ def keyspace_exists(juju, app_name, keyspace_name: str, client_ca: str | None = 
 
 
 def table_exists(
-    juju, app_name, keyspace_name: str, table_name: str, client_ca: str | None = None
+    hosts: list[str],
+    password: str | None,
+    keyspace_name: str,
+    table_name: str,
+    username: str | None = None,
+    client_ca: str | None = None,
 ) -> bool:
     """Check if the given table exists in the specified Cassandra keyspace."""
     with connect_cql(
-        juju=juju, app_name=app_name, hosts=get_hosts(juju, app_name), client_ca=client_ca
+        hosts=hosts, password=password, username=username, client_ca=client_ca
     ) as session:
         query = """
         SELECT table_name
@@ -153,12 +159,14 @@ def table_exists(
 
 
 def prepare_keyspace_and_table(
-    juju: jubilant.Juju, app_name: str, ks: str = "test", table: str = "kv", unit_name: str = ""
+    hosts: list[str],
+    password: str | None,
+    username: str | None = None,
+    ks: str = "test",
+    table: str = "kv",
 ) -> tuple[str, str]:
     """Create test keyspace and table."""
-    hosts = get_hosts(juju, app_name, unit_name)
-
-    with connect_cql(juju=juju, app_name=app_name, hosts=hosts, timeout=300) as session:
+    with connect_cql(hosts=hosts, password=password, username=username, timeout=300) as session:
         session.execute(
             f"CREATE KEYSPACE IF NOT EXISTS {ks} "
             "WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 3}"
@@ -169,13 +177,16 @@ def prepare_keyspace_and_table(
 
 
 def write_n_rows(
-    juju: jubilant.Juju, app_name: str, ks: str, table: str, n: int = 100, unit_name: str = ""
+    hosts: list[str],
+    password: str | None,
+    username: str | None = None,
+    ks: str = "test",
+    table: str = "kv",
+    n: int = 100,
 ) -> dict[int, str]:
     """Write n rows to the table."""
-    hosts = get_hosts(juju, app_name, unit_name)
-
     with connect_cql(
-        juju=juju, app_name=app_name, hosts=hosts, timeout=300, keyspace=ks
+        hosts=hosts, password=password, username=username, timeout=300, keyspace=ks
     ) as session:
         for i in range(n):
             session.execute(
@@ -187,14 +198,17 @@ def write_n_rows(
 
 
 def read_n_rows(
-    juju: jubilant.Juju, app_name: str, ks: str, table: str, n: int = 100, unit_name: str = ""
+    hosts: list[str],
+    password: str | None,
+    username: str | None = None,
+    ks: str = "test",
+    table: str = "kv",
+    n: int = 100,
 ) -> dict[int, str]:
     """Check that table have exactly n rows."""
-    hosts = get_hosts(juju, app_name, unit_name)
-
     got = {}
     with connect_cql(
-        juju=juju, app_name=app_name, hosts=hosts, timeout=300, keyspace=ks
+        hosts=hosts, password=password, username=username, timeout=300, keyspace=ks
     ) as session:
         res = session.execute(f"SELECT id, value FROM {table}")
         assert isinstance(res, ResultSet)
@@ -213,13 +227,19 @@ def assert_rows(wrote: dict[int, str], got: dict[int, str]) -> None:
     assert got == wrote, "Row data mismatch"
 
 
-def get_user_permissions(juju, app_name, username: str, client_ca: str | None = None) -> set[str]:
+def get_user_permissions(
+    hosts: list[str],
+    password: str | None,
+    target_username: str,
+    username: str | None = None,
+    client_ca: str | None = None,
+) -> set[str]:
     """Return a set of permissions granted to the given Cassandra user."""
     with connect_cql(
-        juju=juju,
-        app_name=app_name,
-        hosts=get_hosts(juju, app_name),
+        hosts=hosts,
+        password=password,
+        username=username,
         client_ca=client_ca,
     ) as session:
-        rows = session.execute(f'LIST ALL PERMISSIONS OF "{username}";')
+        rows = session.execute(f'LIST ALL PERMISSIONS OF "{target_username}";')
         return {row.permission for row in rows}

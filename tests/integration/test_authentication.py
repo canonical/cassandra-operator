@@ -8,8 +8,15 @@ from pathlib import Path
 import jubilant
 from pytest import raises
 
-from integration.helpers.cassandra import connect_cql
-from integration.helpers.juju import get_hosts, get_secrets_by_label
+from integration.helpers.cassandra import (
+    OPERATOR_PASSWORD,
+    prepare_keyspace_and_table,
+    write_n_rows,
+)
+from integration.helpers.juju import (
+    app_secret_extract,
+    get_hosts,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -39,15 +46,8 @@ def test_update_custom_secret(juju: jubilant.Juju, app_name: str) -> None:
         timeout=300,
     )
 
-    secrets = get_secrets_by_label(juju, f"cassandra-peers.{app_name}.app", app_name)
-    assert len(secrets) == 1 and secrets[0].get("operator-password") == "custom_password"
-    with connect_cql(juju=juju, app_name=app_name, hosts=get_hosts(juju, app_name)) as session:
-        session.execute(
-            "CREATE KEYSPACE test "
-            "WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1}"
-        )
-        session.set_keyspace("test")
-        session.execute("CREATE TABLE test(message TEXT PRIMARY KEY)")
+    assert (password := app_secret_extract(juju, app_name, OPERATOR_PASSWORD)) == "custom_password"
+    prepare_keyspace_and_table(hosts=get_hosts(juju, app_name), password=password)
 
 
 def test_change_custom_secret(juju: jubilant.Juju, app_name: str) -> None:
@@ -63,12 +63,10 @@ def test_change_custom_secret(juju: jubilant.Juju, app_name: str) -> None:
         timeout=300,
     )
 
-    secrets = get_secrets_by_label(juju, f"cassandra-peers.{app_name}.app", app_name)
-    assert len(secrets) == 1 and secrets[0].get("operator-password") == "custom_password_second"
-    with connect_cql(
-        juju=juju, app_name=app_name, hosts=get_hosts(juju, app_name), keyspace="test"
-    ) as session:
-        session.execute("INSERT INTO test(message) VALUES ('hello')")
+    assert (
+        password := app_secret_extract(juju, app_name, OPERATOR_PASSWORD)
+    ) == "custom_password_second"
+    write_n_rows(hosts=get_hosts(juju, app_name), password=password)
 
 
 def test_remove_custom_secret(juju: jubilant.Juju, app_name: str) -> None:
@@ -86,31 +84,22 @@ def test_remove_custom_secret(juju: jubilant.Juju, app_name: str) -> None:
         timeout=300,
     )
 
-    secrets = get_secrets_by_label(juju, f"cassandra-peers.{app_name}.app", app_name)
-    assert len(secrets) == 1 and secrets[0].get("operator-password") == "custom_password_second"
-    with connect_cql(
-        juju=juju, app_name=app_name, hosts=get_hosts(juju, app_name), keyspace="test"
-    ) as session:
-        session.execute("INSERT INTO test(message) VALUES ('world')")
+    assert (
+        password := app_secret_extract(juju, app_name, OPERATOR_PASSWORD)
+    ) == "custom_password_second"
+    write_n_rows(hosts=get_hosts(juju, app_name), password=password)
 
 
 def test_bad_credentials(juju: jubilant.Juju, app_name: str) -> None:
     with raises(match="AuthenticationFailed"):
-        with connect_cql(
-            juju=juju,
-            app_name=app_name,
+        write_n_rows(
             hosts=get_hosts(juju, app_name),
             username="bad",
-            keyspace="test",
-        ) as session:
-            session.execute("INSERT INTO test(message) VALUES ('bad')")
+            password=app_secret_extract(juju, app_name, OPERATOR_PASSWORD),
+        )
 
     with raises(match="AuthenticationFailed"):
-        with connect_cql(
-            juju=juju,
-            app_name=app_name,
+        write_n_rows(
             hosts=get_hosts(juju, app_name),
             password="bad",
-            keyspace="test",
-        ) as session:
-            session.execute("INSERT INTO test(message) VALUES ('password')")
+        )
