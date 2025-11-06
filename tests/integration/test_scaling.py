@@ -98,6 +98,8 @@ def test_single_node_scale_down(
 
 
 def test_single_node_scale_down_scale_up(juju: jubilant.Juju, app_name: str) -> None:
+    scale_sequentially_to(juju, app_name, 2)
+
     non_leader_units = [
         name for name, unit in juju.status().apps[app_name].units.items() if not unit.leader
     ]
