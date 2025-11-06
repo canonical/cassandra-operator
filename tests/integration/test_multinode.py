@@ -37,7 +37,8 @@ def test_deploy(juju: jubilant.Juju, cassandra_charm: Path, app_name: str) -> No
 def test_write_primary_read_secondary(juju: jubilant.Juju, app_name: str) -> None:
     password = app_secret_extract(juju, app_name, OPERATOR_PASSWORD)
 
-    leader_hosts = [get_unit_address(juju, app_name, get_leader_unit(juju, app_name))]
+    leader, _ = get_leader_unit(juju, app_name)
+    leader_hosts = [get_unit_address(juju, app_name, leader)]
     prepare_keyspace_and_table(leader_hosts, password=password)
     wrote = write_n_rows(hosts=leader_hosts, password=password)
 

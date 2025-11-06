@@ -9,6 +9,7 @@ from time import sleep
 import jubilant
 from tenacity import Retrying, stop_after_delay, wait_fixed
 
+from integration.helpers.cassandra import OPERATOR_PASSWORD
 from integration.helpers.continuous_writes import ContinuousWrites
 from integration.helpers.ha import (
     get_machine_name,
@@ -18,7 +19,12 @@ from integration.helpers.ha import (
     network_restore,
     network_throttle,
 )
-from integration.helpers.juju import check_node_is_up, get_hosts, get_leader_unit
+from integration.helpers.juju import (
+    app_secret_extract,
+    check_node_is_up,
+    get_hosts,
+    get_leader_unit,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -48,9 +54,8 @@ def test_network_cut_without_ip_change(
     no_stoped_unit_hosts = list(set(get_hosts(juju, app_name)) - set(stoped_unit_host))
 
     continuous_writes.start(
-        juju,
-        app_name,
         hosts=no_stoped_unit_hosts,
+        password=app_secret_extract(juju, app_name, OPERATOR_PASSWORD),
         replication_factor=3,
     )
 
@@ -117,7 +122,11 @@ def test_network_cut(
     stoped_machine = get_machine_name(juju, cut_unit_name)
     no_stoped_hosts = list(set(get_hosts(juju, app_name)) - set(stoped_unit_host))
 
-    continuous_writes.start(juju, app_name, hosts=no_stoped_hosts, replication_factor=3)
+    continuous_writes.start(
+        hosts=no_stoped_hosts,
+        password=app_secret_extract(juju, app_name, OPERATOR_PASSWORD),
+        replication_factor=3,
+    )
 
     network_cut(stoped_machine)
     logger.info("Waiting for unit to go down")
