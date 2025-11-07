@@ -130,7 +130,7 @@ class ApplicationCharm(CharmBase):
         if tls is None:
             return
 
-        self.set_tls(tls_ca.get_secret_value() if tls_ca else "")
+        self.set_tls(tls_ca if tls_ca else "")
 
     def _on_endpoints_changed(self, event: ResourceEndpointsChangedEvent) -> None:
         """Handle etcd client relation data changed event."""
@@ -150,8 +150,8 @@ class ApplicationCharm(CharmBase):
 
         response: ResourceProviderModel = event.response
 
-        rolename = response.username.get_secret_value() if response.username else None
-        password = response.password.get_secret_value() if response.password else None
+        rolename = response.username if response.username else None
+        password = response.password if response.password else None
 
         if not rolename or not password:
             raise Exception("No rolename or password provided in _on_keyspace_created")
@@ -172,7 +172,7 @@ class ApplicationCharm(CharmBase):
         logger.info(f"Initial user created: {rolename}")
 
         if response.tls_ca:
-            self.set_tls(response.tls_ca.get_secret_value())
+            self.set_tls(response.tls_ca)
 
         self.unit.status = ActiveStatus()
 
@@ -181,9 +181,9 @@ class ApplicationCharm(CharmBase):
 
         response: ResourceProviderModel = event.response
 
-        rolename = response.entity_name.get_secret_value() if response.entity_name else None
+        rolename = response.entity_name if response.entity_name else None
         password = (
-            response.entity_password.get_secret_value() if response.entity_password else None
+            response.entity_password if response.entity_password else None
         )
 
         if not rolename or not password:
@@ -202,7 +202,7 @@ class ApplicationCharm(CharmBase):
             peer_relation.data[self.app]["hosts"] = str(event.response.endpoints)
 
         if response.tls_ca:
-            self.set_tls(response.tls_ca.get_secret_value())
+            self.set_tls(response.tls_ca)
 
         self.unit.status = ActiveStatus()
 

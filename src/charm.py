@@ -9,8 +9,6 @@ import logging
 from charms.data_platform_libs.v1.data_interfaces import (
     DataContractV1,
     ResourceProviderModel,
-    SecretBool,
-    SecretStr,
 )
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from charms.grafana_agent.v0.cos_agent import COSAgentProvider
@@ -282,8 +280,8 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             )
 
             for request in model.requests:
-                request.tls = SecretBool(self.state.unit.client_tls.ready)
-                request.tls_ca = SecretStr(
+                request.tls = (self.state.unit.client_tls.ready)
+                request.tls_ca = (
                     self.state.unit.client_tls.ca.raw if self.state.unit.client_tls.ca else ""
                 )
 
