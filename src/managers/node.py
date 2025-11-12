@@ -5,6 +5,7 @@
 """Cluster manager."""
 
 import logging
+import re
 import socket
 from dataclasses import dataclass
 
@@ -101,14 +102,38 @@ class NodeManager:
         """Disconnect node from the cluster using nodetool decommission command."""
         self._workload.exec([_NODETOOL, "decommission", "-f"])
 
-    @property
-    def active_cluster_nodes_count(self) -> int:
-        """Number of an active cluster nodes."""
+    def ensure_cluster_topology(self, nodes: int) -> bool:
+        """Check stability & consistency of the cluster topology using nodetool status command.
+
+        Returns:
+            whether the cluster topology is stable and consistent with provided nodes count.
+        """
         try:
             stdout, _ = self._workload.exec([_NODETOOL, "status"], suppress_error_log=True)
-            return stdout.count("UN  ")
+            if "DN  " in stdout:
+                return False
+            return stdout.count("UN  ") == nodes
         except ExecError:
-            return 0
+            return False
+
+    def remove_bad_nodes(self, good_node_ips: list[str]) -> None:
+        """Remove unknown nodes in down state using nodetool removenode command."""
+        try:
+            status_stdout, _ = self._workload.exec([_NODETOOL, "status"])
+        except ExecError:
+            return
+
+        down_nodes = re.findall(r"^DN  (\S+)(?:\s+\S+){4}\s+(\S+).+$", status_stdout, re.MULTILINE)
+
+        for down_node in down_nodes:
+            ip, host_id = down_node
+            if ip in good_node_ips:
+                continue
+            try:
+                self._workload.exec([_NODETOOL, "removenode", host_id])
+                logger.info(f"Removed bad node {ip} from Cassandra cluster")
+            except ExecError:
+                logger.error(f"Failed to remove bad node {ip} from Cassandra cluster")
 
     def repair_auth(self) -> None:
         """Run full repair on system_auth keyspace."""
