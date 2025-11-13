@@ -17,3 +17,11 @@ options:
       Configure the internal system user password. The password will be auto-generated
       if this option is not set. This needs to be a Juju Secret URI pointing to an
       accessible secret that contains the following content: `operator: <password>`.
+
+  pause-after-unit-refresh:
+    description: |
+      Wait for manual confirmation to resume refresh after these units refresh
+
+      Allowed values: "all", "first", "none"
+    type: string
+    default: first

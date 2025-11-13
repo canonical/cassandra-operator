@@ -22,3 +22,6 @@ class BadSecretError(Exception):
 
     def __init__(self) -> None:
         super().__init__("User-defined secret validation error")
+
+class CassandraRefreshError(Exception):
+    """Exception raised when Apache Cassandra refresh fails."""

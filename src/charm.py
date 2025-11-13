@@ -5,6 +5,8 @@
 """Charm definition."""
 
 import logging
+import ops.log
+import charm_refresh
 
 from charms.data_platform_libs.v1.data_interfaces import (
     DataContractV1,
@@ -13,6 +15,7 @@ from charms.data_platform_libs.v1.data_interfaces import (
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from charms.grafana_agent.v0.cos_agent import COSAgentProvider
 from ops import EventBase, ModelError, SecretNotFoundError, main
+
 
 from common.exceptions import BadSecretError, ExecError
 from common.lock_manager import LockManager
@@ -25,6 +28,7 @@ from core.state import (
     ClusterState,
     UnitWorkloadState,
 )
+
 from events.cassandra import CassandraEvents
 from events.provider import ProviderEvents
 from events.tls import TLSEvents
@@ -32,9 +36,12 @@ from managers.config import ConfigManager
 from managers.database import DatabaseManager
 from managers.node import NodeManager
 from managers.tls import Sans, TLSManager
+from managers.refresh import MachinesRefresh, RefreshManager
 from workload import SNAP_NAME, CassandraWorkload
 
 logger = logging.getLogger(__name__)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 
 class CassandraCharm(TypedCharmBase[CharmConfig]):
@@ -45,6 +52,12 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
     def __init__(self, *args):
         super().__init__(*args)
 
+        # Show logger name (module name) in logs
+        root_logger = logging.getLogger()
+        for handler in root_logger.handlers:
+            if isinstance(handler, ops.log.JujuLogHandler):
+                handler.setFormatter(logging.Formatter("{name}:{message}", style="{"))        
+
         self.on.define_event("bootstrap", EventBase)
         self.framework.observe(self.on.bootstrap, self._on_bootstrap)
 
@@ -52,6 +65,20 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         self.workload = CassandraWorkload()
         self.node_manager = NodeManager(workload=self.workload)
         self.tls_manager = TLSManager(workload=self.workload)
+
+        try:
+            self.refresh = MachinesRefresh(
+                    workload_name="charmed-cassandra",
+                    charm_name="cassandra",
+                    _listen_address=self.state.unit.ip,
+                    _workload=self.workload,
+                    _node_manager=self.node_manager,
+                )
+            self.refresh_manager = RefreshManager(refresh=charm_refresh.Machines(
+                self.refresh
+            ))
+        except (charm_refresh.PeerRelationNotReady, charm_refresh.UnitTearingDown):
+            self.refresh_manager = RefreshManager(refresh=None)
 
         config_manager = ConfigManager(
             workload=self.workload,
@@ -81,6 +108,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             config_manager=config_manager,
             database_manager=database_manager,
             tls_manager=self.tls_manager,
+            refresh_manager=self.refresh_manager,
             setup_internal_certificates=self.setup_internal_certificates,
             read_auth_secret=self.read_auth_secret,
             restart=self.restart,
@@ -114,6 +142,12 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             metrics_rules_dir=METRICS_RULES_DIR,
             log_slots=[f"{SNAP_NAME}:logs"],
         )
+
+        if self.refresh_manager and not self.refresh_manager.next_unit_allowed_to_refresh:
+            # Only proceed if snap is installed (avoids KeyError during initial deployment)
+            if self.workload.installed and self.workload.is_alive():
+                self.refresh.post_snap_refresh(self.refresh_manager)
+        
 
     def _on_bootstrap(self, event: EventBase) -> None:
         if self._handle_starting_state(event):
@@ -267,6 +301,10 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         except ModelError as e:
             logger.error(f"Error accessing user-defined system users secret: {e}")
             raise BadSecretError()
+
+    def refresh_not_ready(self) -> bool:
+        """Check if refresh is not available or currently in progress."""
+        return not self.refresh_manager or self.refresh_manager.in_progress
 
     def _update_external_clients_certs(self) -> None:
         logger.info("----------UPDATING CERTS----------")

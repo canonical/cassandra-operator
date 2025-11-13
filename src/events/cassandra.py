@@ -5,7 +5,10 @@
 """Handler for main Cassandra charm events."""
 
 import logging
+from os import eventfd
 from typing import Callable
+
+from charm_refresh import Machines
 
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from ops import (
@@ -46,6 +49,7 @@ from core.workload import WorkloadBase
 from managers.config import ConfigManager
 from managers.database import DatabaseManager
 from managers.node import NodeManager
+from managers.refresh import MachinesRefresh, RefreshManager
 from managers.tls import Sans, TLSManager
 
 logger = logging.getLogger(__name__)
@@ -62,6 +66,7 @@ class CassandraEvents(Object):
         node_manager: NodeManager,
         config_manager: ConfigManager,
         tls_manager: TLSManager,
+        refresh_manager: RefreshManager,            
         setup_internal_certificates: Callable[[Sans], bool],
         database_manager: DatabaseManager,
         read_auth_secret: Callable[[str], str],
@@ -78,6 +83,7 @@ class CassandraEvents(Object):
         self.database_manager = database_manager
         self.read_auth_secret = read_auth_secret
         self.restart = restart
+        self.refresh_manager = refresh_manager
 
         self.charm.on.define_event("update_auth_rf", EventBase)
         self.framework.observe(self.charm.on.update_auth_rf, self._on_update_auth_rf)
@@ -115,6 +121,15 @@ class CassandraEvents(Object):
 
     def _on_start(self, event: StartEvent) -> None:
         self._update_network_address()
+
+        if not self.refresh_manager.is_initialized:
+            logger.debug("Deferring on_start due to charm_refresh is not ready")
+            event.defer()
+            return
+
+        # don't want to run default start/pebble-ready events during upgrades        
+        if self.refresh_manager.in_progress:
+            return
 
         if self.state.unit.workload_state == UnitWorkloadState.ACTIVE:
             logger.debug("Unintended restart detected, resetting unit's workload state")
@@ -222,6 +237,9 @@ class CassandraEvents(Object):
         self.restart()
 
     def _on_config_changed(self, event: ConfigChangedEvent) -> None:
+        if not self.refresh_manager.ready:
+            return
+        
         if not self.state.unit.is_ready:
             logger.debug("Exiting on_config_changed due to unit not being ready")
             return
@@ -255,12 +273,17 @@ class CassandraEvents(Object):
             event.defer()
             return
 
-    def _on_secret_changed(self, event: SecretChangedEvent) -> None:
+    def _on_secret_changed(self, event: SecretChangedEvent) -> None:        
         if not self.charm.unit.is_leader():
             return
 
         if not self.state.unit.is_ready:
             logger.debug("Exiting on_secret_changed due to unit not being ready")
+            return
+
+        if not self.refresh_manager.ready:
+            logger.debug("Deferring on_secret_changed due to charm_refresh is not ready")
+            event.defer()
             return
 
         try:
@@ -342,6 +365,9 @@ class CassandraEvents(Object):
             return
 
     def _on_update_status(self, _: UpdateStatusEvent) -> None:
+        if self.refresh_manager.ready:
+            return
+        
         if self.state.unit.is_operational and not self.workload.is_alive():
             logger.error("Restarting Cassandra service due to unexpected shutdown")
             self.restart()
@@ -370,6 +396,10 @@ class CassandraEvents(Object):
             self.node_manager.remove_bad_nodes([unit.ip for unit in self.state.units])
 
     def _on_collect_unit_status(self, event: CollectStatusEvent) -> None:
+        if self.refresh_manager.is_initialized and self.refresh_manager.unit_status_higher_priority:
+            event.add_status(self.refresh_manager.unit_status_higher_priority)
+            return
+        
         try:
             self.charm.config
             self._acquire_operator_password()
@@ -401,6 +431,14 @@ class CassandraEvents(Object):
 
         if self.state.cluster.auth_repair != AuthRepairState.UNPLANNED:
             event.add_status(Status.REPAIRING_AUTH.value)
+
+        if self.refresh_manager.is_initialized and (
+            refresh_status := self.refresh_manager.unit_status_lower_priority(
+                workload_is_running=self.workload.is_alive(),
+            )                
+        ):
+            event.add_status(refresh_status)
+            return
 
         event.add_status(Status.ACTIVE.value)
 
