@@ -99,6 +99,12 @@ class WorkloadBase(ABC):
         """Install Cassandra."""
         pass
 
+    @property
+    @abstractmethod
+    def installed(self) -> bool:
+        """Whether Cassandra is installed."""
+        pass
+
     @abstractmethod
     def is_alive(self) -> bool:
         """Whether Cassandra service running."""
