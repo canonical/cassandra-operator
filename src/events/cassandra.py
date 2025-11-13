@@ -366,6 +366,7 @@ class CassandraEvents(Object):
 
     def _on_update_status(self, _: UpdateStatusEvent) -> None:
         if self.refresh_manager.ready:
+            logger.error("Refresh manager is not ready")
             return
         
         if self.state.unit.is_operational and not self.workload.is_alive():

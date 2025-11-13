@@ -143,7 +143,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             log_slots=[f"{SNAP_NAME}:logs"],
         )
 
-        if self.refresh_manager and not self.refresh_manager.next_unit_allowed_to_refresh:
+        if self.refresh_manager.is_initialized and not self.refresh_manager.next_unit_allowed_to_refresh:
             # Only proceed if snap is installed (avoids KeyError during initial deployment)
             if self.workload.installed and self.workload.is_alive():
                 self.refresh.post_snap_refresh(self.refresh_manager)
