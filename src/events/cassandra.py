@@ -365,7 +365,7 @@ class CassandraEvents(Object):
             return
 
     def _on_update_status(self, _: UpdateStatusEvent) -> None:
-        if self.refresh_manager.ready:
+        if not self.refresh_manager.ready:
             logger.error("Refresh manager is not ready")
             return
         

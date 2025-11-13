@@ -74,11 +74,11 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
                     _workload=self.workload,
                     _node_manager=self.node_manager,
                 )
-            self.refresh_manager = RefreshManager(refresh=charm_refresh.Machines(
+            self.refresh_manager = RefreshManager(charm_refresh.Machines(
                 self.refresh
             ))
         except (charm_refresh.PeerRelationNotReady, charm_refresh.UnitTearingDown):
-            self.refresh_manager = RefreshManager(refresh=None)
+            self.refresh_manager = RefreshManager(None)
 
         config_manager = ConfigManager(
             workload=self.workload,
