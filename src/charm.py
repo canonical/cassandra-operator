@@ -70,7 +70,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             self.refresh = MachinesRefresh(
                     workload_name="charmed-cassandra",
                     charm_name="cassandra",
-                    _listen_address=self.state.unit.ip,
+                    _hosts=[u.ip for u in self.state.units],
                     _workload=self.workload,
                     _node_manager=self.node_manager,
                 )
