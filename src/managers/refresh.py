@@ -6,6 +6,7 @@
 import abc
 import dataclasses
 import logging
+from typing import Callable
 import charm_refresh
 
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
@@ -17,6 +18,7 @@ from managers.node import NodeManager
 from charms.operator_libs_linux.v2 import snap
 
 from tenacity import (
+    RetryError,
     Retrying,
     stop_after_delay,
     wait_exponential,
@@ -48,7 +50,7 @@ class RefreshManager(charm_refresh.Machines):
 class Refresh(charm_refresh.CharmSpecificCommon, abc.ABC):
     """Base class for Apache Cassandra refresh operations."""
 
-    _listen_address: str
+    _hosts: list[str]
     _workload: WorkloadBase
     _node_manager: NodeManager
 
@@ -78,8 +80,14 @@ class Refresh(charm_refresh.CharmSpecificCommon, abc.ABC):
     def run_pre_refresh_checks_after_1_unit_refreshed(self) -> None: # type: ignore
         """Implement pre-refresh checks after 1 unit refreshed."""
         logger.debug("Running pre-refresh checks")
-        logger.debug(f"Unit IP: {self._listen_address}")
-
+        for attempt in Retrying(
+                wait=wait_exponential(), stop=stop_after_delay(600), reraise=True
+        ):
+            with attempt:
+                for host in self._hosts:
+                    if not self._node_manager.is_healthy(host):
+                        raise charm_refresh.PrecheckFailed("Cluster is not healthy")
+            
 @dataclasses.dataclass(eq=False)
 class MachinesRefresh(Refresh, charm_refresh.CharmSpecificMachines): # type: ignore
     """Refresh handler for Cassandra charm on machines substrate."""
@@ -115,12 +123,20 @@ class MachinesRefresh(Refresh, charm_refresh.CharmSpecificMachines): # type: ign
 
     def post_snap_refresh(self, refresh: charm_refresh.Machines) -> None:
         logger.debug("Running post-snap-refresh check...")
-        for attempt in Retrying(
-            wait=wait_exponential(), stop=stop_after_delay(1800), reraise=True
-        ):
-            with attempt:
-                if not self._node_manager.is_healthy(self._listen_address):
-                    return
+        try:
+            for attempt in Retrying(
+                    wait=wait_exponential(), stop=stop_after_delay(600), reraise=False
+            ):
+                with attempt:
+                    for host in self._hosts:
+                        if not self._node_manager.is_healthy(host):
+                            raise
+        except RetryError:
+            logger.warning(
+            "Post-snap-refresh check timed out."
+            "Some nodes may still be unhealthy. Next unit is not allowed to refresh."
+            )
+            return
 
         refresh.next_unit_allowed_to_refresh = True        
         
