@@ -49,7 +49,7 @@ from core.workload import WorkloadBase
 from managers.config import ConfigManager
 from managers.database import DatabaseManager
 from managers.node import NodeManager
-from managers.refresh import MachinesRefresh, RefreshManager
+from managers.refresh import RefreshManager
 from managers.tls import Sans, TLSManager
 
 logger = logging.getLogger(__name__)
@@ -200,13 +200,15 @@ class CassandraEvents(Object):
             truststore_password=self.state.unit.truststore_password,
         )
         self.workload.start()
+        logger.info("Trying to check heath in _start_leader_setup_auth")
         for attempt in Retrying(
             wait=wait_exponential(), stop=stop_after_delay(1800), reraise=True
         ):
             with attempt:
                 if not self.node_manager.is_healthy(ip="127.0.0.1"):
                     raise Exception("bootstrap timeout exceeded")
-
+                
+        logger.info("Heath in _start_leader_setup_auth is good")                
         for attempt in Retrying(wait=wait_fixed(10), stop=stop_after_delay(120), reraise=True):
             with attempt:
                 self.database_manager.init_admin(password)
