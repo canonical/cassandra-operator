@@ -6,9 +6,9 @@
 
 import logging
 import subprocess
-import toml
 from shutil import rmtree
 
+import toml
 from charmlibs import pathops
 from charms.operator_libs_linux.v2 import snap
 from typing_extensions import override
@@ -30,6 +30,7 @@ with open("refresh_versions.toml", "r") as f:
 
 SNAP_NAME = data["snap"]["name"]
 SNAP_REVISION = data["snap"]["revisions"]["x86_64"]
+
 
 class CassandraWorkload(WorkloadBase):
     """Implementation of WorkloadBase for running on VMs."""

@@ -6,14 +6,9 @@
 import abc
 import dataclasses
 import logging
+
 import charm_refresh
-
-from common.exceptions import CassandraRefreshError
-from core.state import ApplicationState
-from core.workload import WorkloadBase
-from managers.node import NodeManager
 from charms.operator_libs_linux.v2 import snap
-
 from tenacity import (
     RetryError,
     Retrying,
@@ -21,26 +16,32 @@ from tenacity import (
     wait_exponential,
 )
 
+from common.exceptions import CassandraRefreshError
+from core.state import ApplicationState
+from core.workload import WorkloadBase
+from managers.node import NodeManager
+
 logger = logging.getLogger(__name__)
+
 
 @dataclasses.dataclass(eq=False)
 class Refresh(charm_refresh.CharmSpecificCommon, abc.ABC):
     """Base class for Apache Cassandra refresh operations."""
-    
+
     _state: ApplicationState
     _workload: WorkloadBase
     _node_manager: NodeManager
 
     @classmethod
     def is_compatible(
-            cls,
-            *,
-            old_charm_version: charm_refresh.CharmVersion,
-            new_charm_version: charm_refresh.CharmVersion,
-            old_workload_version: str,
-            new_workload_version: str,
+        cls,
+        *,
+        old_charm_version: charm_refresh.CharmVersion,
+        new_charm_version: charm_refresh.CharmVersion,
+        old_workload_version: str,
+        new_workload_version: str,
     ) -> bool:
-        """Checks charm version compatibility."""
+        """Check charm and workload version compatibility."""
         if not super().is_compatible(
             old_charm_version=old_charm_version,
             new_charm_version=new_charm_version,
@@ -54,27 +55,29 @@ class Refresh(charm_refresh.CharmSpecificCommon, abc.ABC):
             new_workload_version=new_workload_version,
         )
 
-    def run_pre_refresh_checks_after_1_unit_refreshed(self) -> None: # type: ignore
-        """Implement pre-refresh checks after 1 unit refreshed."""
+    def run_pre_refresh_checks_after_1_unit_refreshed(self) -> None:  # type: ignore
+        """Run pre-refresh checks after the first unit has been refreshed."""
         logger.debug("Running pre-refresh checks")
 
-        if any([
+        if any(
+            [
                 self._state.unit.peer_tls.rotation,
                 self._state.unit.client_tls.rotation,
-        ]):
+            ]
+        ):
             raise charm_refresh.PrecheckFailed("TLS CA rotation is in progress")
 
-        for attempt in Retrying(
-                wait=wait_exponential(), stop=stop_after_delay(100), reraise=True
-        ):
+        for attempt in Retrying(wait=wait_exponential(), stop=stop_after_delay(100), reraise=True):
             with attempt:
                 for host in [u.ip for u in self._state.units]:
                     if not self._node_manager.is_healthy(host):
                         raise charm_refresh.PrecheckFailed("Cluster is not healthy")
-            
+
+
 @dataclasses.dataclass(eq=False)
-class MachinesRefresh(Refresh, charm_refresh.CharmSpecificMachines): # type: ignore
+class MachinesRefresh(Refresh, charm_refresh.CharmSpecificMachines):  # type: ignore
     """Refresh handler for Cassandra charm on machines substrate."""
+
     def refresh_snap(
         self,
         *,
@@ -82,6 +85,7 @@ class MachinesRefresh(Refresh, charm_refresh.CharmSpecificMachines): # type: ign
         snap_revision: str,
         refresh: charm_refresh.Machines,
     ) -> None:
+        """Refresh the snap package, restart Cassandra, and handle failures."""
         self._node_manager.prepare_shutdown()
         self._workload.stop()
 
@@ -106,23 +110,24 @@ class MachinesRefresh(Refresh, charm_refresh.CharmSpecificMachines): # type: ign
         self.post_snap_refresh(refresh)
 
     def post_snap_refresh(self, refresh: charm_refresh.Machines) -> None:
+        """Perform health checks after a snap refresh."""        
         logger.debug("Running post-snap-refresh check...")
         try:
             for attempt in Retrying(
-                    wait=wait_exponential(), stop=stop_after_delay(100), reraise=False
+                wait=wait_exponential(), stop=stop_after_delay(100), reraise=False
             ):
                 with attempt:
                     if not self._node_manager.is_healthy(self._state.unit.ip):
                         raise
         except RetryError:
             logger.warning(
-            "Post-snap-refresh check timed out."
-            "Node is unhealthy. Next unit is not allowed to refresh."
+                "Post-snap-refresh check timed out."
+                "Node is unhealthy. Next unit is not allowed to refresh."
             )
             return
 
-        refresh.next_unit_allowed_to_refresh = True        
-        
+        refresh.next_unit_allowed_to_refresh = True
+
 
 def is_workload_compatible(
     old_workload_version: str,
@@ -158,6 +163,4 @@ def is_workload_compatible(
         )
         return False
 
-
     return True
-

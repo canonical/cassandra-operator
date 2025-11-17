@@ -7,23 +7,20 @@ from pathlib import Path
 
 import jubilant
 
-from integration.helpers.juju import get_leader_unit
 from integration.helpers.cassandra import (
     OPERATOR_PASSWORD,
-    assert_rows,
-    prepare_keyspace_and_table,
-    read_n_rows,
-    write_n_rows,
 )
 from integration.helpers.continuous_writes import ContinuousWrites
 from integration.helpers.juju import (
     app_secret_extract,
     get_hosts,
+    get_leader_unit,
     get_unit_address,
- )
+)
 
 logger = logging.getLogger(__name__)
 TEST_ROW_NUM = 100
+
 
 def test_deploy(juju: jubilant.Juju, cassandra_charm: Path, app_name: str) -> None:
     juju.deploy(
@@ -34,13 +31,16 @@ def test_deploy(juju: jubilant.Juju, cassandra_charm: Path, app_name: str) -> No
     )
     juju.wait(jubilant.all_active, timeout=1800)
 
-def test_in_place_refresh(juju: jubilant.Juju, app_name: str, continuous_writes: ContinuousWrites, cassandra_charm: Path) -> None:
+
+def test_in_place_refresh(
+    juju: jubilant.Juju, app_name: str, continuous_writes: ContinuousWrites, cassandra_charm: Path
+) -> None:
     logger.info("Producing writes before refresh")
     continuous_writes.start(
         hosts=get_hosts(juju, app_name),
         password=app_secret_extract(juju, app_name, OPERATOR_PASSWORD),
     )
-    
+
     leader, _ = get_leader_unit(juju, app_name)
 
     continuous_writes.assert_new_writes()
@@ -61,4 +61,3 @@ def test_in_place_refresh(juju: jubilant.Juju, app_name: str, continuous_writes:
     continuous_writes.assert_new_writes(hosts=[get_unit_address(juju, app_name, 1)])
 
     continuous_writes.stop_and_assert_writes(hosts=[get_unit_address(juju, app_name, 2)])
-
