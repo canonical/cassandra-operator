@@ -5,10 +5,7 @@
 """Handler for main Cassandra charm events."""
 
 import logging
-from os import eventfd
 from typing import Callable
-
-from charm_refresh import Machines
 
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from ops import (
@@ -66,7 +63,7 @@ class CassandraEvents(Object):
         node_manager: NodeManager,
         config_manager: ConfigManager,
         tls_manager: TLSManager,
-        refresh_manager: RefreshManager,            
+        refresh_manager: RefreshManager,
         setup_internal_certificates: Callable[[Sans], bool],
         database_manager: DatabaseManager,
         read_auth_secret: Callable[[str], str],
@@ -127,7 +124,7 @@ class CassandraEvents(Object):
             event.defer()
             return
 
-        # don't want to run default start/pebble-ready events during upgrades        
+        # don't want to run default start/pebble-ready events during upgrades
         if self.refresh_manager.in_progress:
             return
 
@@ -207,8 +204,8 @@ class CassandraEvents(Object):
             with attempt:
                 if not self.node_manager.is_healthy(ip="127.0.0.1"):
                     raise Exception("bootstrap timeout exceeded")
-                
-        logger.info("Heath in _start_leader_setup_auth is good")                
+
+        logger.info("Heath in _start_leader_setup_auth is good")
         for attempt in Retrying(wait=wait_fixed(10), stop=stop_after_delay(120), reraise=True):
             with attempt:
                 self.database_manager.init_admin(password)
@@ -241,7 +238,7 @@ class CassandraEvents(Object):
     def _on_config_changed(self, event: ConfigChangedEvent) -> None:
         if not self.refresh_manager.ready:
             return
-        
+
         if not self.state.unit.is_ready:
             logger.debug("Exiting on_config_changed due to unit not being ready")
             return
@@ -275,7 +272,7 @@ class CassandraEvents(Object):
             event.defer()
             return
 
-    def _on_secret_changed(self, event: SecretChangedEvent) -> None:        
+    def _on_secret_changed(self, event: SecretChangedEvent) -> None:
         if not self.charm.unit.is_leader():
             return
 
@@ -370,7 +367,7 @@ class CassandraEvents(Object):
         if not self.refresh_manager.ready:
             logger.error("Refresh manager is not ready")
             return
-        
+
         if self.state.unit.is_operational and not self.workload.is_alive():
             logger.error("Restarting Cassandra service due to unexpected shutdown")
             self.restart()
@@ -399,10 +396,13 @@ class CassandraEvents(Object):
             self.node_manager.remove_bad_nodes([unit.ip for unit in self.state.units])
 
     def _on_collect_unit_status(self, event: CollectStatusEvent) -> None:
-        if self.refresh_manager.is_initialized and self.refresh_manager.unit_status_higher_priority:
+        if (
+            self.refresh_manager.is_initialized
+            and self.refresh_manager.unit_status_higher_priority
+        ):
             event.add_status(self.refresh_manager.unit_status_higher_priority)
             return
-        
+
         try:
             self.charm.config
             self._acquire_operator_password()
@@ -438,7 +438,7 @@ class CassandraEvents(Object):
         if self.refresh_manager.is_initialized and (
             refresh_status := self.refresh_manager.unit_status_lower_priority(
                 workload_is_running=self.workload.is_alive(),
-            )                
+            )
         ):
             event.add_status(refresh_status)
             return

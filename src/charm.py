@@ -5,9 +5,9 @@
 """Charm definition."""
 
 import logging
-import ops.log
-import charm_refresh
 
+import charm_refresh
+import ops.log
 from charms.data_platform_libs.v1.data_interfaces import (
     DataContractV1,
     ResourceProviderModel,
@@ -15,7 +15,6 @@ from charms.data_platform_libs.v1.data_interfaces import (
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from charms.grafana_agent.v0.cos_agent import COSAgentProvider
 from ops import EventBase, ModelError, SecretNotFoundError, main
-
 
 from common.exceptions import BadSecretError, ExecError
 from common.lock_manager import LockManager
@@ -28,16 +27,15 @@ from core.state import (
     ClusterState,
     UnitWorkloadState,
 )
-
 from events.cassandra import CassandraEvents
 from events.provider import ProviderEvents
+from events.refresh import MachinesRefresh
 from events.tls import TLSEvents
 from managers.config import ConfigManager
 from managers.database import DatabaseManager
 from managers.node import NodeManager
-from managers.tls import Sans, TLSManager
 from managers.refresh import RefreshManager
-from events.refresh import MachinesRefresh, Refresh
+from managers.tls import Sans, TLSManager
 from workload import SNAP_NAME, CassandraWorkload
 
 logger = logging.getLogger(__name__)
@@ -57,7 +55,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         root_logger = logging.getLogger()
         for handler in root_logger.handlers:
             if isinstance(handler, ops.log.JujuLogHandler):
-                handler.setFormatter(logging.Formatter("{name}:{message}", style="{"))        
+                handler.setFormatter(logging.Formatter("{name}:{message}", style="{"))
 
         self.on.define_event("bootstrap", EventBase)
         self.framework.observe(self.on.bootstrap, self._on_bootstrap)
@@ -69,16 +67,14 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
 
         try:
             self.refresh = MachinesRefresh(
-                    workload_name="charmed-cassandra",
-                    charm_name="cassandra",
-                    _state=self.state,
-                    _workload=self.workload,
-                    _node_manager=self.node_manager,
-                )
+                workload_name="charmed-cassandra",
+                charm_name="cassandra",
+                _state=self.state,
+                _workload=self.workload,
+                _node_manager=self.node_manager,
+            )
 
-            self.refresh_manager = RefreshManager(charm_refresh.Machines(
-                self.refresh
-            ))
+            self.refresh_manager = RefreshManager(charm_refresh.Machines(self.refresh))
 
         except (charm_refresh.PeerRelationNotReady, charm_refresh.UnitTearingDown):
             self.refresh_manager = RefreshManager(None)
@@ -146,15 +142,17 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             log_slots=[f"{SNAP_NAME}:logs"],
         )
 
-        if self.refresh_manager.is_initialized and not self.refresh_manager.next_unit_allowed_to_refresh:
+        if (
+            self.refresh_manager.is_initialized
+            and not self.refresh_manager.next_unit_allowed_to_refresh
+        ):
             # Only proceed if snap is installed (avoids KeyError during initial deployment)
             if self.workload.installed and self.workload.is_alive():
                 self.refresh.post_snap_refresh(self.refresh_manager)
-        
 
     def _on_bootstrap(self, event: EventBase) -> None:
         if self._handle_starting_state(event):
-            logger.info("Defering _on_bootstrap")                            
+            logger.info("Deferring _on_bootstrap")
             event.defer()
             return
 
@@ -176,7 +174,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             logger.debug("Deferring on_bootstrap due to workload not being healthy yet")
             event.defer()
             return
-        logger.info("Heath in _on_bootstrap is good")                
+        logger.info("Heath in _on_bootstrap is good")
 
         logger.debug("Releasing the exclusive lock after successful bootstrap")
         self.bootstrap_manager.release()
