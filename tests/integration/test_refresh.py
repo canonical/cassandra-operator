@@ -62,35 +62,3 @@ def test_in_place_refresh(juju: jubilant.Juju, app_name: str, continuous_writes:
 
     continuous_writes.stop_and_assert_writes(hosts=[get_unit_address(juju, app_name, 2)])
 
-def test_unit_failure_after_refresh(juju: jubilant.Juju, app_name: str, continuous_writes: ContinuousWrites, cassandra_charm: Path) -> None:
-    logger.info("Producing writes before refresh")
-    continuous_writes.start(
-        hosts=get_hosts(juju, app_name),
-        password=app_secret_extract(juju, app_name, OPERATOR_PASSWORD),
-    )
-    
-    leader, _ = get_leader_unit(juju, app_name)
-
-    continuous_writes.assert_new_writes()
-
-    logger.info("Calling pre-refresh-check")
-    res = juju.run(leader, "pre-refresh-check")
-    assert res.success
-
-    logger.info("Refreshing Cassandra")
-    juju.refresh(app_name, path=cassandra_charm)
-    juju.wait(
-        ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
-        delay=3,
-        successes=5,
-        timeout=1800,
-    )
-
-    continuous_writes.assert_new_writes(hosts=[get_unit_address(juju, app_name, 1)])
-
-    continuous_writes.stop_and_assert_writes(hosts=[get_unit_address(juju, app_name, 2)])
-    
-
-    
-    
-    
