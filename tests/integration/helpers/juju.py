@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 CLIENT_CA_CERT = "client-ca-cert-secret"
 DEFAULT_MICROK8S_CHANNEL = "1.32-strict/stable"
-
+REVISION_TO_DEPLOY = 71
 
 @tenacity.retry(
     retry=tenacity.retry_if_exception_type(AssertionError),

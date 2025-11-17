@@ -38,7 +38,8 @@ from managers.config import ConfigManager
 from managers.database import DatabaseManager
 from managers.node import NodeManager
 from managers.tls import Sans, TLSManager
-from managers.refresh import MachinesRefresh, RefreshManager
+from managers.refresh import RefreshManager
+from events.refresh import MachinesRefresh, Refresh
 from workload import SNAP_NAME, CassandraWorkload
 
 logger = logging.getLogger(__name__)
@@ -72,13 +73,15 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             self.refresh = MachinesRefresh(
                     workload_name="charmed-cassandra",
                     charm_name="cassandra",
-                    _hosts=[u.ip for u in self.state.units],
+                    _state=self.state,
                     _workload=self.workload,
                     _node_manager=self.node_manager,
                 )
+
             self.refresh_manager = RefreshManager(charm_refresh.Machines(
                 self.refresh
             ))
+
         except (charm_refresh.PeerRelationNotReady, charm_refresh.UnitTearingDown):
             self.refresh_manager = RefreshManager(None)
 
@@ -153,6 +156,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
 
     def _on_bootstrap(self, event: EventBase) -> None:
         if self._handle_starting_state(event):
+            logger.info("Defering _on_bootstrap")                            
             event.defer()
             return
 
@@ -164,10 +168,12 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             self.bootstrap_manager.release()
             return
 
+        logger.info("Trying to check heath in _on_bootstrap")        
         if not self.node_manager.is_healthy(ip=self.state.unit.ip):
             logger.debug("Deferring on_bootstrap due to workload not being healthy yet")
             event.defer()
             return
+        logger.info("Heath in _on_bootstrap is good")                
 
         logger.debug("Releasing the exclusive lock after successful bootstrap")
         self.bootstrap_manager.release()
