@@ -110,7 +110,7 @@ class MachinesRefresh(Refresh, charm_refresh.CharmSpecificMachines):  # type: ig
         self.post_snap_refresh(refresh)
 
     def post_snap_refresh(self, refresh: charm_refresh.Machines) -> None:
-        """Perform health checks after a snap refresh."""        
+        """Perform health checks after a snap refresh."""
         logger.debug("Running post-snap-refresh check...")
         try:
             for attempt in Retrying(
