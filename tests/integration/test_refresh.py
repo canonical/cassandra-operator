@@ -9,6 +9,7 @@ import jubilant
 
 logger = logging.getLogger(__name__)
 
+
 def test_deploy(juju: jubilant.Juju, cassandra_charm: Path, app_name: str) -> None:
     juju.deploy(
         cassandra_charm,
