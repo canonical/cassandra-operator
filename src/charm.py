@@ -6,7 +6,6 @@
 
 import logging
 
-import charm_refresh
 import ops.log
 from charms.data_platform_libs.v1.data_interfaces import (
     DataContractV1,

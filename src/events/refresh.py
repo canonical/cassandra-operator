@@ -9,12 +9,6 @@ import logging
 
 import charm_refresh
 from charms.operator_libs_linux.v2 import snap
-from tenacity import (
-    RetryError,
-    Retrying,
-    stop_after_delay,
-    wait_exponential,
-)
 
 from core.state import ApplicationState
 from core.workload import WorkloadBase
@@ -60,11 +54,9 @@ class Refresh(charm_refresh.CharmSpecificCommon, abc.ABC):
         ):
             raise charm_refresh.PrecheckFailed("TLS CA rotation is in progress")
 
-        for attempt in Retrying(wait=wait_exponential(), stop=stop_after_delay(100), reraise=True):
-            with attempt:
-                for host in [u.ip for u in self._state.units]:
-                    if not self._node_manager.is_healthy(host):
-                        raise charm_refresh.PrecheckFailed("Cluster is not healthy")
+        for host in [u.ip for u in self._state.units]:
+            if not self._node_manager.is_healthy(host, retry=True):
+                raise charm_refresh.PrecheckFailed("Cluster is not healthy")
 
 
 @dataclasses.dataclass(eq=False)
@@ -107,14 +99,7 @@ class MachinesRefresh(Refresh, charm_refresh.CharmSpecificMachines):  # type: ig
     def post_snap_refresh(self, refresh: charm_refresh.Machines) -> None:
         """Perform health checks after a snap refresh."""
         logger.debug("Running post-snap-refresh check...")
-        try:
-            for attempt in Retrying(
-                wait=wait_exponential(), stop=stop_after_delay(100), reraise=False
-            ):
-                with attempt:
-                    if not self._node_manager.is_healthy(self._state.unit.ip):
-                        raise
-        except RetryError:
+        if not self._node_manager.is_healthy(self._state.unit.ip, retry=True):
             logger.warning(
                 "Post-snap-refresh check timed out."
                 "Node is unhealthy. Next unit is not allowed to refresh."
