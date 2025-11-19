@@ -67,6 +67,7 @@ class CassandraWorkload(WorkloadBase):
         self._cassandra_snap.connect("mount-observe")
         self._cassandra_snap.hold()
 
+    @property
     @override
     def is_alive(self) -> bool:
         try:
