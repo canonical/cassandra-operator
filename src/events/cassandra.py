@@ -396,12 +396,12 @@ class CassandraEvents(Object):
             self.node_manager.remove_bad_nodes([unit.ip for unit in self.state.units])
 
     def _on_collect_unit_status(self, event: CollectStatusEvent) -> None:
-        if (
-            self.refresh_manager.is_initialized
-            and self.refresh_manager.unit_status_higher_priority
-        ):
-            event.add_status(self.refresh_manager.unit_status_higher_priority)
-            return
+        if self.refresh_manager.is_initialized:
+            if self.refresh_manager.unit_status_higher_priority:
+                event.add_status(self.refresh_manager.unit_status_higher_priority)
+                return
+            if status := self.refresh_manager.unit_status_lower_priority():
+                event.add_status(status)
 
         try:
             self.charm.config
@@ -459,6 +459,11 @@ class CassandraEvents(Object):
             event.add_status(Status.WAITING_FOR_TLS.value)
 
     def _on_collect_app_status(self, event: CollectStatusEvent) -> None:
+        if self.refresh_manager.is_initialized:
+            if self.refresh_manager.app_status_higher_priority:
+                event.add_status(self.refresh_manager.app_status_higher_priority)
+                return
+
         try:
             self.charm.config
             self._acquire_operator_password()

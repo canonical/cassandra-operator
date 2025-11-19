@@ -42,15 +42,9 @@ class Refresh(charm_refresh.CharmSpecificCommon, abc.ABC):
         new_workload_version: str,
     ) -> bool:
         """Check charm and workload version compatibility."""
-        if not super().is_compatible(
+        return super().is_compatible(
             old_charm_version=old_charm_version,
             new_charm_version=new_charm_version,
-            old_workload_version=old_workload_version,
-            new_workload_version=new_workload_version,
-        ):
-            return False
-
-        return is_workload_compatible(
             old_workload_version=old_workload_version,
             new_workload_version=new_workload_version,
         )
@@ -91,8 +85,10 @@ class MachinesRefresh(Refresh, charm_refresh.CharmSpecificMachines):  # type: ig
 
         revision_before_refresh = snap.SnapCache()[snap_name].revision
         assert snap_revision != revision_before_refresh
-        if not self._workload.install():
-            logger.exception("Snap refresh failed")
+        try:
+            self._workload.install()
+        except snap.SnapError as e:
+            logger.exception(f"Snap refresh failed: {e}")
 
             revision_after_refresh = snap.SnapCache()[snap_name].revision
 
@@ -101,8 +97,8 @@ class MachinesRefresh(Refresh, charm_refresh.CharmSpecificMachines):  # type: ig
             else:
                 refresh.update_snap_revision()
             raise CassandraRefreshError
-
-        refresh.update_snap_revision()
+        else:
+            refresh.update_snap_revision()
 
         logger.info(f"Upgrading {snap_name} service...")
         self._workload.restart()
@@ -127,40 +123,3 @@ class MachinesRefresh(Refresh, charm_refresh.CharmSpecificMachines):  # type: ig
             return
 
         refresh.next_unit_allowed_to_refresh = True
-
-
-def is_workload_compatible(
-    old_workload_version: str,
-    new_workload_version: str,
-) -> bool:
-    """Check if the workload versions are compatible."""
-    try:
-        old_major, old_minor, *_ = (
-            int(component) for component in old_workload_version.split(".")
-        )
-        new_major, new_minor, *_ = (
-            int(component) for component in new_workload_version.split(".")
-        )
-    except ValueError:
-        # Not enough values to unpack or cannot convert
-        logger.info(
-            "Unable to parse workload versions."
-            f"Got {old_workload_version} to {new_workload_version}"
-        )
-        return False
-
-    if old_major != new_major:
-        logger.info(
-            "Refreshing to a different major workload is not supported. "
-            f"Got {old_major} to {new_major}"
-        )
-        return False
-
-    if not new_minor >= old_minor:
-        logger.info(
-            "Downgrading to a previous minor workload is not supported. "
-            f"Got {old_major}.{old_minor} to {new_major}.{new_minor}"
-        )
-        return False
-
-    return True
