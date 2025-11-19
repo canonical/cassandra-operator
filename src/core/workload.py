@@ -105,6 +105,7 @@ class WorkloadBase(ABC):
         """Whether Cassandra is installed."""
         pass
 
+    @property
     @abstractmethod
     def is_alive(self) -> bool:
         """Whether Cassandra service running."""

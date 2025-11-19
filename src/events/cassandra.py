@@ -368,7 +368,7 @@ class CassandraEvents(Object):
             logger.error("Refresh manager is not ready")
             return
 
-        if self.state.unit.is_operational and not self.workload.is_alive():
+        if self.state.unit.is_operational and not self.workload.is_alive:
             logger.error("Restarting Cassandra service due to unexpected shutdown")
             self.restart()
             return
@@ -437,7 +437,7 @@ class CassandraEvents(Object):
 
         if self.refresh_manager.is_initialized and (
             refresh_status := self.refresh_manager.unit_status_lower_priority(
-                workload_is_running=self.workload.is_alive(),
+                workload_is_running=self.workload.is_alive,
             )
         ):
             event.add_status(refresh_status)

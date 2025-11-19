@@ -142,7 +142,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             and not self.refresh_manager.next_unit_allowed_to_refresh
         ):
             # Only proceed if snap is installed (avoids KeyError during initial deployment)
-            if self.workload.installed and self.workload.is_alive():
+            if self.workload.installed and self.workload.is_alive:
                 self.refresh.post_snap_refresh(self.refresh_manager)
 
     def _on_bootstrap(self, event: EventBase) -> None:
@@ -187,7 +187,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             self.state.cluster.state = ClusterState.ACTIVE
 
     def _on_bootstrap_pending_check(self) -> bool:
-        if not self.workload.is_alive():
+        if not self.workload.is_alive:
             logger.error("Cassandra service abruptly stopped during bootstrap")
             return False
 
@@ -208,7 +208,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
 
         if self.bootstrap_manager.try_lock():
             logger.debug("Bootstrap lock is acquired")
-            if self.workload.is_alive():
+            if self.workload.is_alive:
                 logger.debug("Gracefully shutting down an active workload")
                 try:
                     self.node_manager.prepare_shutdown()
