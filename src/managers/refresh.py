@@ -13,12 +13,13 @@ logger = logging.getLogger(__name__)
 class RefreshManager(charm_refresh.Machines):
     """Extended charm_refresh.Machines that allows None initialization and custom methods."""
 
-    def __init__(self, refresh: charm_refresh.Machines | None = None):
+    def __init__(self, refresh_specific: charm_refresh.CharmSpecificMachines):
         """Initialize the manager optionally using an existing refresh object."""
-        if refresh is not None:
+        try:
+            refresh = charm_refresh.Machines(refresh_specific)
             self.__dict__.update(refresh.__dict__)
             self._refresh_initialized = True
-        else:
+        except (charm_refresh.PeerRelationNotReady, charm_refresh.UnitTearingDown):
             self._refresh_initialized = False
 
     @property
