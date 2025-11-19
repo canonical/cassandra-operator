@@ -9,6 +9,8 @@ import re
 import socket
 from dataclasses import dataclass
 
+from tenacity import Retrying, stop_after_delay, wait_exponential
+
 from common.exceptions import ExecError
 from core.workload import WorkloadBase
 
@@ -32,15 +34,31 @@ class NodeManager:
     def __init__(self, workload: WorkloadBase):
         self._workload = workload
 
-    def is_healthy(self, ip: str) -> bool:
-        """Whether Cassandra healthy and ready in this unit."""
-        if not self._is_in_cluster(ip):
-            return False
-        if not self._is_gossip_ready:
-            return False
-        if not self._is_gossip_active:
-            return False
-        return True
+    def is_healthy(self, ip: str, retry: bool = False, timeout: int = 100) -> bool:
+        """Whether Cassandra healthy and ready in this unit. Can retry if requested."""
+
+        def _check() -> bool:
+            if not self._is_in_cluster(ip):
+                return False
+            if not self._is_gossip_ready:
+                return False
+            if not self._is_gossip_active:
+                return False
+            return True
+
+        if not retry:
+            return _check()
+
+        for attempt in Retrying(
+            wait=wait_exponential(),
+            stop=stop_after_delay(timeout),
+            reraise=False,
+        ):
+            with attempt:
+                if _check():
+                    return True
+
+        return False
 
     @property
     def is_bootstrap_pending(self) -> bool:

@@ -396,12 +396,8 @@ class CassandraEvents(Object):
             self.node_manager.remove_bad_nodes([unit.ip for unit in self.state.units])
 
     def _on_collect_unit_status(self, event: CollectStatusEvent) -> None:
-        if self.refresh_manager.is_initialized:
-            if self.refresh_manager.unit_status_higher_priority:
-                event.add_status(self.refresh_manager.unit_status_higher_priority)
-                return
-            if status := self.refresh_manager.unit_status_lower_priority():
-                event.add_status(status)
+        if self._handle_refresh_high_priority(event):
+            return
 
         try:
             self.charm.config
@@ -435,15 +431,36 @@ class CassandraEvents(Object):
         if self.state.cluster.auth_repair != AuthRepairState.UNPLANNED:
             event.add_status(Status.REPAIRING_AUTH.value)
 
-        if self.refresh_manager.is_initialized and (
-            refresh_status := self.refresh_manager.unit_status_lower_priority(
-                workload_is_running=self.workload.is_alive(),
-            )
-        ):
-            event.add_status(refresh_status)
+        if self._handle_refresh_manager_low_priority(event):
             return
 
         event.add_status(Status.ACTIVE.value)
+
+    def _handle_refresh_high_priority(self, event: CollectStatusEvent) -> bool:
+        if not self.refresh_manager.is_initialized:
+            return False
+
+        if self.refresh_manager.unit_status_higher_priority:
+            event.add_status(self.refresh_manager.unit_status_higher_priority)
+            return True
+
+        if status := self.refresh_manager.unit_status_lower_priority():
+            event.add_status(status)
+
+        return False
+
+    def _handle_refresh_manager_low_priority(self, event: CollectStatusEvent) -> bool:
+        if not self.refresh_manager.is_initialized:
+            return False
+
+        refresh_status = self.refresh_manager.unit_status_lower_priority(
+            workload_is_running=self.workload.is_alive(),
+        )
+        if refresh_status:
+            event.add_status(refresh_status)
+            return True
+
+        return False
 
     def _collect_unit_tls_status(self, event: CollectStatusEvent) -> None:
         if self.state.unit.peer_tls.ready and self.state.unit.peer_tls.rotation:

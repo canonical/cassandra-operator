@@ -9,6 +9,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Iterable
+from unittest.mock import MagicMock
 
 from charms.tls_certificates_interface.v4.tls_certificates import (
     Certificate,
@@ -125,3 +126,14 @@ def get_secrets_latest_content_by_label(
                 if secret.latest_content:
                     result.update(secret.latest_content)
     return result
+
+
+def make_refresh_like():
+    m = MagicMock()
+    m.in_progress = False
+    m.next_unit_allowed_to_refresh = True
+    m.workload_allowed_to_start = True
+    m.app_status_higher_priority = False
+    m.unit_status_higher_priority = False
+    m.unit_status_lower_priority.return_value = False
+    return m
