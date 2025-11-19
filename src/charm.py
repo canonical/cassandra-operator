@@ -65,19 +65,14 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         self.node_manager = NodeManager(workload=self.workload)
         self.tls_manager = TLSManager(workload=self.workload)
 
-        try:
-            self.refresh = MachinesRefresh(
-                workload_name="charmed-cassandra",
-                charm_name="cassandra",
-                _state=self.state,
-                _workload=self.workload,
-                _node_manager=self.node_manager,
-            )
-
-            self.refresh_manager = RefreshManager(charm_refresh.Machines(self.refresh))
-
-        except (charm_refresh.PeerRelationNotReady, charm_refresh.UnitTearingDown):
-            self.refresh_manager = RefreshManager(None)
+        self.refresh = MachinesRefresh(
+            workload_name="charmed-cassandra",
+            charm_name="cassandra",
+            _state=self.state,
+            _workload=self.workload,
+            _node_manager=self.node_manager,
+        )
+        self.refresh_manager = RefreshManager(self.refresh)
 
         config_manager = ConfigManager(
             workload=self.workload,

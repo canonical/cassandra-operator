@@ -16,7 +16,6 @@ from tenacity import (
     wait_exponential,
 )
 
-from common.exceptions import CassandraRefreshError
 from core.state import ApplicationState
 from core.workload import WorkloadBase
 from managers.node import NodeManager
@@ -96,7 +95,7 @@ class MachinesRefresh(Refresh, charm_refresh.CharmSpecificMachines):  # type: ig
                 self._workload.start()
             else:
                 refresh.update_snap_revision()
-            raise CassandraRefreshError
+            raise
         else:
             refresh.update_snap_revision()
 
