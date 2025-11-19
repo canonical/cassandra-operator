@@ -27,12 +27,12 @@ def snap_cache(service: bool = False) -> Generator[MagicMock, None, None]:
 
 def test_alive_true_if_service_active():
     with snap_cache(service=True):
-        assert CassandraWorkload().is_alive()
+        assert CassandraWorkload().is_alive
 
 
 def test_alive_false_if_service_missing():
     with snap_cache():
-        assert not CassandraWorkload().is_alive()
+        assert not CassandraWorkload().is_alive
 
 
 def test_exec_successful_command_returns_output():
