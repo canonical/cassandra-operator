@@ -264,7 +264,17 @@ class TLSContext(RelationState):
         ca = self.ca
         if not cert or not ca:
             return []
-        return list(dict.fromkeys([cert, ca] + self.chain))
+
+        certs = [cert, ca] + self.chain
+        unique = []
+        seen = set()
+
+        for c in certs:
+            if c.raw not in seen:
+                seen.add(c.raw)
+                unique.append(c)
+
+        return unique
 
     @property
     def rotation(self) -> bool:
@@ -615,11 +625,11 @@ class ApplicationState(Object):
             additional_secret_fields=unit_additional_secret_fields,
         )
         self.client_interface = RepositoryInterface(
-            charm,
+            charm.model,
             relation_name=CLIENT_RELATION,
             component=charm.app,
             repository_type=OpsRelationRepository,
-            model=RequirerCommonModel,
+            data_model=RequirerCommonModel,
         )
 
     @property
