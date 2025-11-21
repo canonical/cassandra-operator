@@ -280,7 +280,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             )
 
             for request in model.requests:
-                request.tls = (self.state.unit.client_tls.ready)
+                request.tls = self.state.unit.client_tls.ready
                 request.tls_ca = (
                     self.state.unit.client_tls.ca.raw if self.state.unit.client_tls.ca else ""
                 )

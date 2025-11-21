@@ -182,9 +182,7 @@ class ApplicationCharm(CharmBase):
         response: ResourceProviderModel = event.response
 
         rolename = response.entity_name if response.entity_name else None
-        password = (
-            response.entity_password if response.entity_password else None
-        )
+        password = response.entity_password if response.entity_password else None
 
         if not rolename or not password:
             raise Exception("No rolename or password provided in _on_keyspace_created")

@@ -123,9 +123,7 @@ class ProviderEvents(Object):
             request_id=request.request_id,
             endpoints=",".join([f"{unit.ip}" for unit in self.state.units]),
             tls=self.state.unit.client_tls.ready,
-            tls_ca=(
-                self.state.unit.client_tls.ca.raw if self.state.unit.client_tls.ca else ""
-            ),
+            tls_ca=(self.state.unit.client_tls.ca.raw if self.state.unit.client_tls.ca else ""),
             version="v1",
         )
 
@@ -184,9 +182,7 @@ class ProviderEvents(Object):
             entity_password=password,
             endpoints=",".join([f"{unit.ip}" for unit in self.state.units]),
             tls=self.state.unit.client_tls.ready,
-            tls_ca=(
-                self.state.unit.client_tls.ca.raw if self.state.unit.client_tls.ca else ""
-            ),
+            tls_ca=(self.state.unit.client_tls.ca.raw if self.state.unit.client_tls.ca else ""),
             version="v1",
         )
 
@@ -239,9 +235,7 @@ class ProviderEvents(Object):
             username=(rolename),
             endpoints=",".join([f"{unit.ip}" for unit in self.state.units]),
             tls=self.state.unit.client_tls.ready,
-            tls_ca=(
-                self.state.unit.client_tls.ca.raw if self.state.unit.client_tls.ca else ""
-            ),
+            tls_ca=(self.state.unit.client_tls.ca.raw if self.state.unit.client_tls.ca else ""),
         )
 
         self.cassandra_client.set_response(relation_id, response)

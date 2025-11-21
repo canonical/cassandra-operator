@@ -259,21 +259,21 @@ class TLSContext(RelationState):
         """The cert bundle used for TLS identity."""
         if not all([self.certificate, self.ca]):
             return []
-    
+
         cert = self.certificate
         ca = self.ca
         if not cert or not ca:
             return []
-    
+
         certs = [cert, ca] + self.chain
         unique = []
         seen = set()
-    
+
         for c in certs:
             if c.raw not in seen:
                 seen.add(c.raw)
                 unique.append(c)
-    
+
         return unique
 
     @property
