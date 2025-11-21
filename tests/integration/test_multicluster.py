@@ -10,13 +10,15 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import jubilant
-from helpers import (
+
+from integration.helpers.cassandra import (
+    OPERATOR_PASSWORD,
     assert_rows,
-    get_leader_unit,
     prepare_keyspace_and_table,
     read_n_rows,
     write_n_rows,
 )
+from integration.helpers.juju import app_secret_extract, get_leader_unit, get_unit_address
 
 logger = logging.getLogger(__name__)
 
@@ -73,54 +75,52 @@ def test_writes_not_replicated(juju: jubilant.Juju, app_name: str) -> None:
 
     # Writing unique data into each cluster
     for i, cluster in enumerate(fed):
-        leader = get_leader_unit(juju, cluster.app_name)
+        leader, _ = get_leader_unit(juju, cluster.app_name)
+        leader_hosts = [get_unit_address(juju, cluster.app_name, leader)]
+        password = app_secret_extract(juju, cluster.app_name, OPERATOR_PASSWORD)
         logger.info(f"Preparing keyspace/table on {cluster.app_name} leader {leader}")
-        prepare_keyspace_and_table(juju, cluster.app_name, unit_name=leader, ks=ks, table=tbl)
+        prepare_keyspace_and_table(hosts=leader_hosts, password=password, ks=ks, table=tbl)
 
         logger.info(f"Writing {cluster_rows[i]} rows to {cluster.app_name}")
         rows = write_n_rows(
-            juju,
-            cluster.app_name,
+            hosts=leader_hosts,
+            password=password,
             ks=ks,
             table=tbl,
-            unit_name=leader,
             n=cluster_rows[i],
         )
         cluster_wrote_rows.append(rows)
 
     # Verifying each cluster can read its own data
     for i, cluster in enumerate(fed):
-        leader = get_leader_unit(juju, cluster.app_name)
+        leader, _ = get_leader_unit(juju, cluster.app_name)
         got_rows = read_n_rows(
-            juju,
-            cluster.app_name,
+            hosts=[get_unit_address(juju, cluster.app_name, leader)],
+            password=app_secret_extract(juju, cluster.app_name, OPERATOR_PASSWORD),
             ks=ks,
             table=tbl,
-            unit_name=leader,
             n=cluster_rows[i],
         )
         logger.info(f"Cluster {cluster.app_name} read {len(got_rows)} rows.")
         assert_rows(cluster_wrote_rows[i], got_rows)
 
     # Ensuring no cross-cluster replication
-    leader_0 = get_leader_unit(juju, fed[0].app_name)
+    leader_0, _ = get_leader_unit(juju, fed[0].app_name)
     got_0 = read_n_rows(
-        juju,
-        fed[0].app_name,
+        hosts=[get_unit_address(juju, fed[0].app_name, leader_0)],
+        password=app_secret_extract(juju, fed[0].app_name, OPERATOR_PASSWORD),
         ks=ks,
         table=tbl,
-        unit_name=leader_0,
         n=cluster_rows[1],
     )
     assert got_0 == {}, f"Unexpected rows from cluster 1 visible in cluster 0: {got_0}"
 
-    leader_1 = get_leader_unit(juju, fed[1].app_name)
+    leader_1, _ = get_leader_unit(juju, fed[1].app_name)
     got_1 = read_n_rows(
-        juju,
-        fed[1].app_name,
+        hosts=[get_unit_address(juju, fed[1].app_name, leader_1)],
+        password=app_secret_extract(juju, fed[1].app_name, OPERATOR_PASSWORD),
         ks=ks,
         table=tbl,
-        unit_name=leader_1,
         n=cluster_rows[0],
     )
     assert got_1 == {}, f"Unexpected rows from cluster 0 visible in cluster 1: {got_1}"

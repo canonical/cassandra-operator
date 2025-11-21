@@ -279,6 +279,6 @@ class ConfigManager:
                 "cached_rows_warn_threshold": 2000,
             },
             "role_manager": "CassandraRoleManager",
-            "storage_compatibility_mode": "CASSANDRA_4",
+            "storage_compatibility_mode": "NONE",
             "storage_port": 7000,
         }
