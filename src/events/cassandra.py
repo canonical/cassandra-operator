@@ -352,16 +352,22 @@ class CassandraEvents(Object):
             self.restart()
             return
 
-        if self.state.unit.is_operational and self._update_network_address():
+        if not self.state.unit.is_operational:
+            logger.debug("Exiting on_update_status due to unit not being operational")
+            return
+
+        if self._update_network_address():
             if self.charm.unit.is_leader():
                 self.state.seed_units = self.state.unit
-
             self.config_manager.render_cassandra_config(
                 listen_address=self.state.unit.ip,
                 seeds=self.state.cluster.seeds,
             )
-
             self.restart()
+            return
+
+        if self.charm.unit.is_leader():
+            self.node_manager.remove_bad_nodes([unit.ip for unit in self.state.units])
 
     def _on_collect_unit_status(self, event: CollectStatusEvent) -> None:
         try:
@@ -488,7 +494,7 @@ class CassandraEvents(Object):
             logger.debug("Deferring on_peer_relation_departed due to unit not being operational")
             event.defer()
             return
-        if (n := self.node_manager.active_cluster_nodes_count) != self.charm.app.planned_units():
+        if not self.node_manager.ensure_cluster_topology(n := self.charm.app.planned_units()):
             event.defer()
             return
         self.database_manager.update_system_auth_replication_factor(min(n, 3))
