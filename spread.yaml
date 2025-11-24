@@ -100,7 +100,6 @@ kill-timeout: 1h
 environment:
   PATH: $PATH:$(pipx environment --value PIPX_BIN_DIR)
   CONCIERGE_JUJU_CHANNEL/juju36: 3.6/stable
-  CONCIERGE_JUJU_CHANNEL/juju35: 3.5/stable
 prepare: |
   snap refresh --hold
   chown -R root:root "$SPREAD_PATH"
