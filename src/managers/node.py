@@ -5,6 +5,7 @@
 """Cluster manager."""
 
 import logging
+import re
 import socket
 from dataclasses import dataclass
 
@@ -13,7 +14,7 @@ from core.workload import WorkloadBase
 
 logger = logging.getLogger(__name__)
 
-_NODETOOL = "charmed-cassandra.nodetool"
+NODETOOL = "charmed-cassandra.nodetool"
 
 
 @dataclass
@@ -45,7 +46,7 @@ class NodeManager:
     def is_bootstrap_pending(self) -> bool:
         """Whether `nodetool info` bootstrap state is NEEDS_BOOTSTRAP."""
         try:
-            stdout, _ = self._workload.exec([_NODETOOL, "info"], suppress_error_log=True)
+            stdout, _ = self._workload.exec([NODETOOL, "info"], suppress_error_log=True)
             return "Bootstrap state        : NEEDS_BOOTSTRAP" in stdout
         except ExecError:
             return False
@@ -54,7 +55,7 @@ class NodeManager:
     def is_bootstrap_in_unknown_state(self) -> bool:
         """Whether `nodetool info` bootstrap state is not IN_PROGRESS or COMPLETED."""
         try:
-            stdout, _ = self._workload.exec([_NODETOOL, "info"], suppress_error_log=True)
+            stdout, _ = self._workload.exec([NODETOOL, "info"], suppress_error_log=True)
             return (
                 "Bootstrap state        : IN_PROGRESS" not in stdout
                 and "Bootstrap state        : COMPLETED" not in stdout
@@ -66,11 +67,11 @@ class NodeManager:
     def is_bootstrap_decommissioning(self) -> bool:
         """Check if the node is in the process of, or has completed, decommissioning."""
         try:
-            stdout, _ = self._workload.exec([_NODETOOL, "info"], suppress_error_log=True)
+            stdout, _ = self._workload.exec([NODETOOL, "info"], suppress_error_log=True)
             if "Bootstrap state        : DECOMMISSIONED" in stdout:
                 return True
 
-            stdout, _ = self._workload.exec([_NODETOOL, "info"], suppress_error_log=True)
+            stdout, _ = self._workload.exec([NODETOOL, "info"], suppress_error_log=True)
             return "Decommissioning        : true" in stdout
 
         except ExecError:
@@ -88,37 +89,63 @@ class NodeManager:
             whether operation was successful.
         """
         try:
-            self._workload.exec([_NODETOOL, "bootstrap", "resume"])
+            self._workload.exec([NODETOOL, "bootstrap", "resume"])
             return True
         except ExecError:
             return False
 
     def prepare_shutdown(self) -> None:
         """Prepare Cassandra unit for safe shutdown using nodetool drain command."""
-        self._workload.exec([_NODETOOL, "drain"])
+        self._workload.exec([NODETOOL, "drain"])
 
     def decommission(self) -> None:
         """Disconnect node from the cluster using nodetool decommission command."""
-        self._workload.exec([_NODETOOL, "decommission", "-f"])
+        self._workload.exec([NODETOOL, "decommission", "-f"])
 
-    @property
-    def active_cluster_nodes_count(self) -> int:
-        """Number of an active cluster nodes."""
+    def ensure_cluster_topology(self, nodes: int) -> bool:
+        """Check stability & consistency of the cluster topology using nodetool status command.
+
+        Returns:
+            whether the cluster topology is stable and consistent with provided nodes count.
+        """
         try:
-            stdout, _ = self._workload.exec([_NODETOOL, "status"], suppress_error_log=True)
-            return stdout.count("UN  ")
+            stdout, _ = self._workload.exec([NODETOOL, "status"], suppress_error_log=True)
+            if "DN  " in stdout:
+                return False
+            return stdout.count("UN  ") == nodes
         except ExecError:
-            return 0
+            return False
+
+    def remove_bad_nodes(self, good_node_ips: list[str]) -> None:
+        """Remove unknown nodes in down state using nodetool removenode command."""
+        try:
+            status_stdout, _ = self._workload.exec([NODETOOL, "status"])
+        except ExecError:
+            return
+
+        down_nodes = re.findall(
+            r"^DN  (\S+)\s+(?:\?|\S+\s+\S+)(?:\s+\S+){2}\s+(\S+).+$", status_stdout, re.MULTILINE
+        )
+
+        for down_node in down_nodes:
+            ip, host_id = down_node
+            if ip in good_node_ips:
+                continue
+            try:
+                self._workload.exec([NODETOOL, "removenode", host_id])
+                logger.info(f"Removed bad node {ip} from Cassandra cluster")
+            except ExecError:
+                logger.error(f"Failed to remove bad node {ip} from Cassandra cluster")
 
     def repair_auth(self) -> None:
         """Run full repair on system_auth keyspace."""
-        self._workload.exec([_NODETOOL, "repair", "system_auth", "--full"])
+        self._workload.exec([NODETOOL, "repair", "system_auth", "--full"])
 
     def _is_in_cluster(self, ip: str) -> bool:
         if not ip:
             return False
         try:
-            stdout, _ = self._workload.exec([_NODETOOL, "status"], suppress_error_log=True)
+            stdout, _ = self._workload.exec([NODETOOL, "status"], suppress_error_log=True)
             return f"UN  {ip}" in stdout
         except ExecError:
             return False
@@ -126,7 +153,7 @@ class NodeManager:
     @property
     def _is_gossip_active(self) -> bool:
         try:
-            stdout, _ = self._workload.exec([_NODETOOL, "info"], suppress_error_log=True)
+            stdout, _ = self._workload.exec([NODETOOL, "info"], suppress_error_log=True)
             return "Gossip active          : true" in stdout
         except ExecError:
             return False
@@ -149,7 +176,7 @@ class NodeManager:
         { <IP>: GossipNode, ... }
         """
         try:
-            text, _ = self._workload.exec([_NODETOOL, "gossipinfo"], suppress_error_log=True)
+            text, _ = self._workload.exec([NODETOOL, "gossipinfo"], suppress_error_log=True)
         except ExecError:
             return {}
 
