@@ -128,6 +128,11 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             self.bootstrap_manager.release()
             return
 
+        if self.node_manager.is_bootstrap_pending:
+            logger.debug("Deferring on_bootstrap due to pending bootstrap state")
+            event.defer()
+            return
+
         if not self.node_manager.is_healthy(ip=self.state.unit.ip):
             logger.debug("Deferring on_bootstrap due to workload not being healthy yet")
             event.defer()
@@ -152,15 +157,6 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         if not self.workload.is_alive():
             logger.error("Cassandra service abruptly stopped during bootstrap")
             return False
-
-        if self.node_manager.is_bootstrap_pending:
-            logger.warning("Pending Cassandra bootstrap is detected, trying to resume")
-            if self.node_manager.resume_bootstrap():
-                logger.info("Cassandra bootstrap resuming successful")
-                return True
-            else:
-                logger.error("Cassandra bootstrap resuming failed")
-                return False
 
         if self.node_manager.is_bootstrap_in_unknown_state:
             logger.error("Cassandra bootstrap is in unknown state, failed bootstrap assumed")

@@ -59,6 +59,7 @@ class NodeManager:
             return (
                 "Bootstrap state        : IN_PROGRESS" not in stdout
                 and "Bootstrap state        : COMPLETED" not in stdout
+                and "Bootstrap state        : NEEDS_BOOTSTRAP" not in stdout
             )
         except ExecError:
             return False
@@ -81,18 +82,6 @@ class NodeManager:
         """Get IP and hostname of this unit."""
         hostname = socket.gethostname()
         return socket.gethostbyname(hostname), hostname
-
-    def resume_bootstrap(self) -> bool:
-        """Resume Cassandra bootstrap.
-
-        Returns:
-            whether operation was successful.
-        """
-        try:
-            self._workload.exec([NODETOOL, "bootstrap", "resume"])
-            return True
-        except ExecError:
-            return False
 
     def prepare_shutdown(self) -> None:
         """Prepare Cassandra unit for safe shutdown using nodetool drain command."""
