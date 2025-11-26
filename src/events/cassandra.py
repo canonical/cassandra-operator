@@ -368,7 +368,7 @@ class CassandraEvents(Object):
             logger.error("Refresh manager is not ready")
             return
 
-        if self.state.unit.is_operational and not self.workload.is_alive():
+        if self.state.unit.is_operational and not self.workload.is_alive:
             logger.error("Restarting Cassandra service due to unexpected shutdown")
             self.restart()
             return
