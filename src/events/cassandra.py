@@ -124,8 +124,9 @@ class CassandraEvents(Object):
             event.defer()
             return
 
-        # don't want to run default start/pebble-ready events during upgrades
-        if self.refresh_manager.in_progress:
+        if not self.refresh_manager.workload_allowed_to_start:
+            logger.debug("Deferring on_start due to refresh manager workload start restriction")
+            event.defer()
             return
 
         if self.state.unit.workload_state == UnitWorkloadState.ACTIVE:

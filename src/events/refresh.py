@@ -46,17 +46,20 @@ class Refresh(charm_refresh.CharmSpecificCommon, abc.ABC):
         """Run pre-refresh checks after the first unit has been refreshed."""
         logger.debug("Running pre-refresh checks")
 
-        if any(
-            [
-                self._state.unit.peer_tls.rotation,
-                self._state.unit.client_tls.rotation,
-            ]
-        ):
-            raise charm_refresh.PrecheckFailed("TLS CA rotation is in progress")
+        if not self._workload.installed:
+            raise charm_refresh.PrecheckFailed("Current unit workload is not installed")
 
-        for host in [u.ip for u in self._state.units]:
-            if not self._node_manager.is_healthy(host, retry=True):
-                raise charm_refresh.PrecheckFailed("Cluster is not healthy")
+        for unit in self._state.units:
+            if not unit.is_ready:
+                continue
+            if not unit.is_operational:
+                raise charm_refresh.PrecheckFailed(f"Unit {unit.hostname} is not operational")
+            if unit.peer_tls.rotation or unit.client_tls.rotation:
+                raise charm_refresh.PrecheckFailed(
+                    f"TLS CA rotation is in progress for unit {unit.hostname}"
+                )
+            if not self._node_manager.is_healthy(unit.ip, retry=True):
+                raise charm_refresh.PrecheckFailed(f"Unit {unit.hostname} is not healthy")
 
 
 @dataclasses.dataclass(eq=False)
@@ -71,11 +74,15 @@ class MachinesRefresh(Refresh, charm_refresh.CharmSpecificMachines):  # type: ig
         refresh: charm_refresh.Machines,
     ) -> None:
         """Refresh the snap package, restart Cassandra, and handle failures."""
-        self._node_manager.prepare_shutdown()
-        self._workload.stop()
-
         revision_before_refresh = snap.SnapCache()[snap_name].revision
-        assert snap_revision != revision_before_refresh
+        if snap_revision == revision_before_refresh:
+            refresh.next_unit_allowed_to_refresh = True
+            return
+
+        if self._workload.is_alive:
+            self._node_manager.prepare_shutdown()
+            self._workload.stop()
+
         try:
             self._workload.install()
         except snap.SnapError as e:
@@ -92,13 +99,17 @@ class MachinesRefresh(Refresh, charm_refresh.CharmSpecificMachines):  # type: ig
             refresh.update_snap_revision()
 
         logger.info(f"Upgrading {snap_name} service...")
-        self._workload.restart()
-
+        if self._state.unit.is_ready:
+            self._workload.restart()
         self.post_snap_refresh(refresh)
 
     def post_snap_refresh(self, refresh: charm_refresh.Machines) -> None:
         """Perform health checks after a snap refresh."""
         logger.debug("Running post-snap-refresh check...")
+        if not self._state.unit.is_ready:
+            # Worklaod
+            refresh.next_unit_allowed_to_refresh = True
+            return
         if not self._node_manager.is_healthy(self._state.unit.ip, retry=True):
             logger.warning(
                 "Post-snap-refresh check timed out."
