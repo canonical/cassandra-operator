@@ -8,6 +8,7 @@ import logging
 import subprocess
 from shutil import rmtree
 
+import toml
 from charmlibs import pathops
 from charms.operator_libs_linux.v2 import snap
 from typing_extensions import override
@@ -20,13 +21,15 @@ SNAP_PATH = "/snap/charmed-cassandra"
 SNAP_CURRENT_PATH = f"{SNAP_PATH}/current"
 SNAP_VAR_COMMON_PATH = f"{SNAP_VAR_PATH}/common"
 SNAP_VAR_CURRENT_PATH = f"{SNAP_VAR_PATH}/current"
-
-SNAP_NAME = "charmed-cassandra"
-SNAP_REVISION = "13"
 SNAP_SERVICE = "daemon"
 
-
 logger = logging.getLogger(__name__)
+
+with open("refresh_versions.toml", "r") as f:
+    data = toml.load(f)
+
+SNAP_NAME = data["snap"]["name"]
+SNAP_REVISION = data["snap"]["revisions"]["x86_64"]
 
 
 class CassandraWorkload(WorkloadBase):
@@ -64,6 +67,7 @@ class CassandraWorkload(WorkloadBase):
         self._cassandra_snap.connect("mount-observe")
         self._cassandra_snap.hold()
 
+    @property
     @override
     def is_alive(self) -> bool:
         try:
@@ -88,6 +92,11 @@ class CassandraWorkload(WorkloadBase):
     def remove_directory(self, directory: str) -> None:
         # TODO: https://github.com/canonical/charmtech-charmlibs/issues/23
         rmtree(directory)
+
+    @property
+    @override
+    def installed(self) -> bool:
+        return self._cassandra_snap.present
 
     @override
     def path_exists(self, path: str) -> bool:
