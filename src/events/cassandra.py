@@ -454,7 +454,7 @@ class CassandraEvents(Object):
             return False
 
         refresh_status = self.refresh_manager.unit_status_lower_priority(
-            workload_is_running=self.workload.is_alive(),
+            workload_is_running=self.workload.is_alive,
         )
         if refresh_status:
             event.add_status(refresh_status)
