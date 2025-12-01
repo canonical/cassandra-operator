@@ -52,6 +52,7 @@ class Refresh(charm_refresh.CharmSpecificCommon, abc.ABC):
         for unit in self._state.units:
             if not unit.is_ready:
                 continue
+
             if not unit.is_operational:
                 raise charm_refresh.PrecheckFailed(f"Unit {unit.hostname} is not operational")
             if unit.peer_tls.rotation or unit.client_tls.rotation:

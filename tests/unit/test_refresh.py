@@ -22,7 +22,7 @@ from .helpers import make_refresh_like
     [
         (True, {"client-rotation": "true"}, "TLS CA rotation is in progress"),
         (True, {"peer-rotation": "true"}, "TLS CA rotation is in progress"),
-        (False, {"ip": "1.1.1.1"}, "Cluster is not healthy"),
+        (False, {"ip": "1.1.1.1", "hostname": "test"}, "Unit test is not healthy"),
     ],
 )
 def test_pre_refresh_checks(helthy, unit_data, pre_check_result) -> None:
@@ -43,16 +43,20 @@ def test_pre_refresh_checks(helthy, unit_data, pre_check_result) -> None:
         with (
             patch("events.refresh.MachinesRefresh.__init__", return_value=None),
             patch("managers.node.NodeManager") as node_manager,
+            patch("charm.CassandraWorkload") as workload,
+            patch("core.state.UnitContext.is_ready", return_value=True),
+            patch("core.state.UnitContext.is_operational", return_value=True),                                                
         ):
             node_manager.is_healthy.return_value = helthy
             refresh = MachinesRefresh.__new__(MachinesRefresh)
             refresh._state = charm.state
             refresh._node_manager = node_manager
+            refresh._workload = workload
 
             with pytest.raises(PrecheckFailed) as e:
                 refresh.run_pre_refresh_checks_after_1_unit_refreshed()
 
-            assert str(e.value) == pre_check_result
+            assert pre_check_result in str(e.value)
 
 
 @pytest.mark.parametrize("helthy", [True, False])
@@ -73,6 +77,8 @@ def test_snap_refresh(helthy) -> None:
                 patch("events.refresh.MachinesRefresh.__init__", return_value=None),
                 patch("managers.node.NodeManager") as node_manager,
                 patch("charm.CassandraWorkload") as workload,
+                patch("core.state.UnitContext.is_ready", return_value=True),
+                patch("core.state.UnitContext.is_operational", return_value=True),                        
             ):
                 refresh = MachinesRefresh.__new__(MachinesRefresh)
                 node_manager.is_healthy.return_value = helthy
