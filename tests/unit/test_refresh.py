@@ -45,7 +45,7 @@ def test_pre_refresh_checks(helthy, unit_data, pre_check_result) -> None:
             patch("managers.node.NodeManager") as node_manager,
             patch("charm.CassandraWorkload") as workload,
             patch("core.state.UnitContext.is_ready", return_value=True),
-            patch("core.state.UnitContext.is_operational", return_value=True),                                                
+            patch("core.state.UnitContext.is_operational", return_value=True),
         ):
             node_manager.is_healthy.return_value = helthy
             refresh = MachinesRefresh.__new__(MachinesRefresh)
@@ -78,7 +78,7 @@ def test_snap_refresh(helthy) -> None:
                 patch("managers.node.NodeManager") as node_manager,
                 patch("charm.CassandraWorkload") as workload,
                 patch("core.state.UnitContext.is_ready", return_value=True),
-                patch("core.state.UnitContext.is_operational", return_value=True),                        
+                patch("core.state.UnitContext.is_operational", return_value=True),
             ):
                 refresh = MachinesRefresh.__new__(MachinesRefresh)
                 node_manager.is_healthy.return_value = helthy
