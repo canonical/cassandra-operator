@@ -6,6 +6,7 @@ import logging
 from pathlib import Path
 
 import jubilant
+import yaml
 
 from integration.helpers.cassandra import OPERATOR_PASSWORD
 from integration.helpers.continuous_writes import ContinuousWrites
@@ -34,6 +35,12 @@ def test_deploy(juju: jubilant.Juju, cassandra_charm: Path, app_name: str) -> No
     )
 
 
+def test_seed_primary(juju: jubilant.Juju, app_name: str) -> None:
+    _, leader_status = get_leader_unit(juju, app_name)
+    for unit, _ in juju.status().apps[app_name].units.items():
+        assert f"{leader_status.public_address}:7000" in get_seeds(juju, unit)
+
+
 def test_kill_primary(
     juju: jubilant.Juju, app_name: str, continuous_writes: ContinuousWrites
 ) -> None:
@@ -52,6 +59,15 @@ def test_kill_primary(
         timeout=1800,
     )
     continuous_writes.assert_new_writes()
+
+    new_leader, _ = get_leader_unit(juju, app_name)
+    assert leader != new_leader
+
+
+def test_seed_new_primary(juju: jubilant.Juju, app_name: str) -> None:
+    _, leader_status = get_leader_unit(juju, app_name)
+    for unit, _ in juju.status().apps[app_name].units.items():
+        assert f"{leader_status.public_address}:7000" in get_seeds(juju, unit)
 
 
 def test_kill_subordinate(
@@ -72,3 +88,11 @@ def test_kill_subordinate(
 
 def kill_unit(juju: jubilant.Juju, unit: str) -> None:
     juju.cli("remove-unit", "--force", "--no-wait", "--no-prompt", "--destroy-storage", unit)
+
+
+def get_seeds(juju: jubilant.Juju, unit: str) -> list[str]:
+    config_file = juju.ssh(
+        unit, "cat /var/snap/charmed-cassandra/current/etc/cassandra/cassandra.yaml"
+    )
+    config = yaml.load(config_file, yaml.Loader)
+    return config["seed_provider"][0]["parameters"][0]["seeds"].split(",")
