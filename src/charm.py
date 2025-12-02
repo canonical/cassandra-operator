@@ -300,10 +300,6 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             logger.error(f"Error accessing user-defined system users secret: {e}")
             raise BadSecretError()
 
-    def refresh_not_ready(self) -> bool:
-        """Check if refresh is not available or currently in progress."""
-        return not self.refresh_manager or self.refresh_manager.in_progress
-
     def _update_external_clients_certs(self) -> None:
         logger.info("----------UPDATING CERTS----------")
         for relation in self.state.client_interface.relations:
