@@ -146,7 +146,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
 
     def _on_bootstrap(self, event: EventBase) -> None:
         if self._handle_starting_state(event):
-            logger.info("Deferring _on_bootstrap")
+            logger.debug("Deferring _on_bootstrap")
             event.defer()
             return
 
@@ -168,7 +168,6 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             logger.debug("Deferring on_bootstrap due to workload not being healthy yet")
             event.defer()
             return
-        logger.info("Heath in _on_bootstrap is good")
 
         logger.debug("Releasing the exclusive lock after successful bootstrap")
         self.bootstrap_manager.release()
@@ -305,7 +304,6 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         return not self.refresh_manager or self.refresh_manager.in_progress
 
     def _update_external_clients_certs(self) -> None:
-        logger.info("----------UPDATING CERTS----------")
         for relation in self.state.client_interface.relations:
             model = self.state.client_interface.build_model(
                 relation.id, DataContractV1[ResourceProviderModel]
