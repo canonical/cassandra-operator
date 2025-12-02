@@ -206,7 +206,6 @@ class CassandraEvents(Object):
                 if not self.node_manager.is_healthy(ip="127.0.0.1"):
                     raise Exception("bootstrap timeout exceeded")
 
-
         for attempt in Retrying(wait=wait_fixed(10), stop=stop_after_delay(120), reraise=True):
             with attempt:
                 self.database_manager.init_admin(password)

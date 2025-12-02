@@ -163,7 +163,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             event.defer()
             return
 
-        logger.info("Trying to check heath in _on_bootstrap")
+        logger.debug("Trying to check heath in _on_bootstrap")
         if not self.node_manager.is_healthy(ip=self.state.unit.ip):
             logger.debug("Deferring on_bootstrap due to workload not being healthy yet")
             event.defer()
