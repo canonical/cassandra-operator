@@ -5,7 +5,7 @@
 """Handler for main Cassandra charm events."""
 
 import logging
-from typing import Callable
+from typing import Callable, Literal
 
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from ops import (
@@ -46,6 +46,7 @@ from core.workload import WorkloadBase
 from managers.config import ConfigManager
 from managers.database import DatabaseManager
 from managers.node import NodeManager
+from managers.refresh import RefreshManager
 from managers.tls import Sans, TLSManager
 
 logger = logging.getLogger(__name__)
@@ -62,6 +63,7 @@ class CassandraEvents(Object):
         node_manager: NodeManager,
         config_manager: ConfigManager,
         tls_manager: TLSManager,
+        refresh_manager: RefreshManager,
         setup_internal_certificates: Callable[[Sans], bool],
         database_manager: DatabaseManager,
         read_auth_secret: Callable[[str], str],
@@ -78,6 +80,7 @@ class CassandraEvents(Object):
         self.database_manager = database_manager
         self.read_auth_secret = read_auth_secret
         self.restart = restart
+        self.refresh_manager = refresh_manager
 
         self.charm.on.define_event("update_auth_rf", EventBase)
         self.framework.observe(self.charm.on.update_auth_rf, self._on_update_auth_rf)
@@ -115,6 +118,16 @@ class CassandraEvents(Object):
 
     def _on_start(self, event: StartEvent) -> None:
         self._update_network_address()
+
+        if not self.refresh_manager.is_initialized:
+            logger.debug("Deferring on_start due to charm_refresh is not ready")
+            event.defer()
+            return
+
+        if not self.refresh_manager.workload_allowed_to_start:
+            logger.debug("Deferring on_start due to refresh manager workload start restriction")
+            event.defer()
+            return
 
         if self.state.unit.workload_state == UnitWorkloadState.ACTIVE:
             logger.debug("Unintended restart detected, resetting unit's workload state")
@@ -185,6 +198,7 @@ class CassandraEvents(Object):
             truststore_password=self.state.unit.truststore_password,
         )
         self.workload.start()
+
         for attempt in Retrying(
             wait=wait_exponential(), stop=stop_after_delay(1800), reraise=True
         ):
@@ -222,6 +236,9 @@ class CassandraEvents(Object):
         self.restart()
 
     def _on_config_changed(self, event: ConfigChangedEvent) -> None:
+        if not self.refresh_manager.ready:
+            return
+
         if not self.state.unit.is_ready:
             logger.debug("Exiting on_config_changed due to unit not being ready")
             return
@@ -261,6 +278,11 @@ class CassandraEvents(Object):
 
         if not self.state.unit.is_ready:
             logger.debug("Exiting on_secret_changed due to unit not being ready")
+            return
+
+        if not self.refresh_manager.ready:
+            logger.debug("Deferring on_secret_changed due to charm_refresh is not ready")
+            event.defer()
             return
 
         try:
@@ -342,7 +364,11 @@ class CassandraEvents(Object):
             return
 
     def _on_update_status(self, _: UpdateStatusEvent) -> None:
-        if self.state.unit.is_operational and not self.workload.is_alive():
+        if not self.refresh_manager.ready:
+            logger.error("Refresh manager is not ready")
+            return
+
+        if self.state.unit.is_operational and not self.workload.is_alive:
             logger.error("Restarting Cassandra service due to unexpected shutdown")
             self.restart()
             return
@@ -370,6 +396,9 @@ class CassandraEvents(Object):
             self.node_manager.remove_bad_nodes([unit.ip for unit in self.state.units])
 
     def _on_collect_unit_status(self, event: CollectStatusEvent) -> None:
+        if self._handle_refresh_manager(event, "high"):
+            return
+
         try:
             self.charm.config
             self._acquire_operator_password()
@@ -402,7 +431,32 @@ class CassandraEvents(Object):
         if self.state.cluster.auth_repair != AuthRepairState.UNPLANNED:
             event.add_status(Status.REPAIRING_AUTH.value)
 
+        if self._handle_refresh_manager(event, "low"):
+            return
+
         event.add_status(Status.ACTIVE.value)
+
+    def _handle_refresh_manager(
+        self, event: CollectStatusEvent, priority: Literal["high", "low"]
+    ) -> bool:
+        if not self.refresh_manager.is_initialized:
+            return False
+
+        if priority == "high":
+            if self.refresh_manager.unit_status_higher_priority:
+                event.add_status(self.refresh_manager.unit_status_higher_priority)
+                return True
+            if status := self.refresh_manager.unit_status_lower_priority():
+                event.add_status(status)
+            return False
+        else:
+            refresh_status = self.refresh_manager.unit_status_lower_priority(
+                workload_is_running=self.workload.is_alive,
+            )
+            if refresh_status:
+                event.add_status(refresh_status)
+                return True
+            return False
 
     def _collect_unit_tls_status(self, event: CollectStatusEvent) -> None:
         if self.state.unit.peer_tls.ready and self.state.unit.peer_tls.rotation:
@@ -418,6 +472,11 @@ class CassandraEvents(Object):
             event.add_status(Status.WAITING_FOR_TLS.value)
 
     def _on_collect_app_status(self, event: CollectStatusEvent) -> None:
+        if self.refresh_manager.is_initialized:
+            if self.refresh_manager.app_status_higher_priority:
+                event.add_status(self.refresh_manager.app_status_higher_priority)
+                return
+
         try:
             self.charm.config
             self._acquire_operator_password()
