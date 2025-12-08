@@ -6,6 +6,7 @@
 
 import logging
 
+import ops.log
 from charms.data_platform_libs.v1.data_interfaces import (
     DataContractV1,
     ResourceProviderModel,
@@ -27,14 +28,18 @@ from core.state import (
 )
 from events.cassandra import CassandraEvents
 from events.provider import ProviderEvents
+from events.refresh import MachinesRefresh
 from events.tls import TLSEvents
 from managers.config import ConfigManager
 from managers.database import DatabaseManager
 from managers.node import NodeManager
+from managers.refresh import RefreshManager
 from managers.tls import Sans, TLSManager
 from workload import SNAP_NAME, CassandraWorkload
 
 logger = logging.getLogger(__name__)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 
 class CassandraCharm(TypedCharmBase[CharmConfig]):
@@ -45,6 +50,12 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
     def __init__(self, *args):
         super().__init__(*args)
 
+        # Show logger name (module name) in logs
+        root_logger = logging.getLogger()
+        for handler in root_logger.handlers:
+            if isinstance(handler, ops.log.JujuLogHandler):
+                handler.setFormatter(logging.Formatter("{name}:{message}", style="{"))
+
         self.on.define_event("bootstrap", EventBase)
         self.framework.observe(self.on.bootstrap, self._on_bootstrap)
 
@@ -52,6 +63,15 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         self.workload = CassandraWorkload()
         self.node_manager = NodeManager(workload=self.workload)
         self.tls_manager = TLSManager(workload=self.workload)
+
+        self.refresh = MachinesRefresh(
+            workload_name="charmed-cassandra",
+            charm_name="cassandra",
+            _state=self.state,
+            _workload=self.workload,
+            _node_manager=self.node_manager,
+        )
+        self.refresh_manager = RefreshManager(self.refresh)
 
         config_manager = ConfigManager(
             workload=self.workload,
@@ -81,6 +101,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             config_manager=config_manager,
             database_manager=database_manager,
             tls_manager=self.tls_manager,
+            refresh_manager=self.refresh_manager,
             setup_internal_certificates=self.setup_internal_certificates,
             read_auth_secret=self.read_auth_secret,
             restart=self.restart,
@@ -115,8 +136,17 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             log_slots=[f"{SNAP_NAME}:logs"],
         )
 
+        if (
+            self.refresh_manager.is_initialized
+            and not self.refresh_manager.next_unit_allowed_to_refresh
+            and self.workload.installed
+        ):
+            # Only proceed if snap is installed (avoids KeyError during initial deployment)
+            self.refresh.post_snap_refresh(self.refresh_manager)
+
     def _on_bootstrap(self, event: EventBase) -> None:
         if self._handle_starting_state(event):
+            logger.debug("Deferring _on_bootstrap")
             event.defer()
             return
 
@@ -133,6 +163,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             event.defer()
             return
 
+        logger.debug("Trying to check heath in _on_bootstrap")
         if not self.node_manager.is_healthy(ip=self.state.unit.ip):
             logger.debug("Deferring on_bootstrap due to workload not being healthy yet")
             event.defer()
@@ -154,7 +185,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             self.state.cluster.state = ClusterState.ACTIVE
 
     def _on_bootstrap_pending_check(self) -> bool:
-        if not self.workload.is_alive():
+        if not self.workload.is_alive:
             logger.error("Cassandra service abruptly stopped during bootstrap")
             return False
 
@@ -175,7 +206,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
 
         if self.bootstrap_manager.try_lock():
             logger.debug("Bootstrap lock is acquired")
-            if self.workload.is_alive():
+            if self.workload.is_alive:
                 logger.debug("Gracefully shutting down an active workload")
                 try:
                     self.node_manager.prepare_shutdown()
@@ -269,7 +300,6 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             raise BadSecretError()
 
     def _update_external_clients_certs(self) -> None:
-        logger.info("----------UPDATING CERTS----------")
         for relation in self.state.client_interface.relations:
             model = self.state.client_interface.build_model(
                 relation.id, DataContractV1[ResourceProviderModel]
