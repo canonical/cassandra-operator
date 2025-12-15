@@ -295,11 +295,10 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
                 ]
             )
 
-        changed = seeds != self.state.seed_units
-        if changed:
+        if changed := seeds != self.state.seed_units:
             logger.debug(
                 f"Seeds changing "
-                f"from {','.join([seed.ip for seed in self.state.seed_units]) or '-'} "
+                f"from {','.join(self.state.cluster.seeds) or '-'} "
                 f"to {','.join([seed.ip for seed in seeds])}"
             )
         self.state.seed_units = seeds
