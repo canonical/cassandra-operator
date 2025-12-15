@@ -285,10 +285,8 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             Whether the configuration was changed.
         """
         seeds = self.state.seed_units
-        logger.warning(f"SEEDS BEFORE: {seeds}")
         if seeds and ensure_seed and self.state.unit not in seeds:
             seeds.pop()
-        logger.warning(f"SEEDS AFTER POP: {seeds}")
 
         if (missing_seeds := min(3, len(self.state.units)) - len(seeds)) > 0:
             seeds |= set(
@@ -296,11 +294,15 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
                     :missing_seeds
                 ]
             )
-        logger.warning(f"SEEDS AFTER ADD: {seeds}")
 
         changed = seeds != self.state.seed_units
+        if changed:
+            logger.debug(
+                f"Seeds changing "
+                f"from {','.join([seed.ip for seed in self.state.seed_units]) or '-'} "
+                f"to {','.join([seed.ip for seed in seeds])}"
+            )
         self.state.seed_units = seeds
-        logger.warning(f"SEEDS changed: {changed}")
         return changed
 
     def read_auth_secret(self, secret_id: str) -> str:
