@@ -227,7 +227,7 @@ class ConfigManager:
             "seed_provider": [
                 {
                     "class_name": "org.apache.cassandra.locator.SimpleSeedProvider",
-                    "parameters": [{"seeds": ",".join(seeds)}],
+                    "parameters": [{"seeds": ",".join(sorted(seeds))}],
                 }
             ],
         }

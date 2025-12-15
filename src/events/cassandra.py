@@ -68,6 +68,7 @@ class CassandraEvents(Object):
         database_manager: DatabaseManager,
         read_auth_secret: Callable[[str], str],
         restart: Callable[[], None],
+        reconcile_seeds: Callable[[bool], bool],
     ):
         super().__init__(charm, key="cassandra_events")
         self.charm = charm
@@ -81,6 +82,7 @@ class CassandraEvents(Object):
         self.read_auth_secret = read_auth_secret
         self.restart = restart
         self.refresh_manager = refresh_manager
+        self.reconcile_seeds = reconcile_seeds
 
         self.charm.on.define_event("update_auth_rf", EventBase)
         self.framework.observe(self.charm.on.update_auth_rf, self._on_update_auth_rf)
@@ -158,14 +160,6 @@ class CassandraEvents(Object):
             self._start_subordinate(event)
 
     def _start_leader(self, event: StartEvent) -> None:
-        if not self.state.seed_units:
-            self.state.seed_units = self.state.unit
-
-        if not self._are_seeds_reachable:
-            logger.debug("Deferring leader on_start due to seeds not being ready")
-            event.defer()
-            return
-
         if not self.state.cluster.operator_password_secret:
             try:
                 self._start_leader_setup_auth()
@@ -175,6 +169,13 @@ class CassandraEvents(Object):
                 )
                 event.defer()
                 return
+
+        self.reconcile_seeds(False)
+
+        if not self._are_seeds_reachable:
+            logger.debug("Deferring leader on_start due to seeds not being ready")
+            event.defer()
+            return
 
         self.config_manager.render_cassandra_config(
             listen_address=self.state.unit.ip,
@@ -309,6 +310,14 @@ class CassandraEvents(Object):
     def _on_peer_relation_joined(self, event: RelationJoinedEvent) -> None:
         if event.unit == self.charm.unit or not self.charm.unit.is_leader():
             return
+        if {
+            unit
+            for unit in self.state.units
+            if unit.unit_name == event.unit.name and not unit.is_operational
+        }:
+            event.defer()
+            return
+        self._recover_seeds()
         self.charm.on.update_auth_rf.emit()
 
     def _on_peer_relation_changed(self, event: RelationChangedEvent) -> None:
@@ -382,9 +391,10 @@ class CassandraEvents(Object):
             logger.debug("Exiting on_update_status due to unit not being operational")
             return
 
-        if self._update_network_address():
-            if self.charm.unit.is_leader():
-                self.state.seed_units = self.state.unit
+        update_address = self._update_network_address()
+        update_seeds = self.charm.unit.is_leader() and self.reconcile_seeds(False)
+
+        if update_address or update_seeds:
             self.config_manager.render_cassandra_config(
                 listen_address=self.state.unit.ip,
                 seeds=self.state.cluster.seeds,
@@ -495,8 +505,7 @@ class CassandraEvents(Object):
         )
 
     def _recover_seeds(self) -> None:
-        if not self.state.seed_units:
-            self.state.seed_units = self.state.unit
+        if self.reconcile_seeds(False):
             self.config_manager.render_cassandra_config(seeds=self.state.cluster.seeds)
             self.restart()
 
@@ -549,11 +558,16 @@ class CassandraEvents(Object):
         if not self.charm.unit.is_leader():
             return
         self.state.cluster.auth_repair = AuthRepairState.PENDING
+        if self.charm.app.planned_units() != len(self.state.units):
+            logger.debug("Deferring on_update_auth_rf due to ongoing scaling")
+            event.defer()
+            return
         if not self.state.unit.is_operational:
-            logger.debug("Deferring on_peer_relation_departed due to unit not being operational")
+            logger.debug("Deferring on_update_auth_rf due to unit not being operational")
             event.defer()
             return
         if not self.node_manager.ensure_cluster_topology(n := self.charm.app.planned_units()):
+            logger.debug("Deferring on_update_auth_rf due to inconsistent cluster topology")
             event.defer()
             return
         self.database_manager.update_system_auth_replication_factor(min(n, 3))

@@ -127,6 +127,14 @@ class RelationState:
         self.component = component
         self.relation_data = self.data_interface.as_dict(self.relation.id) if self.relation else {}
 
+    def __eq__(self, value: object, /) -> bool:
+        if not isinstance(value, RelationState):
+            return NotImplemented
+        return self.component.__eq__(value.component) and self.relation.__eq__(value.relation)
+
+    def __hash__(self) -> int:
+        return hash((self.component, self.relation))
+
     def _field_setter_wrapper(self, field: str, value: str) -> None:
         if not self.relation:
             logger.error(
