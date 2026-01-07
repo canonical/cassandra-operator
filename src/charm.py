@@ -147,7 +147,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             self.refresh.post_snap_refresh(self.refresh_manager)
 
     def _on_bootstrap(self, event: EventBase) -> None:
-        if self._handle_starting_state(event):
+        if self._on_bootstrap_try_restart():
             logger.debug("Deferring _on_bootstrap")
             event.defer()
             return
@@ -197,7 +197,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
 
         return True
 
-    def _handle_starting_state(self, event: EventBase) -> bool:
+    def _on_bootstrap_try_restart(self) -> bool:
         """Handle the case when workload is not in STARTING state.
 
         Returns True if the event was handled (lock acquired, workload restarted, etc.),
@@ -284,24 +284,26 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         Returns:
             Whether the configuration was changed.
         """
-        seeds = self.state.seed_units
-        if seeds and ensure_seed and self.state.unit not in seeds:
+        seeds = {seed.peer_url for seed in self.state.seed_units}
+        if seeds and ensure_seed and self.state.unit.peer_url not in seeds:
             seeds.pop()
 
-        if (missing_seeds := min(3, len(self.state.units)) - len(seeds)) > 0:
-            seeds |= set(
-                [unit for unit in [self.state.unit, *self.state.other_units] if not unit.is_seed][
-                    :missing_seeds
-                ]
-            )
+        candidates = list(
+            self.node_manager.active_peers - self.state.cluster.seeds - set(self.state.unit.ip)
+        )
+        if self.state.unit.peer_url not in seeds:
+            candidates = [self.state.unit.peer_url, *candidates]
 
-        if changed := seeds != self.state.seed_units:
+        if (missing_seeds := min(3, len(candidates)) - len(seeds)) > 0:
+            seeds |= set(candidates[:missing_seeds])
+
+        if changed := seeds != self.state.cluster.seeds:
             logger.debug(
                 f"Seeds changing "
                 f"from {','.join(self.state.cluster.seeds) or '-'} "
-                f"to {','.join([seed.ip for seed in seeds])}"
+                f"to {','.join(seeds)}"
             )
-        self.state.seed_units = seeds
+            self.state.cluster.seeds = seeds
         return changed
 
     def read_auth_secret(self, secret_id: str) -> str:

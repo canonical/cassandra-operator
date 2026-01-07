@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from tenacity import Retrying, stop_after_attempt, stop_after_delay, wait_exponential
 
 from common.exceptions import ExecError
+from core.state import CASSANDRA_PEER_PORT
 from core.workload import WorkloadBase
 
 logger = logging.getLogger(__name__)
@@ -133,9 +134,25 @@ class NodeManager:
             except ExecError:
                 logger.error(f"Failed to remove bad node {ip} from Cassandra cluster")
 
+    @property
+    def active_peers(self) -> set[str]:
+        """Get active peers from `nodetool status` command."""
+        try:
+            status_stdout, _ = self._workload.exec([NODETOOL, "status"])
+        except ExecError:
+            return set()
+        return {
+            f"{ip}:{CASSANDRA_PEER_PORT}"
+            for ip in re.findall(
+                r"^UN  (\S+)\s+(?:\?|\S+\s+\S+)(?:\s+\S+){2}\s+(?:\S+).+$",
+                status_stdout,
+                re.MULTILINE,
+            )
+        }
+
     def repair_auth(self) -> None:
         """Run full repair on system_auth keyspace."""
-        self._workload.exec([NODETOOL, "repair", "system_auth", "--full"])
+        self._workload.exec([NODETOOL, "repair", "-full", "system_auth"])
 
     def _is_in_cluster(self, ip: str) -> bool:
         if not ip:
