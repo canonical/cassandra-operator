@@ -275,6 +275,9 @@ def test_tls_relation_broken_resets_certificates_and_triggers_config(ctx, is_lea
             new_tls_context.context.on.relation_broken(new_tls_context.peer_tls_relation),
             state=state_in,
         ) as manager,
+        patch(
+            "managers.node.NodeManager.active_peers", new_callable=PropertyMock(return_value=set())
+        ),
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
         patch("managers.tls.TLSManager.configure") as mock_configure,
@@ -385,6 +388,9 @@ def test_tls_default_certificates_files_setup(ctx):
         ),
         patch("managers.database.DatabaseManager.init_admin"),
         patch(
+            "managers.node.NodeManager.active_peers", new_callable=PropertyMock(return_value=set())
+        ),
+        patch(
             "managers.node.NodeManager.is_healthy",
             return_value=True,
         ),
@@ -439,6 +445,9 @@ def test_tls_default_certificates_files_setup(ctx):
             new_callable=PropertyMock(return_value=default_tls_context.default_provider_pk),
         ),
         patch("managers.database.DatabaseManager.init_admin"),
+        patch(
+            "managers.node.NodeManager.active_peers", new_callable=PropertyMock(return_value=set())
+        ),
         patch("managers.node.NodeManager.is_healthy", return_value=True),
         patch("charm.CassandraCharm.restart"),
     ):
@@ -494,6 +503,9 @@ def test_tls_certificate_available_event_triggers_config_and_rotation(ctx, is_le
         ),
         patch("charm.CassandraCharm.restart"),
         context(context.on.relation_created(peer_tls_relation), state=state_in) as manager,
+        patch(
+            "managers.node.NodeManager.active_peers", new_callable=PropertyMock(return_value=set())
+        ),
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
         patch("managers.tls.TLSManager.configure"),
@@ -537,6 +549,9 @@ def test_tls_certificate_available_event_triggers_config_and_rotation(ctx, is_le
         ),
         patch("charm.CassandraCharm.restart"),
         context(context.on.relation_created(client_tls_relation), state=state_in) as manager,
+        patch(
+            "managers.node.NodeManager.active_peers", new_callable=PropertyMock(return_value=set())
+        ),
         patch("managers.config.ConfigManager.render_env"),
         patch("managers.config.ConfigManager.render_cassandra_config"),
         patch("managers.tls.TLSManager.configure"),
