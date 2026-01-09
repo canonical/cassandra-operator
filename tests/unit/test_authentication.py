@@ -36,6 +36,9 @@ def test_start_custom_secret(bad_secret: bool):
         patch("charm.CassandraWorkload") as workload,
         patch("managers.tls.TLSManager.configure"),
         patch("managers.node.NodeManager.is_healthy", return_value=True),
+        patch(
+            "managers.node.NodeManager.active_peers", new_callable=PropertyMock(return_value=set())
+        ),
         patch("charm.CassandraCharm.restart"),
         patch(
             "managers.tls.TLSManager.client_tls_ready",

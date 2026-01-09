@@ -61,7 +61,11 @@ def test_deploy_with_requirer(
         num_units=1,
     )
 
-    juju.wait(jubilant.all_active, timeout=1200)
+    juju.wait(
+        ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
+        delay=20,
+        timeout=1800,
+    )
 
 
 def test_integrate_client(juju: jubilant.Juju, app_name: str, requirer_app_name: str) -> None:

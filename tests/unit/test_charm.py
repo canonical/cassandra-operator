@@ -29,6 +29,9 @@ def test_start_change_password():
         patch("charm.CassandraWorkload") as workload,
         patch("managers.tls.TLSManager.configure"),
         patch("managers.node.NodeManager.is_healthy", return_value=True),
+        patch(
+            "managers.node.NodeManager.active_peers", new_callable=PropertyMock(return_value=set())
+        ),
         patch("charm.CassandraCharm.restart") as restart,
         patch(
             "managers.tls.TLSManager.client_tls_ready",

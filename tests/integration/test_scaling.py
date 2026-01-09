@@ -32,7 +32,11 @@ def test_deploy(juju: jubilant.Juju, cassandra_charm: Path, app_name: str) -> No
         app=app_name,
         config={"profile": "testing"},
     )
-    juju.wait(jubilant.all_active, timeout=1200)
+    juju.wait(
+        ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
+        delay=20,
+        timeout=1800,
+    )
 
 
 def test_scale_up(juju: jubilant.Juju, app_name: str, continuous_writes: ContinuousWrites) -> None:
