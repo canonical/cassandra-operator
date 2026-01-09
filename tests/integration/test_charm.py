@@ -26,6 +26,11 @@ def test_deploy(juju: jubilant.Juju, cassandra_charm: Path, app_name: str) -> No
         config={"profile": "testing"},
     )
     juju.wait(jubilant.all_active)
+    juju.wait(
+        ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
+        delay=20,
+        timeout=600,
+    )
 
 
 def test_write_read(juju: jubilant.Juju, app_name: str) -> None:

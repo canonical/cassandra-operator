@@ -48,7 +48,11 @@ def test_deploy(juju: jubilant.Juju, cassandra_charm: Path, app_name: str) -> No
             config={"profile": "testing"},
             num_units=2,
         )
-        juju.wait(jubilant.all_active, timeout=1000)
+        juju.wait(
+            ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
+            delay=20,
+            timeout=1200,
+        )
 
 
 def test_cos_monitoring_setup(juju: jubilant.Juju, juju_k8s: jubilant.Juju, app_name: str) -> None:

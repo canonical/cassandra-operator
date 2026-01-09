@@ -29,7 +29,11 @@ def test_deploy_resolve_config(
     juju: jubilant.Juju, app_name: str, continuous_writes: ContinuousWrites
 ) -> None:
     juju.config(app_name, values={"profile": "testing"})
-    juju.wait(jubilant.all_active)
+    juju.wait(
+        ready=lambda status: jubilant.all_agents_idle(status) and jubilant.all_active(status),
+        delay=20,
+        timeout=300,
+    )
 
     continuous_writes.start(
         get_hosts(juju, app_name), app_secret_extract(juju, app_name, OPERATOR_PASSWORD)
