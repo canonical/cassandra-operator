@@ -6,6 +6,7 @@ The metrics can be queried by accessing the `http://<cassandra-unit-ip>:7071/met
 Additionally, the charm provides integration with the [Canonical Observability Stack](https://charmhub.io/topics/canonical-observability-stack).
 
 (how-to-monitoring-enable-monitoring)=
+
 ## Enable monitoring
 
 Deploy the `cos-lite` bundle in a Kubernetes environment. This can be done by following the
