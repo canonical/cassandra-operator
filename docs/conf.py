@@ -239,6 +239,7 @@ redirects = {}
 
 linkcheck_ignore = [
     "http://127.0.0.1:8000",
+    "https://matrix.to/#/#charmhub-data-platform:ubuntu.com",
     ]
 
 # A regex list of URLs where anchors are ignored by 'make linkcheck'
