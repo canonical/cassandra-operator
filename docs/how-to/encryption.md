@@ -6,7 +6,6 @@ All units within a cluster share the same CA certificate file, but each unit has
 This charm implements the **Requirer** side of the [tls-certificates](https://charmhub.io/integrations/tls-certificates) relation. Therefore, any charm implementing the **Provider** side can be used.
 To enable TLS encryption, you must first deploy a TLS certificates Provider charm.
 
-
 ## Deploy a TLS provider charm
 
 For testing purposes, you can use the `self-signed-certificates` charm.
@@ -24,7 +23,8 @@ Configure the CA common name:
 juju config self-signed-certificates ca-common-name="Test CA"
 ```
 
-For an overview of available TLS certificate Provider charms and guidance on choosing the right one for your use case, see [this guide](https://charmhub.io/topics/security-with-x-509-certificates).
+For an overview of available TLS certificate Provider charms and guidance on choosing the right one
+for your use case, see the [X.509 certificates guide](https://charmhub.io/topics/security-with-x-509-certificates).
 
 ## Relate the charms
 
@@ -62,7 +62,7 @@ cqlsh <unit-ip> -u operator -p "<password>"
 
 This should result in an error:
 
-```
+```text
 Warning: Using a password on the command line interface can be insecure.
 Recommendation: use the credentials file to securely provide the password.
 
@@ -72,7 +72,7 @@ Connection error: ('Unable to connect to any servers',
 
 And in the Apache Cassandra logs you will see:
 
-```
+```text
 WARN  [epollEventLoopGroup-5-6] ... SSLException in client networking with peer /10.166.144.168:42604
 io.netty.handler.ssl.NotSslRecordException: not an SSL/TLS record
 ```
@@ -87,7 +87,7 @@ Fetch the root CA from the self-signed certificate operator:
 juju run <tls-certificates>/0 get-ca-certificate --format yaml | yq '.<tls-certificates>/0.results.ca-certificate' > ca.cert
 ```
 
-The CA needs to be used to verify the certificate provided by the Apache Cassandra servers in the TLS handshake. 
+The CA needs to be used to verify the certificate provided by the Apache Cassandra servers in the TLS handshake.
 
 ### Connecting using `cqlsh`
 
@@ -121,7 +121,7 @@ Connect to Apache Cassandra with:
 cqlsh --ssl --cqlshrc /var/snap/charmed-cassandra/current/etc/cassandra/cqlshrc
 ```
 
-The `cqlsh` client should connect and show the prompt where CQL queries can be run. 
+The `cqlsh` client should connect and show the prompt where CQL queries can be run.
 
 ## Disabling TLS
 
