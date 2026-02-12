@@ -52,6 +52,7 @@ class TLSEvents(Object):
         tls_manager: TLSManager,
         setup_internal_certificates: Callable[[Sans], bool],
         restart: Callable[[], None],
+        reconcile_seeds: Callable[[bool], bool],
     ):
         super().__init__(charm, key="tls_events")
         self.charm = charm
@@ -62,6 +63,7 @@ class TLSEvents(Object):
         self.tls_manager = tls_manager
         self.setup_internal_certificates = setup_internal_certificates
         self.restart = restart
+        self.reconcile_seeds = reconcile_seeds
 
         ip, hostname = self.node_manager.network_address()
         self.sans = self.tls_manager.build_sans(
@@ -182,7 +184,7 @@ class TLSEvents(Object):
             return
 
         if self.charm.unit.is_leader():
-            self.state.seed_units = self.state.unit
+            self.reconcile_seeds(True)
 
         self.config_manager.render_cassandra_config(
             seeds=self.state.cluster.seeds,
@@ -235,7 +237,7 @@ class TLSEvents(Object):
             return
 
         if self.charm.unit.is_leader():
-            self.state.seed_units = self.state.unit
+            self.reconcile_seeds(True)
 
         self.config_manager.render_cassandra_config(
             seeds=self.state.cluster.seeds,

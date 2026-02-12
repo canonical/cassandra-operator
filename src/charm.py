@@ -105,6 +105,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             setup_internal_certificates=self.setup_internal_certificates,
             read_auth_secret=self.read_auth_secret,
             restart=self.restart,
+            reconcile_seeds=self.reconcile_seeds,
         )
 
         self.tls_events = TLSEvents(
@@ -116,6 +117,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             tls_manager=self.tls_manager,
             setup_internal_certificates=self.setup_internal_certificates,
             restart=self.restart,
+            reconcile_seeds=self.reconcile_seeds,
         )
 
         self.provider_events = ProviderEvents(
@@ -272,6 +274,36 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         )
 
         return True
+
+    def reconcile_seeds(self, ensure_seed: bool = False) -> bool:
+        """Reconcile seeds accordingly to DA231. Scale up to 3 units.
+
+        Args:
+            ensure_seed: Ensure that this node is in seeds list. Recommended for major changes.
+
+        Returns:
+            Whether the configuration was changed.
+        """
+        seeds = self.state.seed_units
+        if seeds and ensure_seed and self.state.unit not in seeds:
+            seeds.pop()
+
+        if (missing_seeds := min(3, len(self.state.units)) - len(seeds)) > 0:
+            seeds |= set(
+                [unit for unit in [self.state.unit, *self.state.other_units] if not unit.is_seed][
+                    :missing_seeds
+                ]
+            )
+
+        changed = seeds != self.state.seed_units
+        if changed:
+            logger.debug(
+                f"Seeds changing "
+                f"from {','.join([seed.ip for seed in self.state.seed_units]) or '-'} "
+                f"to {','.join([seed.ip for seed in seeds])}"
+            )
+        self.state.seed_units = seeds
+        return changed
 
     def read_auth_secret(self, secret_id: str) -> str:
         """Read and validate user-defined authentication secret.
