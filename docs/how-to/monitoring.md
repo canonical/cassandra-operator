@@ -1,11 +1,12 @@
 # How to set up monitoring
 
-Charmed Apache Cassnadra Snap come with the [JMX exporter](https://github.com/prometheus/jmx_exporter/).
+Charmed Apache Cassandra Snap come with the [JMX exporter](https://github.com/prometheus/jmx_exporter/).
 The metrics can be queried by accessing the `http://<cassandra-unit-ip>:7071/metrics` endpoint.
 
 Additionally, the charm provides integration with the [Canonical Observability Stack](https://charmhub.io/topics/canonical-observability-stack).
 
 (how-to-monitoring-enable-monitoring)=
+
 ## Enable monitoring
 
 Deploy the `cos-lite` bundle in a Kubernetes environment. This can be done by following the
@@ -26,7 +27,7 @@ juju offer loki:logging loki-logging
 juju offer prometheus:receive-remote-write prometheus-receive-remote-write
 ```
 
-### Consume offers via the Apache Cassnadra model
+### Consume offers via the Apache Cassandra model
 
 Switch back to the Charmed Apache Cassandra model, find offers and relate with them:
 
@@ -83,7 +84,7 @@ juju run grafana/leader get-admin-password --model <k8s_cos_controller>:<cos_mod
 
 ## Alerts and dashboards
 
-This guide shows you how to integrate an existing set of rules and/or dashboards to your Charmed Apache Cassndra deployment to be consumed with the [Canonical Observability Stack (COS)](https://charmhub.io/topics/canonical-observability-stack).
+This guide shows you how to integrate an existing set of rules and/or dashboards to your Charmed Apache Cassandra deployment to be consumed with the [Canonical Observability Stack (COS)](https://charmhub.io/topics/canonical-observability-stack).
 To do so, we will sync resources stored in a git repository to COS Lite.
 
 ### Prerequisites
