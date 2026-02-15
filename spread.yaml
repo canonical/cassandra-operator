@@ -97,10 +97,11 @@ suites:
 path: /root/spread_project
 
 kill-timeout: 1h
+warn-timeout: 1m
 environment:
   PATH: $PATH:$(pipx environment --value PIPX_BIN_DIR)
   CONCIERGE_JUJU_CHANNEL/juju36: 3.6/stable
-  MICROK8S_CHANNEL: "1.28-strict/stable"
+  MICROK8S_CHANNEL: "1.32-strict/stable"
 prepare: |
   snap refresh --hold
   chown -R root:root "$SPREAD_PATH"
