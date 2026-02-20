@@ -325,6 +325,12 @@ def get_non_leader_units(juju: jubilant.Juju, app_name: str) -> list[str]:
     return [name for name, unit in app.units.items() if not unit.leader]
 
 
+def get_all_units(juju: jubilant.Juju, app_name: str) -> list[tuple[str, UnitStatus]]:
+    """Return a list of all non-leader units for the given application."""
+    app = juju.status().apps[app_name]
+    return [(name, unit) for name, unit in app.units.items() if not unit.leader]
+
+
 def scale_sequentially_to(juju: jubilant.Juju, app_name: str, n: int) -> None:
     """Sequentially scale Cassandra application to the desired number of units.
 
@@ -376,3 +382,10 @@ def scale_sequentially_to(juju: jubilant.Juju, app_name: str, n: int) -> None:
             successes=5,
             timeout=1200,
         )
+
+
+def get_workload_version(juju: jubilant.Juju, unit_name: str) -> str:
+    version = juju.ssh(unit_name, command="sudo charmed-cassandra.nodetool version")
+    if not version:
+        raise Exception("version is not available")
+    return version.rstrip().replace("ReleaseVersion: ", "")
