@@ -97,9 +97,11 @@ suites:
 path: /root/spread_project
 
 kill-timeout: 1h
+warn-timeout: 1m
 environment:
   PATH: $PATH:$(pipx environment --value PIPX_BIN_DIR)
   CONCIERGE_JUJU_CHANNEL/juju36: 3.6/stable
+  MICROK8S_CHANNEL: "1.32-strict/stable"
 prepare: |
   snap refresh --hold
   chown -R root:root "$SPREAD_PATH"
@@ -119,6 +121,28 @@ prepare-each: |
 
   # `concierge prepare` needs to be run for each spread job in case Juju version changed
   concierge prepare --trace
+
+  if [[ -v USES_K8S ]]; then
+      # calico has issues with strict confinements, so remove -strict
+      sudo snap install microk8s --channel "${MICROK8S_CHANNEL//'-strict'/}" --classic
+
+      sudo usermod -a -G microk8s "$USER"
+      mkdir -p ~/.kube
+      chmod 0700 ~/.kube
+
+      # make juju work with microk8s --classic
+      sudo mkdir -p /var/snap/juju/current/microk8s/credentials
+      sudo microk8s config | sudo tee /var/snap/juju/current/microk8s/credentials/client.config
+      sudo chown -R "$USER":"$USER" /var/snap/juju/current/microk8s/credentials
+
+      IP_ADDR=$(ip -4 -j route get 2.2.2.2 | jq -r '.[] | .prefsrc')
+      sudo microk8s enable dns
+      sudo microk8s enable hostpath-storage
+      sudo microk8s enable metallb:"$IP_ADDR"-"$IP_ADDR"
+
+      juju bootstrap microk8s
+      juju switch concierge-lxd
+  fi
 
   # Unable to set constraint on all models because of Juju bug:
   # https://bugs.launchpad.net/juju/+bug/2065050
