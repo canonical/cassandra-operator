@@ -1,0 +1,240 @@
+INFO     jubilant:_juju.py:237 cli: juju status --model test-cas --format json
+INFO     jubilant:_juju.py:237 cli: juju show-unit --model test-cas application/0 --format json
+INFO     jubilant:_juju.py:237 cli: juju status --model test-cas --format json
+INFO     jubilant:_juju.py:237 cli: juju show-unit --model test-cas application/0 --format json
+INFO     jubilant:_juju.py:237 cli: juju remove-relation --model test-cas application:cassandra-client cassandra:cassandra-client
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
++ .model.name = 'test-cas'
++ .model.type = 'iaas'
++ .model.controller = 'concierge-lxd'
++ .model.cloud = 'localhost'
++ .model.version = '3.6.14'
++ .model.region = 'localhost'
++ .model.model_status.current = 'available'
++ .machines['0'].juju_status.current = 'started'
++ .machines['0'].juju_status.version = '3.6.14'
++ .machines['0'].hostname = 'juju-d48de3-0'
++ .machines['0'].dns_name = '10.30.3.61'
++ .machines['0'].ip_addresses[0] = '10.30.3.61'
++ .machines['0'].instance_id = 'juju-d48de3-0'
++ .machines['0'].machine_status.current = 'running'
++ .machines['0'].machine_status.message = 'Running'
++ .machines['0'].modification_status.current = 'applied'
++ .machines['0'].base.name = 'ubuntu'
++ .machines['0'].base.channel = '24.04'
++ .machines['0'].network_interfaces['eth0'].ip_addresses[0] = '10.30.3.61'
++ .machines['0'].network_interfaces['eth0'].mac_address = '00:16:3e:04:e0:be'
++ .machines['0'].network_interfaces['eth0'].is_up = True
++ .machines['0'].network_interfaces['eth0'].gateway = '10.30.3.1'
++ .machines['0'].network_interfaces['eth0'].space = 'alpha'
++ .machines['0'].constraints = 'arch=amd64'
++ .machines['0'].hardware = 'arch=amd64 cores=0 mem=0M availability-zone=runnervmnay03 virt-type=container'
++ .machines['1'].juju_status.current = 'started'
++ .machines['1'].juju_status.version = '3.6.14'
++ .machines['1'].hostname = 'juju-d48de3-1'
++ .machines['1'].dns_name = '10.30.3.43'
++ .machines['1'].ip_addresses[0] = '10.30.3.43'
++ .machines['1'].instance_id = 'juju-d48de3-1'
++ .machines['1'].machine_status.current = 'running'
++ .machines['1'].machine_status.message = 'Running'
++ .machines['1'].modification_status.current = 'applied'
++ .machines['1'].base.name = 'ubuntu'
++ .machines['1'].base.channel = '24.04'
++ .machines['1'].network_interfaces['eth0'].ip_addresses[0] = '10.30.3.43'
++ .machines['1'].network_interfaces['eth0'].mac_address = '00:16:3e:d3:b1:dd'
++ .machines['1'].network_interfaces['eth0'].is_up = True
++ .machines['1'].network_interfaces['eth0'].gateway = '10.30.3.1'
++ .machines['1'].network_interfaces['eth0'].space = 'alpha'
++ .machines['1'].constraints = 'arch=amd64'
++ .machines['1'].hardware = 'arch=amd64 cores=0 mem=0M availability-zone=runnervmnay03 virt-type=container'
++ .machines['2'].juju_status.current = 'started'
++ .machines['2'].juju_status.version = '3.6.14'
++ .machines['2'].hostname = 'juju-d48de3-2'
++ .machines['2'].dns_name = '10.30.3.233'
++ .machines['2'].ip_addresses[0] = '10.30.3.233'
++ .machines['2'].instance_id = 'juju-d48de3-2'
++ .machines['2'].machine_status.current = 'running'
++ .machines['2'].machine_status.message = 'Running'
++ .machines['2'].modification_status.current = 'applied'
++ .machines['2'].base.name = 'ubuntu'
++ .machines['2'].base.channel = '24.04'
++ .machines['2'].network_interfaces['eth0'].ip_addresses[0] = '10.30.3.233'
++ .machines['2'].network_interfaces['eth0'].mac_address = '00:16:3e:1c:89:1c'
++ .machines['2'].network_interfaces['eth0'].is_up = True
++ .machines['2'].network_interfaces['eth0'].gateway = '10.30.3.1'
++ .machines['2'].network_interfaces['eth0'].space = 'alpha'
++ .machines['2'].constraints = 'arch=amd64'
++ .machines['2'].hardware = 'arch=amd64 cores=0 mem=0M availability-zone=runnervmnay03 virt-type=container'
++ .machines['3'].juju_status.current = 'started'
++ .machines['3'].juju_status.version = '3.6.14'
++ .machines['3'].hostname = 'juju-d48de3-3'
++ .machines['3'].dns_name = '10.30.3.158'
++ .machines['3'].ip_addresses[0] = '10.30.3.158'
++ .machines['3'].instance_id = 'juju-d48de3-3'
++ .machines['3'].machine_status.current = 'running'
++ .machines['3'].machine_status.message = 'Running'
++ .machines['3'].modification_status.current = 'applied'
++ .machines['3'].base.name = 'ubuntu'
++ .machines['3'].base.channel = '24.04'
++ .machines['3'].network_interfaces['eth0'].ip_addresses[0] = '10.30.3.158'
++ .machines['3'].network_interfaces['eth0'].mac_address = '00:16:3e:9d:bc:5f'
++ .machines['3'].network_interfaces['eth0'].is_up = True
++ .machines['3'].network_interfaces['eth0'].gateway = '10.30.3.1'
++ .machines['3'].network_interfaces['eth0'].space = 'alpha'
++ .machines['3'].constraints = 'arch=amd64'
++ .machines['3'].hardware = 'arch=amd64 cores=0 mem=0M availability-zone=runnervmnay03 virt-type=container'
++ .apps['application'].charm = 'local:application-0'
++ .apps['application'].charm_origin = 'local'
++ .apps['application'].charm_name = 'application'
++ .apps['application'].charm_rev = 0
++ .apps['application'].exposed = False
++ .apps['application'].base.name = 'ubuntu'
++ .apps['application'].base.channel = '24.04'
++ .apps['application'].app_status.current = 'active'
++ .apps['application'].relations['cassandra-client'][0].related_app = 'cassandra'
++ .apps['application'].relations['cassandra-client'][0].interface = 'cassandra_client'
++ .apps['application'].relations['cassandra-client'][0].scope = 'global'
++ .apps['application'].relations['local'][0].related_app = 'application'
++ .apps['application'].relations['local'][0].interface = 'cluster'
++ .apps['application'].relations['local'][0].scope = 'global'
++ .apps['application'].units['application/0'].workload_status.current = 'active'
++ .apps['application'].units['application/0'].juju_status.current = 'executing'
++ .apps['application'].units['application/0'].juju_status.message = 'running cassandra-client-relation-departed hook for cassandra/0'
++ .apps['application'].units['application/0'].juju_status.version = '3.6.14'
++ .apps['application'].units['application/0'].leader = True
++ .apps['application'].units['application/0'].machine = '2'
++ .apps['application'].units['application/0'].public_address = '10.30.3.233'
++ .apps['application'].endpoint_bindings[''] = 'alpha'
++ .apps['application'].endpoint_bindings['cassandra-client'] = 'alpha'
++ .apps['application'].endpoint_bindings['local'] = 'alpha'
++ .apps['cassandra'].charm = 'local:cassandra-0'
++ .apps['cassandra'].charm_origin = 'local'
++ .apps['cassandra'].charm_name = 'cassandra'
++ .apps['cassandra'].charm_rev = 0
++ .apps['cassandra'].exposed = False
++ .apps['cassandra'].base.name = 'ubuntu'
++ .apps['cassandra'].base.channel = '24.04'
++ .apps['cassandra'].app_status.current = 'active'
++ .apps['cassandra'].relations['bootstrap'][0].related_app = 'cassandra'
++ .apps['cassandra'].relations['bootstrap'][0].interface = 'rolling_op'
++ .apps['cassandra'].relations['bootstrap'][0].scope = 'global'
++ .apps['cassandra'].relations['cassandra-client'][0].related_app = 'application'
++ .apps['cassandra'].relations['cassandra-client'][0].interface = 'cassandra_client'
++ .apps['cassandra'].relations['cassandra-client'][0].scope = 'global'
++ .apps['cassandra'].relations['cassandra-peers'][0].related_app = 'cassandra'
++ .apps['cassandra'].relations['cassandra-peers'][0].interface = 'cassandra_peers'
++ .apps['cassandra'].relations['cassandra-peers'][0].scope = 'global'
++ .apps['cassandra'].relations['refresh-v-three'][0].related_app = 'cassandra'
++ .apps['cassandra'].relations['refresh-v-three'][0].interface = 'refresh'
++ .apps['cassandra'].relations['refresh-v-three'][0].scope = 'global'
++ .apps['cassandra'].units['cassandra/0'].workload_status.current = 'active'
++ .apps['cassandra'].units['cassandra/0'].juju_status.current = 'executing'
++ .apps['cassandra'].units['cassandra/0'].juju_status.message = 'running secret-remove hook for secret:d6gfgm1vmeesi94qsqm0/3'
++ .apps['cassandra'].units['cassandra/0'].juju_status.version = '3.6.14'
++ .apps['cassandra'].units['cassandra/0'].leader = True
++ .apps['cassandra'].units['cassandra/0'].machine = '0'
++ .apps['cassandra'].units['cassandra/0'].public_address = '10.30.3.61'
++ .apps['cassandra'].units['cassandra/1'].workload_status.current = 'active'
++ .apps['cassandra'].units['cassandra/1'].juju_status.current = 'executing'
++ .apps['cassandra'].units['cassandra/1'].juju_status.message = 'running cassandra-client-relation-changed hook for application/0'
++ .apps['cassandra'].units['cassandra/1'].juju_status.version = '3.6.14'
++ .apps['cassandra'].units['cassandra/1'].machine = '1'
++ .apps['cassandra'].units['cassandra/1'].public_address = '10.30.3.43'
++ .apps['cassandra'].version = '5.0.5'
++ .apps['cassandra'].endpoint_bindings[''] = 'alpha'
++ .apps['cassandra'].endpoint_bindings['bootstrap'] = 'alpha'
++ .apps['cassandra'].endpoint_bindings['cassandra-client'] = 'alpha'
++ .apps['cassandra'].endpoint_bindings['cassandra-peers'] = 'alpha'
++ .apps['cassandra'].endpoint_bindings['client-certificates'] = 'alpha'
++ .apps['cassandra'].endpoint_bindings['cos-agent'] = 'alpha'
++ .apps['cassandra'].endpoint_bindings['peer-certificates'] = 'alpha'
++ .apps['cassandra'].endpoint_bindings['refresh-v-three'] = 'alpha'
++ .apps['self-signed-certificates'].charm = 'self-signed-certificates'
++ .apps['self-signed-certificates'].charm_origin = 'charmhub'
++ .apps['self-signed-certificates'].charm_name = 'self-signed-certificates'
++ .apps['self-signed-certificates'].charm_rev = 317
++ .apps['self-signed-certificates'].exposed = False
++ .apps['self-signed-certificates'].base.name = 'ubuntu'
++ .apps['self-signed-certificates'].base.channel = '24.04'
++ .apps['self-signed-certificates'].charm_channel = '1/stable'
++ .apps['self-signed-certificates'].app_status.current = 'active'
++ .apps['self-signed-certificates'].units['self-signed-certificates/0'].workload_status.current = 'active'
++ .apps['self-signed-certificates'].units['self-signed-certificates/0'].juju_status.current = 'idle'
++ .apps['self-signed-certificates'].units['self-signed-certificates/0'].juju_status.version = '3.6.14'
++ .apps['self-signed-certificates'].units['self-signed-certificates/0'].leader = True
++ .apps['self-signed-certificates'].units['self-signed-certificates/0'].machine = '3'
++ .apps['self-signed-certificates'].units['self-signed-certificates/0'].public_address = '10.30.3.158'
++ .apps['self-signed-certificates'].endpoint_bindings[''] = 'alpha'
++ .apps['self-signed-certificates'].endpoint_bindings['certificates'] = 'alpha'
++ .apps['self-signed-certificates'].endpoint_bindings['send-ca-cert'] = 'alpha'
++ .apps['self-signed-certificates'].endpoint_bindings['tracing'] = 'alpha'
++ .storage.storage['data/0'].kind = 'filesystem'
++ .storage.storage['data/0'].status.current = 'attached'
++ .storage.storage['data/0'].persistent = False
++ .storage.storage['data/0'].life = 'alive'
++ .storage.storage['data/0'].attachments.units['cassandra/0'].machine = '0'
++ .storage.storage['data/0'].attachments.units['cassandra/0'].location = '/var/snap/charmed-cassandra/common/var/lib/cassandra'
++ .storage.storage['data/0'].attachments.units['cassandra/0'].life = 'alive'
++ .storage.storage['data/1'].kind = 'filesystem'
++ .storage.storage['data/1'].status.current = 'attached'
++ .storage.storage['data/1'].persistent = False
++ .storage.storage['data/1'].life = 'alive'
++ .storage.storage['data/1'].attachments.units['cassandra/1'].machine = '1'
++ .storage.storage['data/1'].attachments.units['cassandra/1'].location = '/var/snap/charmed-cassandra/common/var/lib/cassandra'
++ .storage.storage['data/1'].attachments.units['cassandra/1'].life = 'alive'
++ .storage.filesystems['0/0'].size = 147718
++ .storage.filesystems['0/0'].provider_id = '0/0'
++ .storage.filesystems['0/0'].storage = 'data/0'
++ .storage.filesystems['0/0'].attachments.machines['0'].mount_point = '/var/snap/charmed-cassandra/common/var/lib/cassandra'
++ .storage.filesystems['0/0'].attachments.machines['0'].read_only = False
++ .storage.filesystems['0/0'].attachments.machines['0'].life = 'alive'
++ .storage.filesystems['0/0'].attachments.units['cassandra/0'].machine = '0'
++ .storage.filesystems['0/0'].attachments.units['cassandra/0'].location = '/var/snap/charmed-cassandra/common/var/lib/cassandra'
++ .storage.filesystems['0/0'].attachments.units['cassandra/0'].life = 'alive'
++ .storage.filesystems['0/0'].pool = 'rootfs'
++ .storage.filesystems['0/0'].life = 'alive'
++ .storage.filesystems['0/0'].status.current = 'attached'
++ .storage.filesystems['1/1'].size = 147718
++ .storage.filesystems['1/1'].provider_id = '1/1'
++ .storage.filesystems['1/1'].storage = 'data/1'
++ .storage.filesystems['1/1'].attachments.machines['1'].mount_point = '/var/snap/charmed-cassandra/common/var/lib/cassandra'
++ .storage.filesystems['1/1'].attachments.machines['1'].read_only = False
++ .storage.filesystems['1/1'].attachments.machines['1'].life = 'alive'
++ .storage.filesystems['1/1'].attachments.units['cassandra/1'].machine = '1'
++ .storage.filesystems['1/1'].attachments.units['cassandra/1'].location = '/var/snap/charmed-cassandra/common/var/lib/cassandra'
++ .storage.filesystems['1/1'].attachments.units['cassandra/1'].life = 'alive'
++ .storage.filesystems['1/1'].pool = 'rootfs'
++ .storage.filesystems['1/1'].life = 'alive'
++ .storage.filesystems['1/1'].status.current = 'attached'
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['application'].units['application/0'].juju_status.message = 'running cassandra-client-relation-departed hook for cassandra/0'
++ .apps['application'].units['application/0'].juju_status.message = 'running cassandra-client-relation-departed hook for cassandra/1'
+- .apps['cassandra'].units['cassandra/0'].juju_status.message = 'running secret-remove hook for secret:d6gfgm1vmeesi94qsqm0/3'
++ .apps['cassandra'].units['cassandra/0'].juju_status.message = 'running secret-remove hook for secret:d6gfgm9vmeesi94qsqmg/3'
+- .apps['cassandra'].units['cassandra/1'].juju_status.message = 'running cassandra-client-relation-changed hook for application/0'
++ .apps['cassandra'].units['cassandra/1'].juju_status.message = 'running cassandra-client-relation-departed hook for application/0'
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['application'].units['application/0'].juju_status.current = 'executing'
+- .apps['application'].units['application/0'].juju_status.message = 'running cassandra-client-relation-departed hook for cassandra/1'
++ .apps['application'].units['application/0'].juju_status.current = 'idle'
+INFO     jubilant:_juju.py:237 cli: juju status --model test-cas --format json
+INFO     jubilant:_juju.py:237 cli: juju secrets --model test-cas --format json
+INFO     jubilant:_juju.py:237 cli: juju show-secret --model test-cas --reveal --format json d6gfespvmeesi94qsql0
+INFO     integration.helpers.juju:juju.py:76 revealed secret d6gfespvmeesi94qsql0: {"d6gfespvmeesi94qsql0":{"revision":1,"checksum":"9288f6813cfff71a80e71adf4d5306883b918a006ec3698a4902530592403417","owner":"cassandra","label":"cassandra-peers.cassandra.app","created":"2026-02-27T01:48:03Z","updated":"2026-02-27T01:48:03Z","content":{"Data":{"internal-ca-key-secret":"-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEAoSOgfnlhUApn3cmVkibi9MNZVltTCOh1JUzOtTkrAcIWH+E2\nF9EAWYSfZHKmCwar0n6CHPUELSjX2Q1NkXh3sU/oM6LbRp+RpgOBCXNcJzetwmkg\nE4AkP8C9SuwPf0fXjNMkLmqH/jngHjNWNQrxnpFjSxrx9J0lg2JXYd5wcMznLbmK\n0kU+ChdX/c5bxdQeR3XwE7Ocv4IDvvWyIs8iL2O+/RpgjnvpofT6fQ2OKqb4her0\nyA4Ysgp6edYpCTdhR9RSS3VqxTPxJp6OInHvGgfU09Encc5YFpE373lZu6/7BH5P\nKF2ZaqePK5esFCwqwEMpJR/xTP0oqs+lcUMEXwIDAQABAoIBAErJ/9gjmwxsv/d6\n8+5RGR50OpcvrNLiHVjyFLCc936J5/3k59fW+9wQh3A2HCXa802vxNEO0WDqZ4BI\nwdtGN/t2dHXe3Poi3pVYZAAQaFGVcJLeevJCE9D5MoI/HRQ8smkcqFrYvAS9NO2f\ncyAMU8d+gEDgITOg6kPYFWmJtdNMMSi43C+hAuaVTWrQYd9rZkISgngn4Lzj7qgX\nZ0zHjLc6hXLKvG4yOQ98tdL8G4ummliyGl+BA/Ng/8NISrLDXx1zXWUYtdzfBc0j\nTiwXn/Xfx8XvHTAPgFm80KswDmcj0kRz2PCQf3aWxLNUN33ekvh1y9JjipTPQRV/\ngePSPiECgYEA4+JwVe9OD/90A0r/vXwkAqWjkLw4kBO6d3AShh6cbPabe1q4as7s\nDnwIjDK/T2TmAaunBVtwExumjNtgVO9vMfuqOW1TzMvKbd1ZGBjx5QvxJGJLSOUv\n/ZcOK5hpq9Gf3TlHLyE/a+VIYLDZMwoPJj1EkIl1B3zBuhT8HrIzZKECgYEAtQUW\nEgsnzeK1tjugeqWZWmz5YZZjjnnkF1xMUQiWoR4KwDEJK9o6NvrVogXmN2bjpK2u\nUdrqtNwuorVJ7O+8+9rdmWz0Fwcx1X6P1jKFv82UoMzU0QkdHW6qXHD6IP7yJaTR\n0wdWVJ0Q0NkssWbxja/rAUmNRY43gKPeMeD0yP8CgYAQHsiLi64d+5gdU4TbxphV\nh5oWdvoZVwvtvwPQcQHnw1okU7qP86tHKwb/w+c8moqau6XI/zriXyZc+HfMClP3\nWTIlddJjvlbHhszyo3EZHsskI7/nnC7U5YafFt0CxoVkhNTARL3TyBhinp/+uEty\nDQt4ngClUvHxU+Kx2TFBgQKBgDrEN/ILpRR18UAEA4lNkYeFsUA5LoDmmWHsGOqF\nu0D7G8phIPUXl6aZsBk1iRObV3Py3pC8XU3x3UH9UM6W1ed9mktgz61aLJd+yvti\n04D9IK9DUCO8rbMMZko0cz+bBMmrxGKaEzDM/NSQbK37GZhB8C0uz6oxDVu51zyi\nJ1XJAoGBAKk08RPr7MA9/9OElCeKSBXoQKdc1x1ILC/kFMqKAFxk7EDhU+HLyTer\n1QJVgQ6jNjPCxsXtA0Z5rCzL3BhKy9IvdpWAuc7se4B9g2SbIb+5xfQQnrbiOOxf\nfQgJ8MypRNrtDNwnB9leiXcymmLQ4PhXL355CM7fTjVL9m1s1hoN\n-----END RSA PRIVATE KEY-----","internal-ca-secret":"-----BEGIN CERTIFICATE-----\nMIIDdDCCAlygAwIBAgIUIbOJMV/6Q5xE5Viu0TxwJtJCXfowDQYJKoZIhvcNAQEL\nBQAwUjESMBAGA1UEAwwJY2Fzc2FuZHJhMS0wKwYDVQQtDCQyMTc0NjIzZi04NmIw\nLTQ2MWItOTk2OC03OWI2YjAyZjRjMmQxDTALBgNVBAoMBHBlZXIwHhcNMjYwMjI3\nMDE0NjI3WhcNMzYwMjI1MDE0NjI3WjBSMRIwEAYDVQQDDAljYXNzYW5kcmExLTAr\nBgNVBC0MJDIxNzQ2MjNmLTg2YjAtNDYxYi05OTY4LTc5YjZiMDJmNGMyZDENMAsG\nA1UECgwEcGVlcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAKEjoH55\nYVAKZ93JlZIm4vTDWVZbUwjodSVMzrU5KwHCFh/hNhfRAFmEn2RypgsGq9J+ghz1\nBC0o19kNTZF4d7FP6DOi20afkaYDgQlzXCc3rcJpIBOAJD/AvUrsD39H14zTJC5q\nh/454B4zVjUK8Z6RY0sa8fSdJYNiV2HecHDM5y25itJFPgoXV/3OW8XUHkd18BOz\nnL+CA771siLPIi9jvv0aYI576aH0+n0Njiqm+IXq9MgOGLIKennWKQk3YUfUUkt1\nasUz8SaejiJx7xoH1NPRJ3HOWBaRN+95Wbuv+wR+TyhdmWqnjyuXrBQsKsBDKSUf\n8Uz9KKrPpXFDBF8CAwEAAaNCMEAwHQYDVR0OBBYEFLmLjOCFQx4N0VKjNYpvkLwp\nAITnMA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgKkMA0GCSqGSIb3DQEB\nCwUAA4IBAQCFxpo7XVFiEMk7MzqNs/rGQCjqCeP9UnbanGsIeDwcTJxY94nD6aBb\naum0LxNbxAYyXptRvWz+75aRaVcdhuJwg2zCJAWCZP3EL4nMbWO6bJkJJYGnbCII\np9s8/ynckD7LpL/mSMzGPb4UuE/EMiGl4odum/0Om4y6BOo/yQK0Dr72c34mW+Mi\n1kTAa0rDQuY0Kg+EddOjTyKtlH9sddGBkuwD2fiF6KjK5Iem9YGCSZdl+u3LjBEm\nZaBn08qCRRxm28Lz9ebcWnhXbY0J5L0RF2LA7NFtUe65yheDPbnc7VXj09AkgOkd\n5fLcbxqvT5kUyAaANvaZumlgcAeu6gD0\n-----END CERTIFICATE-----","operator-password":"cqnVSaUGyO9aoLWDhJlJMWl6J6A7uOEM"}}}}
+
+INFO     integration.helpers.cassandra:cassandra.py:59 SSL context is disabled
+INFO     cassandra.policies:policies.py:289 Using datacenter 'datacenter1' for DCAwareRoundRobinPolicy (via host '10.30.3.43:9042'); if incorrect, please specify a local_dc to the constructor, or limit contact points to local cluster nodes
+INFO     jubilant:_juju.py:237 cli: juju status --model test-cas --format json
+INFO     jubilant:_juju.py:237 cli: juju secrets --model test-cas --format json
+INFO     jubilant:_juju.py:237 cli: juju show-secret --model test-cas --reveal --format json d6gfespvmeesi94qsql0
+INFO     integration.helpers.juju:juju.py:76 revealed secret d6gfespvmeesi94qsql0: {"d6gfespvmeesi94qsql0":{"revision":1,"checksum":"9288f6813cfff71a80e71adf4d5306883b918a006ec3698a4902530592403417","owner":"cassandra","label":"cassandra-peers.cassandra.app","created":"2026-02-27T01:48:03Z","updated":"2026-02-27T01:48:03Z","content":{"Data":{"internal-ca-key-secret":"-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEAoSOgfnlhUApn3cmVkibi9MNZVltTCOh1JUzOtTkrAcIWH+E2\nF9EAWYSfZHKmCwar0n6CHPUELSjX2Q1NkXh3sU/oM6LbRp+RpgOBCXNcJzetwmkg\nE4AkP8C9SuwPf0fXjNMkLmqH/jngHjNWNQrxnpFjSxrx9J0lg2JXYd5wcMznLbmK\n0kU+ChdX/c5bxdQeR3XwE7Ocv4IDvvWyIs8iL2O+/RpgjnvpofT6fQ2OKqb4her0\nyA4Ysgp6edYpCTdhR9RSS3VqxTPxJp6OInHvGgfU09Encc5YFpE373lZu6/7BH5P\nKF2ZaqePK5esFCwqwEMpJR/xTP0oqs+lcUMEXwIDAQABAoIBAErJ/9gjmwxsv/d6\n8+5RGR50OpcvrNLiHVjyFLCc936J5/3k59fW+9wQh3A2HCXa802vxNEO0WDqZ4BI\nwdtGN/t2dHXe3Poi3pVYZAAQaFGVcJLeevJCE9D5MoI/HRQ8smkcqFrYvAS9NO2f\ncyAMU8d+gEDgITOg6kPYFWmJtdNMMSi43C+hAuaVTWrQYd9rZkISgngn4Lzj7qgX\nZ0zHjLc6hXLKvG4yOQ98tdL8G4ummliyGl+BA/Ng/8NISrLDXx1zXWUYtdzfBc0j\nTiwXn/Xfx8XvHTAPgFm80KswDmcj0kRz2PCQf3aWxLNUN33ekvh1y9JjipTPQRV/\ngePSPiECgYEA4+JwVe9OD/90A0r/vXwkAqWjkLw4kBO6d3AShh6cbPabe1q4as7s\nDnwIjDK/T2TmAaunBVtwExumjNtgVO9vMfuqOW1TzMvKbd1ZGBjx5QvxJGJLSOUv\n/ZcOK5hpq9Gf3TlHLyE/a+VIYLDZMwoPJj1EkIl1B3zBuhT8HrIzZKECgYEAtQUW\nEgsnzeK1tjugeqWZWmz5YZZjjnnkF1xMUQiWoR4KwDEJK9o6NvrVogXmN2bjpK2u\nUdrqtNwuorVJ7O+8+9rdmWz0Fwcx1X6P1jKFv82UoMzU0QkdHW6qXHD6IP7yJaTR\n0wdWVJ0Q0NkssWbxja/rAUmNRY43gKPeMeD0yP8CgYAQHsiLi64d+5gdU4TbxphV\nh5oWdvoZVwvtvwPQcQHnw1okU7qP86tHKwb/w+c8moqau6XI/zriXyZc+HfMClP3\nWTIlddJjvlbHhszyo3EZHsskI7/nnC7U5YafFt0CxoVkhNTARL3TyBhinp/+uEty\nDQt4ngClUvHxU+Kx2TFBgQKBgDrEN/ILpRR18UAEA4lNkYeFsUA5LoDmmWHsGOqF\nu0D7G8phIPUXl6aZsBk1iRObV3Py3pC8XU3x3UH9UM6W1ed9mktgz61aLJd+yvti\n04D9IK9DUCO8rbMMZko0cz+bBMmrxGKaEzDM/NSQbK37GZhB8C0uz6oxDVu51zyi\nJ1XJAoGBAKk08RPr7MA9/9OElCeKSBXoQKdc1x1ILC/kFMqKAFxk7EDhU+HLyTer\n1QJVgQ6jNjPCxsXtA0Z5rCzL3BhKy9IvdpWAuc7se4B9g2SbIb+5xfQQnrbiOOxf\nfQgJ8MypRNrtDNwnB9leiXcymmLQ4PhXL355CM7fTjVL9m1s1hoN\n-----END RSA PRIVATE KEY-----","internal-ca-secret":"-----BEGIN CERTIFICATE-----\nMIIDdDCCAlygAwIBAgIUIbOJMV/6Q5xE5Viu0TxwJtJCXfowDQYJKoZIhvcNAQEL\nBQAwUjESMBAGA1UEAwwJY2Fzc2FuZHJhMS0wKwYDVQQtDCQyMTc0NjIzZi04NmIw\nLTQ2MWItOTk2OC03OWI2YjAyZjRjMmQxDTALBgNVBAoMBHBlZXIwHhcNMjYwMjI3\nMDE0NjI3WhcNMzYwMjI1MDE0NjI3WjBSMRIwEAYDVQQDDAljYXNzYW5kcmExLTAr\nBgNVBC0MJDIxNzQ2MjNmLTg2YjAtNDYxYi05OTY4LTc5YjZiMDJmNGMyZDENMAsG\nA1UECgwEcGVlcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAKEjoH55\nYVAKZ93JlZIm4vTDWVZbUwjodSVMzrU5KwHCFh/hNhfRAFmEn2RypgsGq9J+ghz1\nBC0o19kNTZF4d7FP6DOi20afkaYDgQlzXCc3rcJpIBOAJD/AvUrsD39H14zTJC5q\nh/454B4zVjUK8Z6RY0sa8fSdJYNiV2HecHDM5y25itJFPgoXV/3OW8XUHkd18BOz\nnL+CA771siLPIi9jvv0aYI576aH0+n0Njiqm+IXq9MgOGLIKennWKQk3YUfUUkt1\nasUz8SaejiJx7xoH1NPRJ3HOWBaRN+95Wbuv+wR+TyhdmWqnjyuXrBQsKsBDKSUf\n8Uz9KKrPpXFDBF8CAwEAAaNCMEAwHQYDVR0OBBYEFLmLjOCFQx4N0VKjNYpvkLwp\nAITnMA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgKkMA0GCSqGSIb3DQEB\nCwUAA4IBAQCFxpo7XVFiEMk7MzqNs/rGQCjqCeP9UnbanGsIeDwcTJxY94nD6aBb\naum0LxNbxAYyXptRvWz+75aRaVcdhuJwg2zCJAWCZP3EL4nMbWO6bJkJJYGnbCII\np9s8/ynckD7LpL/mSMzGPb4UuE/EMiGl4odum/0Om4y6BOo/yQK0Dr72c34mW+Mi\n1kTAa0rDQuY0Kg+EddOjTyKtlH9sddGBkuwD2fiF6KjK5Iem9YGCSZdl+u3LjBEm\nZaBn08qCRRxm28Lz9ebcWnhXbY0J5L0RF2LA7NFtUe65yheDPbnc7VXj09AkgOkd\n5fLcbxqvT5kUyAaANvaZumlgcAeu6gD0\n-----END CERTIFICATE-----","operator-password":"cqnVSaUGyO9aoLWDhJlJMWl6J6A7uOEM"}}}}
+
+INFO     integration.helpers.cassandra:cassandra.py:59 SSL context is disabled
+INFO     cassandra.policies:policies.py:289 Using datacenter 'datacenter1' for DCAwareRoundRobinPolicy (via host '10.30.3.43:9042'); if incorrect, please specify a local_dc to the constructor, or limit contact points to local cluster nodes
+INFO     jubilant:_juju.py:237 cli: juju status --model test-cas --format json
+INFO     jubilant:_juju.py:237 cli: juju secrets --model test-cas --format json
+INFO     jubilant:_juju.py:237 cli: juju show-secret --model test-cas --reveal --format json d6gfespvmeesi94qsql0
+INFO     integration.helpers.juju:juju.py:76 revealed secret d6gfespvmeesi94qsql0: {"d6gfespvmeesi94qsql0":{"revision":1,"checksum":"9288f6813cfff71a80e71adf4d5306883b918a006ec3698a4902530592403417","owner":"cassandra","label":"cassandra-peers.cassandra.app","created":"2026-02-27T01:48:03Z","updated":"2026-02-27T01:48:03Z","content":{"Data":{"internal-ca-key-secret":"-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEAoSOgfnlhUApn3cmVkibi9MNZVltTCOh1JUzOtTkrAcIWH+E2\nF9EAWYSfZHKmCwar0n6CHPUELSjX2Q1NkXh3sU/oM6LbRp+RpgOBCXNcJzetwmkg\nE4AkP8C9SuwPf0fXjNMkLmqH/jngHjNWNQrxnpFjSxrx9J0lg2JXYd5wcMznLbmK\n0kU+ChdX/c5bxdQeR3XwE7Ocv4IDvvWyIs8iL2O+/RpgjnvpofT6fQ2OKqb4her0\nyA4Ysgp6edYpCTdhR9RSS3VqxTPxJp6OInHvGgfU09Encc5YFpE373lZu6/7BH5P\nKF2ZaqePK5esFCwqwEMpJR/xTP0oqs+lcUMEXwIDAQABAoIBAErJ/9gjmwxsv/d6\n8+5RGR50OpcvrNLiHVjyFLCc936J5/3k59fW+9wQh3A2HCXa802vxNEO0WDqZ4BI\nwdtGN/t2dHXe3Poi3pVYZAAQaFGVcJLeevJCE9D5MoI/HRQ8smkcqFrYvAS9NO2f\ncyAMU8d+gEDgITOg6kPYFWmJtdNMMSi43C+hAuaVTWrQYd9rZkISgngn4Lzj7qgX\nZ0zHjLc6hXLKvG4yOQ98tdL8G4ummliyGl+BA/Ng/8NISrLDXx1zXWUYtdzfBc0j\nTiwXn/Xfx8XvHTAPgFm80KswDmcj0kRz2PCQf3aWxLNUN33ekvh1y9JjipTPQRV/\ngePSPiECgYEA4+JwVe9OD/90A0r/vXwkAqWjkLw4kBO6d3AShh6cbPabe1q4as7s\nDnwIjDK/T2TmAaunBVtwExumjNtgVO9vMfuqOW1TzMvKbd1ZGBjx5QvxJGJLSOUv\n/ZcOK5hpq9Gf3TlHLyE/a+VIYLDZMwoPJj1EkIl1B3zBuhT8HrIzZKECgYEAtQUW\nEgsnzeK1tjugeqWZWmz5YZZjjnnkF1xMUQiWoR4KwDEJK9o6NvrVogXmN2bjpK2u\nUdrqtNwuorVJ7O+8+9rdmWz0Fwcx1X6P1jKFv82UoMzU0QkdHW6qXHD6IP7yJaTR\n0wdWVJ0Q0NkssWbxja/rAUmNRY43gKPeMeD0yP8CgYAQHsiLi64d+5gdU4TbxphV\nh5oWdvoZVwvtvwPQcQHnw1okU7qP86tHKwb/w+c8moqau6XI/zriXyZc+HfMClP3\nWTIlddJjvlbHhszyo3EZHsskI7/nnC7U5YafFt0CxoVkhNTARL3TyBhinp/+uEty\nDQt4ngClUvHxU+Kx2TFBgQKBgDrEN/ILpRR18UAEA4lNkYeFsUA5LoDmmWHsGOqF\nu0D7G8phIPUXl6aZsBk1iRObV3Py3pC8XU3x3UH9UM6W1ed9mktgz61aLJd+yvti\n04D9IK9DUCO8rbMMZko0cz+bBMmrxGKaEzDM/NSQbK37GZhB8C0uz6oxDVu51zyi\nJ1XJAoGBAKk08RPr7MA9/9OElCeKSBXoQKdc1x1ILC/kFMqKAFxk7EDhU+HLyTer\n1QJVgQ6jNjPCxsXtA0Z5rCzL3BhKy9IvdpWAuc7se4B9g2SbIb+5xfQQnrbiOOxf\nfQgJ8MypRNrtDNwnB9leiXcymmLQ4PhXL355CM7fTjVL9m1s1hoN\n-----END RSA PRIVATE KEY-----","internal-ca-secret":"-----BEGIN CERTIFICATE-----\nMIIDdDCCAlygAwIBAgIUIbOJMV/6Q5xE5Viu0TxwJtJCXfowDQYJKoZIhvcNAQEL\nBQAwUjESMBAGA1UEAwwJY2Fzc2FuZHJhMS0wKwYDVQQtDCQyMTc0NjIzZi04NmIw\nLTQ2MWItOTk2OC03OWI2YjAyZjRjMmQxDTALBgNVBAoMBHBlZXIwHhcNMjYwMjI3\nMDE0NjI3WhcNMzYwMjI1MDE0NjI3WjBSMRIwEAYDVQQDDAljYXNzYW5kcmExLTAr\nBgNVBC0MJDIxNzQ2MjNmLTg2YjAtNDYxYi05OTY4LTc5YjZiMDJmNGMyZDENMAsG\nA1UECgwEcGVlcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAKEjoH55\nYVAKZ93JlZIm4vTDWVZbUwjodSVMzrU5KwHCFh/hNhfRAFmEn2RypgsGq9J+ghz1\nBC0o19kNTZF4d7FP6DOi20afkaYDgQlzXCc3rcJpIBOAJD/AvUrsD39H14zTJC5q\nh/454B4zVjUK8Z6RY0sa8fSdJYNiV2HecHDM5y25itJFPgoXV/3OW8XUHkd18BOz\nnL+CA771siLPIi9jvv0aYI576aH0+n0Njiqm+IXq9MgOGLIKennWKQk3YUfUUkt1\nasUz8SaejiJx7xoH1NPRJ3HOWBaRN+95Wbuv+wR+TyhdmWqnjyuXrBQsKsBDKSUf\n8Uz9KKrPpXFDBF8CAwEAAaNCMEAwHQYDVR0OBBYEFLmLjOCFQx4N0VKjNYpvkLwp\nAITnMA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgKkMA0GCSqGSIb3DQEB\nCwUAA4IBAQCFxpo7XVFiEMk7MzqNs/rGQCjqCeP9UnbanGsIeDwcTJxY94nD6aBb\naum0LxNbxAYyXptRvWz+75aRaVcdhuJwg2zCJAWCZP3EL4nMbWO6bJkJJYGnbCII\np9s8/ynckD7LpL/mSMzGPb4UuE/EMiGl4odum/0Om4y6BOo/yQK0Dr72c34mW+Mi\n1kTAa0rDQuY0Kg+EddOjTyKtlH9sddGBkuwD2fiF6KjK5Iem9YGCSZdl+u3LjBEm\nZaBn08qCRRxm28Lz9ebcWnhXbY0J5L0RF2LA7NFtUe65yheDPbnc7VXj09AkgOkd\n5fLcbxqvT5kUyAaANvaZumlgcAeu6gD0\n-----END CERTIFICATE-----","operator-password":"cqnVSaUGyO9aoLWDhJlJMWl6J6A7uOEM"}}}}
+
+INFO     integration.helpers.cassandra:cassandra.py:59 SSL context is disabled
+INFO     cassandra.policies:policies.py:289 Using datacenter 'datacenter1' for DCAwareRoundRobinPolicy (via host '10.30.3.43:9042'); if incorrect, please specify a local_dc to the constructor, or limit contact points to local cluster nodes
