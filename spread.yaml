@@ -110,8 +110,9 @@ prepare: |
   snap install --classic concierge
 
   # Install charmcraft & pipx (on lxd-vm backend)
-  concierge prepare --trace
+  concierge prepare --extra-debs pipx --trace
 
+  pipx ensurepath
   pipx install tox poetry
 prepare-each: |
   cd "$SPREAD_PATH"
