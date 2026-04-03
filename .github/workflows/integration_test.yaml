@@ -20,7 +20,7 @@ jobs:
       - name: Set up environment
         run: |
           sudo snap install go --classic
-          go install github.com/snapcore/spread/cmd/spread@latest
+          go install github.com/canonical/spread/cmd/spread@latest
           pipx install tox poetry
       - name: Collect spread jobs
         id: collect-jobs
@@ -51,6 +51,11 @@ jobs:
                   architecture = "arm64"
               else:
                   architecture = "amd64"
+              # resolve SH runner label
+              if "24.04" in runner or "latest" in runner:
+                  sh_runner = f"self-hosted-linux-{architecture}-noble-large"
+              else:
+                  sh_runner = f"self-hosted-linux-{architecture}-jammy-large"
               # Example: "test_charm.py:juju36 | amd64"
               name = f"{task}:{variant} | {architecture}"
               # ":" character not valid in GitHub Actions artifact
@@ -59,7 +64,7 @@ jobs:
                   "spread_job": job,
                   "name": name,
                   "name_in_artifact": name_in_artifact,
-                  "runner": runner,
+                  "runner": sh_runner,
               })
           output = f"jobs={json.dumps(jobs)}"
           print(output)
@@ -112,7 +117,6 @@ jobs:
             /usr/share/sbt \
             /usr/share/swift \
             /home/linuxbrew
-          pipx uninstall-all
           printf '\nDisk usage\n'
           df --human-readable
       - name: Checkout
@@ -125,7 +129,7 @@ jobs:
       # https://github.com/canonical/charmcraft/issues/2130 fixed
       - run: |
           sudo snap install go --classic
-          go install github.com/snapcore/spread/cmd/spread@latest
+          go install github.com/canonical/spread/cmd/spread@latest
       - name: Download packed charm(s)
         timeout-minutes: 5
         uses: actions/download-artifact@v4

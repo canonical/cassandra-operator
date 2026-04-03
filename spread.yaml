@@ -80,6 +80,7 @@ backends:
       EOF
 
       sudo passwd --delete "$USER"
+      sudo systemctl reload ssh || sudo systemctl restart ssh
 
       ADDRESS localhost
     # HACK: spread does not pass environment variables set on runner
@@ -88,7 +89,7 @@ backends:
       CI: "$(HOST: echo $CI)"
     systems:
       - ubuntu-24.04:
-          username: runner
+          username: ubuntu
 
 suites:
   tests/spread/:
@@ -109,8 +110,9 @@ prepare: |
   snap install --classic concierge
 
   # Install charmcraft & pipx (on lxd-vm backend)
-  concierge prepare --trace
+  concierge prepare --extra-debs pipx --trace
 
+  pipx ensurepath
   pipx install tox poetry
 prepare-each: |
   cd "$SPREAD_PATH"
