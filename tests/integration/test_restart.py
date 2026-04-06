@@ -12,7 +12,12 @@ import jubilant
 
 from integration.helpers.cassandra import OPERATOR_PASSWORD
 from integration.helpers.continuous_writes import ContinuousWrites
-from integration.helpers.juju import app_secret_extract, get_hosts, get_unit_address
+from integration.helpers.juju import (
+    app_secret_extract,
+    get_hosts,
+    get_unit_address,
+    nodetool_cli_args,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +47,11 @@ def test_graceful_restart_unit(
 
     juju.ssh(
         f"{app_name}/0",
-        "sudo charmed-cassandra.nodetool drain && sudo snap restart charmed-cassandra.daemon",
+        (
+            "sudo charmed-cassandra.nodetool ",
+            f"{nodetool_cli_args(juju, app_name)} ",
+            "drain && sudo snap restart charmed-cassandra.daemon",
+        ),
     )
 
     sleep(60)
@@ -111,7 +120,11 @@ def test_graceful_restart_cluster(
     for i in range(0, 2):
         juju.ssh(
             f"{app_name}/{i}",
-            "sudo charmed-cassandra.nodetool drain && sudo snap restart charmed-cassandra.daemon",
+            (
+                "sudo charmed-cassandra.nodetool ",
+                f"{nodetool_cli_args(juju, app_name)} ",
+                "drain && sudo snap restart charmed-cassandra.daemon",
+            ),
         )
 
     sleep(60)

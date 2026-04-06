@@ -18,7 +18,7 @@ from ops import EventBase, ModelError, SecretNotFoundError, main
 from common.exceptions import BadSecretError, ExecError
 from common.lock_manager import LockManager
 from core.config import CharmConfig
-from core.literals import CASSANDRA_ADMIN_USERNAME
+from core.literals import CASSANDRA_ADMIN_USERNAME, NODETOOL_USERNAME
 from core.state import (
     JMX_EXPORTER_PORT,
     METRICS_RULES_DIR,
@@ -61,7 +61,11 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
 
         self.state = ApplicationState(self)
         self.workload = CassandraWorkload()
-        self.node_manager = NodeManager(workload=self.workload)
+        self.node_manager = NodeManager(
+            workload=self.workload,
+            username=NODETOOL_USERNAME,
+            password=self.state.cluster.nodetool_password_secret,
+        )
         self.tls_manager = TLSManager(workload=self.workload)
 
         self.refresh = MachinesRefresh(

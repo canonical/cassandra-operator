@@ -99,9 +99,11 @@ class ConfigManager:
             whether config was changed.
         """
         content = self._render_env(
-            self._map_env(self.workload.cassandra_paths.env.read_text().split("\n"))
+            {"LOCAL_JMX": "no"}
+            | self._map_env(self.workload.cassandra_paths.env.read_text().split("\n"))
             | self._env_heap_config(cassandra_limit_memory_mb=cassandra_limit_memory_mb)
-            | self._env_jmx_exporter_config(
+            | self._env_jvm_extra_opts(
+                self.workload.cassandra_paths.jmxremote_password_file.as_posix(),
                 self.workload.cassandra_paths.jmx_exporter.as_posix(),
                 self.workload.cassandra_paths.jmx_exporter_config.as_posix(),
             )
@@ -115,6 +117,11 @@ class ConfigManager:
 
         self.workload.cassandra_paths.env.write_text(content)
         return True
+
+    def render_passwords_file(self, credentials: dict[str, str]) -> None:
+        """Render JMX remote passwords file with given credentials."""
+        content = "\n".join([f"{u} {p}" for u, p in credentials.items()]) + "\n"
+        self.workload.cassandra_paths.jmxremote_password_file.write_text(content)
 
     @staticmethod
     def _map_env(env: Iterable[str]) -> dict[str, str]:
@@ -152,6 +159,27 @@ class ConfigManager:
             if agent_path
             else "",
         }
+
+    @staticmethod
+    def _env_remote_jmx_config(password_file: str) -> dict[str, str]:
+        return {
+            "JVM_EXTRA_OPTS": (
+                "-Dcom.sun.management.jmxremote.authenticate=true "
+                f"-Dcom.sun.management.jmxremote.password.file={password_file}"
+            )
+        }
+
+    @staticmethod
+    def _env_jvm_extra_opts(
+        password_file: str, agent_path: str | None, agent_config_path: str | None
+    ) -> dict[str, str]:
+        cfg = ConfigManager._env_remote_jmx_config(password_file)
+        if agent_path:
+            jmx_exporter_config = ConfigManager._env_jmx_exporter_config(
+                agent_path=agent_path, agent_config_path=agent_config_path
+            )
+            cfg["JVM_EXTRA_OPTS"] += f" {jmx_exporter_config['JVM_EXTRA_OPTS']}"
+        return cfg
 
     def _cassandra_client_tls_config(
         self,

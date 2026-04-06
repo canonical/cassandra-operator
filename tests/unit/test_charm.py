@@ -35,6 +35,7 @@ def test_start_change_password():
             new_callable=PropertyMock(return_value=False),
         ),
     ):
+        workload.return_value.exec.return_value = ("ok", None)
         workload.return_value.generate_string.return_value = "password"
 
         state = ctx.run(ctx.on.start(), state)
@@ -65,6 +66,7 @@ def test_start_subordinate_only_after_leader_active():
             "charms.rolling_ops.v0.rollingops.RollingOpsManager._on_acquire_lock", autospec=True
         ),
     ):
+        workload.return_value.exec.return_value = ("ok", None)
         workload.return_value.generate_string.return_value = "password"
 
         state = ctx.run(ctx.on.start(), state)
@@ -73,7 +75,11 @@ def test_start_subordinate_only_after_leader_active():
         relation = testing.PeerRelation(
             id=1,
             endpoint=PEER_RELATION,
-            local_app_data={"cluster_state": "active", "seeds": "1.1.1.1:7000"},
+            local_app_data={
+                "cluster_state": "active",
+                "seeds": "1.1.1.1:7000",
+                "nodetool-password": "password",
+            },
             local_unit_data={"ip": "1.1.1.1"},
         )
         state = testing.State(relations={relation})
@@ -90,7 +96,11 @@ def test_start_subordinate_only_after_seed_active(workload_active: bool, seed_ac
     relation = testing.PeerRelation(
         id=1,
         endpoint=PEER_RELATION,
-        local_app_data={"cluster_state": "active", "seeds": "2.2.2.2:7000"},
+        local_app_data={
+            "cluster_state": "active",
+            "seeds": "2.2.2.2:7000",
+            "nodetool-password": "password",
+        },
         local_unit_data={"ip": "1.1.1.1"},
         peers_data={
             2: {
@@ -115,6 +125,7 @@ def test_start_subordinate_only_after_seed_active(workload_active: bool, seed_ac
         patch("charm.CassandraWorkload") as workload,
         patch("charm.CassandraCharm.restart") as restart,
     ):
+        workload.return_value.exec.return_value = ("ok", None)
         workload.return_value.generate_string.return_value = "password"
 
         state = ctx.run(ctx.on.start(), state)
@@ -170,6 +181,7 @@ def test_config_changed_invalid_config():
         patch("charm.CassandraCharm.setup_internal_certificates", return_value=True),
         patch("charm.CassandraWorkload") as workload,
     ):
+        workload.return_value.exec.return_value = ("ok", None)
         workload.return_value.generate_string.return_value = "password"
 
         state = ctx.run(ctx.on.config_changed(), state)
@@ -202,6 +214,7 @@ def test_config_changed(env_changed: bool, cassandra_config_changed: bool):
             new_callable=PropertyMock(return_value=True),
         ),
     ):
+        workload.return_value.exec.return_value = ("ok", None)
         workload.return_value.generate_string.return_value = "password"
 
         state = ctx.run(ctx.on.config_changed(), state)
