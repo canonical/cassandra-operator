@@ -101,7 +101,7 @@ def read_nodetool_credentials(juju: jubilant.Juju, app_name: str) -> tuple[str, 
     """Read nodetool username & password from secrets."""
     username = "charmed-operator"
     password = app_secret_extract(juju, app_name, username) or ""
-    return (username, password)
+    return username, password
 
 
 def nodetool_cli_args(juju: jubilant.Juju, app_name: str) -> str:
@@ -114,8 +114,7 @@ def check_node_is_up(juju: jubilant.Juju, app_name: str, unit_num: int, unit_add
     nd_tool_status_raw = juju.ssh(
         target=f"{app_name}/{unit_num}",
         command=(
-            "sudo snap run charmed-cassandra.nodetool ",
-            f"{nodetool_cli_args(juju, app_name)} status",
+            f"sudo snap run charmed-cassandra.nodetool {nodetool_cli_args(juju, app_name)} status",
         ),
     )
 

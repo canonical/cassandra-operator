@@ -48,9 +48,9 @@ def test_graceful_restart_unit(
     juju.ssh(
         f"{app_name}/0",
         (
-            "sudo charmed-cassandra.nodetool ",
-            f"{nodetool_cli_args(juju, app_name)} ",
-            "drain && sudo snap restart charmed-cassandra.daemon",
+            "sudo charmed-cassandra.nodetool "
+            f"{nodetool_cli_args(juju, app_name)} "
+            "drain && sudo snap restart charmed-cassandra.daemon"
         ),
     )
 
@@ -121,9 +121,9 @@ def test_graceful_restart_cluster(
         juju.ssh(
             f"{app_name}/{i}",
             (
-                "sudo charmed-cassandra.nodetool ",
-                f"{nodetool_cli_args(juju, app_name)} ",
-                "drain && sudo snap restart charmed-cassandra.daemon",
+                "sudo charmed-cassandra.nodetool "
+                f"{nodetool_cli_args(juju, app_name)} "
+                "drain && sudo snap restart charmed-cassandra.daemon"
             ),
         )
 
