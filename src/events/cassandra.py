@@ -47,6 +47,7 @@ from managers.config import ConfigManager
 from managers.database import DatabaseManager
 from managers.node import NodeManager
 from managers.refresh import RefreshManager
+from managers.ssh import SSHManager
 from managers.tls import Sans, TLSManager
 
 logger = logging.getLogger(__name__)
@@ -68,6 +69,7 @@ class CassandraEvents(Object):
         database_manager: DatabaseManager,
         read_auth_secret: Callable[[str], str],
         restart: Callable[[], None],
+        ssh_manager: SSHManager,
     ):
         super().__init__(charm, key="cassandra_events")
         self.charm = charm
@@ -81,6 +83,7 @@ class CassandraEvents(Object):
         self.read_auth_secret = read_auth_secret
         self.restart = restart
         self.refresh_manager = refresh_manager
+        self.ssh_manager = ssh_manager
 
         self.charm.on.define_event("update_auth_rf", EventBase)
         self.framework.observe(self.charm.on.update_auth_rf, self._on_update_auth_rf)
@@ -122,6 +125,13 @@ class CassandraEvents(Object):
             return
 
         self._update_network_address()
+
+        if not self.ssh_manager.public_key:
+            self.ssh_manager.keygen()
+            event.defer()
+            return
+
+        self.state.unit.ssh_public_key = self.ssh_manager.public_key
 
         if not self.state.cluster.nodetool_password_secret:
             if self.charm.unit.is_leader():
@@ -415,6 +425,8 @@ class CassandraEvents(Object):
             self.node_manager.remove_bad_nodes([unit.ip for unit in self.state.units])
 
     def _on_collect_unit_status(self, event: CollectStatusEvent) -> None:
+        self.reconcile()
+
         if self._handle_refresh_manager(event, "high"):
             return
 
@@ -601,3 +613,7 @@ class CassandraEvents(Object):
             else:
                 self.state.unit.auth_repaired = False
         return True
+
+    def reconcile(self) -> None:
+        """Perform reconcile logic for this event handler."""
+        self.ssh_manager.ensure_authorized({unit.ssh_public_key for unit in self.state.units})

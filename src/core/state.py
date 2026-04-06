@@ -380,6 +380,15 @@ class UnitContext(RelationState):
     def workload_state(self, value: UnitWorkloadState) -> None:
         self._field_setter_wrapper("workload_state", value.value)
 
+    @property
+    def ssh_public_key(self) -> str:
+        """Unit's public SSH key."""
+        return self.relation_data.get("ssh-public-key", "")
+
+    @ssh_public_key.setter
+    def ssh_public_key(self, value: str) -> None:
+        self._field_setter_wrapper("ssh-public-key", value)
+
     # --- TLS ---
     @property
     def peer_tls(self) -> TLSContext:

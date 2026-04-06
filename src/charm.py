@@ -34,6 +34,7 @@ from managers.config import ConfigManager
 from managers.database import DatabaseManager
 from managers.node import NodeManager
 from managers.refresh import RefreshManager
+from managers.ssh import SSHManager
 from managers.tls import Sans, TLSManager
 from workload import SNAP_NAME, CassandraWorkload
 
@@ -77,6 +78,8 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         )
         self.refresh_manager = RefreshManager(self.refresh)
 
+        self.ssh_manager = SSHManager(workload=self.workload)
+
         config_manager = ConfigManager(
             workload=self.workload,
             cluster_name=self.app.name,
@@ -109,6 +112,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             setup_internal_certificates=self.setup_internal_certificates,
             read_auth_secret=self.read_auth_secret,
             restart=self.restart,
+            ssh_manager=self.ssh_manager,
         )
 
         self.tls_events = TLSEvents(
