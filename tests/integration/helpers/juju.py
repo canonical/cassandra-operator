@@ -114,7 +114,7 @@ def check_node_is_up(juju: jubilant.Juju, app_name: str, unit_num: int, unit_add
     nd_tool_status_raw = juju.ssh(
         target=f"{app_name}/{unit_num}",
         command=(
-            f"sudo snap run charmed-cassandra.nodetool {nodetool_cli_args(juju, app_name)} status",
+            f"sudo snap run charmed-cassandra.nodetool {nodetool_cli_args(juju, app_name)} status"
         ),
     )
 
