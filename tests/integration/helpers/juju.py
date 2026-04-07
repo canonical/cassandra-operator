@@ -100,7 +100,7 @@ def get_unit_names(juju: jubilant.Juju, app_name: str) -> list[str]:
 def read_nodetool_credentials(juju: jubilant.Juju, app_name: str) -> tuple[str, str]:
     """Read nodetool username & password from secrets."""
     username = "charmed-operator"
-    password = app_secret_extract(juju, app_name, username) or ""
+    password = app_secret_extract(juju, app_name, "nodetool-password") or ""
     return username, password
 
 

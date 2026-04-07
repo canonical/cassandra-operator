@@ -117,12 +117,17 @@ class CassandraEvents(Object):
         self.workload.install()
 
     def _on_start(self, event: StartEvent) -> None:
+        if not self.state.peer_relation:
+            event.defer()
+            return
+
         self._update_network_address()
 
         if not self.state.cluster.nodetool_password_secret:
             if self.charm.unit.is_leader():
-                self.state.cluster.nodetool_password_secret = self.workload.generate_string()
-                self.node_manager.password = self.state.cluster.nodetool_password_secret
+                nodetool_password = self.workload.generate_string()
+                self.state.cluster.nodetool_password_secret = nodetool_password
+                self.node_manager.password = nodetool_password
             else:
                 self.state.unit.workload_state = UnitWorkloadState.WAITING_FOR_START
                 logger.debug(

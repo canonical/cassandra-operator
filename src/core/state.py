@@ -57,7 +57,12 @@ SECRETS_UNIT = [
     "peer-private-key-secret",
 ]
 
-SECRETS_APP = ["internal-ca-secret", "internal-ca-key-secret", "operator-password"]
+SECRETS_APP = [
+    "internal-ca-secret",
+    "internal-ca-key-secret",
+    "operator-password",
+    "nodetool-password",
+]
 
 logger = logging.getLogger(__name__)
 
