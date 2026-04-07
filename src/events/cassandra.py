@@ -5,7 +5,7 @@
 """Handler for main Cassandra charm events."""
 
 import logging
-from typing import Callable, Literal
+from typing import Callable, Literal, override
 
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from ops import (
@@ -26,6 +26,7 @@ from ops import (
 from pydantic import ValidationError
 from tenacity import (
     Retrying,
+    after_log,
     stop_after_delay,
     wait_exponential,
     wait_fixed,
@@ -50,10 +51,12 @@ from managers.refresh import RefreshManager
 from managers.ssh import SSHManager
 from managers.tls import Sans, TLSManager
 
+from . import Reconciliable
+
 logger = logging.getLogger(__name__)
 
 
-class CassandraEvents(Object):
+class CassandraEvents(Object, Reconciliable):
     """Handler for main Cassandra charm events."""
 
     def __init__(
@@ -119,7 +122,7 @@ class CassandraEvents(Object):
     def _on_install(self, _: InstallEvent) -> None:
         self.workload.install()
 
-    def _on_start(self, event: StartEvent) -> None:
+    def _on_start(self, event: StartEvent) -> None:  # noqa: C901
         if not self.state.peer_relation:
             event.defer()
             return
@@ -229,13 +232,21 @@ class CassandraEvents(Object):
         self.workload.start()
 
         for attempt in Retrying(
-            wait=wait_exponential(), stop=stop_after_delay(1800), reraise=True
+            wait=wait_exponential(),
+            stop=stop_after_delay(1800),
+            reraise=True,
+            after=after_log(logger, logging.DEBUG),
         ):
             with attempt:
                 if not self.node_manager.is_healthy(ip="127.0.0.1"):
                     raise Exception("bootstrap timeout exceeded")
 
-        for attempt in Retrying(wait=wait_fixed(10), stop=stop_after_delay(120), reraise=True):
+        for attempt in Retrying(
+            wait=wait_fixed(10),
+            stop=stop_after_delay(120),
+            reraise=True,
+            after=after_log(logger, logging.DEBUG),
+        ):
             with attempt:
                 self.database_manager.init_admin(password)
         self.state.cluster.operator_password_secret = password
@@ -424,8 +435,9 @@ class CassandraEvents(Object):
         if self.charm.unit.is_leader():
             self.node_manager.remove_bad_nodes([unit.ip for unit in self.state.units])
 
-    def _on_collect_unit_status(self, event: CollectStatusEvent) -> None:
-        self.reconcile()
+    def _on_collect_unit_status(self, event: CollectStatusEvent) -> None:  # noqa: C901
+        for handler in self.charm.reconcilers:  # pyright: ignore
+            handler.reconcile()
 
         if self._handle_refresh_manager(event, "high"):
             return
@@ -614,6 +626,6 @@ class CassandraEvents(Object):
                 self.state.unit.auth_repaired = False
         return True
 
+    @override
     def reconcile(self) -> None:
-        """Perform reconcile logic for this event handler."""
         self.ssh_manager.ensure_authorized({unit.ssh_public_key for unit in self.state.units})
