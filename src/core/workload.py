@@ -160,6 +160,7 @@ class WorkloadBase(ABC):
         cwd: str | None = None,
         suppress_error_log: bool = False,
         timeout: int = 300,
+        env: dict | None = None,
     ) -> tuple[str, str]:
         """Run a command on the workload substrate."""
         pass
