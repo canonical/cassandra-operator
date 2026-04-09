@@ -81,12 +81,12 @@ def s3_config() -> S3Config:
 def test_deploy_active(
     juju: jubilant.Juju, cassandra_charm: Path, app_name: str, s3_config: S3Config
 ) -> None:
-    # juju.deploy(
-    #     cassandra_charm,
-    #     app=app_name,
-    #     config={"profile": "testing"},
-    #     num_units=3,
-    # )
+    juju.deploy(
+        cassandra_charm,
+        app=app_name,
+        config={"profile": "testing"},
+        num_units=3,
+    )
     juju.deploy(
         STORAGE_INTEGRATOR_APP,
         channel=STORAGE_INTEGRATOR_CHANNEL,
