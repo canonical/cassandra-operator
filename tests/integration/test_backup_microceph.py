@@ -137,11 +137,13 @@ def test_list_backups_succeeds_and_is_empty(juju: jubilant.Juju, app_name: str):
 
 
 def test_create_backup(juju: jubilant.Juju, app_name: str):
+    juju.wait(all_active_idle)
     task = juju.run(f"{app_name}/0", "create-backup", wait=1200)
     assert task.results.get("backup-status") == "backup created"
 
 
 def test_list_backups_on_another_unit(juju: jubilant.Juju, app_name: str):
+    juju.wait(all_active_idle)
     task = juju.run(f"{app_name}/1", "list-backups")
     backups = json.loads(task.results.get("result", "[]"))
     assert len(backups) == 1
