@@ -27,6 +27,7 @@ from core.state import (
     UnitWorkloadState,
 )
 from events import Reconciliable
+from events.backup import BackupEvents
 from events.cassandra import CassandraEvents
 from events.provider import ProviderEvents
 from events.refresh import MachinesRefresh
@@ -137,6 +138,14 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             database_manager=database_manager,
         )
 
+        self.backup = BackupEvents(
+            self,
+            state=self.state,
+            workload=self.workload,
+            node_manager=self.node_manager,
+            ssh_manager=self.ssh_manager,
+        )
+
         self._grafana_agent = COSAgentProvider(
             self,
             metrics_endpoints=[
@@ -146,7 +155,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             log_slots=[f"{SNAP_NAME}:logs"],
         )
 
-        self.reconcilers = [self.cassandra_events]
+        self.reconcilers = [self.cassandra_events, self.backup]
 
         if (
             self.refresh_manager.is_initialized

@@ -66,6 +66,8 @@ class CassandraWorkload(WorkloadBase):
         self._cassandra_snap.connect("system-observe")
         self._cassandra_snap.connect("mount-observe")
         self._cassandra_snap.hold()
+        self._install_medusa()
+        self._cassandra_snap.alias("nodetool", "nodetool")
 
     @property
     @override
@@ -115,6 +117,7 @@ class CassandraWorkload(WorkloadBase):
         command: list[str],
         cwd: str | None = None,
         suppress_error_log: bool = False,
+        timeout: int = 300,
     ) -> tuple[str, str]:
         try:
             result = subprocess.run(
@@ -122,7 +125,7 @@ class CassandraWorkload(WorkloadBase):
                 check=True,
                 text=True,
                 capture_output=True,
-                timeout=300,
+                timeout=timeout,
                 cwd=cwd,
             )
             stdout = result.stdout.strip()
@@ -151,3 +154,21 @@ class CassandraWorkload(WorkloadBase):
             logger.debug("STDOUT: %s", stdout)
             logger.debug("STDERR: %s", stderr)
             raise ExecError(stdout, stderr)
+
+    def _install_medusa(self) -> None:
+        """Install cassandra-medusa pip as a system package."""
+        logger.info("Installing Medusa...")
+        # FIXME: maybe replace with a less hackish way, like using the medusa deb for noble.
+        self.exec(["apt", "update"])
+        self.exec(["apt", "install", "-y", "python3-pip"])
+        self.exec(
+            [
+                "pip",
+                "install",
+                "-I",
+                "--break-system-packages",
+                "cassandra-medusa[S3]==0.27.1",
+                "zope.event==5.0",  # There is an incompatibility with zope.event>=5.1
+            ]
+        )
+        self.exec(["apt", "remove", "-y", "python3-pip"])
