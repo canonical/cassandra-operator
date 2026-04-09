@@ -170,7 +170,16 @@ class CassandraWorkload(WorkloadBase):
                 "-I",
                 "--break-system-packages",
                 "cassandra-medusa[S3]==0.27.1",
-                "parallel-ssh==2.14.0"  # github.com/thelastpickle/cassandra-medusa/issues/908
+            ]
+        )
+        # FIXME: remove once upstream open PRs are merged & issues are resolved.
+        self.exec(
+            [
+                "pip",
+                "install",
+                "--force-reinstall",
+                "--break-system-packages",
+                "parallel-ssh==2.14.0",  # github.com/thelastpickle/cassandra-medusa/issues/908
                 "zope.event==5.0",  # There is an incompatibility with zope.event>=5.1
             ]
         )
