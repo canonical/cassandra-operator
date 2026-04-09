@@ -158,7 +158,7 @@ class BackupManager:
             "cql_password": config.cql_password,
             "nodetool_username": config.nodetool_username,
             "nodetool_password": config.nodetool_password,
-            "storage_type": config.storage_provider,
+            "storage_provider": config.storage_provider,
             "storage_bucket": config.storage_bucket,
             "storage_region": config.storage_region,
             "storage_host": config.host,
