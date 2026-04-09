@@ -59,12 +59,18 @@ def prepare_microceph():
         raise RuntimeError("microceph setup failed!")
 
     # set env. vars based on the setup script output.
-    for kv in raw.strip().split():
+    logger.info(raw)
+    lines = [line.strip() for line in raw.split("\n") if line.strip()]
+    # Last line has the env. vars
+    for kv in lines[-1].split():
         parts = kv.split("=")
+        if len(parts) != 2:
+            continue
         os.environ[parts[0]] = parts[1]
 
+    logger.info(os.environ)
     yield
-    assert os.system(f"lxc rm --force {CONTAINER}")
+    assert os.system(f"lxc rm --force {CONTAINER}") == 0
 
 
 @pytest.fixture
