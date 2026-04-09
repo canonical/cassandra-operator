@@ -89,6 +89,16 @@ class CassandraPaths:
         """Main config file."""
         return self.config_dir / "jmx_exporter.yaml"
 
+    @property
+    def medusa_config(self) -> pathops.PathProtocol:
+        """Path to Medusa config file."""
+        return self.config_dir / "medusa.ini"
+
+    @property
+    def s3_credentials(self) -> pathops.PathProtocol:
+        """Path to Medusa config file."""
+        return self.config_dir / "credentials"
+
 
 class WorkloadBase(ABC):
     """Base interface for workload operations."""
@@ -149,6 +159,7 @@ class WorkloadBase(ABC):
         command: list[str],
         cwd: str | None = None,
         suppress_error_log: bool = False,
+        timeout: int = 300,
     ) -> tuple[str, str]:
         """Run a command on the workload substrate."""
         pass

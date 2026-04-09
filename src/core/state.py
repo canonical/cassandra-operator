@@ -26,6 +26,7 @@ from charms.tls_certificates_interface.v4.tls_certificates import (
     CertificateSigningRequest,
     PrivateKey,
 )
+from object_storage import S3Requirer
 from ops import Application, CharmBase, Object, Relation, Unit
 from ops.jujuversion import JujuVersion
 
@@ -35,6 +36,7 @@ DATA_STORAGE = "data"
 CLIENT_TLS_RELATION = "client-certificates"
 PEER_TLS_RELATION = "peer-certificates"
 PEER_RELATION = "cassandra-peers"
+S3_RELATION = "s3-credentials"
 CLIENT_RELATION = "cassandra-client"
 CASSANDRA_PEER_PORT = 7000
 CASSANDRA_CLIENT_PORT = 9042
@@ -314,6 +316,48 @@ class TLSContext(RelationState):
             bundle=self.bundle,
             scope=self.scope,
         )
+
+
+class S3ClientContext:
+    """Context model for S3 client relation."""
+
+    def __init__(self, s3_client: S3Requirer, relation: Relation | None):
+        self.relation_data = s3_client.get_storage_connection_info(relation=relation)
+
+    @property
+    def access_key(self) -> str:
+        """S3 access key ID."""
+        return self.relation_data.get("access-key", "")
+
+    @property
+    def bucket(self) -> str:
+        """S3 bucket name."""
+        return self.relation_data.get("bucket", "")
+
+    @property
+    def endpoint(self) -> str:
+        """S3 bucket name."""
+        return self.relation_data.get("endpoint", "")
+
+    @property
+    def path(self) -> str:
+        """Path in S3 bucket."""
+        return self.relation_data.get("path", "")
+
+    @property
+    def region(self) -> str:
+        """S3 region."""
+        return self.relation_data.get("region", "")
+
+    @property
+    def secret_key(self) -> str:
+        """S3 secret access key."""
+        return self.relation_data.get("secret-key", "")
+
+    @property
+    def ready(self) -> bool:
+        """Returns True if all the necessary relation data has been set, False otherwise."""
+        return all([self.access_key, self.secret_key, self.bucket, self.region])
 
 
 class UnitContext(RelationState):
@@ -668,6 +712,11 @@ class ApplicationState(Object):
         return self.model.get_relation(PEER_RELATION)
 
     @property
+    def s3_relation(self) -> Relation | None:
+        """S3 client relation."""
+        return self.model.get_relation(S3_RELATION)
+
+    @property
     def peer_relation_units(self) -> dict[Unit, DataPeerOtherUnitData]:
         """Unit data interface of all units in the cluster peer relation."""
         if not self.peer_relation or not self.peer_relation.units:
@@ -738,3 +787,7 @@ class ApplicationState(Object):
         See `ApplicationState.other_units` for more info.
         """
         return {unit for unit in self.other_units if unit.is_seed}
+
+    def s3(self, client: S3Requirer) -> S3ClientContext:
+        """S3 client context."""
+        return S3ClientContext(client, self.s3_relation)
