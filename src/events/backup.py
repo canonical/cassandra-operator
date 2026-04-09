@@ -175,9 +175,9 @@ class BackupEvents(Object, Reconciliable):
             cql_password=self.state.cluster.operator_password_secret,
             nodetool_username=NODETOOL_USERNAME,
             nodetool_password=self.state.cluster.nodetool_password_secret,
-            s3_bucket=self.s3_context.bucket,
-            s3_endpoint="",
-            s3_region=self.s3_context.region,
+            storage_bucket=self.s3_context.bucket,
+            storage_endpoint=self.s3_context.endpoint,
+            storage_region=self.s3_context.region,
         )
 
         self.backup_manager.render_credentials(

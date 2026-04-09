@@ -9,7 +9,9 @@ import datetime
 import inspect
 import logging
 import re
+from functools import cached_property
 from typing import Literal
+from urllib.parse import ParseResult, urlparse
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -52,21 +54,42 @@ class MedusaConfig:
     cql_password: str
     nodetool_username: str
     nodetool_password: str
-    s3_bucket: str
-    s3_endpoint: str
-    s3_region: str
+    storage_bucket: str
+    storage_endpoint: str
+    storage_region: str
+
+    @cached_property
+    def parsed_endpoint(self) -> ParseResult:
+        """Return the parsed url object."""
+        return urlparse(self.storage_endpoint)
+
+    @property
+    def host(self) -> str:
+        """Return the S3 compatible storage host."""
+        return self.parsed_endpoint.netloc
+
+    @property
+    def storage_provider(self) -> Literal["s3", "s3_compatible", "gcs"]:
+        """Return the storage provider type."""
+        if "aws" in self.host:
+            return "s3"
+        else:
+            return "s3_compatible"
+
+    @property
+    def secure(self) -> bool:
+        """Is the storage using HTTPS?"""
+        return True if self.parsed_endpoint.scheme == "https" else False
 
 
 class BackupManager:
     """Manager of medusa-driven backup/restores."""
 
-    def __init__(
-        self,
-        workload: WorkloadBase,
-    ):
+    def __init__(self, workload: WorkloadBase, s3_endpoint: str | None = None):
         self._workload = workload
+        self._endpoint = s3_endpoint
 
-    def medusa_exec(self, *args: str) -> str:
+    def medusa_exec(self, *args: str, timeout: int = 3600) -> str:
         """Run a medusa command."""
         stdout, _ = self._workload.exec(
             [
@@ -75,7 +98,7 @@ class BackupManager:
                 self._workload.cassandra_paths.medusa_config.as_posix(),
                 *args,
             ],
-            timeout=3600,
+            timeout=timeout,
         )
         return stdout
 
@@ -90,7 +113,7 @@ class BackupManager:
 
     def list_backups(self) -> list[BackupInfo]:
         """Run medusa list-backups and parse the results."""
-        stdout = self.medusa_exec("list-backups")
+        stdout = self.medusa_exec("list-backups", timeout=60)
         ret = []
         for line in stdout.split("\n"):
             if not line:
@@ -135,7 +158,10 @@ class BackupManager:
             "cql_password": config.cql_password,
             "nodetool_username": config.nodetool_username,
             "nodetool_password": config.nodetool_password,
-            "s3_bucket": config.s3_bucket,
-            "s3_region": config.s3_region,
+            "storage_type": config.storage_provider,
+            "storage_bucket": config.storage_bucket,
+            "storage_region": config.storage_region,
+            "storage_host": config.host,
+            "storage_secure": config.secure,
         }
         self._workload.cassandra_paths.medusa_config.write_text(template.render(data) + "\n")

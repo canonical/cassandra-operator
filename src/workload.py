@@ -118,6 +118,7 @@ class CassandraWorkload(WorkloadBase):
         cwd: str | None = None,
         suppress_error_log: bool = False,
         timeout: int = 300,
+        env: dict | None = None,
     ) -> tuple[str, str]:
         try:
             result = subprocess.run(
@@ -127,6 +128,7 @@ class CassandraWorkload(WorkloadBase):
                 capture_output=True,
                 timeout=timeout,
                 cwd=cwd,
+                env=env,
             )
             stdout = result.stdout.strip()
             stderr = result.stderr.strip()
@@ -168,6 +170,7 @@ class CassandraWorkload(WorkloadBase):
                 "-I",
                 "--break-system-packages",
                 "cassandra-medusa[S3]==0.27.1",
+                "parallel-ssh==2.14.0"  # github.com/thelastpickle/cassandra-medusa/issues/908
                 "zope.event==5.0",  # There is an incompatibility with zope.event>=5.1
             ]
         )
