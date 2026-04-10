@@ -143,8 +143,17 @@ def test_create_backup(juju: jubilant.Juju, app_name: str):
 
 
 def test_list_backups_on_another_unit(juju: jubilant.Juju, app_name: str):
-    juju.wait(all_active_idle)
-    task = juju.run(f"{app_name}/1", "list-backups")
+    juju.wait(all_active_idle, successes=10, delay=3)
+    task = None
+    for attempt in tenacity.Retrying(
+        wait=tenacity.wait_fixed(10), stop=tenacity.stop_after_attempt(6), reraise=True
+    ):
+        with attempt:
+            task = juju.run(f"{app_name}/1", "list-backups")
+
+    if not task:
+        raise RuntimeError("list-backups failed!")
+
     backups = json.loads(task.results.get("result", "[]"))
     assert len(backups) == 1
     assert backups[0].get("start-time") < backups[0].get("end-time")
