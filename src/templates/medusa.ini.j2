@@ -10,13 +10,17 @@ resolve_ip_addresses = True
 
 [storage]
 storage_provider = {{ storage_provider }}
-region = {{ storage_region }}
+key_file = /var/snap/charmed-cassandra/current/etc/cassandra/credentials
 bucket_name = {{ storage_bucket }}
+
+{% if storage_provider in ['s3', 's3_compatible'] %}
+; S3-specific config
+region = {{ storage_region }}
 {% if storage_provider == 's3_compatible' %}
 host = {{ storage_host }}
 {% endif %}
-key_file = /var/snap/charmed-cassandra/current/etc/cassandra/credentials
 secure = {{ storage_secure }}
+{% endif %}
 
 ; Number of days before backups are purged. 0 means backups don't get purged by age (default)
 max_backup_age = 0
