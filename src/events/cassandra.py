@@ -9,6 +9,7 @@ from typing import Callable, Literal, override
 
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from ops import (
+    BoundEvent,
     CollectStatusEvent,
     ConfigChangedEvent,
     EventBase,
@@ -73,6 +74,7 @@ class CassandraEvents(Object, Reconciliable):
         read_auth_secret: Callable[[str], str],
         restart: Callable[[], None],
         ssh_manager: SSHManager,
+        restore_event: BoundEvent,
     ):
         super().__init__(charm, key="cassandra_events")
         self.charm = charm
@@ -87,6 +89,7 @@ class CassandraEvents(Object, Reconciliable):
         self.restart = restart
         self.refresh_manager = refresh_manager
         self.ssh_manager = ssh_manager
+        self.restore_event = restore_event
 
         self.charm.on.define_event("update_auth_rf", EventBase)
         self.framework.observe(self.charm.on.update_auth_rf, self._on_update_auth_rf)
@@ -361,6 +364,11 @@ class CassandraEvents(Object, Reconciliable):
             )
             event.defer()
             return
+
+        self._update_restoring_state()
+        if self.state.restoring:
+            return
+
         if self.config_manager.render_cassandra_config():
             self.restart()
         if not self._repair_auth(event):
@@ -407,6 +415,8 @@ class CassandraEvents(Object, Reconciliable):
         if not self.refresh_manager.ready:
             logger.error("Refresh manager is not ready")
             return
+
+        self._update_restoring_state()
 
         if self.state.unit.is_operational and not self.workload.is_alive:
             logger.error("Restarting Cassandra service due to unexpected shutdown")
@@ -470,6 +480,9 @@ class CassandraEvents(Object, Reconciliable):
 
         if self.state.unit.workload_state == UnitWorkloadState.CANT_START:
             event.add_status(Status.CANT_START.value)
+
+        if self.state.unit.workload_state == UnitWorkloadState.RESTORING:
+            event.add_status(Status.RESTORING.value)
 
         if self.state.cluster.auth_repair != AuthRepairState.UNPLANNED:
             event.add_status(Status.REPAIRING_AUTH.value)
@@ -625,6 +638,23 @@ class CassandraEvents(Object, Reconciliable):
             else:
                 self.state.unit.auth_repaired = False
         return True
+
+    def _update_restoring_state(self) -> None:
+        """Update the restoring state of the unit & cluster."""
+        if self.state.restoring:
+            self.state.unit.workload_state = UnitWorkloadState.RESTORING
+            if self.state.unit.restore_backup_name:
+                # Re-emitting this event is harmless, due to idempotent nature of the handler.
+                self.restore_event.emit(
+                    self.state.peer_relation,
+                    backup_name=self.state.unit.restore_backup_name,
+                    app=self.charm.app,
+                )
+        if (
+            self.state.unit.workload_state == UnitWorkloadState.RESTORING
+            and not self.state.restoring
+        ):
+            self.state.unit.workload_state = UnitWorkloadState.ACTIVE
 
     @override
     def reconcile(self) -> None:

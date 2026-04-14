@@ -111,6 +111,13 @@ class BackupManager:
         )
         return stdout
 
+    def medusa_running(self) -> bool:
+        """Is a medusa process running?"""
+        raw, _ = self._workload.exec(["ps", "-eaf"])
+        processes = [line.strip() for line in raw.split("\n") if line.strip()]
+        medusa_processes = [p for p in processes if "medusa" in p]
+        return bool(medusa_processes)
+
     def create_backup(self, mode: BackupMode = "full") -> str:
         """Create a new cluster backup."""
         dt = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -122,7 +129,7 @@ class BackupManager:
 
     def list_backups(self) -> list[BackupInfo]:
         """Run medusa list-backups and parse the results."""
-        stdout = self.medusa_exec("list-backups", timeout=60)
+        stdout = self.medusa_exec("list-backups", "--show-all", timeout=60)
         ret = []
         for line in stdout.split("\n"):
             if not line:
@@ -147,6 +154,15 @@ class BackupManager:
             )
 
         return ret
+
+    def restore(self, backup_name: str) -> None:
+        """Restore a backup."""
+        default_args = ["--keep-auth", "-y", "--verify"]
+        if self.medusa_running():
+            logger.info("Medusa process in running. Waiting...")
+            return
+
+        self.medusa_exec("restore-cluster", "--backup-name", backup_name, *default_args)
 
     def render_credentials(self, context: StorageClientContext) -> None:
         """Write storage credentials file."""
