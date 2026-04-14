@@ -60,6 +60,7 @@ class MedusaConfig:
     storage_endpoint: str
     storage_region: str
     storage_type: Literal["s3", "azure", "gcs"]
+    storage_path: str | None = None
 
     @cached_property
     def parsed_endpoint(self) -> ParseResult:
@@ -189,6 +190,7 @@ class BackupManager:
             "storage_region": config.storage_region,
             "storage_host": config.host,
             "storage_secure": config.secure,
+            "storage_path": config.storage_path,
         }
         self._workload.cassandra_paths.medusa_config.write_text(template.render(data) + "\n")
 

@@ -270,6 +270,7 @@ class BackupEvents(Object):
             storage_endpoint=self.active_context.endpoint,
             storage_region=self.active_context.region,
             storage_type=self.active_context.type,
+            storage_path=self.active_context.path,
         )
 
         self.backup_manager.render_credentials(self.active_context)

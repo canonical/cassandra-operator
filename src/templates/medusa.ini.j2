@@ -12,6 +12,9 @@ resolve_ip_addresses = True
 storage_provider = {{ storage_provider }}
 key_file = /var/snap/charmed-cassandra/current/etc/cassandra/credentials
 bucket_name = {{ storage_bucket }}
+{% if storage_path %}
+prefix = {{ storage_path }}
+{% endif %}
 
 {% if storage_provider in ['s3', 's3_compatible'] %}
 ; S3-specific config
