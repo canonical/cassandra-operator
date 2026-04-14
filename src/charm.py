@@ -101,6 +101,14 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
         )
         self.bootstrap_manager = LockManager(self, "bootstrap")
 
+        self.backup = BackupEvents(
+            self,
+            state=self.state,
+            workload=self.workload,
+            node_manager=self.node_manager,
+            ssh_manager=self.ssh_manager,
+        )
+
         self.cassandra_events = CassandraEvents(
             self,
             state=self.state,
@@ -114,6 +122,7 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             read_auth_secret=self.read_auth_secret,
             restart=self.restart,
             ssh_manager=self.ssh_manager,
+            restore_event=self.backup.on.restore,
         )
 
         self.tls_events = TLSEvents(
@@ -134,14 +143,6 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
             node_manager=self.node_manager,
             tls_manager=self.tls_manager,
             database_manager=database_manager,
-        )
-
-        self.backup = BackupEvents(
-            self,
-            state=self.state,
-            workload=self.workload,
-            node_manager=self.node_manager,
-            ssh_manager=self.ssh_manager,
         )
 
         self._grafana_agent = COSAgentProvider(

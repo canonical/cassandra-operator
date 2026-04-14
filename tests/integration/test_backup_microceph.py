@@ -14,7 +14,8 @@ import pytest
 import tenacity
 
 from events.backup import BackupMessages
-from integration.helpers.juju import all_active_idle, exec_
+from integration.helpers.cassandra import OPERATOR_PASSWORD, connect_cql
+from integration.helpers.juju import all_active_idle, app_secret_extract, exec_, get_hosts
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +39,20 @@ CONTAINER = f"microceph-{secrets.token_hex(4)}"
 REQUIRED_ENV = [f"S3_{fld.upper()}" for fld in S3Config.__dataclass_fields__]
 STORAGE_INTEGRATOR_APP = "s3-integrator"
 STORAGE_INTEGRATOR_CHANNEL = "2/edge"
+OTHER_APP_NAME = "other"
+N_RECS = 1000
+TEST_KS = "keyspace1"
+TEST_TBL = "standard1"
+
+
+@pytest.fixture(scope="module")
+def other_app_name(juju: jubilant.Juju, app_name: str) -> str:
+    apps = juju.status().apps
+    for app in apps:
+        if app != app_name and apps[app].charm_name == "cassandra":
+            return app
+
+    return OTHER_APP_NAME
 
 
 @pytest.fixture(autouse=True, scope="module")
@@ -126,6 +141,28 @@ def test_run_actions_before_s3_integration_fails(juju: jubilant.Juju, app_name: 
     assert other_exc.value.task.message == BackupMessages.NOT_READY.value
 
 
+def test_load_some_data(juju: jubilant.Juju, app_name: str):
+    hosts = get_hosts(juju, app_name)
+    password = app_secret_extract(juju, app_name, OPERATOR_PASSWORD)
+    juju.ssh(
+        f"{app_name}/0",
+        (
+            "sudo charmed-cassandra.stress "
+            f"write n={N_RECS} "
+            f"-node {hosts[0]} "
+            "-mode native cql3 "
+            "user=operator "
+            f"password={password}"
+        ),
+    )
+
+    with connect_cql(
+        hosts=hosts, password=password, username="operator", keyspace=TEST_KS
+    ) as session:
+        rs = session.execute(f"SELECT COUNT(*) FROM {TEST_KS}.{TEST_TBL}")
+        assert rs.current_rows[0].count == N_RECS
+
+
 def test_s3_integration(juju: jubilant.Juju, app_name: str):
     juju.integrate(app_name, STORAGE_INTEGRATOR_APP)
     juju.wait(all_active_idle)
@@ -158,3 +195,43 @@ def test_list_backups_on_another_unit(juju: jubilant.Juju, app_name: str):
     assert len(backups) == 1
     assert backups[0].get("start-time") < backups[0].get("end-time")
     logger.info(f"One backup found: {backups[0]['id']}")
+
+
+def test_deploy_other_app_active(
+    juju: jubilant.Juju, cassandra_charm: Path, other_app_name: str
+) -> None:
+    juju.deploy(
+        cassandra_charm,
+        app=other_app_name,
+        config={"profile": "testing"},
+        num_units=3,
+    )
+    juju.wait(lambda status: all_active_idle(status, other_app_name), timeout=1800)
+
+
+def test_s3_integration_other_app(juju: jubilant.Juju, other_app_name: str):
+    juju.integrate(other_app_name, STORAGE_INTEGRATOR_APP)
+    juju.wait(all_active_idle)
+
+
+def test_restore_backup_on_other_app(juju: jubilant.Juju, other_app_name: str):
+    task = juju.run(f"{other_app_name}/0", "list-backups")
+    backups = json.loads(task.results.get("result", "[]"))
+    assert len(backups) > 0
+    logger.info(json.dumps(backups))
+    backup_id = backups[-1]["id"]
+    task = juju.run(f"{other_app_name}/1", "restore", params={"backup-id": backup_id})
+    juju.wait(
+        lambda status: all_active_idle(status, other_app_name), successes=10, timeout=1800, delay=3
+    )
+
+
+def test_restore_integrity(juju: jubilant.Juju, other_app_name: str):
+    hosts = get_hosts(juju, other_app_name)
+    password = app_secret_extract(juju, other_app_name, OPERATOR_PASSWORD)
+
+    with connect_cql(
+        hosts=hosts, password=password, username="operator", keyspace=TEST_KS
+    ) as session:
+        rs = session.execute(f"SELECT COUNT(*) FROM {TEST_KS}.{TEST_TBL}")
+        assert rs.current_rows[0].count == N_RECS

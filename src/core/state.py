@@ -110,6 +110,7 @@ class UnitWorkloadState(StrEnum):
     """Cassandra service can't start currently. Another attempt will be taken soon."""
     ACTIVE = "active"
     """Cassandra is active and ready."""
+    RESTORING = "Cluster restore in progress"
 
 
 class AuthRepairState(StrEnum):
@@ -476,6 +477,25 @@ class UnitContext(RelationState):
     def ssh_public_key(self, value: str) -> None:
         self._field_setter_wrapper("ssh-public-key", value)
 
+    @property
+    def restoring(self) -> bool:
+        """Is the restore process running on the unit?"""
+        return self.relation_data.get("restoring") == "true"
+
+    @restoring.setter
+    def restoring(self, value: bool):
+        val = "true" if value else ""
+        self._field_setter_wrapper("restoring", val)
+
+    @property
+    def restore_backup_name(self) -> str:
+        """Return the backup-name (or backup-id) of the current restore process."""
+        return self.relation_data.get("backup-id", "")
+
+    @restore_backup_name.setter
+    def restore_backup_name(self, value: str):
+        self._field_setter_wrapper("backup-id", value)
+
     # --- TLS ---
     @property
     def peer_tls(self) -> TLSContext:
@@ -840,6 +860,11 @@ class ApplicationState(Object):
         See `ApplicationState.other_units` for more info.
         """
         return {unit for unit in self.other_units if unit.is_seed}
+
+    @property
+    def restoring(self) -> bool:
+        """Is cluster restoring?"""
+        return any(unit.restoring for unit in self.units)
 
     def s3(self, client: S3Requirer) -> StorageClientContext:
         """S3 client context."""
