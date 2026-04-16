@@ -5,6 +5,7 @@
 import json
 import logging
 import os
+import time
 from pathlib import Path
 
 import jubilant
@@ -103,12 +104,18 @@ class BackupRestoreTests:
         logger.info(f"One backup found: {backups[0]['id']}")
 
     def test_remove_first_app(self, juju: jubilant.Juju, app_name: str):
-        assert (
-            os.system(
-                f"juju remove-application -m {juju.model} --force --no-wait --no-prompt {app_name}"
-            )
-            == 0
-        )
+        destroy_cmd = [
+            "juju",
+            "remove-application",
+            "-m",
+            juju.model,
+            "--force",
+            "--destroy-storage",
+            "--no-wait",
+            "--no-prompt",
+        ]
+        assert os.system(" ".join(destroy_cmd)) == 0
+        time.sleep(100)
         juju.wait(lambda status: app_name not in status.apps)
 
     def test_deploy_other_app_active(
