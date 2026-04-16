@@ -27,7 +27,7 @@ class S3Config:
     bucket: str = "data-charms-testing"
     endpoint: str = "https://s3.amazonaws.com"
     region: str = "us-east-1"
-    path: str = f"/cassandra/{uuid.uuid1()}"
+    path: str = f"cassandra-{uuid.uuid1()}"
 
     @classmethod
     def from_env(cls) -> "S3Config":
