@@ -113,6 +113,7 @@ class BackupRestoreTests:
             "--destroy-storage",
             "--no-wait",
             "--no-prompt",
+            app_name,
         ]
         assert os.system(" ".join(destroy_cmd)) == 0
         time.sleep(100)

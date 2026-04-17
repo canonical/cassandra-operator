@@ -10,7 +10,6 @@ import inspect
 import json
 import logging
 import re
-from functools import cached_property
 from typing import Literal
 from urllib.parse import ParseResult, urlparse
 
@@ -62,7 +61,7 @@ class MedusaConfig:
     storage_type: Literal["s3", "azure", "gcs"]
     storage_path: str | None = None
 
-    @cached_property
+    @property
     def parsed_endpoint(self) -> ParseResult:
         """Return the parsed url object."""
         return urlparse(self.storage_endpoint)
