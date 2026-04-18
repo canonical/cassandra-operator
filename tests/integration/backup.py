@@ -104,6 +104,8 @@ class BackupRestoreTests:
         logger.info(f"One backup found: {backups[0]['id']}")
 
     def test_remove_first_app(self, juju: jubilant.Juju, app_name: str):
+        juju.remove_relation(app_name, self.integrator_app)
+        juju.wait(all_active_idle, successes=10, delay=3)
         destroy_cmd = [
             "juju",
             "remove-application",
