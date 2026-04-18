@@ -127,12 +127,12 @@ class CassandraEvents(Object):
 
         self._update_network_address()
 
-        if not self.ssh_manager.public_key:
-            self.ssh_manager.keygen()
-            event.defer()
-            return
-
-        self.state.unit.ssh_public_key = self.ssh_manager.public_key
+        public_key = (
+            self.ssh_manager.public_key
+            if self.ssh_manager.public_key
+            else self.ssh_manager.keygen()
+        )
+        self.state.unit.ssh_public_key = public_key
 
         if not self.state.cluster.nodetool_password_secret:
             if self.charm.unit.is_leader():
