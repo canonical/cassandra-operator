@@ -64,7 +64,7 @@ class SSHManager:
 
         self._authorized_path.write_text("\n".join(public_keys) + "\n")
 
-    def keygen(self, renew: bool = False, keysize: int = 4096) -> None:
+    def keygen(self, renew: bool = False, keysize: int = 4096) -> str:
         """Generate SSH keypair.
 
         Args:
@@ -72,7 +72,7 @@ class SSHManager:
             keysize (int, optional): _description_. Defaults to 4096.
         """
         if not renew and self.public_key:
-            return
+            return self.public_key
 
         cmd = ["ssh-keygen", "-t", self._key_type]
         if self._key_type == "rsa":
@@ -81,3 +81,8 @@ class SSHManager:
         cmd += ["-N", ""]  # no password
         cmd += ["-q"]
         self._workload.exec(cmd)
+
+        if not self.public_key:
+            raise RuntimeError("SSH Key generation failed.")
+
+        return self.public_key
