@@ -5,8 +5,10 @@
 """Workload definition."""
 
 import secrets
+import socket
 import string
 from abc import ABC, abstractmethod
+from contextlib import closing
 from typing import Literal
 
 from charmlibs import pathops
@@ -161,3 +163,21 @@ class WorkloadBase(ABC):
         alphabet = string.ascii_letters + string.digits
         random_part = "".join(secrets.choice(alphabet) for _ in range(length))
         return prefix + random_part
+
+    @staticmethod
+    def ping(hosts: list[str], port: int = 9042) -> bool:
+        """Check if any socket in `hosts` list is available or not.
+
+        Args:
+            hosts (list[str]): list of candidate hosts.
+            port (int): port to check.
+
+        Returns:
+            bool: True if any socket is open.
+        """
+        for host in hosts:
+            with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
+                if sock.connect_ex((host, int(port))) == 0:
+                    return True
+
+        return False

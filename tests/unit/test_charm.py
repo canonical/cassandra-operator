@@ -120,11 +120,11 @@ def test_start_subordinate_only_after_seed_active(workload_active: bool, seed_ac
             "managers.tls.TLSManager.client_tls_ready",
             new_callable=PropertyMock(return_value=False),
         ),
-        patch("managers.database.DatabaseManager.check", return_value=seed_active),
         patch("charm.CassandraCharm.setup_internal_certificates", return_value=True),
         patch("charm.CassandraWorkload") as workload,
         patch("charm.CassandraCharm.restart") as restart,
     ):
+        workload.return_value.ping.return_value = seed_active
         workload.return_value.exec.return_value = ("ok", None)
         workload.return_value.generate_string.return_value = "password"
 
