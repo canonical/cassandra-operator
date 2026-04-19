@@ -113,6 +113,7 @@ def test_statuses() -> None:
         patch("charm_refresh.Machines", MagicMock(return_value=refresh_mock)),
         patch("charm.RefreshManager", MagicMock(return_value=refresh_manager_mock)),
         patch("workload.snap.SnapCache"),
+        patch("managers.node.NodeManager.ensure_cluster_topology", return_value=False),
     ):
         state_out = ctx.run(ctx.on.update_status(), state_in)
 
@@ -129,6 +130,7 @@ def test_statuses() -> None:
         patch("charm_refresh.Machines", MagicMock(return_value=refresh_mock)),
         patch("charm.RefreshManager", MagicMock(return_value=refresh_manager_mock)),
         patch("workload.snap.SnapCache"),
+        patch("managers.node.NodeManager.ensure_cluster_topology", return_value=False),
     ):
         state_out = ctx.run(ctx.on.update_status(), state_in)
 
@@ -144,6 +146,7 @@ def test_statuses() -> None:
         patch("charm_refresh.Machines", MagicMock(return_value=refresh_mock)),
         patch("charm.RefreshManager", MagicMock(return_value=refresh_manager_mock)),
         patch("workload.snap.SnapCache"),
+        patch("managers.node.NodeManager.ensure_cluster_topology", return_value=False),
     ):
         state_out = ctx.run(ctx.on.update_status(), state_in)
 
