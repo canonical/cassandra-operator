@@ -26,7 +26,6 @@ from core.state import (
     ClusterState,
     UnitWorkloadState,
 )
-from events import Reconciliable
 from events.cassandra import CassandraEvents
 from events.provider import ProviderEvents
 from events.refresh import MachinesRefresh
@@ -48,7 +47,6 @@ class CassandraCharm(TypedCharmBase[CharmConfig]):
     """Application charm."""
 
     config_type = CharmConfig
-    reconcilers: list[Reconciliable]
 
     def __init__(self, *args):
         super().__init__(*args)

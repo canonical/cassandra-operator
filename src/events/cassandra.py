@@ -5,7 +5,7 @@
 """Handler for main Cassandra charm events."""
 
 import logging
-from typing import Callable, Literal, override
+from typing import Callable, Literal
 
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from ops import (
@@ -51,12 +51,10 @@ from managers.refresh import RefreshManager
 from managers.ssh import SSHManager
 from managers.tls import Sans, TLSManager
 
-from . import Reconciliable
-
 logger = logging.getLogger(__name__)
 
 
-class CassandraEvents(Object, Reconciliable):
+class CassandraEvents(Object):
     """Handler for main Cassandra charm events."""
 
     def __init__(
@@ -626,6 +624,6 @@ class CassandraEvents(Object, Reconciliable):
                 self.state.unit.auth_repaired = False
         return True
 
-    @override
     def reconcile(self) -> None:
+        """Reconcile SSH keys."""
         self.ssh_manager.ensure_authorized({unit.ssh_public_key for unit in self.state.units})
