@@ -37,26 +37,27 @@ def test_pre_refresh_checks(helthy, unit_data, pre_check_result) -> None:
 
     state_in = testing.State(relations={peer_relation})
 
-    with ctx(ctx.on.relation_changed(relation=peer_relation), state_in) as manager:
-        charm: CassandraCharm = manager.charm
+    with patch("workload.snap.SnapCache"):
+        with ctx(ctx.on.relation_changed(relation=peer_relation), state_in) as manager:
+            charm: CassandraCharm = manager.charm
 
-        with (
-            patch("events.refresh.MachinesRefresh.__init__", return_value=None),
-            patch("managers.node.NodeManager") as node_manager,
-            patch("charm.CassandraWorkload") as workload,
-            patch("core.state.UnitContext.is_ready", return_value=True),
-            patch("core.state.UnitContext.is_operational", return_value=True),
-        ):
-            node_manager.is_healthy.return_value = helthy
-            refresh = MachinesRefresh.__new__(MachinesRefresh)
-            refresh._state = charm.state
-            refresh._node_manager = node_manager
-            refresh._workload = workload
+            with (
+                patch("events.refresh.MachinesRefresh.__init__", return_value=None),
+                patch("managers.node.NodeManager") as node_manager,
+                patch("charm.CassandraWorkload") as workload,
+                patch("core.state.UnitContext.is_ready", return_value=True),
+                patch("core.state.UnitContext.is_operational", return_value=True),
+            ):
+                node_manager.is_healthy.return_value = helthy
+                refresh = MachinesRefresh.__new__(MachinesRefresh)
+                refresh._state = charm.state
+                refresh._node_manager = node_manager
+                refresh._workload = workload
 
-            with pytest.raises(PrecheckFailed) as e:
-                refresh.run_pre_refresh_checks_after_1_unit_refreshed()
+                with pytest.raises(PrecheckFailed) as e:
+                    refresh.run_pre_refresh_checks_after_1_unit_refreshed()
 
-            assert pre_check_result in str(e.value)
+                assert pre_check_result in str(e.value)
 
 
 @pytest.mark.parametrize("helthy", [True, False])
