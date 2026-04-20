@@ -390,6 +390,7 @@ def test_tls_default_certificates_files_setup(ctx):
         ),
         patch("charm.CassandraCharm.restart"),
     ):
+        workload.return_value.exec.return_value = ("ok", None)
         workload.return_value.generate_string.return_value = "password"
 
         state_out = ctx.run(ctx.on.start(), state_in)
@@ -442,6 +443,7 @@ def test_tls_default_certificates_files_setup(ctx):
         patch("managers.node.NodeManager.is_healthy", return_value=True),
         patch("charm.CassandraCharm.restart"),
     ):
+        workload.return_value.exec.return_value = ("ok", None)
         workload.return_value.generate_string.return_value = "password"
 
         state_out = ctx.run(ctx.on.start(), state_in)

@@ -41,11 +41,13 @@ UN  10.222.10.113  246.63 KiB  16      50.7%             8f6406bd-96f5-43c3-9433
 DN  10.222.10.5    148.26 KiB  16      52.0%             1a820086-663b-496f-87b7-d6ccf99df077  rack1"""  # noqa: E501 W291
 
     workload = MagicMock(cassandra_paths=MagicMock(env=MagicMock()))
-    node_manager = NodeManager(workload=workload)
+    node_manager = NodeManager(workload=workload, username="username", password="password")
 
     workload.exec.return_value = (status_all_active, None)
     node_manager.remove_bad_nodes(good_node_ips=["10.222.10.92", "10.222.10.254"])
-    workload.exec.assert_called_once_with([NODETOOL, "status"])
+    workload.exec.assert_called_once_with(
+        [NODETOOL, "-u", "username", "-pw", "password", "status"], suppress_error_log=False
+    )
     workload.exec.reset_mock()
 
     workload.exec.return_value = (status_one_active, None)
@@ -53,9 +55,33 @@ DN  10.222.10.5    148.26 KiB  16      52.0%             1a820086-663b-496f-87b7
     assert workload.exec.call_count == 3
     workload.exec.assert_has_calls(
         calls=[
-            call([NODETOOL, "status"]),
-            call([NODETOOL, "removenode", "8f6406bd-96f5-43c3-9433-8439773b7495"]),
-            call([NODETOOL, "removenode", "1a820086-663b-496f-87b7-d6ccf99df077"]),
+            call(
+                [NODETOOL, "-u", "username", "-pw", "password", "status"], suppress_error_log=False
+            ),
+            call(
+                [
+                    NODETOOL,
+                    "-u",
+                    "username",
+                    "-pw",
+                    "password",
+                    "removenode",
+                    "8f6406bd-96f5-43c3-9433-8439773b7495",
+                ],
+                suppress_error_log=False,
+            ),
+            call(
+                [
+                    NODETOOL,
+                    "-u",
+                    "username",
+                    "-pw",
+                    "password",
+                    "removenode",
+                    "1a820086-663b-496f-87b7-d6ccf99df077",
+                ],
+                suppress_error_log=False,
+            ),
         ],
         any_order=True,
     )
@@ -66,8 +92,21 @@ DN  10.222.10.5    148.26 KiB  16      52.0%             1a820086-663b-496f-87b7
     assert workload.exec.call_count == 2
     workload.exec.assert_has_calls(
         calls=[
-            call([NODETOOL, "status"]),
-            call([NODETOOL, "removenode", "1a820086-663b-496f-87b7-d6ccf99df077"]),
+            call(
+                [NODETOOL, "-u", "username", "-pw", "password", "status"], suppress_error_log=False
+            ),
+            call(
+                [
+                    NODETOOL,
+                    "-u",
+                    "username",
+                    "-pw",
+                    "password",
+                    "removenode",
+                    "1a820086-663b-496f-87b7-d6ccf99df077",
+                ],
+                suppress_error_log=False,
+            ),
         ],
         any_order=True,
     )

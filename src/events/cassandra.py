@@ -117,7 +117,26 @@ class CassandraEvents(Object):
         self.workload.install()
 
     def _on_start(self, event: StartEvent) -> None:
+        if not self.state.peer_relation:
+            event.defer()
+            return
+
         self._update_network_address()
+
+        if not self.state.cluster.nodetool_password_secret:
+            if self.charm.unit.is_leader():
+                nodetool_password = self.workload.generate_string()
+                self.state.cluster.nodetool_password_secret = nodetool_password
+                self.node_manager.password = nodetool_password
+            else:
+                self.state.unit.workload_state = UnitWorkloadState.WAITING_FOR_START
+                logger.debug(
+                    "Deferring non-leader on_start because nodetool secret is not generated."
+                )
+                event.defer()
+                return
+
+        self.config_manager.render_passwords_file(self.state.cluster.jmx_credentials)
 
         if not self.refresh_manager.is_initialized:
             logger.debug("Deferring on_start due to charm_refresh is not ready")

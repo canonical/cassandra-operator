@@ -33,6 +33,11 @@ class CassandraPaths:
         return self.config_dir / "cassandra.yaml"
 
     @property
+    def jmxremote_password_file(self) -> pathops.PathProtocol:
+        """JMX remote management interface password file."""
+        return self.config_dir / "jmxremote.password"
+
+    @property
     def commitlog_directory(self) -> pathops.PathProtocol:
         """Commitlog data directory."""
         return self.data_dir / "commitlog"

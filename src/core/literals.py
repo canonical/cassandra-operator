@@ -5,3 +5,4 @@
 """Common literals in the charm."""
 
 CASSANDRA_ADMIN_USERNAME = "operator"
+NODETOOL_USERNAME = "charmed-operator"

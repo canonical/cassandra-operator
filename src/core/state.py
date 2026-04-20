@@ -29,6 +29,8 @@ from charms.tls_certificates_interface.v4.tls_certificates import (
 from ops import Application, CharmBase, Object, Relation, Unit
 from ops.jujuversion import JujuVersion
 
+from core.literals import NODETOOL_USERNAME
+
 DATA_STORAGE = "data"
 CLIENT_TLS_RELATION = "client-certificates"
 PEER_TLS_RELATION = "peer-certificates"
@@ -55,7 +57,12 @@ SECRETS_UNIT = [
     "peer-private-key-secret",
 ]
 
-SECRETS_APP = ["internal-ca-secret", "internal-ca-key-secret", "operator-password"]
+SECRETS_APP = [
+    "internal-ca-secret",
+    "internal-ca-key-secret",
+    "operator-password",
+    "nodetool-password",
+]
 
 logger = logging.getLogger(__name__)
 
@@ -588,6 +595,20 @@ class ClusterContext(RelationState):
     @operator_password_secret.setter
     def operator_password_secret(self, value: str) -> None:
         self._field_setter_wrapper("operator-password", value)
+
+    @property
+    def nodetool_password_secret(self) -> str:
+        """Password used on nodetool."""
+        return self.relation_data.get("nodetool-password", "")
+
+    @nodetool_password_secret.setter
+    def nodetool_password_secret(self, value: str) -> None:
+        self._field_setter_wrapper("nodetool-password", value)
+
+    @property
+    def jmx_credentials(self) -> dict[str, str]:
+        """Return credentials to be used on JMX remote management interface."""
+        return {NODETOOL_USERNAME: self.nodetool_password_secret}
 
     @property
     def auth_repair(self) -> AuthRepairState:

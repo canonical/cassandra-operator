@@ -31,8 +31,29 @@ class GossipNode:
 class NodeManager:
     """Manager of Cassandra cluster, including this unit."""
 
-    def __init__(self, workload: WorkloadBase):
+    def __init__(self, workload: WorkloadBase, username: str, password: str):
         self._workload = workload
+        self._username = username
+        self._password = password
+
+    @property
+    def password(self) -> str:
+        """Return the current password being used with nodetool."""
+        return self._password
+
+    @password.setter
+    def password(self, value: str) -> None:
+        self._password = value
+
+    def nodetool_exec(
+        self, *args: str, host: str | None = None, suppress_error_log: bool = False
+    ) -> str:
+        """Execute a nodetool command."""
+        cmd_args = [NODETOOL, "-u", self._username, "-pw", self._password]
+        if host:
+            cmd_args += ["-h", host]
+        stdout, _ = self._workload.exec([*cmd_args, *args], suppress_error_log=suppress_error_log)
+        return stdout
 
     def is_healthy(self, ip: str, retry: bool = False, timeout: int = 100) -> bool:
         """Whether Cassandra healthy and ready in this unit. Can retry if requested."""
@@ -53,7 +74,7 @@ class NodeManager:
     def is_bootstrap_pending(self) -> bool:
         """Whether `nodetool info` bootstrap state is NEEDS_BOOTSTRAP."""
         try:
-            stdout, _ = self._workload.exec([NODETOOL, "info"], suppress_error_log=True)
+            stdout = self.nodetool_exec("info", suppress_error_log=True)
             return "Bootstrap state        : NEEDS_BOOTSTRAP" in stdout
         except ExecError:
             return False
@@ -62,7 +83,7 @@ class NodeManager:
     def is_bootstrap_in_unknown_state(self) -> bool:
         """Whether `nodetool info` bootstrap state is not IN_PROGRESS or COMPLETED."""
         try:
-            stdout, _ = self._workload.exec([NODETOOL, "info"], suppress_error_log=True)
+            stdout = self.nodetool_exec("info", suppress_error_log=True)
             return (
                 "Bootstrap state        : IN_PROGRESS" not in stdout
                 and "Bootstrap state        : COMPLETED" not in stdout
@@ -75,11 +96,11 @@ class NodeManager:
     def is_bootstrap_decommissioning(self) -> bool:
         """Check if the node is in the process of, or has completed, decommissioning."""
         try:
-            stdout, _ = self._workload.exec([NODETOOL, "info"], suppress_error_log=True)
+            stdout = self.nodetool_exec("info", suppress_error_log=True)
             if "Bootstrap state        : DECOMMISSIONED" in stdout:
                 return True
 
-            stdout, _ = self._workload.exec([NODETOOL, "info"], suppress_error_log=True)
+            stdout = self.nodetool_exec("info", suppress_error_log=True)
             return "Decommissioning        : true" in stdout
 
         except ExecError:
@@ -92,11 +113,11 @@ class NodeManager:
 
     def prepare_shutdown(self) -> None:
         """Prepare Cassandra unit for safe shutdown using nodetool drain command."""
-        self._workload.exec([NODETOOL, "drain"])
+        self.nodetool_exec("drain")
 
     def decommission(self) -> None:
         """Disconnect node from the cluster using nodetool decommission command."""
-        self._workload.exec([NODETOOL, "decommission", "-f"])
+        self.nodetool_exec("decommission", "-f")
 
     def ensure_cluster_topology(self, nodes: int) -> bool:
         """Check stability & consistency of the cluster topology using nodetool status command.
@@ -105,7 +126,7 @@ class NodeManager:
             whether the cluster topology is stable and consistent with provided nodes count.
         """
         try:
-            stdout, _ = self._workload.exec([NODETOOL, "status"], suppress_error_log=True)
+            stdout = self.nodetool_exec("status", suppress_error_log=True)
             if "DN  " in stdout:
                 return False
             return stdout.count("UN  ") == nodes
@@ -115,7 +136,7 @@ class NodeManager:
     def remove_bad_nodes(self, good_node_ips: list[str]) -> None:
         """Remove unknown nodes in down state using nodetool removenode command."""
         try:
-            status_stdout, _ = self._workload.exec([NODETOOL, "status"])
+            status_stdout = self.nodetool_exec("status")
         except ExecError:
             return
 
@@ -128,20 +149,20 @@ class NodeManager:
             if ip in good_node_ips:
                 continue
             try:
-                self._workload.exec([NODETOOL, "removenode", host_id])
+                self.nodetool_exec("removenode", host_id)
                 logger.info(f"Removed bad node {ip} from Cassandra cluster")
             except ExecError:
                 logger.error(f"Failed to remove bad node {ip} from Cassandra cluster")
 
     def repair_auth(self) -> None:
         """Run full repair on system_auth keyspace."""
-        self._workload.exec([NODETOOL, "repair", "system_auth", "--full"])
+        self.nodetool_exec("repair", "system_auth", "--full")
 
     def _is_in_cluster(self, ip: str) -> bool:
         if not ip:
             return False
         try:
-            stdout, _ = self._workload.exec([NODETOOL, "status"], suppress_error_log=True)
+            stdout = self.nodetool_exec("status", suppress_error_log=True)
             return f"UN  {ip}" in stdout
         except ExecError:
             return False
@@ -149,7 +170,7 @@ class NodeManager:
     @property
     def _is_gossip_active(self) -> bool:
         try:
-            stdout, _ = self._workload.exec([NODETOOL, "info"], suppress_error_log=True)
+            stdout = self.nodetool_exec("info", suppress_error_log=True)
             return "Gossip active          : true" in stdout
         except ExecError:
             return False
@@ -172,7 +193,7 @@ class NodeManager:
         { <IP>: GossipNode, ... }
         """
         try:
-            text, _ = self._workload.exec([NODETOOL, "gossipinfo"], suppress_error_log=True)
+            text = self.nodetool_exec("gossipinfo", suppress_error_log=True)
         except ExecError:
             return {}
 

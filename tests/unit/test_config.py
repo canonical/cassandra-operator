@@ -3,7 +3,7 @@
 #
 # Learn more about testing at: https://juju.is/docs/sdk/testing
 
-
+import re
 from unittest.mock import MagicMock
 
 from managers.config import ConfigManager
@@ -39,4 +39,4 @@ def test_render_env_preserves_existing_vars():
     assert "PATH=/custom/path" in result
     assert "MAX_HEAP_SIZE=1024M" in result
     assert "HEAP_NEWSIZE=512M" in result
-    assert "JVM_EXTRA_OPTS=-javaagent:" in result
+    assert re.findall("JVM_EXTRA_OPTS=.+?-javaagent:", result)

@@ -42,6 +42,7 @@ def test_start_custom_secret(bad_secret: bool):
             new_callable=PropertyMock(return_value=False),
         ),
     ):
+        workload.return_value.exec.return_value = ("ok", None)
         workload.return_value.generate_string.return_value = "password"
 
         state = ctx.run(ctx.on.start(), state)
