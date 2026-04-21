@@ -40,6 +40,7 @@ from core.state import (
     PEER_RELATION,
     ApplicationState,
     AuthRepairState,
+    ClusterState,
     UnitWorkloadState,
 )
 from core.statuses import Status
@@ -253,13 +254,13 @@ class CassandraEvents(Object):
 
     def _start_subordinate(self, event: StartEvent) -> None:
         if not self.state.cluster.is_active and not self.state.unit.is_seed:
-            self.state.unit.workload_state = UnitWorkloadState.WAITING_FOR_START
+            # self.state.unit.workload_state = UnitWorkloadState.WAITING_FOR_START
             logger.debug("Deferring subordinate on_start due to cluster not being active yet")
             event.defer()
             return
 
         if not self._are_seeds_reachable:
-            self.state.unit.workload_state = UnitWorkloadState.WAITING_FOR_START
+            # self.state.unit.workload_state = UnitWorkloadState.WAITING_FOR_START
             logger.debug("Deferring subordinate on_start due to seeds not being ready")
             event.defer()
             return
@@ -406,6 +407,8 @@ class CassandraEvents(Object):
             logger.error("Refresh manager is not ready")
             return
 
+        self._handle_premature_leader_bootstrap()
+
         if self.state.unit.is_operational and not self.workload.is_alive:
             logger.error("Restarting Cassandra service due to unexpected shutdown")
             self.restart()
@@ -531,7 +534,7 @@ class CassandraEvents(Object):
     @property
     def _are_seeds_reachable(self) -> bool:
         return self.state.unit.is_seed or any(
-            unit.is_operational and self.database_manager.check(hosts=[unit.ip])
+            unit.is_operational and self.workload.ping(hosts=[unit.ip])
             for unit in self.state.other_seed_units
         )
 
@@ -623,6 +626,26 @@ class CassandraEvents(Object):
             else:
                 self.state.unit.auth_repaired = False
         return True
+
+    def _handle_premature_leader_bootstrap(self) -> None:
+        """Handle premature leader bootstrap which can lead to deadlock."""
+        if not all(
+            [
+                self.charm.unit.is_leader(),
+                self.state.unit.workload_state == UnitWorkloadState.INSTALLING,
+                not self.state.cluster.is_active,
+            ]
+        ):
+            return
+
+        # Ensure the leader has started and is in 'UN' state.
+        if not self.node_manager.ensure_cluster_topology(1):
+            return
+
+        self.workload.restart()
+        if self.node_manager.is_healthy(self.state.unit.ip, retry=True):
+            self.state.unit.workload_state = UnitWorkloadState.ACTIVE
+            self.state.cluster.state = ClusterState.ACTIVE
 
     def reconcile(self) -> None:
         """Reconcile SSH keys."""
