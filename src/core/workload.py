@@ -95,7 +95,7 @@ class CassandraPaths:
         return self.config_dir / "medusa.ini"
 
     @property
-    def s3_credentials(self) -> pathops.PathProtocol:
+    def storage_credentials(self) -> pathops.PathProtocol:
         """Path to Medusa config file."""
         return self.config_dir / "credentials"
 

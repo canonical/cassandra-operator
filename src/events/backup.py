@@ -9,7 +9,7 @@ import logging
 from enum import Enum
 
 from charms.data_platform_libs.v1.data_models import TypedCharmBase
-from object_storage import S3Requirer
+from object_storage import AzureStorageRequirer, GCSRequirer, S3Requirer
 from ops import (
     ActionEvent,
     Object,
@@ -17,7 +17,13 @@ from ops import (
 
 from core.config import CharmConfig
 from core.literals import CASSANDRA_ADMIN_USERNAME, NODETOOL_USERNAME
-from core.state import S3_RELATION, ApplicationState
+from core.state import (
+    AZURE_STORAGE_RELATION,
+    GCS_RELATION,
+    S3_RELATION,
+    ApplicationState,
+    StorageClientContext,
+)
 from core.workload import WorkloadBase
 from managers.backup import BackupManager, MedusaConfig
 from managers.node import NodeManager
@@ -59,6 +65,10 @@ class BackupEvents(Object):
 
         self.s3_client = S3Requirer(self.charm, S3_RELATION)
         self.s3_context = self.state.s3(self.s3_client)
+        self.azure_storage_client = AzureStorageRequirer(self.charm, AZURE_STORAGE_RELATION)
+        self.azure_storage_context = self.state.azure_storage(self.azure_storage_client)
+        self.gcs_client = GCSRequirer(self.charm, GCS_RELATION)
+        self.gcs_context = self.state.gcs(self.gcs_client)
         self.backup_manager = BackupManager(self.workload)
 
         self.framework.observe(
@@ -143,6 +153,15 @@ class BackupEvents(Object):
         return True
 
     @property
+    def active_context(self) -> StorageClientContext | None:
+        """Return the active context based on storage relations state."""
+        for ctx in [self.s3_context, self.gcs_context, self.azure_storage_context]:
+            if ctx.ready:
+                return ctx
+
+        return None
+
+    @property
     def ready(self) -> bool:
         """Runtime readiness check."""
         return all(
@@ -151,7 +170,7 @@ class BackupEvents(Object):
                 self.ssh_manager.public_key,
                 self.state.cluster.operator_password_secret,
                 self.state.cluster.nodetool_password_secret,
-                self.s3_context.ready,
+                self.active_context,
             ]
         )
 
@@ -161,10 +180,13 @@ class BackupEvents(Object):
             # cleanup if necessary.
             for path in [
                 self.workload.cassandra_paths.medusa_config,
-                self.workload.cassandra_paths.s3_credentials,
+                self.workload.cassandra_paths.storage_credentials,
             ]:
                 if path.exists():
                     path.unlink()
+            return
+
+        if not self.active_context:
             return
 
         cfg = MedusaConfig(
@@ -172,12 +194,11 @@ class BackupEvents(Object):
             cql_password=self.state.cluster.operator_password_secret,
             nodetool_username=NODETOOL_USERNAME,
             nodetool_password=self.state.cluster.nodetool_password_secret,
-            storage_bucket=self.s3_context.bucket,
-            storage_endpoint=self.s3_context.endpoint,
-            storage_region=self.s3_context.region,
+            storage_bucket=self.active_context.bucket,
+            storage_endpoint=self.active_context.endpoint,
+            storage_region=self.active_context.region,
+            storage_type=self.active_context.type,
         )
 
-        self.backup_manager.render_credentials(
-            self.s3_context.access_key, self.s3_context.secret_key
-        )
+        self.backup_manager.render_credentials(self.active_context)
         self.backup_manager.render_medusa_config(cfg)
