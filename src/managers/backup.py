@@ -160,7 +160,7 @@ class BackupManager:
         """Restore a backup."""
         default_args = ["--keep-auth", "-y", "--verify"]
         if self.medusa_running():
-            logger.info("Medusa process in running. Waiting...")
+            logger.info("Backup/restore process is running. Waiting...")
             return
 
         self.medusa_exec("restore-cluster", "--backup-name", backup_name, *default_args)
