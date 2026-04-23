@@ -59,7 +59,7 @@ class Refresh(charm_refresh.CharmSpecificCommon, abc.ABC):
                 raise charm_refresh.PrecheckFailed(
                     f"TLS CA rotation is in progress for unit {unit.hostname}"
                 )
-            if not self._node_manager.is_healthy(unit.ip, retry=True):
+            if not self._node_manager.is_healthy(unit.ip, retry=True, timeout=300):
                 raise charm_refresh.PrecheckFailed(f"Unit {unit.hostname} is not healthy")
 
 

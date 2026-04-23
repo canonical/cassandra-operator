@@ -84,3 +84,11 @@ def make_unit_checker(
         )
 
     return check
+
+
+def enable_node_gossip(juju: jubilant.Juju, unit_name: str):
+    juju.ssh(unit_name, command="sudo charmed-cassandra.nodetool enablegossip")
+
+
+def disable_node_gossip(juju: jubilant.Juju, unit_name: str):
+    juju.ssh(unit_name, command="sudo charmed-cassandra.nodetool disablegossip")
