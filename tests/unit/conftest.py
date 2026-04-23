@@ -7,6 +7,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from managers.ssh import SSHManager
+
 from .helpers import make_refresh_like
 
 logger = logging.getLogger(__name__)
@@ -30,3 +32,10 @@ def mock_refresh():
         patch("charm_refresh._main._RefreshVersions", MagicMock(return_value=fake_versions)),
     ):
         yield
+
+
+@pytest.fixture(autouse=True)
+def mock_ssh_manager(monkeypatch):
+    mock = MagicMock(spec=SSHManager)
+    mock.return_value.public_key = "mykey"
+    monkeypatch.setattr("charm.SSHManager", mock)
