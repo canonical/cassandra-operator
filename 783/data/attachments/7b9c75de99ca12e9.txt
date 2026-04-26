@@ -1,0 +1,146 @@
+INFO     jubilant:_juju.py:237 cli: juju config --model test-cas cassandra profile=testing
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
++ .model.name = 'test-cas'
++ .model.type = 'iaas'
++ .model.controller = 'concierge-lxd'
++ .model.cloud = 'localhost'
++ .model.version = '3.6.21'
++ .model.region = 'localhost'
++ .model.model_status.current = 'available'
++ .machines['0'].juju_status.current = 'started'
++ .machines['0'].juju_status.version = '3.6.21'
++ .machines['0'].hostname = 'juju-a99c4f-0'
++ .machines['0'].dns_name = '10.254.57.130'
++ .machines['0'].ip_addresses[0] = '10.254.57.130'
++ .machines['0'].instance_id = 'juju-a99c4f-0'
++ .machines['0'].machine_status.current = 'running'
++ .machines['0'].machine_status.message = 'Running'
++ .machines['0'].modification_status.current = 'applied'
++ .machines['0'].base.name = 'ubuntu'
++ .machines['0'].base.channel = '24.04'
++ .machines['0'].network_interfaces['eth0'].ip_addresses[0] = '10.254.57.130'
++ .machines['0'].network_interfaces['eth0'].mac_address = '00:16:3e:72:47:dc'
++ .machines['0'].network_interfaces['eth0'].is_up = True
++ .machines['0'].network_interfaces['eth0'].gateway = '10.254.57.1'
++ .machines['0'].network_interfaces['eth0'].space = 'alpha'
++ .machines['0'].constraints = 'arch=amd64'
++ .machines['0'].hardware = 'arch=amd64 cores=0 mem=0M availability-zone=github-runner virt-type=container'
++ .apps['cassandra'].charm = 'local:cassandra-0'
++ .apps['cassandra'].charm_origin = 'local'
++ .apps['cassandra'].charm_name = 'cassandra'
++ .apps['cassandra'].charm_rev = 0
++ .apps['cassandra'].exposed = False
++ .apps['cassandra'].base.name = 'ubuntu'
++ .apps['cassandra'].base.channel = '24.04'
++ .apps['cassandra'].app_status.current = 'blocked'
++ .apps['cassandra'].app_status.message = 'invalid config'
++ .apps['cassandra'].relations['bootstrap'][0].related_app = 'cassandra'
++ .apps['cassandra'].relations['bootstrap'][0].interface = 'rolling_op'
++ .apps['cassandra'].relations['bootstrap'][0].scope = 'global'
++ .apps['cassandra'].relations['cassandra-peers'][0].related_app = 'cassandra'
++ .apps['cassandra'].relations['cassandra-peers'][0].interface = 'cassandra_peers'
++ .apps['cassandra'].relations['cassandra-peers'][0].scope = 'global'
++ .apps['cassandra'].relations['refresh-v-three'][0].related_app = 'cassandra'
++ .apps['cassandra'].relations['refresh-v-three'][0].interface = 'refresh'
++ .apps['cassandra'].relations['refresh-v-three'][0].scope = 'global'
++ .apps['cassandra'].units['cassandra/0'].workload_status.current = 'blocked'
++ .apps['cassandra'].units['cassandra/0'].workload_status.message = 'invalid config'
++ .apps['cassandra'].units['cassandra/0'].juju_status.current = 'executing'
++ .apps['cassandra'].units['cassandra/0'].juju_status.message = 'running install hook'
++ .apps['cassandra'].units['cassandra/0'].juju_status.version = '3.6.21'
++ .apps['cassandra'].units['cassandra/0'].leader = True
++ .apps['cassandra'].units['cassandra/0'].machine = '0'
++ .apps['cassandra'].units['cassandra/0'].public_address = '10.254.57.130'
++ .apps['cassandra'].version = '5.0.5'
++ .apps['cassandra'].endpoint_bindings[''] = 'alpha'
++ .apps['cassandra'].endpoint_bindings['bootstrap'] = 'alpha'
++ .apps['cassandra'].endpoint_bindings['cassandra-client'] = 'alpha'
++ .apps['cassandra'].endpoint_bindings['cassandra-peers'] = 'alpha'
++ .apps['cassandra'].endpoint_bindings['client-certificates'] = 'alpha'
++ .apps['cassandra'].endpoint_bindings['cos-agent'] = 'alpha'
++ .apps['cassandra'].endpoint_bindings['peer-certificates'] = 'alpha'
++ .apps['cassandra'].endpoint_bindings['refresh-v-three'] = 'alpha'
++ .storage.storage['data/0'].kind = 'filesystem'
++ .storage.storage['data/0'].status.current = 'attached'
++ .storage.storage['data/0'].persistent = False
++ .storage.storage['data/0'].life = 'alive'
++ .storage.storage['data/0'].attachments.units['cassandra/0'].machine = '0'
++ .storage.storage['data/0'].attachments.units['cassandra/0'].location = '/var/snap/charmed-cassandra/common/var/lib/cassandra'
++ .storage.storage['data/0'].attachments.units['cassandra/0'].life = 'alive'
++ .storage.filesystems['0/0'].size = 98121
++ .storage.filesystems['0/0'].provider_id = '0/0'
++ .storage.filesystems['0/0'].storage = 'data/0'
++ .storage.filesystems['0/0'].attachments.machines['0'].mount_point = '/var/snap/charmed-cassandra/common/var/lib/cassandra'
++ .storage.filesystems['0/0'].attachments.machines['0'].read_only = False
++ .storage.filesystems['0/0'].attachments.machines['0'].life = 'alive'
++ .storage.filesystems['0/0'].attachments.units['cassandra/0'].machine = '0'
++ .storage.filesystems['0/0'].attachments.units['cassandra/0'].location = '/var/snap/charmed-cassandra/common/var/lib/cassandra'
++ .storage.filesystems['0/0'].attachments.units['cassandra/0'].life = 'alive'
++ .storage.filesystems['0/0'].pool = 'rootfs'
++ .storage.filesystems['0/0'].life = 'alive'
++ .storage.filesystems['0/0'].status.current = 'attached'
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['cassandra'].app_status.current = 'blocked'
+- .apps['cassandra'].app_status.message = 'invalid config'
++ .apps['cassandra'].app_status.current = 'active'
+- .apps['cassandra'].units['cassandra/0'].workload_status.current = 'blocked'
+- .apps['cassandra'].units['cassandra/0'].workload_status.message = 'invalid config'
++ .apps['cassandra'].units['cassandra/0'].workload_status.current = 'maintenance'
++ .apps['cassandra'].units['cassandra/0'].workload_status.message = 'installing Cassandra'
+- .apps['cassandra'].units['cassandra/0'].juju_status.message = 'running install hook'
++ .apps['cassandra'].units['cassandra/0'].juju_status.message = 'running bootstrap-relation-created hook'
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['cassandra'].units['cassandra/0'].juju_status.message = 'running bootstrap-relation-created hook'
++ .apps['cassandra'].units['cassandra/0'].juju_status.message = 'running refresh-v-three-relation-created hook'
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['cassandra'].units['cassandra/0'].juju_status.message = 'running refresh-v-three-relation-created hook'
++ .apps['cassandra'].units['cassandra/0'].juju_status.message = 'running cassandra-peers-relation-created hook'
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['cassandra'].units['cassandra/0'].juju_status.message = 'running cassandra-peers-relation-created hook'
++ .apps['cassandra'].units['cassandra/0'].juju_status.message = 'running leader-elected hook'
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['cassandra'].units['cassandra/0'].juju_status.message = 'running leader-elected hook'
++ .apps['cassandra'].units['cassandra/0'].juju_status.message = 'running config-changed hook'
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['cassandra'].units['cassandra/0'].juju_status.message = 'running config-changed hook'
++ .apps['cassandra'].units['cassandra/0'].juju_status.message = 'running start hook'
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['cassandra'].units['cassandra/0'].workload_status.message = 'installing Cassandra'
++ .apps['cassandra'].units['cassandra/0'].workload_status.message = 'waiting for Cassandra to start'
+- .apps['cassandra'].units['cassandra/0'].juju_status.message = 'running start hook'
++ .apps['cassandra'].units['cassandra/0'].juju_status.message = 'running secret-changed hook for secret:pg0dofrjhi7l62sgsgm0'
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['cassandra'].units['cassandra/0'].workload_status.current = 'maintenance'
+- .apps['cassandra'].units['cassandra/0'].workload_status.message = 'waiting for Cassandra to start'
++ .apps['cassandra'].units['cassandra/0'].workload_status.current = 'active'
+- .apps['cassandra'].units['cassandra/0'].juju_status.message = 'running secret-changed hook for secret:pg0dofrjhi7l62sgsgm0'
++ .apps['cassandra'].units['cassandra/0'].juju_status.message = 'running secret-remove hook for secret:pg0dofrjhi7l62sgsgm0/1'
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['cassandra'].units['cassandra/0'].juju_status.message = 'running secret-remove hook for secret:pg0dofrjhi7l62sgsgm0/1'
++ .apps['cassandra'].units['cassandra/0'].juju_status.message = 'running bootstrap-relation-changed hook'
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['cassandra'].units['cassandra/0'].juju_status.message = 'running bootstrap-relation-changed hook'
++ .apps['cassandra'].units['cassandra/0'].juju_status.message = 'running refresh-v-three-relation-changed hook'
+INFO     jubilant:_juju.py:237 cli: juju status --model test-cas --format json
+INFO     jubilant:_juju.py:237 cli: juju secrets --model test-cas --format json
+INFO     jubilant:_juju.py:237 cli: juju show-secret --model test-cas --reveal --format json b17m93fi32ducsmb2tn0
+INFO     integration.helpers.juju:juju.py:76 revealed secret b17m93fi32ducsmb2tn0: {"b17m93fi32ducsmb2tn0":{"revision":1,"checksum":"be664b818a301641a9b0587eef5f48b7577b43bd66f480542f6d66f5f52c4466","owner":"cassandra","label":"cassandra-peers.cassandra.app","created":"2026-04-26T02:38:41Z","updated":"2026-04-26T02:38:41Z","content":{"Data":{"internal-ca-key-secret":"-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEAs+FAsZhD78LEJvwFCamIoz1/d7LATi2fyAQO1fw2f+25P2OF\naCk5GHl7B60sFNOGI36esU3sXo2OpQOQ2AOuzxOvTXsQfZ3LJm5xNaj95PK4JFZ1\nBFpeZw1YSDX7C0eTLgOLu2T2VOZbu5LMwsNAr2BGGvfPC3TtnxP7ERv5RZKy8+Oh\nj8oFvk3ZracQsSu72/sjlWTDsfBzGKqXgsAeWmxZSRP3zwZ97MbPRlF1hI6NCRe1\npe0qagZ+kQxYmLRzIil324Yjo8jnUJn/65tp34wSKmIJK0wuMNUuDgl9SWLlFNBr\nW7ZwQRrNJE2Sh6VadHJMZv7qFZR9Tf6ekbr4zwIDAQABAoIBACCGsiaK5Hn1y3dL\nKfQJ0lnGNIbl7S0VxecqiK476XTvfQhPzB8+GQNqcAs+zpJDf2Vqr3JbJ0sfqLQA\n9Y+B9vmd0xydDKnSPxpHbTQpRyO/mfmEIquzVY+n05dXH3p2KlBvNrSfeIV4lAzS\najErkkZED9kvhyJItfEGcWcyGjxwkQZRSvUW1IOmBasqkxWlwLgaEeWrYVkWlY9o\nl8R2kX1MUDqsnsFlQCAQR36bMlDhZ1lbzJG53O3HpZ0dI+v40IAv18s3/o+1Qh0m\na88RryA/DJ8YZhwxZKCz8bHCNaMfpVz08te0Z8J2TqQF1rsAREFK8/rsIl1F+JZM\nbdv8UQ0CgYEA6XtzKf0wz4+R6UXol0t5dMcpt+ZJ5WGZsBfX9FJiRsBtoTtaAI2W\n8gP29GMzXf0YcaeFC4qAq8bLtGuo4MqwCLLay5Fiu6O8fPXAudaxN+HNRWI2d/he\nqUPeJLfncVM4g76/rNovF9ToNFj0j0kProwWhd/xQkw6dsOWphBGbqsCgYEAxTpj\n43U5RdsI282gdoTyp+gdxkpVkp6VoetQckedR2LpuISxx6/H7rvhgMOguUPfkLLO\nRy2XyyD8m/cUA2tHMIeEKT9q0WTs02CSl2TB959yX46GCKtcicX4ko0JqOg3DOPT\nKO1c4vOJH5Ch9W7jSJxS+jbRvt7qGy/Q26sRjm0CgYBDv/+9+mtUf1uerht883it\n6zDu3RMqTXT0RSb0DYfY8fOd6oQGTw+y8HWTmsmIB241ZJ/Vpn4J2mi31NmvSQFl\ntMiKc4iL3EpQlFs1Udgg2BPhg0s86sRFJ51pWDf/iV+H0yz5cmJh7vTmY72rak7z\nnlDWzhHK5CW+2qh3TZeyewKBgQCLSa152jPUjdg3w4TrrwDgbCF7BMxie/UZIWLz\nEniVDdoaIjyb1hzREYc0tPQxYynkuyLLSfvFzUoZq+lKcN0Z/Nrtdogt0aUfszhU\nCyihhM31hmZKgRsdgd8HQOvtifI2/D8IzHmpHm1dCXwYJXQGt8AyTbzbm/qhsKdE\nPBBuEQKBgFNTzamEXhdXFsEoZVlXY1eC2VV3awxRc2ILRSOvznCDN95pIUPu+m9o\nAmMjKYyCdQdjSkPXVpwHMfrVzhrflQtDiUHxHqEEC1KwTcIm3Y1ya5PynlEgLcn8\nJmJQGDGqYZXj13catJQznmsJflwrTQwCNkrRSvguD57A1WzS9peG\n-----END RSA PRIVATE KEY-----","internal-ca-secret":"-----BEGIN CERTIFICATE-----\nMIIDdDCCAlygAwIBAgIUQArHR5XRBPZ6jei/9NHEezOYfhMwDQYJKoZIhvcNAQEL\nBQAwUjESMBAGA1UEAwwJY2Fzc2FuZHJhMS0wKwYDVQQtDCQ4NzQyODkxNi01ZWM5\nLTQ5ODEtOWYwZC02YTU4ZGZiMGE0ZTAxDTALBgNVBAoMBHBlZXIwHhcNMjYwNDI2\nMDIzNzQwWhcNMzYwNDIzMDIzNzQwWjBSMRIwEAYDVQQDDAljYXNzYW5kcmExLTAr\nBgNVBC0MJDg3NDI4OTE2LTVlYzktNDk4MS05ZjBkLTZhNThkZmIwYTRlMDENMAsG\nA1UECgwEcGVlcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALPhQLGY\nQ+/CxCb8BQmpiKM9f3eywE4tn8gEDtX8Nn/tuT9jhWgpORh5ewetLBTThiN+nrFN\n7F6NjqUDkNgDrs8Tr017EH2dyyZucTWo/eTyuCRWdQRaXmcNWEg1+wtHky4Di7tk\n9lTmW7uSzMLDQK9gRhr3zwt07Z8T+xEb+UWSsvPjoY/KBb5N2a2nELEru9v7I5Vk\nw7Hwcxiql4LAHlpsWUkT988GfezGz0ZRdYSOjQkXtaXtKmoGfpEMWJi0cyIpd9uG\nI6PI51CZ/+ubad+MEipiCStMLjDVLg4JfUli5RTQa1u2cEEazSRNkoelWnRyTGb+\n6hWUfU3+npG6+M8CAwEAAaNCMEAwHQYDVR0OBBYEFFcTZ+C6UGC8peIG0GK+juvD\nRuBmMA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgKkMA0GCSqGSIb3DQEB\nCwUAA4IBAQCdlhRy0IGH6sDPTe9te9BZL6A/6wMTSz0jlBqla27ZkojaEDB8CGh4\nA9VBD5wsBLQ4yfUo7GYBFnQVY3WM1qwF+xrpui6ezKnRbPEZ4bskRHE2RWG2orU5\nJdT8M9xx14evz+hn8QmKEYG2ujTb9pui1+nO1wSJR/SXjYDKpJe4LWd5sfHQqQlt\nIA0OxrcAFJe+L4iJGFSXh64VhI20kvRSZk0t8VMv6+vq2HdDOO1dgp9fHxzmOCa9\ngYQFvcuvZbfUB29DcYoqcppmEH3YLz/MEf1JWjlAnjZuem5imALgQw1EzsT7U5E5\nYhnun2nuMOKBHSJMY0B/2Bsf58MYohDC\n-----END CERTIFICATE-----","nodetool-password":"kxiA5mPcV44ged4FV0IRssEY7sVg1HX9","operator-password":"aqlnQfjUVMwzkp6EQvHPLrfBoPegSkxP"}}}}
+
+INFO     integration.helpers.cassandra:cassandra.py:59 SSL context is disabled
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.254.57.130:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 858, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-config/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 269, in __init__
+    self._connect_socket()
+  File "cassandra/connection.py", line 963, in cassandra.connection.Connection._connect_socket
+ConnectionRefusedError: [Errno 111] Tried connecting to [('10.254.57.130', 9042)]. Last error: Connection refused
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.254.57.130:9042': ConnectionRefusedError(111, "Tried connecting to [('10.254.57.130', 9042)]. Last error: Connection refused")})
+INFO     cassandra.policies:policies.py:291 Using datacenter 'datacenter1' for DCAwareRoundRobinPolicy (via host '10.254.57.130:9042'); if incorrect, please specify a local_dc to the constructor, or limit contact points to local cluster nodes
