@@ -94,9 +94,8 @@ class MedusaConfig:
 class BackupManager:
     """Manager of medusa-driven backup/restores."""
 
-    def __init__(self, workload: WorkloadBase, s3_endpoint: str | None = None):
+    def __init__(self, workload: WorkloadBase):
         self._workload = workload
-        self._endpoint = s3_endpoint
 
     def medusa_exec(self, *args: str, timeout: int = 3600) -> str:
         """Run a medusa command."""

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-# Copyright 2025 Canonical Ltd.
+# Copyright 2026 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""Handler for main Cassandra charm events."""
+"""Handler for Cassandra backup/restore events."""
 
 import json
 import logging
@@ -38,8 +38,8 @@ class BackupMessages(str, Enum):
 
     NOT_READY = (
         "Can not initiate backup/restore operation. "
-        "Check if s3-integrator is in active|idle state, "
-        "and if the charm is integrated properly with s3-integrator."
+        "Check if storage relation is in active|idle state, "
+        "and if the charm is integrated properly with the object storage integrator."
     )
     WORKLOAD_NOT_READY = "Cassandra workload is busy. Wait for active|idle state and try again."
     OP_FAILED = 'Backup/restore operation failed, check "juju debug-log" for more info.'
@@ -56,7 +56,7 @@ class BackupEvents(Object):
         node_manager: NodeManager,
         ssh_manager: SSHManager,
     ):
-        super().__init__(charm, key="provider_events")
+        super().__init__(charm, key="backup_events")
         self.charm = charm
         self.state = state
         self.workload = workload
@@ -99,7 +99,11 @@ class BackupEvents(Object):
 
         try:
             backups = self.backup_manager.list_backups()
-            repo = f"{self.s3_context.endpoint}/{self.s3_context.bucket}"
+            repo = (
+                f"{self.active_context.endpoint}/{self.active_context.bucket}"
+                if self.active_context
+                else ""
+            )
             event.set_results(
                 {"result": json.dumps([backup.as_dict(repo) for backup in backups], indent=4)}
             )
