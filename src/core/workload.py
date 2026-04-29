@@ -97,7 +97,7 @@ class CassandraPaths:
     @property
     def storage_credentials(self) -> pathops.PathProtocol:
         """Path to Medusa config file."""
-        return self.config_dir / "credentials"
+        return self.config_dir / "object-storage.credentials"
 
 
 class WorkloadBase(ABC):
