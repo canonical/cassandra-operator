@@ -101,11 +101,7 @@ class BackupEvents(Object):
             backups = self.backup_manager.list_backups()
             repo = f"{self.s3_context.endpoint}/{self.s3_context.bucket}"
             event.set_results(
-                {
-                    "result": json.dumps(
-                        [backup.as_da096_dict(repo) for backup in backups], indent=4
-                    )
-                }
+                {"result": json.dumps([backup.as_dict(repo) for backup in backups], indent=4)}
             )
         except ExecError as e:
             logger.error(f"list-backups failed: {e.stdout} {e.stderr}")
