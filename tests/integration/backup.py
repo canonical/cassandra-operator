@@ -4,6 +4,8 @@
 
 import json
 import logging
+import os
+import time
 from pathlib import Path
 
 import jubilant
@@ -100,6 +102,24 @@ class BackupRestoreTests:
         assert len(backups) == 1
         assert backups[0].get("start-time") < backups[0].get("end-time")
         logger.info(f"One backup found: {backups[0]['id']}")
+
+    def test_remove_first_app(self, juju: jubilant.Juju, app_name: str):
+        juju.remove_relation(app_name, self.integrator_app)
+        juju.wait(all_active_idle, successes=10, delay=3)
+        destroy_cmd = [
+            "juju",
+            "remove-application",
+            "-m",
+            juju.model,
+            "--force",
+            "--destroy-storage",
+            "--no-wait",
+            "--no-prompt",
+            app_name,
+        ]
+        assert os.system(" ".join(destroy_cmd)) == 0
+        time.sleep(100)
+        juju.wait(lambda status: app_name not in status.apps)
 
     def test_deploy_other_app_active(
         self, juju: jubilant.Juju, cassandra_charm: Path, other_app_name: str
