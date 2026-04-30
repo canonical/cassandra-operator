@@ -34,7 +34,7 @@ class BackupInfo:
     state: Literal["finished", "incomplete"]
     mode: BackupMode = "full"
 
-    def as_da096_dict(self, base_repo_url: str) -> dict[str, str | float | None]:
+    def as_dict(self, base_repo_url: str) -> dict[str, str | float | None]:
         """Serialize as a DA-096 compatible dict."""
         return {
             "id": self.name,
@@ -88,15 +88,14 @@ class MedusaConfig:
     @property
     def secure(self) -> bool:
         """Is the storage using HTTPS?"""
-        return True if self.parsed_endpoint.scheme == "https" else False
+        return self.parsed_endpoint.scheme == "https"
 
 
 class BackupManager:
     """Manager of medusa-driven backup/restores."""
 
-    def __init__(self, workload: WorkloadBase, s3_endpoint: str | None = None):
+    def __init__(self, workload: WorkloadBase):
         self._workload = workload
-        self._endpoint = s3_endpoint
 
     def medusa_exec(self, *args: str, timeout: int = 3600) -> str:
         """Run a medusa command."""

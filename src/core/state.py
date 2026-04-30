@@ -365,9 +365,9 @@ class StorageClientContext:
             return self.relation_data.get("bucket", "")
 
     @property
-    def path(self) -> str | None:
+    def path(self) -> str:
         """Path in the bucket in multi-tenant mode."""
-        return self.relation_data.get("path")
+        return self.relation_data.get("path", "")
 
     # S3-specific
 
