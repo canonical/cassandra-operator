@@ -3,6 +3,7 @@
 # See LICENSE file for licensing details.
 
 import logging
+from collections import defaultdict
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -39,3 +40,14 @@ def mock_ssh_manager(monkeypatch):
     mock = MagicMock(spec=SSHManager)
     mock.return_value.public_key = "mykey"
     monkeypatch.setattr("charm.SSHManager", mock)
+
+
+@pytest.fixture(autouse=True)
+def patched_snap(monkeypatch):
+    cache = MagicMock()
+    snap_mock = MagicMock()
+    snap_mock.services = defaultdict(default_factory=lambda _: {"active": True})
+    cache.return_value = {"charmed-cassandra": snap_mock}
+    with monkeypatch.context() as m:
+        m.setattr("charms.operator_libs_linux.v2.snap.SnapCache", cache)
+        yield

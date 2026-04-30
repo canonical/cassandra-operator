@@ -1,0 +1,56 @@
+[cassandra]
+stop_cmd = snap stop charmed-cassandra.daemon
+start_cmd = snap start charmed-cassandra.daemon
+config_file = /var/snap/charmed-cassandra/current/etc/cassandra/cassandra.yaml
+cql_username = {{ cql_username }}
+cql_password = {{ cql_password }}
+nodetool_username = {{ nodetool_username }}
+nodetool_password = {{ nodetool_password }}
+resolve_ip_addresses = True
+
+[storage]
+storage_provider = {{ storage_provider }}
+key_file = /var/snap/charmed-cassandra/current/etc/cassandra/object-storage.credentials
+bucket_name = {{ storage_bucket }}
+
+{% if storage_provider in ['s3', 's3_compatible'] %}
+; S3-specific config
+region = {{ storage_region }}
+{% if storage_provider == 's3_compatible' %}
+host = {{ storage_host }}
+{% endif %}
+secure = {{ storage_secure }}
+{% endif %}
+
+; Number of days before backups are purged. 0 means backups don't get purged by age (default)
+max_backup_age = 0
+; Number of backups to retain. Older backups will get purged beyond that number. 0 means backups don't get purged by count (default)
+max_backup_count = 0
+
+; Used to throttle S3 backups/restores:
+transfer_max_bandwidth = 50MB/s
+
+concurrent_transfers = 1
+
+; Size over which uploads will be using multi part uploads. Defaults to 20MB.
+multi_part_upload_threshold = 20971520
+
+; GC grace period for backed up files. Prevents race conditions between purge and running backups
+backup_grace_period_in_days = 10
+
+use_sudo_for_restore = True
+
+[ssh]
+username = root
+key_file = /root/.ssh/charmed-id_ed25519
+
+[checks]
+enable_md5_checks = True
+
+[logging]
+enabled = 1
+file = /var/snap/charmed-cassandra/common/var/log/cassandra/medusa.log
+level = INFO
+format = [%(asctime)s] %(levelname)s: %(message)s
+maxBytes = 20000000
+backupCount = 50

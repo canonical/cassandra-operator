@@ -21,6 +21,17 @@ DEFAULT_MICROK8S_CHANNEL = "1.32-strict/stable"
 REVISION_TO_DEPLOY = 71
 
 
+def all_active_idle(status: jubilant.Status, *apps: str):
+    """Check all units are in active|idle state."""
+    return jubilant.all_agents_idle(status, *apps) and jubilant.all_active(status, *apps)
+
+
+def exec_(cmd: str) -> str:
+    return subprocess.check_output(
+        cmd, shell=True, universal_newlines=True, stderr=subprocess.PIPE
+    )
+
+
 @tenacity.retry(
     retry=tenacity.retry_if_exception_type(AssertionError),
     stop=stop_after_delay(60),

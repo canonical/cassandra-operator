@@ -9,6 +9,8 @@ import logging
 import os
 from dataclasses import dataclass
 from enum import StrEnum
+from functools import cached_property
+from typing import Literal
 
 from charms.data_platform_libs.v0.data_interfaces import (
     Data,
@@ -26,6 +28,7 @@ from charms.tls_certificates_interface.v4.tls_certificates import (
     CertificateSigningRequest,
     PrivateKey,
 )
+from object_storage import AzureStorageRequirer, GCSRequirer, S3Requirer
 from ops import Application, CharmBase, Object, Relation, Unit
 from ops.jujuversion import JujuVersion
 
@@ -35,6 +38,9 @@ DATA_STORAGE = "data"
 CLIENT_TLS_RELATION = "client-certificates"
 PEER_TLS_RELATION = "peer-certificates"
 PEER_RELATION = "cassandra-peers"
+S3_RELATION = "s3-credentials"
+AZURE_STORAGE_RELATION = "azure-storage-credentials"
+GCS_RELATION = "gcs-credentials"
 CLIENT_RELATION = "cassandra-client"
 CASSANDRA_PEER_PORT = 7000
 CASSANDRA_CLIENT_PORT = 9042
@@ -314,6 +320,87 @@ class TLSContext(RelationState):
             bundle=self.bundle,
             scope=self.scope,
         )
+
+
+class StorageClientContext:
+    """Context model for storage client relations."""
+
+    def __init__(
+        self, client: AzureStorageRequirer | GCSRequirer | S3Requirer, relation: Relation | None
+    ):
+        self._client = client
+        self.relation_data = client.get_storage_connection_info(relation=relation)
+
+    @cached_property
+    def type(self) -> Literal["s3", "gcs", "azure"]:
+        """Return the storage type."""
+        match self._client:
+            case S3Requirer():
+                return "s3"
+            case GCSRequirer():
+                return "gcs"
+            case AzureStorageRequirer():
+                return "azure"
+            case _:
+                raise ValueError("Can't determine storage type.")
+
+    # Generic
+
+    @property
+    def secret_key(self) -> str:
+        """S3 secret access key or GCS secret key JSON."""
+        raw = self.relation_data.get("secret-key", "")
+        if isinstance(raw, str):
+            return raw
+        else:
+            return json.dumps(raw)
+
+    @property
+    def bucket(self) -> str:
+        """Bucket name."""
+        if self.type == "azure":
+            return self.relation_data.get("container", "")
+        else:
+            return self.relation_data.get("bucket", "")
+
+    @property
+    def path(self) -> str:
+        """Path in the bucket in multi-tenant mode."""
+        return self.relation_data.get("path", "")
+
+    # S3-specific
+
+    @property
+    def access_key(self) -> str:
+        """S3 access key ID."""
+        return self.relation_data.get("access-key", "")
+
+    @property
+    def endpoint(self) -> str:
+        """S3 endpoint."""
+        return self.relation_data.get("endpoint", "")
+
+    @property
+    def region(self) -> str:
+        """S3 region."""
+        return self.relation_data.get("region", "")
+
+    # Azure-specific
+
+    @property
+    def storage_account(self) -> str:
+        """Azure storage account."""
+        return self.relation_data.get("storage-account", "")
+
+    @property
+    def ready(self) -> bool:
+        """Returns True if all the necessary relation data has been set, False otherwise."""
+        if self.type == "s3":
+            return all([self.access_key, self.secret_key, self.bucket, self.region])
+        elif self.type == "gcs":
+            return all([self.secret_key, self.bucket])
+        else:
+            return all([self.secret_key, self.bucket, self.storage_account])
 
 
 class UnitContext(RelationState):
@@ -668,6 +755,21 @@ class ApplicationState(Object):
         return self.model.get_relation(PEER_RELATION)
 
     @property
+    def s3_relation(self) -> Relation | None:
+        """S3 client relation."""
+        return self.model.get_relation(S3_RELATION)
+
+    @property
+    def gcs_relation(self) -> Relation | None:
+        """GCS client relation."""
+        return self.model.get_relation(GCS_RELATION)
+
+    @property
+    def azure_storage_relation(self) -> Relation | None:
+        """Azure storage client relation."""
+        return self.model.get_relation(AZURE_STORAGE_RELATION)
+
+    @property
     def peer_relation_units(self) -> dict[Unit, DataPeerOtherUnitData]:
         """Unit data interface of all units in the cluster peer relation."""
         if not self.peer_relation or not self.peer_relation.units:
@@ -738,3 +840,15 @@ class ApplicationState(Object):
         See `ApplicationState.other_units` for more info.
         """
         return {unit for unit in self.other_units if unit.is_seed}
+
+    def s3(self, client: S3Requirer) -> StorageClientContext:
+        """S3 client context."""
+        return StorageClientContext(client, self.s3_relation)
+
+    def gcs(self, client: GCSRequirer) -> StorageClientContext:
+        """GCS client context."""
+        return StorageClientContext(client, self.gcs_relation)
+
+    def azure_storage(self, client: AzureStorageRequirer) -> StorageClientContext:
+        """Azure storage client context."""
+        return StorageClientContext(client, self.azure_storage_relation)
