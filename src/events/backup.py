@@ -12,7 +12,14 @@ from charms.data_platform_libs.v1.data_models import TypedCharmBase
 from object_storage import AzureStorageRequirer, GCSRequirer, S3Requirer
 from ops import (
     ActionEvent,
+    Application,
+    CharmEvents,
+    EventSource,
+    Handle,
     Object,
+    Relation,
+    RelationEvent,
+    Unit,
 )
 
 from core.config import CharmConfig
@@ -23,6 +30,7 @@ from core.state import (
     S3_RELATION,
     ApplicationState,
     StorageClientContext,
+    UnitWorkloadState,
 )
 from core.workload import WorkloadBase
 from managers.backup import BackupManager, MedusaConfig
@@ -43,10 +51,42 @@ class BackupMessages(str, Enum):
     )
     WORKLOAD_NOT_READY = "Cassandra workload is busy. Wait for active|idle state and try again."
     OP_FAILED = 'Backup/restore operation failed, check "juju debug-log" for more info.'
+    RESTORE_IN_PROGRESS = "A restore is already in progress, please wait for it to finish."
+    INVALID_BACKUP_ID = "A valid backup-id should be proivded for restore action."
+
+
+class RestoreEvent(RelationEvent):
+    """Base class for restore events."""
+
+    def __init__(
+        self,
+        handle: Handle,
+        relation: Relation,
+        backup_name: str,
+        app: Application | None = None,
+        unit: Unit | None = None,
+    ):
+        super().__init__(handle, relation, app=app, unit=unit)
+        self.backup_name = backup_name
+
+    def snapshot(self) -> dict:
+        """Return a snapshot of the event."""
+        return super().snapshot() | {"backup-name": self.backup_name}
+
+    def restore(self, snapshot: dict):
+        """Restore the event from a snapshot."""
+        super().restore(snapshot)
+        self.backup_name = snapshot["backup-name"]
+
+
+class _CustomEvents(CharmEvents):
+    restore = EventSource(RestoreEvent)
 
 
 class BackupEvents(Object):
     """Handle backup and restore actions/events."""
+
+    on = _CustomEvents()  # pyright: ignore
 
     def __init__(
         self,
@@ -78,6 +118,7 @@ class BackupEvents(Object):
             getattr(self.charm.on, "list_backups_action"), self._on_list_backups_action
         )
         self.framework.observe(getattr(self.charm.on, "restore_action"), self._on_restore_action)
+        self.framework.observe(self.on.restore, self._on_restore_event)
 
     def _on_create_backup_action(self, event: ActionEvent) -> None:
         """Handle the `create-backup` Juju action."""
@@ -116,6 +157,38 @@ class BackupEvents(Object):
         if not self._run_before_checks(event):
             return
 
+        if self.state.restoring:
+            event.fail(BackupMessages.RESTORE_IN_PROGRESS.value)
+            return
+
+        if not (backup_name := event.params.get("backup-id")):
+            event.fail(BackupMessages.INVALID_BACKUP_ID.value)
+            return
+
+        self.state.unit.restoring = True
+        self.state.unit.restore_backup_name = backup_name
+        self.state.unit.workload_state = UnitWorkloadState.RESTORING
+        event.set_results({"result": "restore started."})
+
+    def _on_restore_event(self, event: RestoreEvent) -> None:
+        """Handle custom `restore` event."""
+        if not self.state.unit.restoring or not self.state.restoring:
+            # Restore is not initiated on this unit.
+            return
+
+        if self.backup_manager.medusa_running():
+            event.defer()
+            return
+
+        try:
+            logger.info(f"Initiating restore on {self.state.unit.unit_name}")
+            self.backup_manager.restore(backup_name=event.backup_name)
+            logger.info("Restore finished successfully.")
+        except ExecError as e:
+            logger.error(f"Restore process failed: {e.stdout} {e.stderr}")
+        finally:
+            self.state.unit.restoring = False
+            self.state.unit.restore_backup_name = ""
         logger.info(f"restore {repr(event)}")
 
     def _run_before_checks(self, event: ActionEvent) -> bool:
@@ -198,6 +271,7 @@ class BackupEvents(Object):
             storage_endpoint=self.active_context.endpoint,
             storage_region=self.active_context.region,
             storage_type=self.active_context.type,
+            storage_path=self.active_context.path,
         )
 
         self.backup_manager.render_credentials(self.active_context)

@@ -8,6 +8,15 @@ on:
           Use canonical/data-platform-workflows build_charm.yaml to build the charm(s)
         required: true
         type: string
+    secrets:
+      AWS_ACCESS_KEY:
+        required: true
+      AWS_SECRET_KEY:
+        required: true
+      GCP_ACCESS_KEY:
+        required: true
+      GCP_SECRET_KEY:
+        required: true
 
 jobs:
   collect-integration-tests:
@@ -137,6 +146,11 @@ jobs:
           pattern: ${{ inputs.artifact-prefix }}-*
           merge-multiple: true
       - name: Run spread job
+        env:
+          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+          GCP_ACCESS_KEY: ${{ secrets.GCP_ACCESS_KEY }}
+          GCP_SECRET_KEY: ${{ secrets.GCP_SECRET_KEY }}
         timeout-minutes: 180
         id: spread
         # TODO: replace with `charmcraft test` when

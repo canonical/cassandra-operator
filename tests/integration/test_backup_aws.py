@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
-# Copyright 2025 Canonical Ltd.
+# Copyright 2026 Canonical Ltd.
 # See LICENSE file for licensing details.
 
 import logging
 import os
 import secrets
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 
 import jubilant
 import pytest
-import tenacity
 
 from integration.backup import BackupRestoreTests
-from integration.helpers.juju import all_active_idle, exec_
+from integration.helpers.juju import all_active_idle
 
 logger = logging.getLogger(__name__)
 
@@ -22,54 +22,28 @@ logger = logging.getLogger(__name__)
 class S3Config:
     """S3 connection config model."""
 
-    bucket: str
-    endpoint: str
-    region: str
     access_key: str
     secret_key: str
+    bucket: str = "data-charms-testing"
+    endpoint: str = "https://s3.amazonaws.com"
+    region: str = "us-east-1"
+    path: str = f"cassandra-{uuid.uuid1()}"
 
     @classmethod
     def from_env(cls) -> "S3Config":
-        return cls(**{k: os.environ.get(f"S3_{k.upper()}", "") for k in cls.__dataclass_fields__})
+        return cls(
+            **{
+                k: os.environ.get(f"AWS_{k.upper()}", "")
+                for k in cls.__dataclass_fields__
+                if f"AWS_{k.upper()}" in os.environ
+            }
+        )
 
 
 CONTAINER = f"microceph-{secrets.token_hex(4)}"
-REQUIRED_ENV = [f"S3_{fld.upper()}" for fld in S3Config.__dataclass_fields__]
+REQUIRED_ENV = ("AWS_ACCESS_KEY", "AWS_SECRET_KEY")
 STORAGE_INTEGRATOR_APP = "s3-integrator"
 STORAGE_INTEGRATOR_CHANNEL = "2/edge"
-
-
-@pytest.fixture(autouse=True, scope="module")
-def prepare_microceph():
-    assert os.system(f"lxc launch ubuntu:24.04 {CONTAINER}") == 0
-    # wait for container to boot & setup microceph.
-    raw = None
-    for attempt in tenacity.Retrying(
-        wait=tenacity.wait_fixed(10), stop=tenacity.stop_after_delay(600)
-    ):
-        with attempt:
-            exec_(f"lxc exec {CONTAINER} -- whoami")
-            exec_(
-                f"lxc file push tests/integration/helpers/setup-microceph.sh {CONTAINER}/root/setup.sh"  # noqa: E501
-            )
-            raw = exec_(f"lxc exec {CONTAINER} -- /root/setup.sh")
-
-    if not raw:
-        raise RuntimeError("microceph setup failed!")
-
-    # set env. vars based on the setup script output.
-    logger.info(raw)
-    lines = [line.strip() for line in raw.split("\n") if line.strip()]
-    # Last line has the env. vars
-    for kv in lines[-1].split():
-        parts = kv.split("=")
-        if len(parts) != 2:
-            continue
-        os.environ[parts[0]] = parts[1]
-
-    logger.info(os.environ)
-    yield
-    assert os.system(f"lxc rm --force {CONTAINER}") == 0
 
 
 @pytest.fixture
@@ -93,6 +67,7 @@ def test_deploy_s3_integrator(
             "endpoint": s3_config.endpoint,
             "bucket": s3_config.bucket,
             "region": s3_config.region,
+            "path": s3_config.path,
         },
     )
 

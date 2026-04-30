@@ -10,7 +10,6 @@ import inspect
 import json
 import logging
 import re
-from functools import cached_property
 from typing import Literal
 from urllib.parse import ParseResult, urlparse
 
@@ -60,8 +59,9 @@ class MedusaConfig:
     storage_endpoint: str
     storage_region: str
     storage_type: Literal["s3", "azure", "gcs"]
+    storage_path: str | None = None
 
-    @cached_property
+    @property
     def parsed_endpoint(self) -> ParseResult:
         """Return the parsed url object."""
         return urlparse(self.storage_endpoint)
@@ -110,6 +110,13 @@ class BackupManager:
         )
         return stdout
 
+    def medusa_running(self) -> bool:
+        """Is a medusa process running?"""
+        raw, _ = self._workload.exec(["ps", "-eaf"])
+        processes = [line.strip() for line in raw.split("\n") if line.strip()]
+        medusa_processes = [p for p in processes if "medusa" in p]
+        return bool(medusa_processes)
+
     def create_backup(self, mode: BackupMode = "full") -> str:
         """Create a new cluster backup."""
         dt = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -121,7 +128,7 @@ class BackupManager:
 
     def list_backups(self) -> list[BackupInfo]:
         """Run medusa list-backups and parse the results."""
-        stdout = self.medusa_exec("list-backups", timeout=60)
+        stdout = self.medusa_exec("list-backups", "--show-all", timeout=60)
         ret = []
         for line in stdout.split("\n"):
             if not line:
@@ -146,6 +153,15 @@ class BackupManager:
             )
 
         return ret
+
+    def restore(self, backup_name: str) -> None:
+        """Restore a backup."""
+        default_args = ["--keep-auth", "-y", "--verify"]
+        if self.medusa_running():
+            logger.info("Backup/restore process is running. Waiting...")
+            return
+
+        self.medusa_exec("restore-cluster", "--backup-name", backup_name, *default_args)
 
     def render_credentials(self, context: StorageClientContext) -> None:
         """Write storage credentials file."""
@@ -172,6 +188,7 @@ class BackupManager:
             "storage_region": config.storage_region,
             "storage_host": config.host,
             "storage_secure": config.secure,
+            "storage_path": config.storage_path,
         }
         self._workload.cassandra_paths.medusa_config.write_text(template.render(data) + "\n")
 

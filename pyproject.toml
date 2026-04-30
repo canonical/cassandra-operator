@@ -106,7 +106,11 @@ lint.extend-ignore = [
     "D413",
 ]
 extend-exclude = ["__pycache__", "*.egg_info"]
-lint.per-file-ignores = {"tests/*" = ["D100","D101","D102","D103","D104"]}
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["D100","D101","D102","D103","D104"]
+"tests/unit/test_backup_manager.py" = ["E501"]  # includes long lines because of mock CLI outputs.
+
 
 [tool.ruff.lint.flake8-copyright]
 # Check for properly formatted copyright header in each file

@@ -159,3 +159,13 @@ def continuous_writes() -> Generator[ContinuousWrites, None, None]:
     continuous_writes = ContinuousWrites()
     yield continuous_writes
     continuous_writes.force_stop()
+
+
+@pytest.fixture(scope="module")
+def other_app_name(juju: jubilant.Juju, app_name: str) -> str:
+    apps = juju.status().apps
+    for app in apps:
+        if app != app_name and apps[app].charm_name == "cassandra":
+            return app
+
+    return "other"

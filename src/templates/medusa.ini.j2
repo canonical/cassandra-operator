@@ -10,6 +10,9 @@ resolve_ip_addresses = True
 
 [storage]
 storage_provider = {{ storage_provider }}
+{% if storage_path %}
+prefix = {{ storage_path }}
+{% endif %}
 key_file = /var/snap/charmed-cassandra/current/etc/cassandra/object-storage.credentials
 bucket_name = {{ storage_bucket }}
 

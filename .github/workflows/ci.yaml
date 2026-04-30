@@ -83,3 +83,8 @@ jobs:
       artifact-prefix: ${{ needs.build.outputs.artifact-prefix }}
     permissions:
       contents: write  # Needed for Allure Report
+    secrets:
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+      AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+      GCP_ACCESS_KEY: ${{ secrets.GCP_ACCESS_KEY }}
+      GCP_SECRET_KEY: ${{ secrets.GCP_SECRET_KEY }}
