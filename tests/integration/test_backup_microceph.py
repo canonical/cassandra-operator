@@ -67,7 +67,6 @@ def prepare_microceph():
             continue
         os.environ[parts[0]] = parts[1]
 
-    logger.info(os.environ)
     yield
     assert os.system(f"lxc rm --force {CONTAINER}") == 0
 
