@@ -1,0 +1,277 @@
+INFO     jubilant:_juju.py:237 cli: juju controllers --format json
+INFO     integration.helpers.juju:juju.py:209 Localhost controller 'concierge-lxd' exists, skipping setup...
+INFO     jubilant:_juju.py:237 cli: juju add-model --no-switch test-cas --controller concierge-lxd --config update-status-hook-interval=60s
+INFO     jubilant:_juju.py:237 cli: juju deploy --model test-cas s3-integrator --channel 2/edge --config endpoint=https://s3.amazonaws.com --config bucket=data-charms-testing --config region=us-east-1 --config path=cassandra-02a4b4b2-6ad1-11f1-b246-00163ea25d58
+INFO     jubilant:_juju.py:237 cli: juju add-secret --model test-cas test-f6b9daba --file /root/snap/juju/common/tmpv0m81x4y
+INFO     jubilant:_juju.py:237 cli: juju grant-secret --model test-cas test-f6b9daba s3-integrator
+INFO     jubilant:_juju.py:237 cli: juju config --model test-cas s3-integrator credentials=secret:57ehisf303dbmrmr3630
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
++ .model.name = 'test-cas'
++ .model.type = 'iaas'
++ .model.controller = 'concierge-lxd'
++ .model.cloud = 'localhost'
++ .model.version = '3.6.24'
++ .model.region = 'localhost'
++ .model.model_status.current = 'available'
++ .machines['0'].juju_status.current = 'pending'
++ .machines['0'].instance_id = 'pending'
++ .machines['0'].machine_status.current = 'allocating'
++ .machines['0'].machine_status.message = 'Creating container'
++ .machines['0'].modification_status.current = 'idle'
++ .machines['0'].base.name = 'ubuntu'
++ .machines['0'].base.channel = '24.04'
++ .machines['0'].constraints = 'arch=amd64'
++ .apps['s3-integrator'].charm = 's3-integrator'
++ .apps['s3-integrator'].charm_origin = 'charmhub'
++ .apps['s3-integrator'].charm_name = 's3-integrator'
++ .apps['s3-integrator'].charm_rev = 550
++ .apps['s3-integrator'].exposed = False
++ .apps['s3-integrator'].base.name = 'ubuntu'
++ .apps['s3-integrator'].base.channel = '24.04'
++ .apps['s3-integrator'].charm_channel = '2/edge'
++ .apps['s3-integrator'].app_status.current = 'waiting'
++ .apps['s3-integrator'].app_status.message = 'waiting for machine'
++ .apps['s3-integrator'].relations['status-peers'][0].related_app = 's3-integrator'
++ .apps['s3-integrator'].relations['status-peers'][0].interface = 'status_peers'
++ .apps['s3-integrator'].relations['status-peers'][0].scope = 'global'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'waiting'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = 'waiting for machine'
++ .apps['s3-integrator'].units['s3-integrator/0'].juju_status.current = 'allocating'
++ .apps['s3-integrator'].units['s3-integrator/0'].machine = '0'
++ .apps['s3-integrator'].endpoint_bindings[''] = 'alpha'
++ .apps['s3-integrator'].endpoint_bindings['s3-credentials'] = 'alpha'
++ .apps['s3-integrator'].endpoint_bindings['status-peers'] = 'alpha'
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .machines['0'].instance_id = 'pending'
+- .machines['0'].machine_status.current = 'allocating'
+- .machines['0'].machine_status.message = 'Creating container'
+- .machines['0'].modification_status.current = 'idle'
++ .machines['0'].instance_id = 'juju-cf920b-0'
++ .machines['0'].machine_status.current = 'running'
++ .machines['0'].machine_status.message = 'Container started'
++ .machines['0'].modification_status.current = 'applied'
++ .machines['0'].hardware = 'arch=amd64 cores=0 mem=0M availability-zone=github-runner virt-type=container'
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .machines['0'].machine_status.message = 'Container started'
++ .machines['0'].machine_status.message = 'Running'
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
++ .machines['0'].dns_name = '10.124.82.119'
++ .machines['0'].ip_addresses[0] = '10.124.82.119'
++ .apps['s3-integrator'].units['s3-integrator/0'].public_address = '10.124.82.119'
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .machines['0'].juju_status.current = 'pending'
++ .machines['0'].juju_status.current = 'started'
++ .machines['0'].juju_status.version = '3.6.24'
++ .machines['0'].hostname = 'juju-cf920b-0'
++ .machines['0'].network_interfaces['eth0'].ip_addresses[0] = '10.124.82.119'
++ .machines['0'].network_interfaces['eth0'].mac_address = '00:16:3e:33:0d:0a'
++ .machines['0'].network_interfaces['eth0'].is_up = True
++ .machines['0'].network_interfaces['eth0'].gateway = '10.124.82.1'
++ .machines['0'].network_interfaces['eth0'].space = 'alpha'
+- .apps['s3-integrator'].app_status.message = 'waiting for machine'
++ .apps['s3-integrator'].app_status.message = 'agent initialising'
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = 'waiting for machine'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = 'agent initialising'
++ .apps['s3-integrator'].units['s3-integrator/0'].juju_status.version = '3.6.24'
++ .apps['s3-integrator'].units['s3-integrator/0'].leader = True
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['s3-integrator'].app_status.current = 'waiting'
+- .apps['s3-integrator'].app_status.message = 'agent initialising'
++ .apps['s3-integrator'].app_status.current = 'maintenance'
++ .apps['s3-integrator'].app_status.message = 'installing charm software'
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'waiting'
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = 'agent initialising'
+- .apps['s3-integrator'].units['s3-integrator/0'].juju_status.current = 'allocating'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'maintenance'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = 'installing charm software'
++ .apps['s3-integrator'].units['s3-integrator/0'].juju_status.current = 'executing'
++ .apps['s3-integrator'].units['s3-integrator/0'].juju_status.message = 'running install hook'
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['s3-integrator'].app_status.current = 'maintenance'
+- .apps['s3-integrator'].app_status.message = 'installing charm software'
++ .apps['s3-integrator'].app_status.current = 'active'
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'maintenance'
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = 'installing charm software'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'active'
+- .apps['s3-integrator'].units['s3-integrator/0'].juju_status.message = 'running install hook'
++ .apps['s3-integrator'].units['s3-integrator/0'].juju_status.message = 'running status-peers-relation-created hook'
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['s3-integrator'].units['s3-integrator/0'].juju_status.message = 'running status-peers-relation-created hook'
++ .apps['s3-integrator'].units['s3-integrator/0'].juju_status.message = 'running leader-elected hook'
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['s3-integrator'].units['s3-integrator/0'].juju_status.message = 'running leader-elected hook'
++ .apps['s3-integrator'].units['s3-integrator/0'].juju_status.message = 'running config-changed hook'
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['s3-integrator'].app_status.current = 'active'
++ .apps['s3-integrator'].app_status.current = 'maintenance'
++ .apps['s3-integrator'].app_status.message = "Creating bucket: 'data-charms-testing'..."
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'active'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'maintenance'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Creating bucket: 'data-charms-testing'..."
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['s3-integrator'].app_status.current = 'maintenance'
+- .apps['s3-integrator'].app_status.message = "Creating bucket: 'data-charms-testing'..."
++ .apps['s3-integrator'].app_status.current = 'blocked'
++ .apps['s3-integrator'].app_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'maintenance'
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Creating bucket: 'data-charms-testing'..."
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'blocked'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
+- .apps['s3-integrator'].units['s3-integrator/0'].juju_status.message = 'running config-changed hook'
++ .apps['s3-integrator'].units['s3-integrator/0'].juju_status.message = 'running status-peers-relation-changed hook'
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['s3-integrator'].units['s3-integrator/0'].juju_status.current = 'executing'
+- .apps['s3-integrator'].units['s3-integrator/0'].juju_status.message = 'running status-peers-relation-changed hook'
++ .apps['s3-integrator'].units['s3-integrator/0'].juju_status.current = 'idle'
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['s3-integrator'].app_status.current = 'blocked'
+- .apps['s3-integrator'].app_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
++ .apps['s3-integrator'].app_status.current = 'maintenance'
++ .apps['s3-integrator'].app_status.message = "Creating bucket: 'data-charms-testing'..."
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'blocked'
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'maintenance'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Creating bucket: 'data-charms-testing'..."
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['s3-integrator'].app_status.current = 'maintenance'
+- .apps['s3-integrator'].app_status.message = "Creating bucket: 'data-charms-testing'..."
++ .apps['s3-integrator'].app_status.current = 'blocked'
++ .apps['s3-integrator'].app_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'maintenance'
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Creating bucket: 'data-charms-testing'..."
+- .apps['s3-integrator'].units['s3-integrator/0'].juju_status.current = 'idle'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'blocked'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
++ .apps['s3-integrator'].units['s3-integrator/0'].juju_status.current = 'executing'
++ .apps['s3-integrator'].units['s3-integrator/0'].juju_status.message = 'running status-peers-relation-changed hook'
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['s3-integrator'].units['s3-integrator/0'].juju_status.current = 'executing'
+- .apps['s3-integrator'].units['s3-integrator/0'].juju_status.message = 'running status-peers-relation-changed hook'
++ .apps['s3-integrator'].units['s3-integrator/0'].juju_status.current = 'idle'
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['s3-integrator'].app_status.current = 'blocked'
+- .apps['s3-integrator'].app_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
++ .apps['s3-integrator'].app_status.current = 'maintenance'
++ .apps['s3-integrator'].app_status.message = "Creating bucket: 'data-charms-testing'..."
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'blocked'
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'maintenance'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Creating bucket: 'data-charms-testing'..."
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['s3-integrator'].app_status.current = 'maintenance'
+- .apps['s3-integrator'].app_status.message = "Creating bucket: 'data-charms-testing'..."
++ .apps['s3-integrator'].app_status.current = 'blocked'
++ .apps['s3-integrator'].app_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'maintenance'
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Creating bucket: 'data-charms-testing'..."
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'blocked'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['s3-integrator'].app_status.current = 'blocked'
+- .apps['s3-integrator'].app_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
++ .apps['s3-integrator'].app_status.current = 'maintenance'
++ .apps['s3-integrator'].app_status.message = "Creating bucket: 'data-charms-testing'..."
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'blocked'
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'maintenance'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Creating bucket: 'data-charms-testing'..."
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['s3-integrator'].app_status.current = 'maintenance'
+- .apps['s3-integrator'].app_status.message = "Creating bucket: 'data-charms-testing'..."
++ .apps['s3-integrator'].app_status.current = 'blocked'
++ .apps['s3-integrator'].app_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'maintenance'
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Creating bucket: 'data-charms-testing'..."
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'blocked'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['s3-integrator'].app_status.current = 'blocked'
+- .apps['s3-integrator'].app_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
++ .apps['s3-integrator'].app_status.current = 'maintenance'
++ .apps['s3-integrator'].app_status.message = "Creating bucket: 'data-charms-testing'..."
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'blocked'
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'maintenance'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Creating bucket: 'data-charms-testing'..."
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['s3-integrator'].app_status.current = 'maintenance'
+- .apps['s3-integrator'].app_status.message = "Creating bucket: 'data-charms-testing'..."
++ .apps['s3-integrator'].app_status.current = 'blocked'
++ .apps['s3-integrator'].app_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'maintenance'
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Creating bucket: 'data-charms-testing'..."
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'blocked'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['s3-integrator'].app_status.current = 'blocked'
+- .apps['s3-integrator'].app_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
++ .apps['s3-integrator'].app_status.current = 'maintenance'
++ .apps['s3-integrator'].app_status.message = "Creating bucket: 'data-charms-testing'..."
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'blocked'
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'maintenance'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Creating bucket: 'data-charms-testing'..."
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['s3-integrator'].app_status.current = 'maintenance'
+- .apps['s3-integrator'].app_status.message = "Creating bucket: 'data-charms-testing'..."
++ .apps['s3-integrator'].app_status.current = 'blocked'
++ .apps['s3-integrator'].app_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'maintenance'
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Creating bucket: 'data-charms-testing'..."
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'blocked'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['s3-integrator'].app_status.current = 'blocked'
+- .apps['s3-integrator'].app_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
++ .apps['s3-integrator'].app_status.current = 'maintenance'
++ .apps['s3-integrator'].app_status.message = "Creating bucket: 'data-charms-testing'..."
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'blocked'
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'maintenance'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Creating bucket: 'data-charms-testing'..."
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['s3-integrator'].app_status.current = 'maintenance'
+- .apps['s3-integrator'].app_status.message = "Creating bucket: 'data-charms-testing'..."
++ .apps['s3-integrator'].app_status.current = 'blocked'
++ .apps['s3-integrator'].app_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'maintenance'
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Creating bucket: 'data-charms-testing'..."
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'blocked'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['s3-integrator'].app_status.current = 'blocked'
+- .apps['s3-integrator'].app_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
++ .apps['s3-integrator'].app_status.current = 'maintenance'
++ .apps['s3-integrator'].app_status.message = "Creating bucket: 'data-charms-testing'..."
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'blocked'
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'maintenance'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Creating bucket: 'data-charms-testing'..."
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['s3-integrator'].app_status.current = 'maintenance'
+- .apps['s3-integrator'].app_status.message = "Creating bucket: 'data-charms-testing'..."
++ .apps['s3-integrator'].app_status.current = 'blocked'
++ .apps['s3-integrator'].app_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'maintenance'
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Creating bucket: 'data-charms-testing'..."
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'blocked'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['s3-integrator'].app_status.current = 'blocked'
+- .apps['s3-integrator'].app_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
++ .apps['s3-integrator'].app_status.current = 'maintenance'
++ .apps['s3-integrator'].app_status.message = "Creating bucket: 'data-charms-testing'..."
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'blocked'
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'maintenance'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Creating bucket: 'data-charms-testing'..."
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['s3-integrator'].app_status.current = 'maintenance'
+- .apps['s3-integrator'].app_status.message = "Creating bucket: 'data-charms-testing'..."
++ .apps['s3-integrator'].app_status.current = 'blocked'
++ .apps['s3-integrator'].app_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'maintenance'
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Creating bucket: 'data-charms-testing'..."
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'blocked'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Could not ensure bucket(s): 'data-charms-testing'"
+INFO     jubilant:_juju.py:237 cli: juju debug-log --model test-cas --limit 300
