@@ -1,0 +1,145 @@
+INFO     integration.test_backup_microceph:test_backup_microceph.py:61 Detected host IP: 10.89.90.221
+Installing microceph
+2026-06-28T05:51:20Z INFO Waiting for automatic snapd restart...
+2026-06-28T05:51:21Z INFO Waiting for automatic snapd restart...
+2026-06-28T05:51:22Z INFO Waiting for automatic snapd restart...
+microceph (squid/stable) 19.2.3+snapcf306793a4 from Canonical** installed
+Bootstrapping cluster
+Adding loop disks
+
++-----------+---------+
+|   PATH    | STATUS  |
++-----------+---------+
+| loop,4G,3 | Success |
++-----------+---------+
+Enabling RGW (no TLS)
+Waiting for RGW to become ready...
+Creating RGW user
+Creating S3 bucket
+Retrying bucket creation...
+Retrying bucket creation...
+Retrying bucket creation...
+S3_ENDPOINT=http://10.89.90.221 S3_ACCESS_KEY=T9JHZ47PUQVFRULW6ZJX S3_SECRET_KEY=bkueCcx0hSD1VqeaMJebtjcvJyEd3lrD6MnJzbkx S3_BUCKET=testing S3_REGION=default
+
+INFO     jubilant:_juju.py:237 cli: juju controllers --format json
+INFO     integration.helpers.juju:juju.py:209 Localhost controller 'concierge-lxd' exists, skipping setup...
+INFO     jubilant:_juju.py:237 cli: juju add-model --no-switch test-cas --controller concierge-lxd --config update-status-hook-interval=60s
+INFO     jubilant:_juju.py:237 cli: juju deploy --model test-cas s3-integrator --channel 2/edge --config endpoint=http://10.89.90.221 --config bucket=testing --config region=default
+INFO     jubilant:_juju.py:237 cli: juju add-secret --model test-cas test-f42a8bb3 --file /root/snap/juju/common/tmpmrh9k4uh
+INFO     jubilant:_juju.py:237 cli: juju grant-secret --model test-cas test-f42a8bb3 s3-integrator
+INFO     jubilant:_juju.py:237 cli: juju config --model test-cas s3-integrator credentials=secret:gsqa1tunrqahtuel0uv0
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
++ .model.name = 'test-cas'
++ .model.type = 'iaas'
++ .model.controller = 'concierge-lxd'
++ .model.cloud = 'localhost'
++ .model.version = '3.6.24'
++ .model.region = 'localhost'
++ .model.model_status.current = 'available'
++ .machines['0'].juju_status.current = 'pending'
++ .machines['0'].instance_id = 'pending'
++ .machines['0'].machine_status.current = 'pending'
++ .machines['0'].modification_status.current = 'idle'
++ .machines['0'].base.name = 'ubuntu'
++ .machines['0'].base.channel = '24.04'
++ .machines['0'].constraints = 'arch=amd64'
++ .apps['s3-integrator'].charm = 's3-integrator'
++ .apps['s3-integrator'].charm_origin = 'charmhub'
++ .apps['s3-integrator'].charm_name = 's3-integrator'
++ .apps['s3-integrator'].charm_rev = 550
++ .apps['s3-integrator'].exposed = False
++ .apps['s3-integrator'].base.name = 'ubuntu'
++ .apps['s3-integrator'].base.channel = '24.04'
++ .apps['s3-integrator'].charm_channel = '2/edge'
++ .apps['s3-integrator'].app_status.current = 'waiting'
++ .apps['s3-integrator'].app_status.message = 'waiting for machine'
++ .apps['s3-integrator'].relations['status-peers'][0].related_app = 's3-integrator'
++ .apps['s3-integrator'].relations['status-peers'][0].interface = 'status_peers'
++ .apps['s3-integrator'].relations['status-peers'][0].scope = 'global'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'waiting'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = 'waiting for machine'
++ .apps['s3-integrator'].units['s3-integrator/0'].juju_status.current = 'allocating'
++ .apps['s3-integrator'].units['s3-integrator/0'].machine = '0'
++ .apps['s3-integrator'].endpoint_bindings[''] = 'alpha'
++ .apps['s3-integrator'].endpoint_bindings['s3-credentials'] = 'alpha'
++ .apps['s3-integrator'].endpoint_bindings['status-peers'] = 'alpha'
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .machines['0'].machine_status.current = 'pending'
++ .machines['0'].machine_status.current = 'allocating'
++ .machines['0'].machine_status.message = 'Creating container'
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .machines['0'].instance_id = 'pending'
+- .machines['0'].machine_status.current = 'allocating'
+- .machines['0'].machine_status.message = 'Creating container'
+- .machines['0'].modification_status.current = 'idle'
++ .machines['0'].instance_id = 'juju-d39058-0'
++ .machines['0'].machine_status.current = 'running'
++ .machines['0'].machine_status.message = 'Container started'
++ .machines['0'].modification_status.current = 'applied'
++ .machines['0'].hardware = 'arch=amd64 cores=0 mem=0M availability-zone=github-runner virt-type=container'
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
++ .machines['0'].dns_name = '10.89.90.161'
++ .machines['0'].ip_addresses[0] = '10.89.90.161'
+- .machines['0'].machine_status.message = 'Container started'
++ .machines['0'].machine_status.message = 'Running'
++ .apps['s3-integrator'].units['s3-integrator/0'].public_address = '10.89.90.161'
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .machines['0'].juju_status.current = 'pending'
++ .machines['0'].juju_status.current = 'started'
++ .machines['0'].juju_status.version = '3.6.24'
++ .machines['0'].hostname = 'juju-d39058-0'
++ .machines['0'].network_interfaces['eth0'].ip_addresses[0] = '10.89.90.161'
++ .machines['0'].network_interfaces['eth0'].mac_address = '00:16:3e:f9:1a:d8'
++ .machines['0'].network_interfaces['eth0'].is_up = True
++ .machines['0'].network_interfaces['eth0'].gateway = '10.89.90.1'
++ .machines['0'].network_interfaces['eth0'].space = 'alpha'
+- .apps['s3-integrator'].app_status.message = 'waiting for machine'
++ .apps['s3-integrator'].app_status.message = 'agent initialising'
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = 'waiting for machine'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = 'agent initialising'
++ .apps['s3-integrator'].units['s3-integrator/0'].juju_status.version = '3.6.24'
++ .apps['s3-integrator'].units['s3-integrator/0'].leader = True
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['s3-integrator'].app_status.current = 'waiting'
+- .apps['s3-integrator'].app_status.message = 'agent initialising'
++ .apps['s3-integrator'].app_status.current = 'maintenance'
++ .apps['s3-integrator'].app_status.message = 'installing charm software'
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'waiting'
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = 'agent initialising'
+- .apps['s3-integrator'].units['s3-integrator/0'].juju_status.current = 'allocating'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'maintenance'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = 'installing charm software'
++ .apps['s3-integrator'].units['s3-integrator/0'].juju_status.current = 'executing'
++ .apps['s3-integrator'].units['s3-integrator/0'].juju_status.message = 'running install hook'
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['s3-integrator'].app_status.current = 'maintenance'
+- .apps['s3-integrator'].app_status.message = 'installing charm software'
++ .apps['s3-integrator'].app_status.current = 'active'
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'maintenance'
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = 'installing charm software'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'active'
+- .apps['s3-integrator'].units['s3-integrator/0'].juju_status.message = 'running install hook'
++ .apps['s3-integrator'].units['s3-integrator/0'].juju_status.message = 'running status-peers-relation-created hook'
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['s3-integrator'].units['s3-integrator/0'].juju_status.message = 'running status-peers-relation-created hook'
++ .apps['s3-integrator'].units['s3-integrator/0'].juju_status.message = 'running config-changed hook'
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['s3-integrator'].app_status.current = 'active'
++ .apps['s3-integrator'].app_status.current = 'maintenance'
++ .apps['s3-integrator'].app_status.message = "Creating bucket: 'testing'..."
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'active'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'maintenance'
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Creating bucket: 'testing'..."
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['s3-integrator'].app_status.current = 'maintenance'
+- .apps['s3-integrator'].app_status.message = "Creating bucket: 'testing'..."
++ .apps['s3-integrator'].app_status.current = 'active'
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'maintenance'
+- .apps['s3-integrator'].units['s3-integrator/0'].workload_status.message = "Creating bucket: 'testing'..."
++ .apps['s3-integrator'].units['s3-integrator/0'].workload_status.current = 'active'
+- .apps['s3-integrator'].units['s3-integrator/0'].juju_status.message = 'running config-changed hook'
++ .apps['s3-integrator'].units['s3-integrator/0'].juju_status.message = 'running start hook'
+INFO     jubilant.wait:_juju.py:982 wait: status changed:
+- .apps['s3-integrator'].units['s3-integrator/0'].juju_status.current = 'executing'
+- .apps['s3-integrator'].units['s3-integrator/0'].juju_status.message = 'running start hook'
++ .apps['s3-integrator'].units['s3-integrator/0'].juju_status.current = 'idle'
