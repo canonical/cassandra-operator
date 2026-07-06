@@ -1,0 +1,1592 @@
+INFO     jubilant:_juju.py:237 cli: juju status --model test-cas --format json
+INFO     jubilant:_juju.py:237 cli: juju secrets --model test-cas --format json
+INFO     jubilant:_juju.py:237 cli: juju show-secret --model test-cas --reveal --format json tbhpm57id6ubp23i86c0
+INFO     integration.helpers.juju:juju.py:87 revealed secret tbhpm57id6ubp23i86c0: {"tbhpm57id6ubp23i86c0":{"revision":2,"checksum":"8ca70ea441156b9cca64d7b965f5a42e08c40773773dc678328f16c49f52b9e5","owner":"cassandra","label":"cassandra-peers.cassandra.app","created":"2026-07-06T02:05:58Z","updated":"2026-07-06T02:07:11Z","content":{"Data":{"internal-ca-key-secret":"-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEAq1OGfb8fHdtPwh/k2VD8AyUC1WLHsTD3TsNFW1uoUi1KfAeS\nmaErTfgDlS1fHnJtGzonNPNkmXyvVhtE8wDenJ6GiR/hf291am1fuOehKqDMIF08\nurMEhoLdQy8wh1L8l506VgKzsUD9TPBFwdyziTXu9FxXeo8L66ju2CAexEkShlus\nfLHwVoGtJx5r89/XfApBYZc4Lsmwcw0xdxSEIl6Jrw6jA1N0VL2kEumm9KsrmwDR\n2gsQt5VHHjsJ3zMiMM2cnh0ynpcOwxXpBmT3SfN7gYmTHRQO/3uX51634/oZGJQW\nY6+ZyAm6jhZD//kgzNMYNPcFOyMZV3mzS/pGpwIDAQABAoIBACSZQzG5kjwejXs6\ntPh3hF5nmaNb5qzDeREqRbaubdagNjkopPiMpWOSh7Fmb9thNk2KrrVxCRyAtjP+\nv0vp86QheTvxw4ollT+W/cvSL2ubzf9b6402kNDrQ7kGa6d84tjAjaWyDhDfgTze\nVwiCzReSnek1kLpttG4zOFKTCf+EAn6CR8Pa9CqeOTQ2/PD5WBY4Sp9/kl71YS3h\nxHrftnuQ9cFVrDcZtPFizK0NzJ+mZIAKP0Kx9ODQfxp1w5jrhvgxIvKQqqJbXe6i\nHbda4d/wj79VhgT5bGhI/GVUsOx3ZDhgPs1aUFlVH+dSKbBkSwuUL6dGYpBmBoHC\nDygfPIECgYEA7GrpjfgkAhkMfbaBaIU5Di8DTqax2+CAVRyBqJDZJqaihb5Y6S55\nzj6MMZcxg4AwiA9dRIAmaCLVjQcP4yYgWcUfIIhDV6IYaCuI92M9XOkcs/vld5/y\njdsUfm8RFKZh/toTaJsgE49ZwuiMrx96sjdsLG0HPR8Wwe/mUjCRV+MCgYEAuYRk\nQO3UlhL9vwxCAKdLoYTmv/kG+Nu/2H++ZiUO3pf6TxbT59L8iYEh+fJPzl0EqBvm\nRW86iTmpM06rCl4Zg5ksq//XkOkTRZFn2qTAvd/FOxbz4akG2u4tq35taeAcn/Qb\nnEXoNykUvFHS/55o3XhzlrnIZa54LIv9kOcRqW0CgYEAvJR7QBdTAalhYVWW2/yI\nilvN04r8DFuDgmB+vCruS/pXYT94RGgiGPWjdlsXz8EM9TrsNpvSBvbiSN/9OD9N\nRs4KCjUnIlvWBCHV2x957wazMo4Xd9hJ7gV2z3NguIwPVu401RgH+hI6k1JUBcyi\nXk3/J2DAiWynBoOJwL2k8ekCgYBg4au9YLaBPR+4kr0xPCy6B/69SF6EvbXdaTDU\nhQvT4Qg+H0zApyVs5bwJnKpiuZ8B77f8kM6/9RXQjoeyHVwzpl124WAA9Ec1MG9M\n9ncVcXO9nQn10eCbmoDNK3QWM4yfV8rHfJZ9n/2NLyoChgZ7ijjLAPCPcWKe2Oit\nsI4/rQKBgGdM6+l5oyCy8AnRIUCm0tPL0NW/VXbho1hapxpXKBTFYnoK5TL7sNN5\nGm5Mws6OlCmaEQIIfT6W+d1arGubV2ZRPcmzGN2zkcfTiK4ZKwCLngHXZtCdltSi\n+ChdwgvfLrYD8PUT2yDaBVcVzELyGGLgg9kmydBmSwi8Jr/LenuD\n-----END RSA PRIVATE KEY-----","internal-ca-secret":"-----BEGIN CERTIFICATE-----\nMIIDdDCCAlygAwIBAgIUTUzVMCuMAnseRZCMehoIymu/iF4wDQYJKoZIhvcNAQEL\nBQAwUjESMBAGA1UEAwwJY2Fzc2FuZHJhMS0wKwYDVQQtDCQ0YTlmMDBjOS0zMmM3\nLTRlZTItOTQyYy0yODhjMWY3ZDNjMzgxDTALBgNVBAoMBHBlZXIwHhcNMjYwNzA2\nMDIwNjA1WhcNMzYwNzAzMDIwNjA1WjBSMRIwEAYDVQQDDAljYXNzYW5kcmExLTAr\nBgNVBC0MJDRhOWYwMGM5LTMyYzctNGVlMi05NDJjLTI4OGMxZjdkM2MzODENMAsG\nA1UECgwEcGVlcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAKtThn2/\nHx3bT8If5NlQ/AMlAtVix7Ew907DRVtbqFItSnwHkpmhK034A5UtXx5ybRs6JzTz\nZJl8r1YbRPMA3pyehokf4X9vdWptX7jnoSqgzCBdPLqzBIaC3UMvMIdS/JedOlYC\ns7FA/UzwRcHcs4k17vRcV3qPC+uo7tggHsRJEoZbrHyx8FaBrScea/Pf13wKQWGX\nOC7JsHMNMXcUhCJeia8OowNTdFS9pBLppvSrK5sA0doLELeVRx47Cd8zIjDNnJ4d\nMp6XDsMV6QZk90nze4GJkx0UDv97l+det+P6GRiUFmOvmcgJuo4WQ//5IMzTGDT3\nBTsjGVd5s0v6RqcCAwEAAaNCMEAwHQYDVR0OBBYEFC/KN98C6p3gSKAL+OQDpLls\nlVapMA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgKkMA0GCSqGSIb3DQEB\nCwUAA4IBAQB1EAGVX4wGFxM3Q3EaqjCfjzSMS0dilzu20HqnNoT3KiqXgV7OQGr5\ntxLssZN31spS6qQC8v4GtTIIA4hXdPr+gHY6EaADItK7a4KGJOW6yDKUxVgQOJBq\nnt+AljpEHJP3AM3rW/v8YPnp5SZwL2mJB58i7ib3cBMLS91TVtdG2V17yIKqoINi\n97UIBluiUiixdYMj00hdt+s2QHXoh/dw4u8SnJp2ZIZe+ydnUYGLlTRJGeOu09id\nl2ktGxMgrLQu8Rmlxlj2H7fOlY9WkrPNmNqQh13rANCYieKSkhkbKLcNE8oqyiDy\nkcfSIPs/qtfUSgjzS06zXU19IGmAw/8z\n-----END CERTIFICATE-----","nodetool-password":"djJJXSecd4Tfp1s0J2W48h6sSXjhqw0O","operator-password":"BZj2WkI8tVQdooxPO8ePmOS8kVJ13ZEx"}}}}
+
+INFO     integration.helpers.cassandra:cassandra.py:59 SSL context is disabled
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.87:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.166.34.17:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "/root/spread_project/.tox/integration-provider/lib/python3.12/site-packages/cassandra/io/libevreactor.py", line 352, in handle_read
+    buf = self._socket.recv(self.in_buffer_size)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.166.34.87:9042': ConnectionResetError(104, 'Connection reset by peer'), '10.166.34.17:9042': ConnectionResetError(104, 'Connection reset by peer')})
