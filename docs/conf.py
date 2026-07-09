@@ -27,6 +27,12 @@ import yaml
 project = "Charmed Apache Cassandra"
 author = "Canonical Ltd."
 
+# Project slug; see https://meta.discourse.org/t/what-is-category-slug/87897
+#
+# TODO: If your documentation is hosted on https://docs.ubuntu.com/,
+#       uncomment and update as needed.
+
+slug = 'data/cassandra/docs'
 
 # Sidebar documentation title; best kept reasonably short
 #
@@ -70,7 +76,7 @@ copyright = "%s CC-BY-SA, %s" % (datetime.date.today().year, author)
 # NOTE: The Open Graph Protocol (OGP) enhances page display in a social graph
 #       and is used by social media platforms; see https://ogp.me/
 
-ogp_site_url = "https://canonical-charmed-cassandra.readthedocs-hosted.com/"
+ogp_site_url = f"https://canonical.com/{slug}/{os.environ.get('READTHEDOCS_VERSION', 'local')}"
 
 
 # Preview name of the documentation website
@@ -106,7 +112,7 @@ html_context = {
     # TODO: If there's no such website,
     #       remove the {{ product_page }} link from the page header template
     #       (usually .sphinx/_templates/header.html; also, see README.rst).
-    "product_page": "canonical.com/data",
+    "product_page": "canonical.com/data/cassandra",
     # Product tag image; the orange part of your logo, shown in the page header
     #
     # TODO: To add a tag image, uncomment and update as needed.
@@ -171,24 +177,19 @@ html_extra_path = []
 # 'source_edit_link': 'https://github.com/canonical/sphinx-docs-starter-pack',
 # }
 
-# Project slug; see https://meta.discourse.org/t/what-is-category-slug/87897
-#
-# TODO: If your documentation is hosted on https://docs.ubuntu.com/,
-#       uncomment and update as needed.
-
-# slug = ''
-
 #######################
 # Sitemap configuration: https://sphinx-sitemap.readthedocs.io/
 #######################
 
 # Use RTD canonical URL to ensure duplicate pages have a specific canonical URL
 
-html_baseurl = os.environ.get("READTHEDOCS_CANONICAL_URL", "/")
+html_baseurl = f"https://canonical.com/{slug}/{os.environ.get('READTHEDOCS_VERSION', 'local')}"
+
 
 # sphinx-sitemap uses html_baseurl to generate the full URL for each page:
 
 sitemap_url_scheme = '{link}'
+sitemap_filename = "doc-sitemap.xml"
 
 # Include `lastmod` dates in the sitemap:
 
@@ -209,8 +210,8 @@ sitemap_excludes = [
 # Template and asset locations
 #######################
 
-#html_static_path = ["_static"]
-#templates_path = ["_templates"]
+html_static_path = ["_static"]
+templates_path = ["_templates"]
 
 
 #############
@@ -301,7 +302,9 @@ exclude_patterns = []
 
 # Adds custom JavaScript files, located under 'html_static_path'
 
-# html_js_files = []
+html_js_files = [
+    "overwrite_links.js",
+    ]
 
 
 # Specifies a reST snippet to be appended to each .rst file
