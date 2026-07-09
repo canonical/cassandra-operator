@@ -1,7 +1,7 @@
 // Replaces rtd-address with new-address in links
 
 const rtd_address = 'canonical-casssandra-charm.readthedocs-hosted.com';
-const new_address = 'https://canonical.com/data/cassandra/docs';
+const new_address = 'canonical.com/data/cassandra/docs';
 
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
