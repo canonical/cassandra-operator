@@ -189,7 +189,7 @@ html_extra_path = []
 # Use RTD canonical URL to ensure duplicate pages have a specific canonical URL
 
 html_baseurl = (
-    f"https://canonical.com/{slug}/{os.environ.get('READTHEDOCS_VERSION', 'local')}"
+    f"https://canonical.com/{slug}/{os.environ.get('READTHEDOCS_VERSION', 'local')}/"
 )
 
 
