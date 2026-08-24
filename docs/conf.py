@@ -292,7 +292,15 @@ extensions = [
 
 # Excludes files or directories from processing
 
-exclude_patterns = []
+exclude_patterns = [
+    # Exclude the docs virtual environments and build tooling from being
+    # scanned as documentation source files (fixes "document isn't included
+    # in any toctree" warnings and linkcheck scanning of site-packages)
+    ".venv/*",
+    ".sphinx/*",
+    "_build/*",
+    "requirements.txt",
+]
 
 # Adds custom CSS files, located under 'html_static_path'
 
