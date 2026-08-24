@@ -1,3 +1,11 @@
+---
+myst:
+  html_meta:
+    description: "Monitor Charmed Apache Cassandra - integrate with the Canonical Observability Stack for metrics, logs, alert rules, and Grafana dashboards."
+---
+
+(how-to-monitoring)=
+
 # How to set up monitoring
 
 Charmed Apache Cassandra Snap come with the [JMX exporter](https://github.com/prometheus/jmx_exporter/).
