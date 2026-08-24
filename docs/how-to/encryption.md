@@ -8,6 +8,9 @@ myst:
 
 # How to enable TLS encryption
 
+This guide includes step-by-step instructions on how to enable TLS encryption for peer-to-peer
+and client-to-node communication in a Charmed Apache Cassandra cluster.
+
 This charm implements the **Requirer** side of the [tls-certificates](https://charmhub.io/integrations/tls-certificates) relation. Therefore, any charm implementing the **Provider** side could be used.
 
 All units within a cluster share the same CA certificate file, but each unit has a distinct private key.

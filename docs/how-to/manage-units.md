@@ -8,6 +8,9 @@ myst:
 
 # How to manage units
 
+This guide includes step-by-step instructions on how to scale a Charmed Apache Cassandra cluster
+by adding or removing units, and how to verify the cluster topology.
+
 For general Juju unit management process, see the [Juju documentation](https://canonical.com/juju/docs/juju-cli/3.6/howto/manage-units/).
 
 The charm automates most of the node management operations, ensuring that the cluster topology remains consistent and data is replicated correctly.

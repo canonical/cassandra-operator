@@ -8,10 +8,12 @@ myst:
 
 # How to set up monitoring
 
-Charmed Apache Cassandra Snap come with the [JMX exporter](https://github.com/prometheus/jmx_exporter/).
-The metrics can be queried by accessing the `http://<cassandra-unit-ip>:7071/metrics` endpoint.
+This guide includes step-by-step instructions on how to set up monitoring with the
+[Canonical Observability Stack](https://charmhub.io/topics/canonical-observability-stack).
 
-Additionally, the charm provides integration with the [Canonical Observability Stack](https://charmhub.io/topics/canonical-observability-stack).
+Charmed Apache Cassandra snap comes with the
+[JMX exporter](https://github.com/prometheus/jmx_exporter/).
+The metrics can be queried by accessing the `http://<cassandra-unit-ip>:7071/metrics` endpoint.
 
 (how-to-monitoring-enable-monitoring)=
 

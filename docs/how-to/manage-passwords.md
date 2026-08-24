@@ -8,9 +8,11 @@ myst:
 
 # How to manage passwords
 
-Authentication is enabled by default in Charmed Apache Cassandra. The charm automatically generates the initial password for the default `operator` user and stores it in a Juju secret.
+This guide shows how to retrieve the current password for the default `operator` user and
+how to rotate it.
 
-This guide shows how to retrieve the current password and how to rotate it.
+Authentication is enabled by default in Charmed Apache Cassandra.
+The charm automatically generates the initial password and stores it in a Juju secret.
 
 ## Prerequisites
 
