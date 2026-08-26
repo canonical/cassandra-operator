@@ -119,7 +119,15 @@ juju show-secret --reveal "cassandra-peers.<application name>.app" --format json
   | jq -r '.[].content.Data."operator-password"'
 ```
 
-Once you have the password, connect to the cluster using `cqlsh`:
+Once you have the password, connect to the cluster.
+
+Install `cqlsh` locally:
+
+```shell
+sudo snap install cqlsh
+```
+
+Then connect to the cluster:
 
 ```shell
 cqlsh <unit-ip> -u operator -p "<password>"
@@ -130,9 +138,14 @@ cqlsh <unit-ip> -u operator -p "<password>"
 <summary> Output example</summary>
 
 ```text
-Connected to cassandra at 10.166.144.207:9042
-[cqlsh 6.2.0 | Cassandra 5.0.5 | CQL spec 3.4.7 | Native protocol v5]
+[cqlsh 5.0.1 | Cassandra 5.0.5 | CQL spec 3.4.7 | Native protocol v5]
 Use HELP for help.
+operator@cqlsh>
+```
+
+If you want to test it further, run some commands in the cqlsh prompt:
+
+```text
 operator@cqlsh> CREATE KEYSPACE hello
    ... WITH replication = {
    ...   'class': 'SimpleStrategy',
