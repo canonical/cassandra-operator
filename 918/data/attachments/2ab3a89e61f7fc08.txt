@@ -1,0 +1,1838 @@
+INFO     jubilant:_juju.py:237 cli: juju status --model test-cas --format json
+INFO     jubilant:_juju.py:237 cli: juju secrets --model test-cas --format json
+INFO     jubilant:_juju.py:237 cli: juju show-secret --model test-cas --reveal --format json 7a7b802l562h8dlkkqp0
+INFO     integration.helpers.juju:juju.py:87 revealed secret 7a7b802l562h8dlkkqp0: {"7a7b802l562h8dlkkqp0":{"revision":2,"checksum":"94b6e8ffafd7badea84996fbad6b50658933bd4a5fa90cfebccde44fc4a34925","owner":"cassandra","label":"cassandra-peers.cassandra.app","created":"2026-08-26T02:06:42Z","updated":"2026-08-26T02:07:25Z","content":{"Data":{"internal-ca-key-secret":"-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEAvoEYHi89v+5fye0CIetXATqG4Yp2r6KuNCdB56m3C2QIsk0g\n541RHTfreRTtmUbFQ+NrgVG+OP+OsAgJQOopq8huJ86iyz9V/c2Yj397KYTLlnyk\nNbIhAT+d6avIFErNUnpY+zmea0Guwz6OdKfV273Mv14LNK117kzYmvCBaZuiJ3k7\nsiTEUeNUVH+iDXDQwoDWYl3+ExrbZDGUErL72bqY9vJIqcxnpAntn6rBegSzYk1i\nWl0y7APW/fYPp1c783Jo3QuC+iQplNVN2lIZFH+tXN6lrNoaifDN45VFVBrCdiSv\npUU2Pf9OD5RcUrLieMiBeHHqq1POmKsZjJc0wwIDAQABAoH/Ji6w28XZ+6bl5FUy\ntx4b+dxxuZa3lDW3iJkpk51nsZFSYd0ToMgk/kN0y27ZJ5jkWsis+GqV/GyvEi86\ntGb8xweIba/iY+MhwwxpUo6S0XjmyAT1lUBTkiF0sT287g2mIlSYVO5AVrHKrZ3/\nfLGZwZ1jj5Z19/WgOrBGy3fBOqb++OU1OkLBGj9+dIST7W4tr2RK38IuP5y4NyYo\nT1faeXM7pSj/uViDiomtzXJy0Wrnd8UgWxbviIc/jLQtunM4VmaI3VdvOyqY3V4F\n2GdKdoBikDhvWqLCPNGfQ0JBRGc7inPu4+3GZEtjOV4d8vGbKR0L8e1mehrZ7pLZ\np48BAoGBAPcO3bOwdJdEhbcRPPwqP/nj+lIwVPRqFz4RuXMyz+BAT4sgcjiOf4WH\n21+8HShJ6nGpiEzP/tvnv0Y7aWrWnRPsvjdeK76X6UM9+67D05DO2UDwy43Z+w2b\nSR7lW/V/ufG1k5mXjTbeyt6+NFym0o2N9sjor9Lv6Xhw4uACl4n7AoGBAMVmOZmh\nPgegc2mVF/0gvbrwJ1D6CfgTrpzOTrK2rf3ivg/xcSaIuG2DUnIKUooaD5mE49b6\nJrEn+XC3FvIkpOiR4xxjRuB+iz2U9pHP5OgUGvegG4gN34UiT5wBZgpz2NEH/FAK\nR0I+27qqgpkaMmEgsQfs9pA1oETEdS7ELI3ZAoGBAOe68upbRVCpPf6TVa90daOP\nWbkDinviksBuYZMTAvZle/aUTW6NAkGeR38JdBPZGOTZznW11mgvfDKFAYDrolQR\nB+3pD4Dq/ilLFyo6ldPKoO6PrW31Gs0NbU1kdpfT4PY9iR9Ujmj8Gi9JGtYYx39s\nvCCAWIKy8zs8LyFMbRVHAoGBAL6PGpfGYn02VXPdbBT+IGpwH2Q6nJkRVwUk3DAF\nzh1DYDs/1v1eCrwdg993O4r58YlAEjqbrfJjJpe7B7mlylSBUP88j1V0k7JVNVo5\nmT64+feGZk2HJvn8z2FIsFryzqGr1dTmtzeqOrAOnphyA6RjzMJb7QH14su/42fM\nFT6xAoGBANA0UPDWiBJlhlQJG34P85ykXX9MP3eaG4L8BMvaWIaRBThMEBbOWhMc\nsEo60o1ibbAE+NLkOBj4YlA6RgTd4GZcihWKF8sTFrOkPiEcw3lqQqmZ3bawt29+\nDKjcXYr1E84saQZ77+1PniQ5AnJNshYGE8N1yiJAI/Ia9wqKa4Wq\n-----END RSA PRIVATE KEY-----","internal-ca-secret":"-----BEGIN CERTIFICATE-----\nMIIDdDCCAlygAwIBAgIUPOJ3ZK7wgOvwrfWF711RD2cRpCEwDQYJKoZIhvcNAQEL\nBQAwUjESMBAGA1UEAwwJY2Fzc2FuZHJhMS0wKwYDVQQtDCRjZWExMjQwMi1kNjdm\nLTQ1NjktOTEzYS03MzQ5ODFmODRlMDcxDTALBgNVBAoMBHBlZXIwHhcNMjYwODI2\nMDIwNTE4WhcNMzYwODIzMDIwNTE4WjBSMRIwEAYDVQQDDAljYXNzYW5kcmExLTAr\nBgNVBC0MJGNlYTEyNDAyLWQ2N2YtNDU2OS05MTNhLTczNDk4MWY4NGUwNzENMAsG\nA1UECgwEcGVlcjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAL6BGB4v\nPb/uX8ntAiHrVwE6huGKdq+irjQnQeeptwtkCLJNIOeNUR0363kU7ZlGxUPja4FR\nvjj/jrAICUDqKavIbifOoss/Vf3NmI9/eymEy5Z8pDWyIQE/nemryBRKzVJ6WPs5\nnmtBrsM+jnSn1du9zL9eCzStde5M2JrwgWmboid5O7IkxFHjVFR/og1w0MKA1mJd\n/hMa22QxlBKy+9m6mPbySKnMZ6QJ7Z+qwXoEs2JNYlpdMuwD1v32D6dXO/NyaN0L\ngvokKZTVTdpSGRR/rVzepazaGonwzeOVRVQawnYkr6VFNj3/Tg+UXFKy4njIgXhx\n6qtTzpirGYyXNMMCAwEAAaNCMEAwHQYDVR0OBBYEFEDAeruVv8CuwEtBfwTbOePR\nMZFEMA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgKkMA0GCSqGSIb3DQEB\nCwUAA4IBAQATzFVqnnFC1De4qCa596cZQK6ngDzIKGvAqL0v+w53O8qmBZcABhFy\nqE7G82rdRUyt/QrJwiWIKce/ygIJv9MWYWE2fMekk5BRDeOu8s2EA+zgh9RdJ7BJ\njAgdqqPjoZfuAm2lO7uoIyDmuQdQGbDGwrCpcwhUFhkCxyC2yyOLJL89vwYWfcO4\njqimVd5VQHT05GCSqooD7uCfC6wyASr3ICoNbCXbIRNjvg8FDYXMseRlyUeTwRUK\ndqNDA7D9sHNCxyHGXUGTZrIQ8eoPYKDU2sH1fIsSB1Hr+kJDJAiNfKbFAYzyFbuw\n0cSOxSe71ek6ke9Nm+vKkQTmzSRnG9WQ\n-----END CERTIFICATE-----","nodetool-password":"JlgfLuZy59dmFS1wEEkmYkukll1uTpRD","operator-password":"custom_password_second"}}}}
+
+INFO     integration.helpers.cassandra:cassandra.py:59 SSL context is disabled
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username bad and/or password are incorrect"')})
+INFO     jubilant:_juju.py:237 cli: juju status --model test-cas --format json
+INFO     integration.helpers.cassandra:cassandra.py:59 SSL context is disabled
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
+WARNING  cassandra.cluster:cassandra.py:71 [control connection] Error connecting to 10.105.50.85:9042:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 3670, in cassandra.cluster.ControlConnection._reconnect_internal
+  File "cassandra/cluster.py", line 3692, in cassandra.cluster.ControlConnection._try_connect
+  File "cassandra/cluster.py", line 1671, in cassandra.cluster.Cluster.connection_factory
+  File "cassandra/connection.py", line 864, in cassandra.connection.Connection.factory
+  File "cassandra/connection.py", line 610, in cassandra.connection.defunct_on_error.wrapper
+  File "cassandra/connection.py", line 1497, in cassandra.connection.Connection._handle_auth_response
+cassandra.AuthenticationFailed: Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"
+ERROR    cassandra.cluster:cassandra.py:71 Control connection failed to connect, shutting down Cluster:
+Traceback (most recent call last):
+  File "cassandra/cluster.py", line 1741, in cassandra.cluster.Cluster.connect
+  File "cassandra/cluster.py", line 3636, in cassandra.cluster.ControlConnection.connect
+  File "cassandra/cluster.py", line 3681, in cassandra.cluster.ControlConnection._reconnect_internal
+cassandra.cluster.NoHostAvailable: ('Unable to connect to any servers', {'10.105.50.85:9042': AuthenticationFailed('Failed to authenticate to 10.105.50.85:9042: Error from server: code=0100 [Bad credentials] message="Provided username operator and/or password are incorrect"')})
