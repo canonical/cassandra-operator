@@ -25,6 +25,12 @@ Since the Charmed Apache Cassandra is deployed directly on a cloud infrastructur
 The [offers-overlay](https://github.com/canonical/cos-lite-bundle/blob/main/overlays/offers-overlay.yaml)
 can be used, and this step is shown in the COS tutorial.
 
+```{note}
+If you use [microk8s](https://microk8s.io/) with the strictly confined Juju snap, make sure to install the
+**strictly confined** microk8s snap (e.g. from the `1.35-strict/stable` channel). The classic microk8s snap
+is not supported by Juju.
+```
+
 ### Offer interfaces via the COS controller
 
 Switch to COS K8s environment and offer COS interfaces to be cross-model related with Charmed Apache Cassandra VM model:
@@ -103,8 +109,7 @@ Deploy the `cos-lite` bundle in a Kubernetes environment and integrate Charmed A
 This guide will refer to the models that charms are deployed into as:
 
 * `<cos-model>` for the model containing observability charms (and deployed on K8s)
-* `<apps-model>` for the model containing Charmed Apache Cassandra
-* `<apps-model>` for other optional charms (e.g. TLS-certificates operators, `grafana-agent`, `data-integrator`, etc.).
+* `<apps-model>` for the model containing Charmed Apache Cassandra and other optional charms (e.g. TLS-certificates operators, `grafana-agent`, `data-integrator`, etc.).
 
 ### Create a repository with a custom monitoring setup
 
@@ -121,7 +126,7 @@ Deploy the [COS configuration](https://charmhub.io/cos-configuration-k8s) charm 
 ```shell
 juju deploy cos-configuration-k8s cos-config \
   --config git_repo=<repository_url> \
-  --config git_branch=<branch> \
+  --config git_branch=<branch>
 ```
 
 The COS configuration charm keeps the monitoring stack in sync with our repository, by forwarding resources to Prometheus, Loki and Grafana.
@@ -138,17 +143,17 @@ The path to the resource folders can be set after deployment:
 
 ```shell
 juju config cos-config \
-  --config prometheus_alert_rules_path=<path_to_prom_rules> \
-  --config loki_alert_rules_path=<path_to_loki_rules> \
-  --config grafana_dashboards_path=<path_to_models>
+  prometheus_alert_rules_path=<path_to_prom_rules> \
+  loki_alert_rules_path=<path_to_loki_rules> \
+  grafana_dashboards_path=<path_to_models>
 ```
 
 Then, integrate the charm with the COS operators to forward the rules and dashboards:
 
 ```shell
-juju integrate cos-config prometheus
-juju integrate cos-config grafana
-juju integrate cos-config loki
+juju integrate cos-config:prometheus-config prometheus:metrics-endpoint
+juju integrate cos-config:grafana-dashboards grafana:grafana-dashboard
+juju integrate cos-config:loki-config loki:logging
 ```
 
 After this is complete, the monitoring COS stack should be up and ready to fire alerts based on our rules. As for the dashboards, they should be available in the Grafana interface.
