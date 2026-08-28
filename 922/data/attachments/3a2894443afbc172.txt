@@ -1,0 +1,56 @@
+INFO     jubilant:_juju.py:237 cli: juju controllers --format json
+INFO     integration.helpers.juju:juju.py:223 Microk8s controller 'microk8s-localhost' exists, skipping setup...
+INFO     jubilant:_juju.py:237 cli: juju status --model test-cas --format json
+INFO     jubilant:_juju.py:237 cli: juju run --model test-cas --format json traefik/0 show-proxied-endpoints
+INFO     integration.test_cos:test_cos.py:221 Displaying some of the logs pushed to loki:
+INFO     integration.test_cos:test_cos.py:226 Stream: /var/snap/charmed-cassandra/common/var/log/cassandra/debug.log
+INFO     integration.test_cos:test_cos.py:228 |__ DEBUG [ScheduledTasks:1] 2026-08-28 04:42:46,052 MigrationCoordinator.java:269 - Pulling unreceived schema versions...
+INFO     integration.test_cos:test_cos.py:228 |__ DEBUG [ScheduledTasks:1] 2026-08-28 04:41:46,052 MigrationCoordinator.java:269 - Pulling unreceived schema versions...
+INFO     integration.test_cos:test_cos.py:228 |__ DEBUG [ScheduledTasks:1] 2026-08-28 04:40:46,052 MigrationCoordinator.java:269 - Pulling unreceived schema versions...
+INFO     integration.test_cos:test_cos.py:228 |__ DEBUG [ScheduledTasks:1] 2026-08-28 04:39:46,052 MigrationCoordinator.java:269 - Pulling unreceived schema versions...
+INFO     integration.test_cos:test_cos.py:228 |__ DEBUG [ScheduledTasks:1] 2026-08-28 04:38:46,052 MigrationCoordinator.java:269 - Pulling unreceived schema versions...
+INFO     integration.test_cos:test_cos.py:228 |__ DEBUG [ScheduledTasks:1] 2026-08-28 04:37:46,051 MigrationCoordinator.java:269 - Pulling unreceived schema versions...
+INFO     integration.test_cos:test_cos.py:228 |__ DEBUG [ScheduledTasks:1] 2026-08-28 04:36:46,051 MigrationCoordinator.java:269 - Pulling unreceived schema versions...
+INFO     integration.test_cos:test_cos.py:228 |__ DEBUG [ScheduledTasks:1] 2026-08-28 04:35:46,051 MigrationCoordinator.java:269 - Pulling unreceived schema versions...
+INFO     integration.test_cos:test_cos.py:228 |__ DEBUG [AntiEntropyStage:1] 2026-08-28 04:35:28,134 RepairMessageVerbHandler.java:298 - cleaning up repair
+INFO     integration.test_cos:test_cos.py:228 |__ INFO  [AntiEntropyStage:1] 2026-08-28 04:35:28,079 Validator.java:257 - [repair #e4b1ce70-a299-11f1-841f-39a8a0f0542d] Sending completed merkle tree to /10.1.146.145:7000 for system_auth.role_permissions
+INFO     integration.test_cos:test_cos.py:229 
+
+INFO     integration.test_cos:test_cos.py:226 Stream: /var/snap/charmed-cassandra/common/var/log/cassandra/debug.log
+INFO     integration.test_cos:test_cos.py:228 |__ DEBUG [ScheduledTasks:1] 2026-08-28 04:42:17,119 MigrationCoordinator.java:269 - Pulling unreceived schema versions...
+INFO     integration.test_cos:test_cos.py:228 |__ DEBUG [ScheduledTasks:1] 2026-08-28 04:41:17,119 MigrationCoordinator.java:269 - Pulling unreceived schema versions...
+INFO     integration.test_cos:test_cos.py:228 |__ DEBUG [ScheduledTasks:1] 2026-08-28 04:40:17,119 MigrationCoordinator.java:269 - Pulling unreceived schema versions...
+INFO     integration.test_cos:test_cos.py:228 |__ DEBUG [ScheduledTasks:1] 2026-08-28 04:39:17,119 MigrationCoordinator.java:269 - Pulling unreceived schema versions...
+INFO     integration.test_cos:test_cos.py:228 |__ DEBUG [ScheduledTasks:1] 2026-08-28 04:38:17,118 MigrationCoordinator.java:269 - Pulling unreceived schema versions...
+INFO     integration.test_cos:test_cos.py:228 |__ DEBUG [ScheduledTasks:1] 2026-08-28 04:37:17,118 MigrationCoordinator.java:269 - Pulling unreceived schema versions...
+INFO     integration.test_cos:test_cos.py:228 |__ DEBUG [ScheduledTasks:1] 2026-08-28 04:36:17,118 MigrationCoordinator.java:269 - Pulling unreceived schema versions...
+INFO     integration.test_cos:test_cos.py:228 |__ DEBUG [OptionalTasks:1] 2026-08-28 04:35:45,668 CassandraDaemon.java:398 - Completed submission of build tasks for any materialized views defined at startup
+INFO     integration.test_cos:test_cos.py:228 |__ INFO  [RepairJobTask:1] 2026-08-28 04:35:28,121 RepairCoordinator.java:250 - [repair #e4a7e360-a299-11f1-841f-39a8a0f0542d]Repair command #1 finished in 0 seconds
+INFO     integration.test_cos:test_cos.py:228 |__ DEBUG [RepairJobTask:1] 2026-08-28 04:35:28,088 AbstractRepairTask.java:101 - Repair result: [RepairSessionResult{sessionId=e4b1ce70-a299-11f1-841f-39a8a0f0542d, keyspace='system_auth', ranges=[(6630114697655902340,7474491345147064098], (-8914003466757704202,-8460483882319871466], (-7849662476984640804,-7442632477577444450], (8274320015808194380,8914759575049647336], (-3733916163581018818,-2983638923312693996], (-2983638923312693996,-2490396157900426844], (1026038908400346326,1685995933389050588], (-1934515122983502908,-1523031914821891346], (-4152593846491708376,-3733916163581018818], (-2490396157900426844,-1934515122983502908], (-998601950191987488,-582964290620347609], (6152625115805959271,6630114697655902340], (66972637692007291,628716056051633535], (-582964290620347609,66972637692007291], (2664141385905164664,3318760271021193781], (1685995933389050588,2284459624345789414], (-1523031914821891346,-998601950191987488], (-5549204663739514116,-4813288971028620475], (5538817586963690081,6152625115805959271], (4442775686728751792,5095248598877001054], (2284459624345789414,2664141385905164664], (7474491345147064098,8274320015808194380], (-6624960544965093656,-6029658176004694405], (8914759575049647336,-8914003466757704202], (-4813288971028620475,-4152593846491708376], (5095248598877001054,5538817586963690081], (3318760271021193781,3745046772302323171], (-8460483882319871466,-7849662476984640804], (-6029658176004694405,-5549204663739514116], (-7442632477577444450,-6624960544965093656], (3745046772302323171,4442775686728751792], (628716056051633535,1026038908400346326]], repairJobResults=[org.apache.cassandra.repair.RepairResult@6fb09887, org.apache.cassandra.repair.RepairResult@6e686b75, org.apache.cassandra.repair.RepairResult@5a97ebb1, org.apache.cassandra.repair.RepairResult@4abcfc7b, org.apache.cassandra.repair.RepairResult@21a3310b, org.apache.cassandra.repair.RepairResult@cbdd589, org.apache.cassandra.repair.RepairResult@69926dcc, org.apache.cassandra.repair.RepairResult@44e01ba1], skippedReplicas=false}]
+INFO     integration.test_cos:test_cos.py:229 
+
+INFO     integration.test_cos:test_cos.py:226 Stream: /var/snap/charmed-cassandra/common/var/log/cassandra/gc.log
+INFO     integration.test_cos:test_cos.py:228 |__ [2026-08-28T04:42:54.325+0000][552.583s][13545][13767][info ] Total time for which application threads were stopped: 0.0001529 seconds, Stopping threads took: 0.0000305 seconds
+INFO     integration.test_cos:test_cos.py:228 |__ [2026-08-28T04:42:54.325+0000][552.583s][13545][13767][info ] Leaving safepoint region
+INFO     integration.test_cos:test_cos.py:228 |__ [2026-08-28T04:42:54.325+0000][552.583s][13545][13767][info ] Entering safepoint region: Cleanup
+INFO     integration.test_cos:test_cos.py:228 |__ [2026-08-28T04:42:54.325+0000][552.583s][13545][13767][info ] Application time: 9.0008331 seconds
+INFO     integration.test_cos:test_cos.py:228 |__ [2026-08-28T04:42:45.324+0000][543.582s][13545][13767][info ] Total time for which application threads were stopped: 0.0001206 seconds, Stopping threads took: 0.0000291 seconds
+INFO     integration.test_cos:test_cos.py:228 |__ [2026-08-28T04:42:45.324+0000][543.582s][13545][13767][info ] Leaving safepoint region
+INFO     integration.test_cos:test_cos.py:228 |__ [2026-08-28T04:42:45.324+0000][543.582s][13545][13767][info ] Entering safepoint region: Cleanup
+INFO     integration.test_cos:test_cos.py:228 |__ [2026-08-28T04:42:45.324+0000][543.582s][13545][13767][info ] Application time: 6.0005679 seconds
+INFO     integration.test_cos:test_cos.py:228 |__ [2026-08-28T04:42:39.323+0000][537.581s][13545][13767][info ] Total time for which application threads were stopped: 0.0001418 seconds, Stopping threads took: 0.0000272 seconds
+INFO     integration.test_cos:test_cos.py:228 |__ [2026-08-28T04:42:39.323+0000][537.581s][13545][13767][info ] Leaving safepoint region
+INFO     integration.test_cos:test_cos.py:229 
+
+INFO     integration.test_cos:test_cos.py:226 Stream: /var/snap/charmed-cassandra/common/var/log/cassandra/gc.log
+INFO     integration.test_cos:test_cos.py:228 |__ [2026-08-28T04:42:49.873+0000][521.462s][18574][19148][info ] Total time for which application threads were stopped: 0.0001931 seconds, Stopping threads took: 0.0000256 seconds
+INFO     integration.test_cos:test_cos.py:228 |__ [2026-08-28T04:42:49.873+0000][521.462s][18574][19148][info ] Leaving safepoint region
+INFO     integration.test_cos:test_cos.py:228 |__ [2026-08-28T04:42:49.873+0000][521.462s][18574][19148][info ] Entering safepoint region: Cleanup
+INFO     integration.test_cos:test_cos.py:228 |__ [2026-08-28T04:42:49.873+0000][521.462s][18574][19148][info ] Application time: 8.0009488 seconds
+INFO     integration.test_cos:test_cos.py:228 |__ [2026-08-28T04:42:41.872+0000][513.461s][18574][19148][info ] Total time for which application threads were stopped: 0.0001381 seconds, Stopping threads took: 0.0000250 seconds
+INFO     integration.test_cos:test_cos.py:228 |__ [2026-08-28T04:42:41.872+0000][513.461s][18574][19148][info ] Leaving safepoint region
+INFO     integration.test_cos:test_cos.py:228 |__ [2026-08-28T04:42:41.872+0000][513.461s][18574][19148][info ] Entering safepoint region: Cleanup
+INFO     integration.test_cos:test_cos.py:228 |__ [2026-08-28T04:42:41.872+0000][513.461s][18574][19148][info ] Application time: 4.0003552 seconds
+INFO     integration.test_cos:test_cos.py:228 |__ [2026-08-28T04:42:37.871+0000][509.461s][18574][19148][info ] Total time for which application threads were stopped: 0.0001600 seconds, Stopping threads took: 0.0000309 seconds
+INFO     integration.test_cos:test_cos.py:228 |__ [2026-08-28T04:42:37.871+0000][509.461s][18574][19148][info ] Leaving safepoint region
+INFO     integration.test_cos:test_cos.py:229
