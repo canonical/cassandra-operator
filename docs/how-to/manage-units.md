@@ -55,6 +55,9 @@ Only one unit can be removed at a time. Support for removing multiple units simu
 Before removing a unit, check the replication factor of your keyspaces. If removing the unit brings the number of nodes below the replication factor of a keyspace, that keyspace may become unavailable or lose data.
 ```
 
+A Cassandra cluster is also called a *ring*: a set of peer nodes with no master, where every node can serve the same functionality as any other. For more details, see the
+[Cassandra architecture documentation](https://cassandra.apache.org/doc/latest/cassandra/architecture/architecture.html).
+
 During removal, the charm decommissions the node: data stored on the removed unit is streamed to the remaining nodes before the node leaves the ring, so no data is lost.
 
 ## Admin utility scripts
