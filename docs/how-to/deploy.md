@@ -90,7 +90,8 @@ The charm supports two profiles:
 To maintain high availability of the data, `3+` units are recommended.
 
 ```{warning}
-A typical 3-unit deployment with the `production` profile requires **at least** 32 GB of RAM.
+Typical `production` profile servers need at least 32 GB of ECC RAM per unit.
+See [Apache Cassandra documentation](https://cassandra.apache.org/doc/stable/cassandra/managing/operating/hardware.html) for more details.
 ```
 
 To change the profile on a running deployment:
