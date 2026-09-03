@@ -8,14 +8,13 @@ myst:
 
 # How to deploy Charmed Apache Cassandra
 
-This guide provides deployment instructions for the **IAAS/VM** operator using the Juju CLI.
-
-To deploy a Charmed Apache Cassandra cluster, it is necessary to:
+This guide walks you through deploying the **IAAS/VM** operator with the Juju CLI and verifying
+the deployment by connecting to the cluster. You will:
 
 1. Set up a Juju controller
 2. Set up a Juju model
 3. Deploy Charmed Apache Cassandra
-4. Connect to the cluster
+4. Verify the deployment by connecting to the cluster
 
 If you already have a Juju controller and a Juju model, you can skip the associated steps.
 
