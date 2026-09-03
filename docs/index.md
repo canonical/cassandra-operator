@@ -1,3 +1,9 @@
+---
+myst:
+  html_meta:
+    description: "Charmed Apache Cassandra - deploy, scale, and manage Apache Cassandra clusters on VMs with the Juju orchestrator. Documentation, guides, and reference."
+---
+
 # Charmed Apache Cassandra documentation
 
 ```{warning}
@@ -28,6 +34,9 @@ offering secure defaults, integration interfaces, and lifecycle automation.
 ## In this documentation
 
 This documentation contains only basic information and will be expanded later.
+
+- **How-to guides** cover deploying and scaling a cluster, enabling TLS encryption, and setting up monitoring.
+- **Reference** contains contact information.
 
 ## How this documentation is organized
 
