@@ -132,6 +132,8 @@ Then connect to the cluster:
 cqlsh <unit-ip> -u operator -p "<password>"
 ```
 
+Alternatively, the `charmed-cassandra` snap bundles the same client as `charmed-cassandra.cqlsh`.
+
 <details>
 
 <summary> Output example</summary>
