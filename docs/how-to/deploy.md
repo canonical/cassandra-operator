@@ -82,16 +82,16 @@ juju deploy cassandra -n <units> --config profile=<profile> --channel 5/edge
 
 The charm supports two profiles:
 
-* `production` (default) — tunes Cassandra for maximum performance and allocates half of the
-  available RAM on the host
-* `testing` — minimises resource requirements for very-small, non-production test and staging
+* `production` (default) — tunes Cassandra for maximum performance, allocating up to 8 GB RAM per
+  unit for the Java heap. More RAM might be needed for read caches, bloom filters, etc.
+* `testing` — minimises resource requirements for very small, non-production test and staging
   clusters
 
-```{warning}
-The `production` profile typically needs **at least** 32 GB of RAM.
-```
+To maintain high availability of the data, `3+` units are recommended.
 
-To maintain high-availability of the data, `3+` units are recommended.
+```{warning}
+A typical 3-unit deployment with the `production` profile requires **at least** 32 GB of RAM.
+```
 
 To change the profile on a running deployment:
 
