@@ -56,7 +56,7 @@ Before removing a unit, check the replication factor of your keyspaces. If remov
 ```
 
 A Cassandra cluster is also called a *ring*: a peer-to-peer set of nodes where every node is equal and can serve the same functionality as any other. For more details, see the
-[Cassandra architecture documentation](https://cassandra.apache.org/doc/latest/cassandra/architecture/architecture.html).
+[Cassandra architecture documentation](https://cassandra.apache.org/doc/latest/cassandra/architecture/dynamo.html).
 
 During removal, the charm decommissions the node: data stored on the removed unit is streamed to the remaining nodes before the node leaves the ring, so no data is lost.
 
