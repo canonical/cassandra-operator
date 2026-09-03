@@ -74,7 +74,7 @@ juju ssh cassandra/0 sudo snap run charmed-cassandra.nodetool \
 ```
 
 ```{note}
-The `nodetool` username is always `charmed-operator`. The password is stored in the `nodetool-password` field of the `cassandra-peers` application secret.
+The `nodetool` username is always `charmed-operator` — a separate internal user, distinct from the `operator` CQL user used to connect with `cqlsh`. The password is stored in the `nodetool-password` field of the `cassandra-peers` application secret.
 ```
 
 ### Cluster status
