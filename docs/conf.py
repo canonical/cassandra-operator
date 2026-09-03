@@ -1,6 +1,6 @@
 import datetime
 import os
-import yaml
+import textwrap
 
 # Configuration for the Sphinx documentation builder.
 # All configuration specific to your project should be done in this file.
@@ -11,8 +11,8 @@ import yaml
 # A complete list of built-in Sphinx configuration values:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 #
-# Our starter pack uses the custom Canonical Sphinx extension
-# to keep all documentation based on it consistent and on brand:
+# The Sphinx Stack uses the Canonical Sphinx theme to keep all documentation
+# consistent and on brand:
 # https://github.com/canonical/canonical-sphinx
 
 
@@ -27,6 +27,12 @@ import yaml
 project = "Charmed Apache Cassandra"
 author = "Canonical Ltd."
 
+# Project slug; see https://meta.discourse.org/t/what-is-category-slug/87897
+#
+# TODO: If your documentation is hosted on https://docs.ubuntu.com/,
+#       uncomment and update as needed.
+
+slug = "data/cassandra/docs"
 
 # Sidebar documentation title; best kept reasonably short
 #
@@ -39,13 +45,8 @@ html_title = project + " documentation"
 
 # Copyright string; shown at the bottom of the page
 #
-# Now, the starter pack uses CC-BY-SA as the license
-# and the current year as the copyright year.
-#
-# TODO: If your docs need another license, specify it instead of 'CC-BY-SA'.
-#
 # TODO: If your documentation is a part of the code repository of your project,
-#       it inherits the code license instead; specify it instead of 'CC-BY-SA'.
+#       it inherits the code license instead; specify it in html_context below.
 #
 # NOTE: For static works, it is common to provide the first publication year.
 #       Another option is to provide both the first year of publication
@@ -60,7 +61,7 @@ html_title = project + " documentation"
 #         -H 'Accept: application/vnd.github.v3.raw' \
 #         https://api.github.com/repos/canonical/<REPO> | jq '.created_at'
 
-copyright = "%s CC-BY-SA, %s" % (datetime.date.today().year, author)
+copyright = f"{datetime.date.today().year}"
 
 
 # Documentation website URL
@@ -70,7 +71,9 @@ copyright = "%s CC-BY-SA, %s" % (datetime.date.today().year, author)
 # NOTE: The Open Graph Protocol (OGP) enhances page display in a social graph
 #       and is used by social media platforms; see https://ogp.me/
 
-ogp_site_url = "https://canonical-charmed-cassandra.readthedocs-hosted.com/"
+ogp_site_url = (
+    f"https://canonical.com/{slug}/{os.environ.get('READTHEDOCS_VERSION', 'local')}"
+)
 
 
 # Preview name of the documentation website
@@ -91,7 +94,7 @@ ogp_image = "https://assets.ubuntu.com/v1/cc828679-docs_illustration.svg"
 
 # TODO: To customise the favicon, uncomment and update as needed.
 
-# html_favicon = '.sphinx/_static/favicon.png'
+# html_favicon = '_static/favicon.png'
 
 
 # Dictionary of values to pass into the Sphinx context for all pages:
@@ -105,8 +108,8 @@ html_context = {
     #
     # TODO: If there's no such website,
     #       remove the {{ product_page }} link from the page header template
-    #       (usually .sphinx/_templates/header.html; also, see README.rst).
-    "product_page": "canonical.com/data",
+    #       (usually _templates/header.html; also, see README.rst).
+    "product_page": "canonical.com/data/cassandra",
     # Product tag image; the orange part of your logo, shown in the page header
     #
     # TODO: To add a tag image, uncomment and update as needed.
@@ -136,11 +139,9 @@ html_context = {
     # Docs branch in the repo; used in links for viewing the source files
     #
     # TODO: To customise the branch, uncomment and update as needed.
-    'repo_default_branch': 'main',
+    "repo_default_branch": "main",
     # Docs location in the repo; used in links for viewing the source files
     #
-
-
     # TODO: To customise the directory, uncomment and update as needed.
     "repo_folder": "/docs/",
     # TODO: To enable or disable the Previous / Next buttons at the bottom of pages
@@ -148,9 +149,19 @@ html_context = {
     # "sequential_nav": "both",
     # TODO: To enable listing contributors on individual pages, set to True
     "display_contributors": False,
-
-    # Required for feedback button    
-    'github_issues': 'enabled',
+    # Required for feedback button
+    "github_issues": "enabled",
+    # Passes the top-level 'author' value to the theme
+    "author": author,
+    # Documentation license information
+    "license": {
+        # TODO: Specify your project's license.
+        # For the name, we recommend using the standard shorthand identifier from
+        # https://spdx.org/licenses
+        "name": "CC-BY-SA-3.0",
+        # TODO: Link directly to your project's license statement.
+        "url": "https://github.com/canonical/sphinx-stack/blob/main/LICENSE",
+    },
 }
 
 html_extra_path = []
@@ -168,15 +179,8 @@ html_extra_path = []
 # - https://git.launchpad.net/example
 #
 # html_theme_options = {
-# 'source_edit_link': 'https://github.com/canonical/sphinx-docs-starter-pack',
+# 'source_edit_link': 'https://github.com/canonical/sphinx-stack',
 # }
-
-# Project slug; see https://meta.discourse.org/t/what-is-category-slug/87897
-#
-# TODO: If your documentation is hosted on https://docs.ubuntu.com/,
-#       uncomment and update as needed.
-
-# slug = ''
 
 #######################
 # Sitemap configuration: https://sphinx-sitemap.readthedocs.io/
@@ -184,11 +188,15 @@ html_extra_path = []
 
 # Use RTD canonical URL to ensure duplicate pages have a specific canonical URL
 
-html_baseurl = os.environ.get("READTHEDOCS_CANONICAL_URL", "/")
+html_baseurl = (
+    f"https://canonical.com/{slug}/{os.environ.get('READTHEDOCS_VERSION', 'local')}/"
+)
+
 
 # sphinx-sitemap uses html_baseurl to generate the full URL for each page:
 
-sitemap_url_scheme = '{link}'
+sitemap_url_scheme = "{link}"
+sitemap_filename = "doc-sitemap.xml"
 
 # Include `lastmod` dates in the sitemap:
 
@@ -197,9 +205,9 @@ sitemap_show_lastmod = True
 # Exclude generated pages from the sitemap:
 
 sitemap_excludes = [
-    '404/',
-    'genindex/',
-    'search/',
+    "404/",
+    "genindex/",
+    "search/",
 ]
 
 # TODO: Add more pages to sitemap_excludes if needed. Wildcards are supported.
@@ -209,16 +217,16 @@ sitemap_excludes = [
 # Template and asset locations
 #######################
 
-#html_static_path = ["_static"]
-#templates_path = ["_templates"]
+html_static_path = ["_static"]
+templates_path = ["_templates"]
 
 
 #############
 # Redirects #
 #############
 
-# To set up redirects: https://documatt.gitlab.io/sphinx-reredirects/usage.html
-# For example: 'explanation/old-name.html': '../how-to/prettify.html',
+# Add redirects to the 'redirects.txt' file
+# https://sphinxext-rediraffe.readthedocs.io/en/latest/
 
 # To set up redirects in the Read the Docs project dashboard:
 # https://docs.readthedocs.io/en/stable/guides/redirects.html
@@ -227,6 +235,29 @@ sitemap_excludes = [
 #       the sphinx_reredirects extension will be disabled.
 
 redirects = {}
+
+# Uncomment and populate when redirects are needed:
+# rediraffe_redirects = "redirects.txt"
+# rediraffe_dir_only = True
+
+
+############################
+# sphinx-llm configuration #
+############################
+
+# This description is included in llms.txt to provide some initial context for your
+# product docs.
+# TODO: Add a description in the form "This is the documentation for <product name>,
+# <first sentence of home page>".
+llms_txt_description = textwrap.dedent("""\
+    This is the documentation for Charmed Apache Cassandra, a Juju charm that
+    automates the deployment, scaling, configuration and operations of Apache
+    Cassandra clusters.
+    """)
+
+# The base URL for references built by sphinx-markdown-builder.
+if os.environ.get("READTHEDOCS"):
+    markdown_http_base = html_baseurl
 
 
 ###########################
@@ -240,7 +271,7 @@ redirects = {}
 linkcheck_ignore = [
     "http://127.0.0.1:8000",
     "https://matrix.to/#/#charmhub-data-platform:ubuntu.com",
-    ]
+]
 
 # A regex list of URLs where anchors are ignored by 'make linkcheck'
 
@@ -272,20 +303,15 @@ extensions = [
     "canonical_sphinx",
     "notfound.extension",
     "sphinx_design",
-    "sphinx_reredirects",
-    "sphinx_tabs.tabs",
     "sphinxcontrib.jquery",
     "sphinxext.opengraph",
     "sphinx_config_options",
-    "sphinx_contributor_listing",
-    "sphinx_filtered_toctree",
+    "sphinx_llm.txt",
     "sphinx_related_links",
     "sphinx_roles",
     "sphinx_terminal",
-    "sphinx_ubuntu_images",
     "sphinx_youtube_links",
     "sphinxcontrib.cairosvgconverter",
-    "sphinx_last_updated_by_git",
     "sphinx.ext.intersphinx",
     "sphinx_sitemap",
 ]
@@ -293,23 +319,21 @@ extensions = [
 # Excludes files or directories from processing
 
 exclude_patterns = [
-    # Exclude the docs virtual environments and build tooling from being
-    # scanned as documentation source files (fixes "document isn't included
-    # in any toctree" warnings and linkcheck scanning of site-packages)
-    ".venv/*",
-    ".sphinx/*",
-    "_build/*",
-    "requirements.txt",
+    ".venv*",
+    "_dev",
 ]
 
 # Adds custom CSS files, located under 'html_static_path'
 
-# html_css_files = []
+html_css_files = ["https://assets.ubuntu.com/v1/d86746ef-cookie_banner.css"]
 
 
 # Adds custom JavaScript files, located under 'html_static_path'
 
-# html_js_files = []
+html_js_files = [
+    "overwrite_links.js",
+    "https://assets.ubuntu.com/v1/287a5e8f-bundle.js",
+]
 
 
 # Specifies a reST snippet to be appended to each .rst file
@@ -357,15 +381,8 @@ rst_prolog = """
 if "discourse_prefix" not in html_context and "discourse" in html_context:
     html_context["discourse_prefix"] = html_context["discourse"] + "/t/"
 
-# Workaround for substitutions.yaml
-
-# if os.path.exists('./reuse/substitutions.yaml'):
-#     with open('./reuse/substitutions.yaml', 'r') as fd:
-#         myst_substitutions = yaml.safe_load(fd.read())
-
 # Add configuration for intersphinx mapping
 
 # intersphinx_mapping = {
-#     'starter-pack': ('https://canonical-example-product-documentation.readthedocs-hosted.com/en/latest', None),
-#     'sphinxcontrib-mermaid': ('https://sphinxcontrib-mermaid-demo.readthedocs.io/en/latest', None)
+#     "snap": ("https://snapcraft.io/docs/", None),
 # }

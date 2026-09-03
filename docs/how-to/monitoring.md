@@ -11,16 +11,14 @@ myst:
 This guide includes step-by-step instructions on how to set up monitoring with the
 [Canonical Observability Stack](https://charmhub.io/topics/canonical-observability-stack).
 
-Charmed Apache Cassandra snap comes with the
-[JMX exporter](https://github.com/prometheus/jmx_exporter/).
-The metrics can be queried by accessing the `http://<cassandra-unit-ip>:7071/metrics` endpoint.
+Additionally, the charm provides integration with the [Canonical Observability Stack](https://documentation.ubuntu.com/observability/).
 
 (how-to-monitoring-enable-monitoring)=
 
 ## Enable monitoring
 
 Deploy the `cos-lite` bundle in a Kubernetes environment. This can be done by following the
-[deployment tutorial](https://charmhub.io/topics/canonical-observability-stack/tutorials/install-microk8s).
+[deployment tutorial](https://documentation.ubuntu.com/observability/track-3.0/tutorial/cos-lite-microk8s-sandbox/).
 Since the Charmed Apache Cassandra is deployed directly on a cloud infrastructure environment, it is needed to offer the endpoints of the COS relations.
 The [offers-overlay](https://github.com/canonical/cos-lite-bundle/blob/main/overlays/offers-overlay.yaml)
 can be used, and this step is shown in the COS tutorial.
@@ -100,7 +98,7 @@ juju run grafana/leader get-admin-password --model <k8s_cos_controller>:<cos_mod
 
 ## Alerts and dashboards
 
-This guide shows you how to integrate an existing set of rules and/or dashboards to your Charmed Apache Cassandra deployment to be consumed with the [Canonical Observability Stack (COS)](https://charmhub.io/topics/canonical-observability-stack).
+This guide shows you how to integrate an existing set of rules and/or dashboards to your Charmed Apache Cassandra deployment to be consumed with the [Canonical Observability Stack (COS)](https://documentation.ubuntu.com/observability/).
 To do so, we will sync resources stored in a git repository to COS Lite.
 
 ### Prerequisites
