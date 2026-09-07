@@ -1,46 +1,61 @@
-# Managing encryption
+---
+myst:
+  html_meta:
+    description: "Enable TLS encryption for Charmed Apache Cassandra - secure peer-to-peer and client-to-node communication and rotate certificates."
+---
 
-The Apache Cassandra charm has encryption enabled by default.
+(how-to-tls-encryption)=
+
+# How to enable TLS encryption
+
+This guide includes step-by-step instructions on how to enable TLS encryption for peer-to-peer
+and client-to-node communication in a Charmed Apache Cassandra cluster.
+
+This charm implements the **Requirer** side of the [tls-certificates](https://charmhub.io/integrations/tls-certificates) relation. Therefore, any charm implementing the **Provider** side could be used.
+
 All units within a cluster share the same CA certificate file, but each unit has a distinct private key.
 
-This charm implements the **Requirer** side of the [tls-certificates](https://charmhub.io/integrations/tls-certificates) relation. Therefore, any charm implementing the **Provider** side can be used.
-To enable TLS encryption, you must first deploy a TLS certificates Provider charm.
+## Prerequisites
 
-## Deploy a TLS provider charm
+For this guide, we will need an active Charmed Apache Cassandra application.
+Follow the [How to deploy Charmed Apache Cassandra](how-to-deploy) guide to set up the environment.
 
-For testing purposes, you can use the `self-signed-certificates` charm.
-However, this setup is **not recommended** for production clusters.
+## Enable TLS encryption for peer-to-peer communication
 
-Deploy the `self-signed-certificates` charm with:
+To enable peer-to-peer TLS encryption, you should first deploy a TLS certificates Provider charm.
+For this guide, we will be using the `self-signed-certificates` charm.
 
-```shell
-juju deploy self-signed-certificates --channel=edge
+```{warning}
+Using self-signed certificates is not recommended for production systems.
+Instead follow your organisations best-practices for managing TLS certificates.
+Please refer to [this post](https://charmhub.io/topics/security-with-x-509-certificates)
+for an overview of the TLS certificates Providers charms and some guidance on how to choose
+the right charm for your use case.
 ```
 
-Configure the CA common name:
+To deploy the `self-signed-certificates` application:
 
 ```shell
-juju config self-signed-certificates ca-common-name="Test CA"
+juju deploy self-signed-certificates --channel=edge --config ca-common-name="Test CA"
 ```
 
-For an overview of available TLS certificate Provider charms and guidance on choosing the right one
-for your use case, see the [X.509 certificates guide](https://charmhub.io/topics/security-with-x-509-certificates).
-
-## Relate the charms
-
-To enable **peer-to-peer TLS encryption**, relate Charmed Apache Cassandra to the `:peer-certificates` endpoint:
+To enable peer-to-peer TLS encryption with Charmed Apache Cassandra, integrate the Charmed Apache Cassandra application to the `tls-certificates` provider application via the `peer-certificates` relation interface:
 
 ```shell
-juju integrate <tls-certificates>:certificates cassandra:peer-certificates
+juju integrate cassandra:peer-certificates self-signed-certificates
 ```
 
-To enable **client-to-node TLS encryption**, relate Charmed Apache Cassandra to the `:client-certificates` endpoint:
+While certificates are being issued and distributed, units show waiting and maintenance statuses such as `waiting for internal TLS setup` and `waiting for peer tls rotation to complete`. Once the process completes, units return to `active/idle`.
+
+## Enable TLS encryption for client-to-node communication
+
+To enable client-to-node TLS encryption, integrate the Charmed Apache Cassandra application to the `tls-certificates` provider application via the `client-certificates` relation interface:
 
 ```shell
-juju integrate <tls-certificates>:certificates cassandra:client-certificates
+juju integrate cassandra:client-certificates self-signed-certificates
 ```
 
-where `<tls-certificates>` is the name of the deployed TLS certificates Provider charm.
+While certificates are being issued and distributed, units show waiting and maintenance statuses such as `waiting for TLS setup` and `waiting for client tls rotation to complete`. Once the process completes, units return to `active/idle`.
 
 ## Connect to the cluster
 
@@ -67,14 +82,7 @@ Warning: Using a password on the command line interface can be insecure.
 Recommendation: use the credentials file to securely provide the password.
 
 Connection error: ('Unable to connect to any servers',
-  {'10.166.144.168:9042': ConnectionResetError(104, 'Connection reset by peer')})
-```
-
-And in the Apache Cassandra logs you will see:
-
-```text
-WARN  [epollEventLoopGroup-5-6] ... SSLException in client networking with peer /10.166.144.168:42604
-io.netty.handler.ssl.NotSslRecordException: not an SSL/TLS record
+  {'<unit-ip>:9042': ConnectionResetError(104, 'Connection reset by peer')})
 ```
 
 This confirms that Apache Cassandra requires a secure TLS connection.
@@ -84,7 +92,8 @@ This confirms that Apache Cassandra requires a secure TLS connection.
 Fetch the root CA from the self-signed certificate operator:
 
 ```shell
-juju run <tls-certificates>/0 get-ca-certificate --format yaml | yq '.<tls-certificates>/0.results.ca-certificate' > ca.cert
+juju run self-signed-certificates/0 get-ca-certificate --format json \
+  | jq -r '."self-signed-certificates/0".results."ca-certificate"' > ca.cert
 ```
 
 The CA needs to be used to verify the certificate provided by the Apache Cassandra servers in the TLS handshake.
@@ -115,21 +124,38 @@ certfile = /var/snap/charmed-cassandra/current/etc/cassandra/ca.cert
 validate = true
 ```
 
+````{note}
+Make sure the `cqlshrc` file is only readable by your user, otherwise `cqlsh` will refuse to use the credentials stored in it:
+
+```shell
+sudo chown $USER /var/snap/charmed-cassandra/current/etc/cassandra/cqlshrc
+sudo chmod 600 /var/snap/charmed-cassandra/current/etc/cassandra/cqlshrc
+```
+````
+
 Connect to Apache Cassandra with:
 
 ```shell
-cqlsh --ssl --cqlshrc /var/snap/charmed-cassandra/current/etc/cassandra/cqlshrc
+charmed-cassandra.cqlsh --ssl --cqlshrc /var/snap/charmed-cassandra/current/etc/cassandra/cqlshrc
 ```
 
 The `cqlsh` client should connect and show the prompt where CQL queries can be run.
 
-## Disabling TLS
+## (Optional) Rotate certificates
 
-To disable TLS, remove the relations:
+When the TLS certificates Provider charm renews the certificates (for example, when they are close to expiry, or when the CA is rotated), the Cassandra charm picks up the new certificates automatically.
+
+During the rotation, units show maintenance statuses such as `waiting for peer tls rotation to complete` or `waiting for client tls rotation to complete`, and return to `active/idle` once the new certificates are in place. No manual action is required.
+
+## Disable TLS encryption
+
+To disable TLS encryption, remove the relations with the `tls-certificates` provider application:
 
 ```shell
-juju remove-relation <tls-certificates>:certificates cassandra:peer-certificates
-juju remove-relation <tls-certificates>:certificates cassandra:client-certificates
+juju remove-relation cassandra:peer-certificates self-signed-certificates
+juju remove-relation cassandra:client-certificates self-signed-certificates
 ```
 
-where `<tls-certificates>` is the name of the TLS certificates Provider charm deployed.
+```{note}
+Removing the relations causes a rolling restart of the units as they switch back to unencrypted communication.
+```
