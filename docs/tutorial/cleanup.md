@@ -24,7 +24,7 @@ data we created. Only do this when you are finished with the tutorial.
 To remove Charmed Apache Cassandra and everything else in the `tutorial` model:
 
 ```shell
-juju destroy-model tutorial --destroy-storage --no-prompt --force
+juju destroy-model tutorial --destroy-storage --no-prompt
 ```
 
 This removes all applications in the model (Charmed Apache Cassandra, the Data Integrator, and the

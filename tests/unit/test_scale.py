@@ -112,6 +112,39 @@ def test_storage_detaching_success(caplog):
         assert "storage-detaching event completed" in caplog.text
 
 
+def test_storage_detaching_full_teardown_skips_decommission(caplog):
+    """Charm should skip decommission when the whole application is being removed."""
+    ctx = testing.Context(CassandraCharm)
+    storage = testing.Storage(name=DATA_STORAGE, index=0)
+    state = make_state(storage)
+
+    with (
+        patch("charm.CassandraWorkload") as workload,
+        patch(
+            "managers.tls.TLSManager.client_tls_ready",
+            new_callable=PropertyMock(return_value=False),
+        ),
+        patch(
+            "managers.node.NodeManager.is_bootstrap_decommissioning",
+            new_callable=PropertyMock(return_value=False),
+        ),
+        patch("managers.node.NodeManager.is_healthy", return_value=True) as is_healthy,
+        patch("managers.node.NodeManager.decommission", return_value=None) as decommission,
+        patch("ops.model.Application.planned_units", return_value=0),
+        patch("core.state.ApplicationState.units", new_callable=PropertyMock) as units,
+    ):
+        workload.return_value.generate_string.return_value = "password"
+
+        units.return_value = [MagicMock()]
+
+        with caplog.at_level(logging.INFO):
+            ctx.run(ctx.on.storage_detaching(storage), state)
+
+        decommission.assert_not_called()
+        is_healthy.assert_not_called()
+        assert "all units are being removed" in caplog.text.lower()
+
+
 def test_storage_detaching_decommission_fails(caplog):
     """Charm should log failure if decommission fails with ExecError."""
     ctx = testing.Context(CassandraCharm)
