@@ -40,7 +40,7 @@ not recommended for a production cluster. For guidance on choosing a provider, s
 Before enabling TLS on Charmed Apache Cassandra, deploy the `self-signed-certificates` charm:
 
 ```shell
-juju deploy self-signed-certificates --channel edge --config ca-common-name="Tutorial CA"
+juju deploy self-signed-certificates --channel 1/stable --config ca-common-name="Tutorial CA"
 ```
 
 Wait for the charm to settle into an `active`/`idle` state, as shown by `juju status`.

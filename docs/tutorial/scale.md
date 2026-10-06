@@ -15,8 +15,9 @@ data available. In this section we scale the cluster out, confirm the data we wr
 replicated to the new node, add more data, then scale back in and confirm nothing was lost.
 
 A Cassandra cluster is also called a *ring*: a peer-to-peer set of nodes where every node is equal.
-When nodes are added or removed, the charm automatically redistributes (streams) data so the ring
-stays balanced and the replication factor is honoured.
+When nodes are added or removed, the charm drives the operation while Apache Cassandra itself
+automatically redistributes (streams) the data, so the ring stays balanced and the replication
+factor is honoured.
 
 ## Inspect the ring
 
@@ -83,6 +84,25 @@ juju ssh cassandra/0 sudo snap run charmed-cassandra.nodetool \
   -u charmed-operator -pw "$(juju show-secret --reveal cassandra-peers.cassandra.app --format json | jq -r '.[].content.Data."nodetool-password"')" \
   status
 ```
+
+<details> <summary> Output example</summary>
+
+```text
+Datacenter: datacenter1
+=======================
+Status=Up/Down
+|/ State=Normal/Leaving/Joining/Moving
+--  Address        Load       Tokens  Owns (effective)  Host ID                               Rack
+UN  10.166.144.10  135.1 KiB  16      73.8%             1f3f0e1e-...                          rack1
+UN  10.166.144.11  132.7 KiB  16      76.2%             9a2b7c4d-...                          rack1
+UN  10.166.144.12  134.4 KiB  16      74.9%             5e8d1a2c-...                          rack1
+UN  10.166.144.15  98.3 KiB   16      75.1%             b7c3f9a1-...                          rack1
+```
+
+</details>
+
+With four nodes and a replication factor of `3`, each node now owns roughly `75%` of the data instead
+of `100%`.
 
 ## Verify data was replicated
 

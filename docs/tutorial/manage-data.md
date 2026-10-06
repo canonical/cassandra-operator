@@ -95,8 +95,37 @@ operator@cqlsh:tutorial> SELECT * FROM members;
 (3 rows)
 ```
 
+```{note}
+`SELECT *` without a `WHERE` clause scans every partition across the whole cluster. It is fine on
+this tiny tutorial table, but on a production deployment it is an expensive operation that should be
+avoided. Real queries normally restrict the rows they read, for example with `WHERE id = 1`.
+```
+
 The data is now stored in the cluster and, thanks to the replication factor of `3`, replicated to
-every node.
+every node. We can demonstrate this with the `CONSISTENCY ALL` setting, which forces a read to
+contact *every* replica and only succeed if they all respond. Since each node holds a full copy, the
+read still returns all three rows:
+
+```text
+operator@cqlsh:tutorial> CONSISTENCY ALL;
+Consistency level set to ALL.
+operator@cqlsh:tutorial> SELECT * FROM members;
+
+ id | name    | race
+----+---------+--------
+  1 |   frodo | hobbit
+  2 | gandalf |   maia
+  3 | aragorn |  human
+
+(3 rows)
+```
+
+Reset the consistency level back to the default before moving on:
+
+```text
+operator@cqlsh:tutorial> CONSISTENCY QUORUM;
+Consistency level set to QUORUM.
+```
 
 Leave the shell with `exit`.
 

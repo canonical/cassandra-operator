@@ -27,7 +27,7 @@ and manage client users in Charmed Apache Cassandra.
 ## The Data Integrator charm
 
 The [Data Integrator charm](https://charmhub.io/data-integrator) is a bare-bones charm for the
-central management of database and messaging users. It supports many data platforms (Apache
+central management of database and messaging users. It supports many data products (Apache
 Cassandra, MongoDB, MySQL, PostgreSQL, Apache Kafka, OpenSearch, and more) with a consistent and
 robust user experience.
 
@@ -53,12 +53,12 @@ Wait for the status to become `active`/`idle` using `watch juju status --color`.
 
 ```text
 Model     Controller  Cloud/Region         Version  SLA          Timestamp
-tutorial  overlord    localhost/localhost  3.6.13   unsupported  13:02:41Z
+tutorial  overlord    localhost/localhost  3.6.29   unsupported  13:02:41Z
 
 App                       Version  Status  Scale  Charm                     Channel        Rev  Exposed  Message
 cassandra                 5.0.5    active      3  cassandra                 5/edge          42  no
 data-integrator                    active      1  data-integrator           latest/stable  362  no
-self-signed-certificates           active      1  self-signed-certificates  1/edge         317  no
+self-signed-certificates           active      1  self-signed-certificates  1/stable       317  no
 
 Unit                         Workload  Agent  Machine  Public address  Ports     Message
 cassandra/0*                 active    idle   0        10.166.144.10   9042/tcp
@@ -117,6 +117,11 @@ access entirely, simply remove the relation:
 
 ```shell
 juju remove-relation data-integrator cassandra
+```
+
+```{note}
+Removing the relation revokes the generated user, but it does not delete the keyspace or any data in
+it. The `tutorial_app` keyspace remains in the cluster until you drop it explicitly.
 ```
 
 ## What's next?

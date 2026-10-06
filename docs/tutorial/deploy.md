@@ -39,7 +39,7 @@ Wait until all units show `active`/`idle` status:
 
 ```text
 Model     Controller  Cloud/Region         Version  SLA          Timestamp
-tutorial  overlord    localhost/localhost  3.6.13   unsupported  12:31:09Z
+tutorial  overlord    localhost/localhost  3.6.29   unsupported  12:31:09Z
 
 App        Version  Status  Scale  Charm      Channel  Rev  Exposed  Message
 cassandra  5.0.5    active      3  cassandra  5/edge    42  no

@@ -53,7 +53,7 @@ Kubernetes. We will use it to deploy and manage Charmed Apache Cassandra. As wit
 installed from a snap package:
 
 ```shell
-sudo snap install juju
+sudo snap install juju --channel 3.6/stable
 ```
 
 Install `jq`, a JSON processor used to parse Juju output in later steps:
@@ -115,7 +115,7 @@ juju status
 
 ```text
 Model     Controller  Cloud/Region         Version  SLA          Timestamp
-tutorial  overlord    localhost/localhost  3.6.13   unsupported  12:10:54Z
+tutorial  overlord    localhost/localhost  3.6.29   unsupported  12:10:54Z
 
 Model "admin/tutorial" is empty.
 ```
