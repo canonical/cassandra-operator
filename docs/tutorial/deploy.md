@@ -8,7 +8,7 @@ myst:
 
 # 2. Deploy Apache Cassandra
 
-This is a part of the [Charmed Apache Cassandra Tutorial](index.md).
+This is a part of the [Charmed Apache Cassandra Tutorial](tutorial-index).
 
 To deploy Charmed Apache Cassandra, all you need to do is run the following command, which fetches
 [Apache Cassandra](https://charmhub.io/cassandra) from [Charmhub](https://charmhub.io/) and deploys
