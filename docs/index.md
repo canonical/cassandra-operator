@@ -35,6 +35,7 @@ offering secure defaults, integration interfaces, and lifecycle automation.
 
 This documentation contains only basic information and will be expanded later.
 
+- **Tutorial** takes you step-by-step from bootstrapping a controller to deploying, securing, and scaling a cluster.
 - **How-to guides** cover deploying and scaling a cluster, enabling TLS encryption, and setting up monitoring.
 - **Reference** contains contact information.
 
@@ -42,8 +43,7 @@ This documentation contains only basic information and will be expanded later.
 
 This documentation uses the [Diátaxis](https://diataxis.fr/) documentation structure.
 
-<!-- - The Tutorial takes you step-by-step through the initial Charmed Apache Cassandra setup and usage. -->
-
+- The Tutorial takes you step-by-step through the initial Charmed Apache Cassandra setup and usage.
 - How-to guides assume you have basic familiarity with Apache Cassandra and Juju.
 
 <!-- - Reference includes factual data required for using Charmed Apache Cassandra.
@@ -77,6 +77,7 @@ for more information.
 :hidden:
 
 Home <self>
+tutorial/index
 how-to/index
 reference/contact
 ```

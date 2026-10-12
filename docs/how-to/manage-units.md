@@ -69,8 +69,9 @@ The most important commands are exposed via the [Charmed Apache Cassandra snap](
 To run the commands, you need to provide authentication information. The `nodetool` credentials are stored on every unit and can be used by running the commands within the unit itself, e.g. via the `juju ssh` command:
 
 ```shell
-juju ssh cassandra/0 sudo snap run charmed-cassandra.nodetool status \
-  -u charmed-operator -pw "$(juju show-secret --reveal cassandra-peers.cassandra.app --format json | jq -r '.[].content.Data."nodetool-password"')"
+juju ssh cassandra/0 sudo snap run charmed-cassandra.nodetool \
+  -u charmed-operator -pw "$(juju show-secret --reveal cassandra-peers.cassandra.app --format json | jq -r '.[].content.Data."nodetool-password"')" \
+  status
 ```
 
 ```{note}
@@ -82,8 +83,9 @@ The `nodetool` username is always `charmed-operator` — a separate internal use
 To check the state of the Cassandra ring, run `charmed-cassandra.nodetool status` on any unit:
 
 ```shell
-juju ssh cassandra/0 sudo snap run charmed-cassandra.nodetool status \
-  -u charmed-operator -pw "$(juju show-secret --reveal cassandra-peers.cassandra.app --format json | jq -r '.[].content.Data."nodetool-password"')"
+juju ssh cassandra/0 sudo snap run charmed-cassandra.nodetool \
+  -u charmed-operator -pw "$(juju show-secret --reveal cassandra-peers.cassandra.app --format json | jq -r '.[].content.Data."nodetool-password"')" \
+  status
 ```
 
 The output lists every node in the cluster with its state (`UN` means up and normal), address, and load:

@@ -576,6 +576,10 @@ class CassandraEvents(Object):
             logger.warning("Node is already decommissioned")
             return
 
+        if self.charm.app.planned_units() == 0:
+            logger.info("All units are being removed, skipping node decommissioning")
+            return
+
         if not self.node_manager.is_healthy(self.state.unit.ip):
             raise Exception("Cluster is not healthy, cannot remove unit")
 
